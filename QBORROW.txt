@@ -1,0 +1,11 @@
+Main Page: Catalog that shows list of available items. then user logins
+The user clicks an item
+Checks availability then if it is available, you can submit a form request
+Email and (text) will be sent to the burrower that the due date is near
+Admin dashboard: Analytics of total items, damage, lost, borrowed
+If the borrower has 3 overdue returns, the borrower will be suspended to borrow for 1 month
+Admin can set the overdue duration of each item that will be burrowed
+
+
+Admin Account: admin@gmail.com 
+            : admin123
