@@ -1,0 +1,355 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+.app-layout {
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  background: #dedede;
+  font-family: Arial, Helvetica, sans-serif;
+  transition: 0.3s ease;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.app-sidebar {
+  height: 100vh;
+  background: linear-gradient(180deg, #19d1c3 0%, #169ccf 45%, #1748c9 100%);
+  padding: 14px 14px 24px;
+  color: white;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.app-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/background.png");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* SIDEBAR TOP - FINAL REPAIRED */
+.app-sidebar-top {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 54px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 4px 8px;
+  margin-bottom: 18px;
+}
+
+/* Makes logo and text behave as separate grid children */
+.app-sidebar-brand {
+  display: contents;
+}
+
+.app-sidebar-brand img {
+  grid-column: 1;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
+}
+
+.app-sidebar-brand-text {
+  grid-column: 2;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.app-sidebar-brand-text h2 {
+  margin: 0;
+  color: white;
+  font-family: "BerlinCustom", "Berlin Sans FB", "Arial Rounded MT Bold", Arial,
+    sans-serif;
+  font-size: 1.78rem;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.app-sidebar-brand-text p {
+  margin: 7px 0 0;
+  color: white;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* HAMBURGER BUTTON - LOCKED RIGHT */
+.app-sidebar-toggle {
+  grid-column: 3;
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.app-sidebar-toggle span {
+  width: 46px;
+  height: 8px;
+  background: white;
+  border-radius: 4px;
+  display: block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.app-sidebar-toggle:hover {
+  transform: scale(1.06);
+  opacity: 0.92;
+}
+
+/* FLOATING HAMBURGER WHEN SIDEBAR IS HIDDEN */
+.floating-layout-toggle {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 50;
+  width: 58px;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #12b8b0, #087ccc);
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.floating-layout-toggle span {
+  width: 42px;
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  display: block;
+}
+
+.floating-layout-toggle:hover {
+  transform: scale(1.06);
+}
+
+/* NAV */
+.app-sidebar-nav {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.app-sidebar-nav a,
+.app-logout-btn {
+  width: 100%;
+  min-height: 58px;
+  border: none;
+  border-radius: 22px;
+  background: #e8e8e8;
+  color: #111;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  box-shadow: 0 4px 7px rgba(0, 0, 0, 0.16);
+  transition: 0.23s ease;
+}
+
+.app-sidebar-nav a img,
+.app-logout-btn img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.app-sidebar-nav a:hover,
+.app-sidebar-nav a.active,
+.app-logout-btn:hover {
+  transform: translateX(7px);
+  background: white;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.22);
+}
+
+.app-admin-label {
+  margin: 18px 0 4px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* SIDEBAR CLOSED */
+.sidebar-closed {
+  grid-template-columns: 0 1fr;
+}
+
+.sidebar-closed .app-sidebar {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  transform: translateX(-100%);
+  overflow: hidden;
+}
+
+/* MAIN CONTENT */
+.app-main-content {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* LOADING */
+.layout-loading {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #12b8b0, #077bd3, #1233a4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.layout-loading img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.layout-loading h2 {
+  color: white;
+}
+
+/* SCROLLBAR */
+.app-sidebar::-webkit-scrollbar,
+.app-main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.app-sidebar::-webkit-scrollbar-track,
+.app-main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+}
+
+.app-main-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1150px) {
+  .app-layout {
+    grid-template-columns: 320px 1fr;
+  }
+
+  .app-sidebar-brand img {
+    width: 62px;
+    height: 62px;
+  }
+
+  .app-sidebar-brand-text h2 {
+    font-size: 1.52rem;
+  }
+
+  .app-sidebar-brand-text p {
+    font-size: 0.64rem;
+  }
+
+  .app-sidebar-toggle {
+    width: 48px;
+    height: 44px;
+  }
+
+  .app-sidebar-toggle span {
+    width: 38px;
+    height: 5px;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-layout {
+    height: auto;
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .app-sidebar {
+    height: auto;
+    max-height: 100vh;
+  }
+
+  .sidebar-closed {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-closed .app-sidebar {
+    display: none;
+  }
+
+  .app-main-content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}

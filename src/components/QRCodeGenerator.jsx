@@ -1,83 +1,83 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
 
 function QRCodeGenerator({ itemId, itemName }) {
-  const [qrImage, setQrImage] = useState("");
-  const barcodeRef = useRef(null);
+  const qrCanvasRef = useRef(null);
+  const barcodeCanvasRef = useRef(null);
 
   useEffect(() => {
-    async function generateQR() {
+    async function generateCodes() {
       try {
-        const itemLink = `${window.location.origin}/item/${itemId}`;
-        const qrDataUrl = await QRCode.toDataURL(itemLink);
-        setQrImage(qrDataUrl);
+        const itemUrl = `${window.location.origin}/item/${itemId}`;
+
+        if (qrCanvasRef.current) {
+          await QRCode.toCanvas(qrCanvasRef.current, itemUrl, {
+            width: 95,
+            margin: 1,
+          });
+        }
+
+        if (barcodeCanvasRef.current) {
+          JsBarcode(barcodeCanvasRef.current, itemId, {
+            format: "CODE128",
+            width: 1,
+            height: 38,
+            displayValue: false,
+            margin: 0,
+          });
+        }
       } catch (error) {
-        console.error("QR generation error:", error);
+        console.error("Code generation failed:", error);
       }
     }
 
-    generateQR();
+    generateCodes();
   }, [itemId]);
 
-  useEffect(() => {
-    if (barcodeRef.current && itemId) {
-      JsBarcode(barcodeRef.current, itemId, {
-        format: "CODE128",
-        width: 1.5,
-        height: 50,
-        displayValue: true,
-      });
-    }
-  }, [itemId]);
+  function downloadCanvas(canvasRef, filename) {
+    if (!canvasRef.current) return;
 
-  function downloadQR() {
     const link = document.createElement("a");
-    link.href = qrImage;
-    link.download = `${itemName}-QR.png`;
+    link.download = filename;
+    link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   }
 
-  function downloadBarcode() {
-    const svg = barcodeRef.current;
-    const svgData = new XMLSerializer().serializeToString(svg);
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = function () {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-
-      const pngFile = canvas.toDataURL("image/png");
-
-      const link = document.createElement("a");
-      link.href = pngFile;
-      link.download = `${itemName}-Barcode.png`;
-      link.click();
-    };
-
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
-  }
-
   return (
-    <div>
-      <div>
+    <div className="code-generator-box">
+      <div className="qr-code-area">
         <p>QR Code</p>
-        {qrImage && <img src={qrImage} alt="QR Code" width="100" />}
-        <br />
-        <button onClick={downloadQR}>Download QR</button>
+        <canvas ref={qrCanvasRef}></canvas>
+
+        <button
+          type="button"
+          onClick={() =>
+            downloadCanvas(
+              qrCanvasRef,
+              `${itemName || "item"}-${itemId}-qr-code.png`
+            )
+          }
+        >
+          Download QR
+        </button>
       </div>
 
-      <br />
-
-      <div>
+      <div className="barcode-area">
         <p>Barcode</p>
-        <svg ref={barcodeRef}></svg>
-        <br />
-        <button onClick={downloadBarcode}>Download Barcode</button>
+        <canvas ref={barcodeCanvasRef}></canvas>
+
+        <button
+          type="button"
+          onClick={() =>
+            downloadCanvas(
+              barcodeCanvasRef,
+              `${itemName || "item"}-${itemId}-barcode.png`
+            )
+          }
+        >
+          Download Barcode
+        </button>
       </div>
     </div>
   );
