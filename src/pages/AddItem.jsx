@@ -4,6 +4,7 @@ import {
   collection,
   addDoc,
   updateDoc,
+  getDocs,
   serverTimestamp,
 } from "firebase/firestore";
 import {
@@ -15,22 +16,17 @@ import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
 import "../styles/AddItem.css";
 
-const defaultCategories = [
-  { id: "sports", name: "Sports Items" },
-  { id: "laboratory", name: "Laboratory Items" },
-  { id: "stem", name: "STEM Items" },
-  { id: "it", name: "IT Items" },
-];
-
 function AddItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
+  const [categories, setCategories] = useState([]);
+
   const [itemName, setItemName] = useState("");
   const [itemCode, setItemCode] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState("sports");
+  const [categoryId, setCategoryId] = useState("");
   const [condition, setCondition] = useState("Good");
   const [availability, setAvailability] = useState("Available");
   const [maxBorrowDays, setMaxBorrowDays] = useState("7");
@@ -39,6 +35,7 @@ function AddItem() {
   const [imagePreview, setImagePreview] = useState("");
   const [cropSourceFile, setCropSourceFile] = useState(null);
 
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
@@ -61,19 +58,55 @@ function AddItem() {
     }
   }
 
+  function getCategoryName(categoryIdValue) {
+    const category = categories.find(
+      (item) => normalizeText(item.id) === normalizeText(categoryIdValue)
+    );
+
+    return category?.name || categoryIdValue || "Unknown";
+  }
+
+  async function fetchCategories() {
+    setLoadingCategories(true);
+
+    try {
+      const categoriesSnapshot = await getDocs(collection(db, "categories"));
+
+      const categoryData = categoriesSnapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((category) => category.isActive !== false)
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
+      setCategories(categoryData);
+    } catch (error) {
+      showStatus("Error loading categories: " + error.message, "error");
+    } finally {
+      setLoadingCategories(false);
+    }
+  }
+
   const availableCategories = useMemo(() => {
     if (!isCategoryAdmin) {
-      return defaultCategories;
+      return categories;
     }
 
     const assignedCategories = Array.isArray(userData?.assignedCategories)
       ? userData.assignedCategories.map(normalizeText)
       : [];
 
-    return defaultCategories.filter((category) =>
+    return categories.filter((category) =>
       assignedCategories.includes(normalizeText(category.id))
     );
-  }, [userData, isCategoryAdmin]);
+  }, [categories, userData, isCategoryAdmin]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (availableCategories.length === 0) {
@@ -93,7 +126,6 @@ function AddItem() {
   function getSelectedCategory() {
     return (
       availableCategories.find((category) => category.id === categoryId) ||
-      defaultCategories.find((category) => category.id === categoryId) ||
       null
     );
   }
@@ -188,6 +220,14 @@ function AddItem() {
 
     if (!isSuperAdmin && !isCategoryAdmin) {
       showStatus("Only super admins and category admins can add items.", "error");
+      return;
+    }
+
+    if (categories.length === 0) {
+      showStatus(
+        "No categories found. Go to User Management and seed or add categories first.",
+        "error"
+      );
       return;
     }
 
@@ -295,7 +335,7 @@ function AddItem() {
               Assigned categories:{" "}
               {Array.isArray(userData?.assignedCategories) &&
               userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
+                ? userData.assignedCategories.map(getCategoryName).join(", ")
                 : "No assigned categories yet"}
             </div>
           )}
@@ -383,9 +423,11 @@ function AddItem() {
                   id="category"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={availableCategories.length === 0}
+                  disabled={loadingCategories || availableCategories.length === 0}
                 >
-                  {availableCategories.length === 0 ? (
+                  {loadingCategories ? (
+                    <option value="">Loading categories...</option>
+                  ) : availableCategories.length === 0 ? (
                     <option value="">No assigned category</option>
                   ) : (
                     availableCategories.map((category) => (
@@ -482,7 +524,11 @@ function AddItem() {
               <button
                 type="submit"
                 className="add-item-primary-btn"
-                disabled={submitting || availableCategories.length === 0}
+                disabled={
+                  submitting ||
+                  loadingCategories ||
+                  availableCategories.length === 0
+                }
               >
                 {submitting ? "Saving..." : "Save Item"}
               </button>

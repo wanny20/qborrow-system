@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -12,19 +14,15 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
+import ImageCropModal from "../components/ImageCropModal";
 import "../styles/EditItem.css";
-
-const defaultCategories = [
-  { id: "sports", name: "Sports Items" },
-  { id: "laboratory", name: "Laboratory Items" },
-  { id: "stem", name: "STEM Items" },
-  { id: "it", name: "IT Items" },
-];
 
 function EditItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+
+  const [categories, setCategories] = useState([]);
 
   const [itemId, setItemId] = useState("");
   const [originalItem, setOriginalItem] = useState(null);
@@ -39,6 +37,7 @@ function EditItem() {
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [cropSourceFile, setCropSourceFile] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,19 +57,47 @@ function EditItem() {
     return String(value || "").trim().toLowerCase();
   }
 
+  function revokePreview(url) {
+    if (url && url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function getCategoryName(categoryIdValue) {
+    const category = categories.find(
+      (item) => normalizeText(item.id) === normalizeText(categoryIdValue)
+    );
+
+    return category?.name || categoryIdValue || "Unknown";
+  }
+
+  async function fetchCategories() {
+    const categoriesSnapshot = await getDocs(collection(db, "categories"));
+
+    return categoriesSnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .filter((category) => category.isActive !== false)
+      .sort((a, b) =>
+        String(a.name || "").localeCompare(String(b.name || ""))
+      );
+  }
+
   const availableCategories = useMemo(() => {
     if (!isCategoryAdmin) {
-      return defaultCategories;
+      return categories;
     }
 
     const assignedCategories = Array.isArray(userData?.assignedCategories)
       ? userData.assignedCategories.map(normalizeText)
       : [];
 
-    return defaultCategories.filter((category) =>
+    return categories.filter((category) =>
       assignedCategories.includes(normalizeText(category.id))
     );
-  }, [userData, isCategoryAdmin]);
+  }, [categories, userData, isCategoryAdmin]);
 
   function canEditCategory(targetCategoryId, targetCategoryName) {
     if (isSuperAdmin) return true;
@@ -90,7 +117,7 @@ function EditItem() {
   function getSelectedCategory() {
     return (
       availableCategories.find((category) => category.id === categoryId) ||
-      defaultCategories.find((category) => category.id === categoryId) ||
+      categories.find((category) => category.id === categoryId) ||
       null
     );
   }
@@ -102,13 +129,18 @@ function EditItem() {
     return availability;
   }
 
-  async function fetchItem(id) {
+  async function fetchPageData(id) {
     setLoading(true);
     showStatus("", "");
+    setIsForbidden(false);
 
     try {
-      const itemRef = doc(db, "items", id);
-      const itemSnap = await getDoc(itemRef);
+      const [categoryData, itemSnap] = await Promise.all([
+        fetchCategories(),
+        getDoc(doc(db, "items", id)),
+      ]);
+
+      setCategories(categoryData);
 
       if (!itemSnap.exists()) {
         showStatus("Item not found.", "error");
@@ -121,8 +153,7 @@ function EditItem() {
         ...itemSnap.data(),
       };
 
-      const existingCategoryId =
-        item.categoryId || item.category || "";
+      const existingCategoryId = item.categoryId || item.category || "";
       const existingCategoryName =
         item.categoryName || item.category || existingCategoryId;
 
@@ -150,6 +181,8 @@ function EditItem() {
       setMaxBorrowDays(String(item.maxBorrowDays || 7));
       setImageUrl(item.imageUrl || "");
       setImagePreview(item.imageUrl || "");
+      setImageFile(null);
+      setCropSourceFile(null);
     } catch (error) {
       showStatus("Error loading item: " + error.message, "error");
     } finally {
@@ -159,33 +192,51 @@ function EditItem() {
 
   function handleImageChange(event) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (!file) {
-      setImageFile(null);
-      setImagePreview(imageUrl || "");
-      return;
-    }
+    if (!file) return;
+
+    showStatus("", "");
 
     if (!file.type.startsWith("image/")) {
       showStatus("Please upload an image file only.", "error");
-      event.target.value = "";
       return;
     }
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    if (file.size > 8 * 1024 * 1024) {
+      showStatus("Image is too large. Please upload an image below 8MB.", "error");
+      return;
+    }
+
+    setCropSourceFile(file);
+  }
+
+  function handleItemCropComplete(blob, previewUrl) {
+    revokePreview(imagePreview);
+
+    setImageFile(blob);
+    setImagePreview(previewUrl);
+    setCropSourceFile(null);
+
+    showStatus(
+      `Replacement image cropped and compressed to ${(blob.size / 1024).toFixed(
+        1
+      )} KB.`,
+      "success"
+    );
   }
 
   async function uploadItemImage(finalItemCode) {
     if (!imageFile) return imageUrl || "";
 
-    const safeFileName = imageFile.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const imageRef = ref(
-      storage,
-      `items/${finalItemCode || itemId}-${Date.now()}-${safeFileName}`
-    );
+    const safeFileName = `${finalItemCode || itemId}-${Date.now()}.jpg`;
+    const imageRef = ref(storage, `items/${safeFileName}`);
 
-    await uploadBytes(imageRef, imageFile);
+    await uploadBytes(imageRef, imageFile, {
+      contentType: "image/jpeg",
+      cacheControl: "public,max-age=3600",
+    });
+
     return getDownloadURL(imageRef);
   }
 
@@ -200,6 +251,14 @@ function EditItem() {
 
     if (isForbidden) {
       showStatus("You are not allowed to edit this item.", "error");
+      return;
+    }
+
+    if (categories.length === 0) {
+      showStatus(
+        "No categories found. Go to User Management and seed or add categories first.",
+        "error"
+      );
       return;
     }
 
@@ -279,7 +338,7 @@ function EditItem() {
     }
 
     setItemId(idFromUrl);
-    fetchItem(idFromUrl);
+    fetchPageData(idFromUrl);
   }, [userData]);
 
   const selectedCategory = getSelectedCategory();
@@ -298,6 +357,17 @@ function EditItem() {
 
   return (
     <div className="edit-item-page">
+      {cropSourceFile && (
+        <ImageCropModal
+          file={cropSourceFile}
+          title="Crop Replacement Image"
+          outputSize={800}
+          maxOutputBytes={450 * 1024}
+          onCancel={() => setCropSourceFile(null)}
+          onCropComplete={handleItemCropComplete}
+        />
+      )}
+
       <section className="edit-item-header">
         <div>
           <p className="qb-kicker">Inventory Update</p>
@@ -314,7 +384,7 @@ function EditItem() {
               Assigned categories:{" "}
               {Array.isArray(userData?.assignedCategories) &&
               userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
+                ? userData.assignedCategories.map(getCategoryName).join(", ")
                 : "No assigned categories yet"}
             </div>
           )}
@@ -418,12 +488,17 @@ function EditItem() {
                     id="category"
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
+                    disabled={availableCategories.length === 0}
                   >
-                    {availableCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
+                    {availableCategories.length === 0 ? (
+                      <option value="">No assigned category</option>
+                    ) : (
+                      availableCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
 
@@ -495,7 +570,10 @@ function EditItem() {
                   onChange={handleImageChange}
                 />
 
-                <p>Optional. Upload only if you want to replace the image.</p>
+                <p>
+                  Optional. Upload only if you want to replace the image. The
+                  new image will be cropped before uploading.
+                </p>
               </div>
 
               <div className="edit-item-actions">
@@ -511,7 +589,7 @@ function EditItem() {
                 <button
                   type="submit"
                   className="edit-item-primary-btn"
-                  disabled={submitting}
+                  disabled={submitting || availableCategories.length === 0}
                 >
                   {submitting ? "Updating..." : "Update Item"}
                 </button>

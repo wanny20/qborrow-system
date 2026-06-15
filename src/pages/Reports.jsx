@@ -11,6 +11,8 @@ function Reports() {
 
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -21,12 +23,39 @@ function Reports() {
     return String(value || "").trim().toLowerCase();
   }
 
+  function getCategoryNameById(categoryId) {
+    const category = categories.find(
+      (categoryItem) =>
+        normalizeText(categoryItem.id) === normalizeText(categoryId)
+    );
+
+    return category?.name || categoryId || "Unknown";
+  }
+
+  function getAssignedCategoryNames() {
+    if (!Array.isArray(userData?.assignedCategories)) {
+      return "No assigned categories yet";
+    }
+
+    if (userData.assignedCategories.length === 0) {
+      return "No assigned categories yet";
+    }
+
+    return userData.assignedCategories.map(getCategoryNameById).join(", ");
+  }
+
   function getItemCategoryId(item) {
     return item.categoryId || item.category || "";
   }
 
   function getItemCategoryName(item) {
-    return item.categoryName || item.category || item.categoryId || "Uncategorized";
+    return (
+      item.categoryName ||
+      getCategoryNameById(item.categoryId || item.category) ||
+      item.category ||
+      item.categoryId ||
+      "Uncategorized"
+    );
   }
 
   function getRequestCategoryId(request) {
@@ -36,6 +65,7 @@ function Reports() {
   function getRequestCategoryName(request) {
     return (
       request.categoryName ||
+      getCategoryNameById(request.categoryId || request.category) ||
       request.category ||
       request.categoryId ||
       "Uncategorized"
@@ -71,6 +101,11 @@ function Reports() {
     return today > expectedDate;
   }
 
+  function getRequestStatusLabel(request) {
+    if (checkOverdue(request)) return "Overdue";
+    return request.approvalStatus || "Unknown";
+  }
+
   function getCreatedTime(record) {
     if (record.createdAt?.toMillis) return record.createdAt.toMillis();
     if (record.createdAt?.seconds) return record.createdAt.seconds * 1000;
@@ -81,8 +116,12 @@ function Reports() {
     setLoading(true);
 
     try {
-      const itemsSnapshot = await getDocs(collection(db, "items"));
-      const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+      const [itemsSnapshot, requestsSnapshot, categoriesSnapshot] =
+        await Promise.all([
+          getDocs(collection(db, "items")),
+          getDocs(collection(db, "borrowRequests")),
+          getDocs(collection(db, "categories")),
+        ]);
 
       const itemData = itemsSnapshot.docs.map((document) => ({
         id: document.id,
@@ -94,8 +133,19 @@ function Reports() {
         ...document.data(),
       }));
 
+      const categoryData = categoriesSnapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((category) => category.isActive !== false)
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
       setItems(itemData);
       setRequests(requestData);
+      setCategories(categoryData);
     } catch (error) {
       alert("Error loading reports: " + error.message);
     } finally {
@@ -109,9 +159,12 @@ function Reports() {
 
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
-      canCategoryAdminSeeCategory(getItemCategoryId(item), getItemCategoryName(item))
+      canCategoryAdminSeeCategory(
+        getItemCategoryId(item),
+        getItemCategoryName(item)
+      )
     );
-  }, [items, userData]);
+  }, [items, categories, userData]);
 
   const visibleRequests = useMemo(() => {
     return requests.filter((request) =>
@@ -120,7 +173,7 @@ function Reports() {
         getRequestCategoryName(request)
       )
     );
-  }, [requests, userData]);
+  }, [requests, categories, userData]);
 
   const availableItems = visibleItems.filter(
     (item) => item.availability === "Available"
@@ -176,14 +229,18 @@ function Reports() {
         ${request.borrowerName || ""}
         ${request.borrowerEmail || ""}
         ${request.purpose || ""}
+        ${getRequestCategoryId(request)}
         ${getRequestCategoryName(request)}
         ${request.approvalStatus || ""}
+        ${getRequestStatusLabel(request)}
       `.toLowerCase();
 
       const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
 
       const matchesStatus =
-        statusFilter === "All" || request.approvalStatus === statusFilter;
+        statusFilter === "All" ||
+        request.approvalStatus === statusFilter ||
+        (statusFilter === "Overdue" && checkOverdue(request));
 
       return matchesSearch && matchesStatus;
     })
@@ -197,11 +254,12 @@ function Reports() {
 
       if (!countedStatuses.includes(request.approvalStatus)) return;
 
-      const itemKey = request.itemName || request.itemId || "Unknown Item";
+      const itemKey = request.itemId || request.itemName || "Unknown Item";
 
       if (!countMap[itemKey]) {
         countMap[itemKey] = {
-          itemName: itemKey,
+          itemKey,
+          itemName: request.itemName || "Unknown Item",
           categoryName: getRequestCategoryName(request),
           count: 0,
         };
@@ -211,10 +269,25 @@ function Reports() {
     });
 
     return Object.values(countMap).sort((a, b) => b.count - a.count);
-  }, [visibleRequests]);
+  }, [visibleRequests, categories]);
 
   const categoryReports = useMemo(() => {
     const categoryMap = {};
+
+    categories.forEach((category) => {
+      if (!canCategoryAdminSeeCategory(category.id, category.name)) return;
+
+      categoryMap[category.id] = {
+        categoryId: category.id,
+        categoryName: category.name || category.id,
+        totalItems: 0,
+        available: 0,
+        reserved: 0,
+        borrowed: 0,
+        damagedLost: 0,
+        totalRequests: 0,
+      };
+    });
 
     visibleItems.forEach((item) => {
       const categoryId = getItemCategoryId(item) || getItemCategoryName(item);
@@ -235,9 +308,17 @@ function Reports() {
 
       categoryMap[categoryId].totalItems += 1;
 
-      if (item.availability === "Available") categoryMap[categoryId].available += 1;
-      if (item.availability === "Reserved") categoryMap[categoryId].reserved += 1;
-      if (item.availability === "Borrowed") categoryMap[categoryId].borrowed += 1;
+      if (item.availability === "Available") {
+        categoryMap[categoryId].available += 1;
+      }
+
+      if (item.availability === "Reserved") {
+        categoryMap[categoryId].reserved += 1;
+      }
+
+      if (item.availability === "Borrowed") {
+        categoryMap[categoryId].borrowed += 1;
+      }
 
       if (
         item.condition === "Damaged" ||
@@ -250,7 +331,8 @@ function Reports() {
     });
 
     visibleRequests.forEach((request) => {
-      const categoryId = getRequestCategoryId(request) || getRequestCategoryName(request);
+      const categoryId =
+        getRequestCategoryId(request) || getRequestCategoryName(request);
       const categoryName = getRequestCategoryName(request);
 
       if (!categoryMap[categoryId]) {
@@ -272,7 +354,7 @@ function Reports() {
     return Object.values(categoryMap).sort((a, b) =>
       a.categoryName.localeCompare(b.categoryName)
     );
-  }, [visibleItems, visibleRequests]);
+  }, [categories, visibleItems, visibleRequests, userData]);
 
   if (loading) {
     return (
@@ -301,11 +383,7 @@ function Reports() {
 
           {isCategoryAdmin && (
             <div className="reports-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
+              Assigned categories: {getAssignedCategoryNames()}
             </div>
           )}
         </div>
@@ -421,6 +499,7 @@ function Reports() {
             <option value="Returned">Returned</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Overdue">Overdue</option>
           </select>
         </div>
 
@@ -437,7 +516,7 @@ function Reports() {
         <div className="reports-section-heading">
           <div>
             <h2>Category Report</h2>
-            <p>Item and request totals grouped by category.</p>
+            <p>Item and request totals grouped by active category.</p>
           </div>
         </div>
 
@@ -445,7 +524,7 @@ function Reports() {
           <div className="reports-empty">
             <img src="/qborrow-logo.png" alt="QBorrow Logo" />
             <h2>No category data</h2>
-            <p>No items or requests are available for your assigned categories.</p>
+            <p>No categories, items, or requests are available for your role.</p>
           </div>
         ) : (
           <div className="reports-category-grid">
@@ -507,7 +586,7 @@ function Reports() {
           ) : (
             <div className="reports-list">
               {frequentlyBorrowedItems.slice(0, 8).map((item) => (
-                <article className="reports-mini-card" key={item.itemName}>
+                <article className="reports-mini-card" key={item.itemKey}>
                   <div>
                     <h3>{item.itemName}</h3>
                     <p>{item.categoryName}</p>
@@ -538,9 +617,9 @@ function Reports() {
               {overdueRequests.slice(0, 8).map((request) => (
                 <article className="reports-mini-card danger" key={request.id}>
                   <div>
-                    <h3>{request.itemName}</h3>
-                    <p>{request.borrowerEmail}</p>
-                    <p>Expected: {request.expectedReturnDate}</p>
+                    <h3>{request.itemName || "Untitled Item"}</h3>
+                    <p>{request.borrowerEmail || "No email"}</p>
+                    <p>Expected: {request.expectedReturnDate || "Not set"}</p>
                   </div>
 
                   <strong>Overdue</strong>
@@ -551,126 +630,131 @@ function Reports() {
         </div>
       </section>
 
-<section className="reports-panel">
-  <div className="reports-section-heading">
-    <div>
-      <h2>Borrowing History</h2>
-      <p>
-        Showing {filteredHistory.length} of {visibleRequests.length} request
-        record{visibleRequests.length === 1 ? "" : "s"}.
-      </p>
-    </div>
-  </div>
-
-  {filteredHistory.length === 0 ? (
-    <div className="reports-empty">
-      <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-      <h2>No borrowing history found</h2>
-      <p>Try changing the search keyword or status filter.</p>
-    </div>
-  ) : (
-    <div className="reports-history-list">
-      {filteredHistory.map((request) => (
-        <article className="reports-history-row" key={request.id}>
-          <div className="reports-history-main">
-            <div className="reports-history-titleline">
-              <div>
-                <span className="reports-row-code">
-                  {request.itemCode || request.itemId || "No code"}
-                </span>
-                <h3>{request.itemName || "Untitled Item"}</h3>
-              </div>
-
-              <strong
-                className={`reports-status-pill status-${String(
-                  request.approvalStatus || "Unknown"
-                ).toLowerCase()}`}
-              >
-                {request.approvalStatus || "Unknown"}
-              </strong>
-            </div>
-
-            <div className="reports-history-subline">
-              <span>{request.borrowerName || "Unnamed Borrower"}</span>
-              <span>{request.borrowerEmail || "No email"}</span>
-              <span>{getRequestCategoryName(request)}</span>
-            </div>
+      <section className="reports-panel">
+        <div className="reports-section-heading">
+          <div>
+            <h2>Borrowing History</h2>
+            <p>
+              Showing {filteredHistory.length} of {visibleRequests.length} request
+              record{visibleRequests.length === 1 ? "" : "s"}.
+            </p>
           </div>
+        </div>
 
-          <div className="reports-history-date-list">
-            <div>
-              <span>Borrow</span>
-              <strong>{request.borrowDate || "Not set"}</strong>
-            </div>
-
-            <div>
-              <span>Expected</span>
-              <strong>{request.expectedReturnDate || "Not set"}</strong>
-            </div>
-
-            <div>
-              <span>Actual</span>
-              <strong>{request.actualReturnDate || "Not returned"}</strong>
-            </div>
-
-            <div>
-              <span>Condition</span>
-              <strong>{request.returnCondition || "N/A"}</strong>
-            </div>
+        {filteredHistory.length === 0 ? (
+          <div className="reports-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+            <h2>No borrowing history found</h2>
+            <p>Try changing the search keyword or status filter.</p>
           </div>
+        ) : (
+          <div className="reports-history-list">
+            {filteredHistory.map((request) => (
+              <article className="reports-history-row" key={request.id}>
+                <div className="reports-history-main">
+                  <div className="reports-history-titleline">
+                    <div>
+                      <span className="reports-row-code">
+                        {request.itemCode || request.itemId || "No code"}
+                      </span>
 
-          <div className="reports-history-purpose-list">
-            <span>Purpose</span>
-            <p>{request.purpose || "No purpose provided."}</p>
+                      <h3>{request.itemName || "Untitled Item"}</h3>
+                    </div>
+
+                    <strong
+                      className={`reports-status-pill status-${String(
+                        getRequestStatusLabel(request)
+                      ).toLowerCase()}`}
+                    >
+                      {getRequestStatusLabel(request)}
+                    </strong>
+                  </div>
+
+                  <div className="reports-history-subline">
+                    <span>{request.borrowerName || "Unnamed Borrower"}</span>
+                    <span>{request.borrowerEmail || "No email"}</span>
+                    <span>{getRequestCategoryName(request)}</span>
+                  </div>
+                </div>
+
+                <div className="reports-history-date-list">
+                  <div>
+                    <span>Borrow</span>
+                    <strong>{request.borrowDate || "Not set"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Expected</span>
+                    <strong>{request.expectedReturnDate || "Not set"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Actual</span>
+                    <strong>{request.actualReturnDate || "Not returned"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Condition</span>
+                    <strong>{request.returnCondition || "N/A"}</strong>
+                  </div>
+                </div>
+
+                <div className="reports-history-purpose-list">
+                  <span>Purpose</span>
+                  <p>{request.purpose || "No purpose provided."}</p>
+                </div>
+              </article>
+            ))}
           </div>
-        </article>
-      ))}
-    </div>
-  )}
-</section>
+        )}
+      </section>
 
-<section className="reports-panel">
-  <div className="reports-section-heading">
-    <div>
-      <h2>Damaged / Lost Items</h2>
-      <p>Items currently marked as damaged or lost.</p>
-    </div>
-  </div>
-
-  {damagedLostItems.length === 0 ? (
-    <div className="reports-empty">
-      <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-      <h2>No damaged or lost items</h2>
-      <p>Your visible inventory has no damaged or lost records.</p>
-    </div>
-  ) : (
-    <div className="reports-damaged-list">
-      {damagedLostItems.map((item) => (
-        <article className="reports-damaged-row" key={item.id}>
-          <div className="reports-damaged-main">
-            <span className="reports-row-code">{item.itemCode || item.id}</span>
-            <h3>{item.itemName || "Untitled Item"}</h3>
-            <p>{getItemCategoryName(item)}</p>
+      <section className="reports-panel">
+        <div className="reports-section-heading">
+          <div>
+            <h2>Damaged / Lost Items</h2>
+            <p>Items currently marked as damaged or lost.</p>
           </div>
+        </div>
 
-          <div className="reports-damaged-meta">
-            <div>
-              <span>Availability</span>
-              <strong>{item.availability || "N/A"}</strong>
-            </div>
-
-            <div>
-              <span>Condition</span>
-              <strong className="reports-damage-pill">
-                {item.condition || item.availability || "N/A"}
-              </strong>
-            </div>
+        {damagedLostItems.length === 0 ? (
+          <div className="reports-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+            <h2>No damaged or lost items</h2>
+            <p>Your visible inventory has no damaged or lost records.</p>
           </div>
-        </article>
-      ))}
-    </div>
-  )}
-</section>
+        ) : (
+          <div className="reports-damaged-list">
+            {damagedLostItems.map((item) => (
+              <article className="reports-damaged-row" key={item.id}>
+                <div className="reports-damaged-main">
+                  <span className="reports-row-code">
+                    {item.itemCode || item.id}
+                  </span>
+
+                  <h3>{item.itemName || "Untitled Item"}</h3>
+
+                  <p>{getItemCategoryName(item)}</p>
+                </div>
+
+                <div className="reports-damaged-meta">
+                  <div>
+                    <span>Availability</span>
+                    <strong>{item.availability || "N/A"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Condition</span>
+                    <strong className="reports-damage-pill">
+                      {item.condition || item.availability || "N/A"}
+                    </strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

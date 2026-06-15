@@ -15,11 +15,15 @@ const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
 
 function ItemList() {
   const [searchParams] = useSearchParams();
+
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [localUserData, setLocalUserData] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState("");
 
@@ -48,6 +52,24 @@ function ItemList() {
     return item.itemCode || item.id;
   }
 
+  function getCategoryNameById(categoryId) {
+    const category = categories.find(
+      (categoryItem) => normalizeText(categoryItem.id) === normalizeText(categoryId)
+    );
+
+    return category?.name || categoryId || "Unknown";
+  }
+
+  function getAssignedCategoryNames() {
+    if (!Array.isArray(userData?.assignedCategories)) return "No assigned categories yet";
+
+    if (userData.assignedCategories.length === 0) {
+      return "No assigned categories yet";
+    }
+
+    return userData.assignedCategories.map(getCategoryNameById).join(", ");
+  }
+
   function canCategoryAdminSeeItem(item) {
     if (!isCategoryAdmin) return true;
 
@@ -64,16 +86,30 @@ function ItemList() {
     );
   }
 
-  async function fetchItems() {
+  async function fetchItemsAndCategories() {
     try {
-      const querySnapshot = await getDocs(collection(db, "items"));
+      const [itemSnapshot, categorySnapshot] = await Promise.all([
+        getDocs(collection(db, "items")),
+        getDocs(collection(db, "categories")),
+      ]);
 
-      const itemData = querySnapshot.docs.map((document) => ({
+      const itemData = itemSnapshot.docs.map((document) => ({
         id: document.id,
         ...document.data(),
       }));
 
+      const categoryData = categorySnapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((category) => category.isActive !== false)
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
       setItems(itemData);
+      setCategories(categoryData);
     } catch (error) {
       alert("Error loading items: " + error.message);
     }
@@ -118,7 +154,7 @@ function ItemList() {
 
       await deleteDoc(doc(db, "items", item.id));
       alert("Item deleted successfully.");
-      await fetchItems();
+      await fetchItemsAndCategories();
     } catch (error) {
       alert("Error deleting item: " + error.message);
     } finally {
@@ -154,7 +190,7 @@ function ItemList() {
           });
         }
 
-        await fetchItems();
+        await fetchItemsAndCategories();
       } catch (error) {
         alert("Error loading item list: " + error.message);
       } finally {
@@ -175,10 +211,42 @@ function ItemList() {
     }
 
     return items;
-  }, [items, userData]);
+  }, [items, userData, categories]);
 
   const availableCategories = useMemo(() => {
+    const visibleCategoryIds = new Set(
+      roleVisibleItems
+        .map((item) => getItemCategoryId(item))
+        .filter(Boolean)
+        .map(normalizeText)
+    );
+
+    const fromCategoryCollection = categories
+      .filter((category) => {
+        if (isCategoryAdmin) {
+          const assignedCategories = Array.isArray(userData?.assignedCategories)
+            ? userData.assignedCategories.map(normalizeText)
+            : [];
+
+          return assignedCategories.includes(normalizeText(category.id));
+        }
+
+        if (isBorrower) {
+          return visibleCategoryIds.has(normalizeText(category.id));
+        }
+
+        return true;
+      })
+      .map((category) => ({
+        value: category.id,
+        label: category.name || category.id,
+      }));
+
     const categoryMap = new Map();
+
+    fromCategoryCollection.forEach((category) => {
+      categoryMap.set(category.value, category.label);
+    });
 
     roleVisibleItems.forEach((item) => {
       const categoryId = getItemCategoryId(item);
@@ -189,11 +257,13 @@ function ItemList() {
       }
     });
 
-    return Array.from(categoryMap.entries()).map(([value, label]) => ({
-      value,
-      label,
-    }));
-  }, [roleVisibleItems]);
+    return Array.from(categoryMap.entries())
+      .map(([value, label]) => ({
+        value,
+        label,
+      }))
+      .sort((a, b) => String(a.label || "").localeCompare(String(b.label || "")));
+  }, [categories, roleVisibleItems, userData, isCategoryAdmin, isBorrower]);
 
   const filteredItems = roleVisibleItems.filter((item) => {
     const searchableText = `
@@ -219,8 +289,8 @@ function ItemList() {
 
     const matchesCategory =
       categoryFilter === "All" ||
-      getItemCategoryId(item) === categoryFilter ||
-      getItemCategoryName(item) === categoryFilter;
+      normalizeText(getItemCategoryId(item)) === normalizeText(categoryFilter) ||
+      normalizeText(getItemCategoryName(item)) === normalizeText(categoryFilter);
 
     return matchesSearch && matchesAvailability && matchesCategory;
   });
@@ -243,12 +313,15 @@ function ItemList() {
   }
 
   const totalItems = roleVisibleItems.length;
+
   const availableItems = roleVisibleItems.filter(
     (item) => item.availability === "Available"
   ).length;
+
   const borrowedItems = roleVisibleItems.filter(
     (item) => item.availability === "Borrowed"
   ).length;
+
   const unavailableItems = roleVisibleItems.filter(
     (item) =>
       item.availability === "Unavailable" ||
@@ -286,11 +359,7 @@ function ItemList() {
 
           {isCategoryAdmin && (
             <div className="inventory-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
+              Assigned categories: {getAssignedCategoryNames()}
             </div>
           )}
         </div>
@@ -403,7 +472,7 @@ function ItemList() {
           <button
             type="button"
             className="inventory-refresh-btn"
-            onClick={fetchItems}
+            onClick={fetchItemsAndCategories}
           >
             Refresh
           </button>

@@ -327,7 +327,7 @@
 /* Empty */
 
 .reports-empty {
-  min-height: 240px;
+  min-height: 220px;
   display: grid;
   place-items: center;
   border: 2px dashed var(--qb-border);
@@ -338,7 +338,7 @@
 }
 
 .reports-empty.small {
-  min-height: 180px;
+  min-height: 170px;
 }
 
 .reports-empty img {
@@ -365,7 +365,7 @@
 
 .reports-category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
 }
 
@@ -443,10 +443,6 @@
   gap: 18px;
 }
 
-.reports-two-column .reports-panel {
-  min-height: 100%;
-}
-
 .reports-list {
   display: grid;
   gap: 10px;
@@ -499,62 +495,7 @@
   background: var(--qb-secondary);
 }
 
-/* History */
-
-.reports-history-grid,
-.reports-damaged-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-  gap: 12px;
-}
-
-.reports-history-card {
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--qb-border);
-  border-radius: 20px;
-  background: var(--qb-bg);
-  box-shadow: 4px 4px 0 0 rgba(30, 41, 59, 0.1);
-  padding: 14px;
-}
-
-.reports-history-card::after {
-  content: "";
-  position: absolute;
-  top: -38px;
-  right: -38px;
-  width: 94px;
-  height: 94px;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-tertiary);
-}
-
-.reports-history-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.reports-history-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.reports-history-topline > span {
-  max-width: 150px;
-  overflow: hidden;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+/* Status pills */
 
 .reports-status-pill {
   display: inline-flex;
@@ -586,139 +527,13 @@
   color: #ffffff;
 }
 
+.status-overdue,
 .status-rejected,
 .status-cancelled {
   background: #fecaca;
 }
 
-.reports-history-card h3 {
-  margin: 0 0 12px;
-  font-family: var(--qb-heading-font);
-  font-size: 1.12rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
-
-.reports-history-info {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.reports-history-info div,
-.reports-purpose-box {
-  min-width: 0;
-  border: 2px solid var(--qb-border);
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 8px 10px;
-}
-
-.reports-history-info span,
-.reports-purpose-box span {
-  display: block;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.reports-history-info strong {
-  display: block;
-  margin-top: 3px;
-  font-size: 0.82rem;
-  font-weight: 900;
-  overflow-wrap: anywhere;
-}
-
-.reports-history-info p {
-  margin: 3px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.72rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.reports-purpose-box {
-  margin-top: 8px;
-  background: rgba(139, 92, 246, 0.06);
-}
-
-.reports-purpose-box p {
-  display: -webkit-box;
-  margin: 5px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.45;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Responsive */
-
-@media (max-width: 1280px) {
-  .reports-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .reports-request-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1180px) {
-  .reports-header {
-    grid-template-columns: 1fr;
-  }
-
-  .reports-header > .reports-secondary-btn {
-    width: 100%;
-    min-height: 46px;
-  }
-
-  .reports-tools,
-  .reports-two-column {
-    grid-template-columns: 1fr;
-  }
-
-  .reports-refresh-btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 760px) {
-  .reports-header > div,
-  .reports-panel,
-  .reports-tools {
-    border-radius: 20px;
-    padding: 16px;
-  }
-
-  .reports-summary-grid,
-  .reports-request-summary,
-  .reports-category-grid,
-  .reports-history-grid,
-  .reports-damaged-grid,
-  .reports-category-stats,
-  .reports-history-info {
-    grid-template-columns: 1fr;
-  }
-
-  .reports-mini-card {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .reports-mini-card strong {
-    width: 100%;
-  }
-}
-/* List layout for Borrowing History and Damaged/Lost Items */
+/* Borrowing History list */
 
 .reports-history-list,
 .reports-damaged-list {
@@ -867,18 +682,37 @@
   padding: 3px 9px;
 }
 
-/* Remove old card style effect inside list sections */
+/* Responsive */
 
-.reports-history-list .reports-history-card::after {
-  display: none;
+@media (max-width: 1280px) {
+  .reports-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reports-request-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-/* Responsive list */
-
 @media (max-width: 1180px) {
+  .reports-header {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-header > .reports-secondary-btn {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .reports-tools,
+  .reports-two-column,
   .reports-history-row,
   .reports-damaged-row {
     grid-template-columns: 1fr;
+  }
+
+  .reports-refresh-btn {
+    width: 100%;
   }
 
   .reports-history-date-list,
@@ -888,12 +722,29 @@
 }
 
 @media (max-width: 760px) {
-  .reports-history-titleline {
-    flex-direction: column;
+  .reports-header > div,
+  .reports-panel,
+  .reports-tools {
+    border-radius: 20px;
+    padding: 16px;
   }
 
+  .reports-summary-grid,
+  .reports-request-summary,
+  .reports-category-grid,
+  .reports-category-stats,
   .reports-history-date-list,
   .reports-damaged-meta {
     grid-template-columns: 1fr;
+  }
+
+  .reports-mini-card,
+  .reports-history-titleline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reports-mini-card strong {
+    width: 100%;
   }
 }
