@@ -1,54 +1,78 @@
 import { useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
+import "../styles/ProtectedRoute.css";
 
-function ProtectedRoute({ children, allowedRole }) {
-  const [loading, setLoading] = useState(true);
-  const [isAllowed, setIsAllowed] = useState(false);
+function ProtectedRoute({ children, allowedRoles }) {
+  const location = useLocation();
+
+  const [checking, setChecking] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setChecking(true);
 
       try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          alert("User role not found.");
-          window.location.href = "/login";
+        if (!firebaseUser) {
+          setCurrentUser(null);
+          setUserData(null);
           return;
         }
 
-        const userData = userSnap.data();
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const userSnap = await getDoc(userRef);
 
-        if (userData.role === allowedRole) {
-          setIsAllowed(true);
-        } else {
-          alert("Access denied. You are not allowed to open this page.");
-          window.location.href = "/dashboard";
+        if (!userSnap.exists()) {
+          setCurrentUser(firebaseUser);
+          setUserData(null);
+          return;
         }
-      } catch (error) {
-        alert("Error checking access: " + error.message);
-        window.location.href = "/login";
-      }
 
-      setLoading(false);
+        setCurrentUser(firebaseUser);
+        setUserData({
+          id: userSnap.id,
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          ...userSnap.data(),
+        });
+      } catch (error) {
+        console.error("Protected route error:", error);
+        setCurrentUser(null);
+        setUserData(null);
+      } finally {
+        setChecking(false);
+      }
     });
 
     return () => unsubscribe();
-  }, [allowedRole]);
+  }, []);
 
-  if (loading) {
-    return <h2>Checking access...</h2>;
+  if (checking) {
+    return (
+      <div className="protected-route-loading">
+        <div className="protected-route-card">
+          <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+          <h2>Checking access...</h2>
+          <p>Verifying your QBorrow account and role permissions.</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!isAllowed) {
-    return null;
+  if (!currentUser) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!userData?.role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

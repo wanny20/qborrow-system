@@ -1,307 +1,506 @@
-import { useEffect, useState } from "react";
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { useEffect, useMemo, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/Dashboard.css";
 
 function Dashboard() {
-  const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
+  const outletContext = useOutletContext() || {};
+  const { userData } = outletContext;
+
   const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [borrowerSearch, setBorrowerSearch] = useState("");
 
-  const [stats, setStats] = useState({
-    totalItems: 0,
-    availableItems: 0,
-    borrowedItems: 0,
-    pendingRequests: 0,
-    overdueItems: 0,
-    damagedLostItems: 0,
-  });
+  const isSuperAdmin = userData?.role === "superAdmin";
+  const isCategoryAdmin = userData?.role === "categoryAdmin";
+  const isBorrower = userData?.role === "borrower";
+  const isAdmin = isSuperAdmin || isCategoryAdmin;
 
-  async function fetchDashboardStats() {
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function getCategoryId(record) {
+    return record.categoryId || record.category || "";
+  }
+
+  function getCategoryName(record) {
+    return record.categoryName || record.category || record.categoryId || "Uncategorized";
+  }
+
+  function canCategoryAdminSee(record) {
+    if (!isCategoryAdmin) return true;
+
+    const assignedCategories = Array.isArray(userData?.assignedCategories)
+      ? userData.assignedCategories.map(normalizeText)
+      : [];
+
+    const categoryId = normalizeText(getCategoryId(record));
+    const categoryName = normalizeText(getCategoryName(record));
+
+    return (
+      assignedCategories.includes(categoryId) ||
+      assignedCategories.includes(categoryName)
+    );
+  }
+
+  function isOverdue(request) {
+    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+      return false;
+    }
+
+    if (!request.expectedReturnDate) return false;
+
+    const today = new Date();
+    const expectedDate = new Date(request.expectedReturnDate);
+
+    today.setHours(0, 0, 0, 0);
+    expectedDate.setHours(0, 0, 0, 0);
+
+    return today > expectedDate;
+  }
+
+  async function fetchDashboardData() {
+    setLoading(true);
+
     try {
       const itemsSnapshot = await getDocs(collection(db, "items"));
       const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
 
-      const items = itemsSnapshot.docs.map((document) => ({
+      const itemData = itemsSnapshot.docs.map((document) => ({
         id: document.id,
         ...document.data(),
       }));
 
-      const requests = requestsSnapshot.docs.map((document) => ({
+      const requestData = requestsSnapshot.docs.map((document) => ({
         id: document.id,
         ...document.data(),
       }));
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const overdueRequests = requests.filter((request) => {
-        if (request.approvalStatus !== "Approved") {
-          return false;
-        }
-
-        const expectedDate = new Date(request.expectedReturnDate);
-        expectedDate.setHours(0, 0, 0, 0);
-
-        return today > expectedDate;
-      });
-
-      setStats({
-        totalItems: items.length,
-        availableItems: items.filter(
-          (item) => item.availability === "Available"
-        ).length,
-        borrowedItems: items.filter((item) => item.availability === "Borrowed")
-          .length,
-        pendingRequests: requests.filter(
-          (request) => request.approvalStatus === "Pending"
-        ).length,
-        overdueItems: overdueRequests.length,
-        damagedLostItems: items.filter(
-          (item) => item.condition === "Damaged" || item.condition === "Lost"
-        ).length,
-      });
+      setItems(itemData);
+      setRequests(requestData);
     } catch (error) {
-      alert("Error loading dashboard stats: " + error.message);
+      alert("Error loading dashboard: " + error.message);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
-
-      try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          setUserData(userSnap.data());
-          fetchDashboardStats();
-        } else {
-          alert("No user role found in Firestore.");
-        }
-      } catch (error) {
-        alert("Error loading user data: " + error.message);
-      }
-
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    fetchDashboardData();
   }, []);
 
-  async function handleLogout() {
-    try {
-      await signOut(auth);
-      window.location.href = "/";
-    } catch (error) {
-      alert("Logout failed: " + error.message);
+  const visibleItems = useMemo(() => {
+    if (isCategoryAdmin) {
+      return items.filter((item) => canCategoryAdminSee(item));
     }
+
+    return items;
+  }, [items, userData]);
+
+  const visibleRequests = useMemo(() => {
+    if (isCategoryAdmin) {
+      return requests.filter((request) => canCategoryAdminSee(request));
+    }
+    
+    return requests;
+  }, [requests, userData]);
+
+  const currentUser = auth.currentUser;
+
+  const myRequests = currentUser
+    ? requests.filter((request) => request.borrowerId === currentUser.uid)
+    : [];
+
+  const availableItems = visibleItems.filter(
+    (item) => item.availability === "Available"
+  );
+
+  const borrowedItems = visibleItems.filter(
+    (item) => item.availability === "Borrowed"
+  );
+
+  const pendingRequests = visibleRequests.filter(
+    (request) => request.approvalStatus === "Pending"
+  );
+
+  const overdueRequests = visibleRequests.filter((request) => isOverdue(request));
+
+  const damagedLostItems = visibleItems.filter(
+    (item) =>
+      item.condition === "Damaged" ||
+      item.condition === "Lost" ||
+      item.availability === "Damaged" ||
+      item.availability === "Lost"
+  );
+
+  const myPendingRequests = myRequests.filter(
+    (request) => request.approvalStatus === "Pending"
+  );
+
+  const myApprovedRequests = myRequests.filter(
+    (request) => request.approvalStatus === "Approved"
+  );
+
+  const myBorrowedRequests = myRequests.filter(
+    (request) => request.approvalStatus === "Borrowed"
+  );
+  const borrowedRequests = visibleRequests.filter(
+  (request) => request.approvalStatus === "Borrowed"
+);
+
+  const myReturnedRequests = myRequests.filter(
+    (request) => request.approvalStatus === "Returned"
+  );
+
+const adminStats = [
+  {
+    label: "Total Items",
+    value: visibleItems.length,
+    tone: "purple",
+    path: "/admin-list/items",
+  },
+  {
+    label: "Available",
+    value: availableItems.length,
+    tone: "green",
+    path: "/admin-list/available",
+  },
+  {
+    label: "Borrowed",
+    value: borrowedRequests.length,
+    tone: "yellow",
+    path: "/admin-list/borrowed",
+  },
+  {
+    label: "Pending",
+    value: pendingRequests.length,
+    tone: "pink",
+    path: "/admin-list/pending",
+  },
+  {
+    label: "Overdue",
+    value: overdueRequests.length,
+    tone: "red",
+    path: "/admin-list/overdue",
+  },
+  {
+    label: "Damaged/Lost",
+    value: damagedLostItems.length,
+    tone: "red",
+    path: "/admin-list/damaged-lost",
+  },
+];
+
+const borrowerStats = [
+  {
+    label: "Available Items",
+    value: items.filter((item) => item.availability === "Available").length,
+    tone: "green",
+    path: "/items",
+  },
+  {
+    label: "Pending",
+    value: myPendingRequests.length,
+    tone: "yellow",
+    path: "/my-requests",
+  },
+  {
+    label: "Approved",
+    value: myApprovedRequests.length,
+    tone: "purple",
+    path: "/my-requests",
+  },
+  {
+    label: "Borrowed",
+    value: myBorrowedRequests.length,
+    tone: "pink",
+    path: "/my-requests",
+  },
+  {
+    label: "Returned",
+    value: myReturnedRequests.length,
+    tone: "green",
+    path: "/my-requests",
+  },
+];
+
+  const adminActions = [
+    {
+      label: "Add Item",
+      description: "Register new inventory",
+      path: "/add-item",
+    },
+    {
+      label: "Manage Requests",
+      description: "Approve or reject requests",
+      path: "/manage-requests",
+    },
+    {
+      label: "Release Item",
+      description: "Scan before releasing",
+      path: "/release-item",
+    },
+    {
+      label: "Return Item",
+      description: "Confirm returned items",
+      path: "/return-confirmation",
+    },
+    {
+      label: "Reports",
+      description: "View analytics",
+      path: "/reports",
+    },
+  ];
+
+  if (isSuperAdmin) {
+    adminActions.push({
+      label: "User Management",
+      description: "Manage roles and accounts",
+      path: "/user-management",
+    });
   }
 
-  function goTo(path) {
-    window.location.href = path;
-  }
+  const borrowerActions = [
+    {
+      label: "Scan QR",
+      description: "Open an item using QR",
+      path: "/scan-qr",
+    },
+    {
+      label: "Browse Items",
+      description: "View available items",
+      path: "/items",
+    },
+    {
+      label: "My Requests",
+      description: "Track your borrowing",
+      path: "/my-requests",
+    },
+  ];
+
+  const filteredAvailableItems = items
+    .filter((item) => item.availability === "Available")
+    .filter((item) => {
+      const searchableText = `
+        ${item.itemName || ""}
+        ${item.itemCode || ""}
+        ${getCategoryName(item)}
+        ${item.condition || ""}
+        ${item.description || ""}
+      `.toLowerCase();
+
+      return searchableText.includes(borrowerSearch.toLowerCase());
+    })
+    .slice(0, 4);
+
+  const roleLabel = isSuperAdmin
+    ? "Super Admin"
+    : isCategoryAdmin
+    ? "Category Admin"
+    : "Borrower";
+
+  const notificationCount = isAdmin
+    ? pendingRequests.length + overdueRequests.length + damagedLostItems.length
+    : myPendingRequests.length + myApprovedRequests.length + myBorrowedRequests.length;
 
   if (loading) {
     return (
       <div className="dashboard-loading">
-        <div className="loading-card">
+        <div className="dashboard-loading-card">
           <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-          <h2>Loading Dashboard...</h2>
+          <h2>Loading dashboard...</h2>
+          <p>Preparing a quick summary of your account.</p>
         </div>
       </div>
     );
   }
 
-  const statCards = [
-    {
-      title: "Total Items",
-      value: stats.totalItems,
-      icon: "📦",
-      className: "stat-blue",
-    },
-    {
-      title: "Available Items",
-      value: stats.availableItems,
-      icon: "✅",
-      className: "stat-green",
-    },
-    {
-      title: "Borrowed Items",
-      value: stats.borrowedItems,
-      icon: "📤",
-      className: "stat-indigo",
-    },
-    {
-      title: "Pending Requests",
-      value: stats.pendingRequests,
-      icon: "⏳",
-      className: "stat-yellow",
-    },
-    {
-      title: "Overdue Items",
-      value: stats.overdueItems,
-      icon: "⚠️",
-      className: "stat-red",
-    },
-    {
-      title: "Damaged/Lost Items",
-      value: stats.damagedLostItems,
-      icon: "🛠️",
-      className: "stat-dark",
-    },
-  ];
-
   return (
     <div className="dashboard-page">
-      <aside className="dashboard-sidebar">
-        <div className="sidebar-brand">
-          <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-          <div>
-            <h2>QBorrow</h2>
-            <p>Scan • Borrow • Return</p>
-          </div>
+      <section className="dashboard-hero">
+        <div>
+          <p className="dashboard-eyebrow">QBorrow Dashboard</p>
+          <h1>Welcome, {userData?.fullName || "User"}</h1>
+          <p>
+            {isAdmin
+              ? "Here is a quick overview of inventory, requests, and items that need attention."
+              : "Browse items, scan QR codes, and track your borrowing requests from one place."}
+          </p>
+
+          {isCategoryAdmin && (
+            <div className="dashboard-assigned-note">
+              Assigned:{" "}
+              {Array.isArray(userData?.assignedCategories) &&
+              userData.assignedCategories.length > 0
+                ? userData.assignedCategories.join(", ")
+                : "No assigned categories"}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="dashboard-role-row">
+        <div>
+          <span>Current Role</span>
+          <strong>{roleLabel}</strong>
         </div>
 
-        <nav className="sidebar-nav">
-          <button className="active" onClick={() => goTo("/dashboard")}>
-            🏠 Dashboard
-          </button>
+        <div>
+          <span>Email</span>
+          <strong>{userData?.email || auth.currentUser?.email || "No email"}</strong>
+        </div>
+      </section>
 
-          <button onClick={() => goTo("/items")}>📋 View Items</button>
-
-          <button onClick={() => goTo("/scan-qr")}>🔍 Scan QR Code</button>
-
-          <button onClick={() => goTo("/my-requests")}>
-            📄 My Borrow Requests
-          </button>
-
-          <button onClick={() => goTo("/notifications")}>
-            🔔 Notifications
-          </button>
-
-          {userData?.role === "admin" && (
-            <>
-              <div className="sidebar-label">Admin Menu</div>
-
-              <button onClick={() => goTo("/add-item")}>➕ Add Item</button>
-
-              <button onClick={() => goTo("/manage-requests")}>
-                ✅ Manage Requests
-              </button>
-
-              <button onClick={() => goTo("/return-confirmation")}>
-                ↩️ Return Confirmation
-              </button>
-
-              <button onClick={() => goTo("/reports")}>📊 Reports</button>
-            </>
-          )}
-        </nav>
-
-        <button className="logout-btn" onClick={handleLogout}>
-          🚪 Logout
-        </button>
-      </aside>
-
-      <main className="dashboard-main">
-        <section className="dashboard-header">
-          <div>
-            <p className="dashboard-eyebrow">QBorrow Dashboard</p>
-            <h1>
-              Welcome back,{" "}
-              <span>{userData?.fullName || "User"}</span>
-            </h1>
-            <p className="dashboard-subtitle">
-              Monitor borrowing activity, item availability, and return status
-              in one place.
-            </p>
-          </div>
-
-          <div className="user-card">
-            <div className="user-avatar">
-              {userData?.fullName?.charAt(0)?.toUpperCase() || "U"}
-            </div>
-
-            <div>
-              <p>{userData?.fullName}</p>
-              <span className={`role-badge ${userData?.role}`}>
-                {userData?.role}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="stats-grid">
-          {statCards.map((card) => (
-            <div className={`stat-card ${card.className}`} key={card.title}>
-              <div className="stat-icon">{card.icon}</div>
-
-              <div>
-                <h3>{card.value}</h3>
-                <p>{card.title}</p>
-              </div>
-            </div>
+        <section className="dashboard-stats-grid">
+          {(isAdmin ? adminStats : borrowerStats).map((stat) => (
+            <button
+              type="button"
+              className={`dashboard-stat-card dashboard-stat-${stat.tone}`}
+              key={stat.label}
+              onClick={() => navigate(stat.path)}
+              aria-label={`Open ${stat.label}`}
+            >
+              <span className="dashboard-stat-label">{stat.label}</span>
+              <strong>{stat.value}</strong>
+              <span className="dashboard-stat-hint">View</span>
+            </button>
           ))}
         </section>
 
-        <section className="quick-actions">
-          <div className="section-title">
-            <h2>Quick Actions</h2>
-            <p>Choose a task to continue using the system.</p>
+      {isAdmin ? (
+        <section className="dashboard-main-grid">
+          <div className="dashboard-panel">
+            <div className="dashboard-panel-heading">
+              <div>
+                <h2>Quick Actions</h2>
+                <p>Common admin tasks.</p>
+              </div>
+            </div>
+
+            <div className="dashboard-action-list">
+              {adminActions.map((action) => (
+                <button
+                  type="button"
+                  key={action.label}
+                  onClick={() => navigate(action.path)}
+                >
+                  <div>
+                    <strong>{action.label}</strong>
+                    <span>{action.description}</span>
+                  </div>
+
+                  <span>→</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="action-grid">
-            <button onClick={() => goTo("/items")}>
-              <span>📋</span>
-              View Items
-            </button>
+          <div className="dashboard-panel">
+            <div className="dashboard-panel-heading">
+              <div>
+                <h2>Needs Attention</h2>
+                <p>Important admin indicators.</p>
+              </div>
+            </div>
 
-            <button onClick={() => goTo("/scan-qr")}>
-              <span>🔍</span>
-              Scan QR
-            </button>
+            <div className="dashboard-attention-list">
+              <button type="button" onClick={() => navigate("/manage-requests")}>
+                <span>Pending Requests</span>
+                <strong>{pendingRequests.length}</strong>
+              </button>
 
-            <button onClick={() => goTo("/my-requests")}>
-              <span>📄</span>
-              My Requests
-            </button>
+              <button type="button" onClick={() => navigate("/reports")}>
+                <span>Overdue Records</span>
+                <strong>{overdueRequests.length}</strong>
+              </button>
 
-            <button onClick={() => goTo("/notifications")}>
-              <span>🔔</span>
-              Notifications
-            </button>
+              <button type="button" onClick={() => navigate("/reports")}>
+                <span>Damaged/Lost Items</span>
+                <strong>{damagedLostItems.length}</strong>
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="dashboard-main-grid">
+          <div className="dashboard-panel">
+            <div className="dashboard-panel-heading">
+              <div>
+                <h2>Quick Actions</h2>
+                <p>Start borrowing faster.</p>
+              </div>
+            </div>
 
-            {userData?.role === "admin" && (
-              <>
-                <button onClick={() => goTo("/add-item")}>
-                  <span>➕</span>
-                  Add Item
+            <div className="dashboard-action-list">
+              {borrowerActions.map((action) => (
+                <button
+                  type="button"
+                  key={action.label}
+                  onClick={() => navigate(action.path)}
+                >
+                  <div>
+                    <strong>{action.label}</strong>
+                    <span>{action.description}</span>
+                  </div>
+
+                  <span>→</span>
                 </button>
+              ))}
+            </div>
+          </div>
 
-                <button onClick={() => goTo("/manage-requests")}>
-                  <span>✅</span>
-                  Manage Requests
-                </button>
+          <div className="dashboard-panel">
+            <div className="dashboard-panel-heading dashboard-search-heading">
+              <div>
+                <h2>Available Items</h2>
+                <p>Preview of borrowable items.</p>
+              </div>
 
-                <button onClick={() => goTo("/return-confirmation")}>
-                  <span>↩️</span>
-                  Confirm Return
-                </button>
+              <button type="button" onClick={() => navigate("/items")}>
+                View All
+              </button>
+            </div>
 
-                <button onClick={() => goTo("/reports")}>
-                  <span>📊</span>
-                  Reports
-                </button>
-              </>
+            <input
+              className="dashboard-search-input"
+              type="text"
+              placeholder="Search available items..."
+              value={borrowerSearch}
+              onChange={(event) => setBorrowerSearch(event.target.value)}
+            />
+
+            {filteredAvailableItems.length === 0 ? (
+              <div className="dashboard-empty-state">
+                <p>No available items found.</p>
+              </div>
+            ) : (
+              <div className="dashboard-item-preview-list">
+                {filteredAvailableItems.map((item) => (
+                  <article key={item.id}>
+                    <div>
+                      <strong>{item.itemName || "Untitled Item"}</strong>
+                      <span>
+                        {getCategoryName(item)} • {item.condition || "Unknown"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/item/${item.id}`)}
+                    >
+                      View
+                    </button>
+                  </article>
+                ))}
+              </div>
             )}
           </div>
         </section>
-      </main>
+      )}
     </div>
   );
 }
