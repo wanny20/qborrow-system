@@ -98,6 +98,19 @@
   line-height: 1.55;
 }
 
+.admin-list-assigned-note {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  margin-top: 12px;
+  border: 2px dashed var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 /* Buttons */
 
 .admin-list-primary-btn,
@@ -216,7 +229,7 @@
 /* Empty */
 
 .admin-list-empty {
-  min-height: 160px;
+  min-height: 180px;
   display: grid;
   place-items: center;
   border: 2px dashed var(--qb-border);
@@ -224,6 +237,13 @@
   background: var(--qb-bg);
   padding: 28px;
   text-align: center;
+}
+
+.admin-list-empty img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 12px;
 }
 
 .admin-list-empty h2 {
@@ -369,11 +389,17 @@
   background: #dbeafe;
 }
 
+.status-overdue,
 .status-damaged,
 .status-lost,
 .status-rejected,
 .status-cancelled {
   background: #fecaca;
+}
+
+.status-unavailable,
+.status-unknown {
+  background: #e5e7eb;
 }
 
 .admin-list-actions {

@@ -23,6 +23,18 @@ function BorrowRequest() {
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
   }
 
+  function addDaysToDate(dateString, daysToAdd) {
+    const [year, month, day] = String(dateString).split("-").map(Number);
+
+    if (!year || !month || !day) return dateString;
+
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + daysToAdd);
+
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
   const today = getTodayDate();
 
   const [item, setItem] = useState(null);
@@ -54,7 +66,12 @@ function BorrowRequest() {
   }
 
   function getCategoryName() {
-    return item?.categoryName || item?.category || item?.categoryId || "Uncategorized";
+    return (
+      item?.categoryName ||
+      item?.category ||
+      item?.categoryId ||
+      "Uncategorized"
+    );
   }
 
   function getBorrowerName() {
@@ -64,6 +81,38 @@ function BorrowRequest() {
       currentUser?.email ||
       "Borrower"
     );
+  }
+
+  function getMaxBorrowDays() {
+    const parsedMaxDays = Number(item?.maxBorrowDays);
+
+    if (!Number.isFinite(parsedMaxDays) || parsedMaxDays <= 0) {
+      return null;
+    }
+
+    return Math.floor(parsedMaxDays);
+  }
+
+  function getMaxExpectedReturnDate() {
+    const maxBorrowDays = getMaxBorrowDays();
+
+    if (!maxBorrowDays) {
+      return "";
+    }
+
+    return addDaysToDate(borrowDate, maxBorrowDays);
+  }
+
+  function getMaxBorrowDaysLabel() {
+    const maxBorrowDays = getMaxBorrowDays();
+
+    if (!maxBorrowDays) {
+      return "No maximum limit set for this item.";
+    }
+
+    return `Maximum allowed borrowing period: ${maxBorrowDays} day${
+      maxBorrowDays === 1 ? "" : "s"
+    }.`;
   }
 
   function getSuspendedUntilDate(value) {
@@ -100,6 +149,16 @@ function BorrowRequest() {
       month: "long",
       day: "numeric",
     });
+  }
+
+  function getBorrowRestrictionMessage() {
+    const suspendedUntilLabel = getSuspendedUntilLabel();
+
+    if (suspendedUntilLabel) {
+      return `Your account is temporarily suspended from borrowing until ${suspendedUntilLabel} due to overdue returns.`;
+    }
+
+    return "Your account is currently restricted from borrowing. Please contact the administrator.";
   }
 
   function hasDateConflict(newBorrowDate, newExpectedReturnDate, existingRequest) {
@@ -152,7 +211,9 @@ function BorrowRequest() {
           ...itemSnap.data(),
         });
 
-        if (!outletContext?.userData) {
+        if (outletContext?.userData) {
+          setCurrentUserData(outletContext.userData);
+        } else {
           const userRef = doc(db, "users", user.uid);
           const userSnap = await getDoc(userRef);
 
@@ -196,10 +257,7 @@ function BorrowRequest() {
     }
 
     if (currentUserData?.canBorrow === false || isBorrowerSuspended()) {
-      showStatus(
-        `Your account is temporarily suspended from borrowing until ${getSuspendedUntilLabel()} due to overdue returns.`,
-        "error"
-      );
+      showStatus(getBorrowRestrictionMessage(), "error");
       return;
     }
 
@@ -230,6 +288,16 @@ function BorrowRequest() {
 
     if (item.availability !== "Available") {
       showStatus("This item is not available for borrowing right now.", "error");
+      return;
+    }
+
+    const maxExpectedReturnDate = getMaxExpectedReturnDate();
+
+    if (maxExpectedReturnDate && expectedReturnDate > maxExpectedReturnDate) {
+      showStatus(
+        `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${maxExpectedReturnDate}.`,
+        "error"
+      );
       return;
     }
 
@@ -314,6 +382,8 @@ function BorrowRequest() {
     }
   }
 
+  const maxExpectedReturnDate = getMaxExpectedReturnDate();
+
   if (loading) {
     return (
       <div className="borrow-request-loading">
@@ -361,7 +431,9 @@ function BorrowRequest() {
 
           <div className="borrow-request-item-info">
             <span className="borrow-request-item-code">{getItemCode()}</span>
+
             <h2>{item?.itemName || "Untitled Item"}</h2>
+
             <p>{item?.description || "No description added for this item yet."}</p>
 
             <div className="borrow-request-meta-grid">
@@ -391,6 +463,7 @@ function BorrowRequest() {
         <section className="borrow-request-form-card">
           <div className="borrow-request-form-heading">
             <h2>Request Form</h2>
+
             <p>
               Your request will be sent as <strong>Pending</strong>. The item
               becomes reserved only after admin approval.
@@ -465,11 +538,16 @@ function BorrowRequest() {
                   type="date"
                   value={expectedReturnDate}
                   min={today}
+                  max={maxExpectedReturnDate || undefined}
                   onChange={(e) => setExpectedReturnDate(e.target.value)}
                   required
                 />
 
-                <p>Select today or a future date only.</p>
+                <p>
+                  {maxExpectedReturnDate
+                    ? `${getMaxBorrowDaysLabel()} Latest allowed return date: ${maxExpectedReturnDate}.`
+                    : "Select today or a future date only."}
+                </p>
               </div>
             </div>
 

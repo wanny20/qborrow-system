@@ -2,9 +2,8 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAHfVJXCkhXX6qRM8rGBj5UVzU000JFvf4",
   authDomain: "qborrow-b68ad.firebaseapp.com",
@@ -15,7 +14,6 @@ const firebaseConfig = {
   measurementId: "G-JQR18BTGE9"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 const secondaryApp =
@@ -26,6 +24,7 @@ const auth = getAuth(app);
 const secondaryAuth = getAuth(secondaryApp);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const functions = getFunctions(app, "us-central1");
 
-export { auth, secondaryAuth, db, storage };
+export { auth, secondaryAuth, db, storage, functions };
 export default app;

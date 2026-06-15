@@ -12,6 +12,8 @@ function AdminDashboardList() {
 
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -38,32 +40,32 @@ function AdminDashboardList() {
       label: "Dashboard List",
       title: "Borrowed Items",
       subtitle: "Borrowed records with borrower information.",
-      emptyTitle: "No requests found",
-      emptyText: "No records matched this dashboard card or search keyword.",
+      emptyTitle: "No borrowed records found",
+      emptyText: "No borrowed records matched this dashboard card or search keyword.",
       type: "requests",
     },
     pending: {
       label: "Dashboard List",
       title: "Pending Requests",
       subtitle: "Borrow requests waiting for admin approval.",
-      emptyTitle: "No requests found",
-      emptyText: "No records matched this dashboard card or search keyword.",
+      emptyTitle: "No pending requests found",
+      emptyText: "No pending requests matched this dashboard card or search keyword.",
       type: "requests",
     },
     overdue: {
       label: "Dashboard List",
       title: "Overdue Records",
       subtitle: "Approved or borrowed requests past the expected return date.",
-      emptyTitle: "No requests found",
-      emptyText: "No records matched this dashboard card or search keyword.",
+      emptyTitle: "No overdue records found",
+      emptyText: "No overdue records matched this dashboard card or search keyword.",
       type: "requests",
     },
     "damaged-lost": {
       label: "Dashboard List",
-      title: "Damaged/Lost Items",
-      subtitle: "Items marked as damaged or lost.",
-      emptyTitle: "No items found",
-      emptyText: "No records matched this dashboard card or search keyword.",
+      title: "Damaged / Lost Items",
+      subtitle: "Items currently marked as damaged or lost.",
+      emptyTitle: "No damaged or lost items found",
+      emptyText: "No damaged/lost records matched this dashboard card or search keyword.",
       type: "items",
     },
   };
@@ -93,6 +95,26 @@ function AdminDashboardList() {
       request.categoryId ||
       "Uncategorized"
     );
+  }
+
+  function getCategoryNameById(categoryId) {
+    const category = categories.find(
+      (categoryItem) => normalizeText(categoryItem.id) === normalizeText(categoryId)
+    );
+
+    return category?.name || categoryId || "Unknown";
+  }
+
+  function getAssignedCategoryNames() {
+    if (!Array.isArray(userData?.assignedCategories)) {
+      return "No assigned categories yet";
+    }
+
+    if (userData.assignedCategories.length === 0) {
+      return "No assigned categories yet";
+    }
+
+    return userData.assignedCategories.map(getCategoryNameById).join(", ");
   }
 
   function canCategoryAdminSeeCategory(categoryId, categoryName) {
@@ -131,8 +153,12 @@ function AdminDashboardList() {
     setLoading(true);
 
     try {
-      const itemSnapshot = await getDocs(collection(db, "items"));
-      const requestSnapshot = await getDocs(collection(db, "borrowRequests"));
+      const [itemSnapshot, requestSnapshot, categorySnapshot] =
+        await Promise.all([
+          getDocs(collection(db, "items")),
+          getDocs(collection(db, "borrowRequests")),
+          getDocs(collection(db, "categories")),
+        ]);
 
       const itemData = itemSnapshot.docs.map((document) => ({
         id: document.id,
@@ -144,8 +170,19 @@ function AdminDashboardList() {
         ...document.data(),
       }));
 
+      const categoryData = categorySnapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((category) => category.isActive !== false)
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        );
+
       setItems(itemData);
       setRequests(requestData);
+      setCategories(categoryData);
     } catch (error) {
       alert("Error loading dashboard list: " + error.message);
     } finally {
@@ -161,7 +198,7 @@ function AdminDashboardList() {
     return items.filter((item) =>
       canCategoryAdminSeeCategory(getItemCategoryId(item), getItemCategoryName(item))
     );
-  }, [items, userData]);
+  }, [items, userData, categories]);
 
   const visibleRequests = useMemo(() => {
     return requests.filter((request) =>
@@ -170,7 +207,7 @@ function AdminDashboardList() {
         getRequestCategoryName(request)
       )
     );
-  }, [requests, userData]);
+  }, [requests, userData, categories]);
 
   const rawRecords = useMemo(() => {
     if (listType === "available") {
@@ -215,6 +252,7 @@ function AdminDashboardList() {
               ${record.itemName || ""}
               ${record.itemCode || ""}
               ${record.description || ""}
+              ${getItemCategoryId(record)}
               ${getItemCategoryName(record)}
               ${record.availability || ""}
               ${record.condition || ""}
@@ -225,6 +263,7 @@ function AdminDashboardList() {
               ${record.borrowerName || ""}
               ${record.borrowerEmail || ""}
               ${record.purpose || ""}
+              ${getRequestCategoryId(record)}
               ${getRequestCategoryName(record)}
               ${record.approvalStatus || ""}
             `;
@@ -233,6 +272,23 @@ function AdminDashboardList() {
       })
       .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
   }, [rawRecords, searchTerm, currentList.type]);
+
+  function getItemStatusLabel(item) {
+    if (item.condition === "Damaged" || item.availability === "Damaged") {
+      return "Damaged";
+    }
+
+    if (item.condition === "Lost" || item.availability === "Lost") {
+      return "Lost";
+    }
+
+    return item.availability || "Unknown";
+  }
+
+  function getRequestStatusLabel(request) {
+    if (isOverdue(request)) return "Overdue";
+    return request.approvalStatus || "Unknown";
+  }
 
   if (loading) {
     return (
@@ -251,8 +307,16 @@ function AdminDashboardList() {
       <section className="admin-list-header">
         <div>
           <p className="qb-kicker">{currentList.label}</p>
+
           <h1>{currentList.title}</h1>
+
           <p>{currentList.subtitle}</p>
+
+          {isCategoryAdmin && (
+            <div className="admin-list-assigned-note">
+              Assigned categories: {getAssignedCategoryNames()}
+            </div>
+          )}
         </div>
 
         <button
@@ -288,6 +352,7 @@ function AdminDashboardList() {
       <section className="admin-list-panel">
         {filteredRecords.length === 0 ? (
           <div className="admin-list-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
             <h2>{currentList.emptyTitle}</h2>
             <p>{currentList.emptyText}</p>
           </div>
@@ -320,10 +385,10 @@ function AdminDashboardList() {
                     <span>Availability</span>
                     <strong
                       className={`admin-list-pill status-${String(
-                        item.availability || "unknown"
+                        getItemStatusLabel(item)
                       ).toLowerCase()}`}
                     >
-                      {item.availability || "Unknown"}
+                      {getItemStatusLabel(item)}
                     </strong>
                   </div>
                 </div>
@@ -340,7 +405,7 @@ function AdminDashboardList() {
                   <button
                     type="button"
                     className="admin-list-secondary-btn"
-                    onClick={() => navigate(`/edit-item/${item.id}`)}
+                    onClick={() => navigate(`/edit-item?id=${item.id}`)}
                   >
                     Edit
                   </button>
@@ -378,12 +443,10 @@ function AdminDashboardList() {
                     <span>Status</span>
                     <strong
                       className={`admin-list-pill status-${String(
-                        request.approvalStatus || "unknown"
+                        getRequestStatusLabel(request)
                       ).toLowerCase()}`}
                     >
-                      {isOverdue(request)
-                        ? "Overdue"
-                        : request.approvalStatus || "Unknown"}
+                      {getRequestStatusLabel(request)}
                     </strong>
                   </div>
 

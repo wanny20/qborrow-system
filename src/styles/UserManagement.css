@@ -705,3 +705,827 @@
     border-radius: 16px;
   }
 }
+/* =========================
+   Dynamic Categories + CSV Import
+   ========================= */
+
+.user-left-stack {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 18px;
+  align-self: start;
+}
+
+.user-admin-card {
+  border: 2px solid var(--qb-border);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 5px 5px 0 0 var(--qb-border);
+  padding: 20px;
+}
+
+.user-full-btn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.user-category-add-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.user-category-add-form .user-field {
+  margin-bottom: 0;
+}
+
+.user-category-add-form .user-primary-btn {
+  width: 100%;
+}
+
+.user-small-note {
+  margin: 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.user-category-list {
+  display: grid;
+  gap: 10px;
+}
+
+.user-category-empty {
+  border: 2px dashed var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 14px;
+  color: var(--qb-muted-foreground);
+  font-weight: 800;
+  text-align: center;
+}
+
+.user-category-row {
+  display: grid;
+  gap: 10px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 12px;
+}
+
+.user-category-row > div:first-child strong {
+  display: block;
+  font-family: var(--qb-heading-font);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.user-category-row > div:first-child span {
+  display: block;
+  margin-top: 3px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.user-category-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.user-category-counts span {
+  min-height: 30px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--qb-muted-foreground);
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.user-category-row button {
+  width: 100%;
+}
+
+.user-csv-preview {
+  display: grid;
+  gap: 4px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.user-csv-preview strong {
+  overflow-wrap: anywhere;
+  font-family: var(--qb-heading-font);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.user-csv-preview span {
+  color: var(--qb-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.user-csv-actions {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 8px;
+}
+
+.user-import-results {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.user-import-results div {
+  border: 2px solid var(--qb-border);
+  border-radius: 14px;
+  padding: 9px 10px;
+}
+
+.user-import-results div.success {
+  background: #d1fae5;
+}
+
+.user-import-results div.failed {
+  background: #fecaca;
+}
+
+.user-import-results strong,
+.user-import-results span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.user-import-results strong {
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.user-import-results span {
+  margin-top: 3px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.user-import-results p {
+  margin: 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.user-delete-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  background: #fecaca;
+  color: #7f1d1d;
+  padding: 0 14px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition:
+    transform 180ms var(--qb-ease-bounce),
+    box-shadow 180ms var(--qb-ease-bounce),
+    background 180ms ease;
+}
+
+.user-delete-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--qb-border);
+}
+
+.user-delete-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 1180px) {
+  .user-left-stack {
+    position: static;
+  }
+}
+
+@media (max-width: 860px) {
+  .user-csv-actions,
+  .user-category-counts {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   USER MANAGEMENT CLEAN LAYOUT FIX
+   ========================= */
+
+/* Make the whole page easier to understand */
+.user-management-layout {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+/* Put Create User, Categories, and Import CSV as clean cards */
+.user-left-stack {
+  position: static !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(260px, 1fr)) !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+/* Remove sticky behavior that causes overlapping */
+.user-create-card,
+.user-admin-card {
+  position: static !important;
+  top: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+/* Make the user list full-width below the controls */
+.user-list-card {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Make existing user rows cleaner */
+.user-card {
+  grid-template-columns: minmax(220px, 0.8fr) minmax(420px, 1.4fr) minmax(260px, 0.8fr) !important;
+  align-items: center !important;
+}
+
+.user-card h3 {
+  margin-top: 46px !important;
+}
+
+/* Buttons in user rows */
+.user-actions {
+  align-self: center !important;
+}
+
+.user-actions button {
+  min-height: 44px !important;
+}
+
+/* Prevent long left cards from visually crushing the page */
+.user-create-card,
+.user-admin-card,
+.user-list-card {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Category cards cleaner */
+.user-category-row {
+  background: #ffffff !important;
+}
+
+.user-category-counts {
+  grid-template-columns: 1fr !important;
+}
+
+/* CSV buttons cleaner */
+.user-csv-actions {
+  grid-template-columns: 1fr !important;
+}
+
+/* Large screens: keep cards readable */
+@media (min-width: 1500px) {
+  .user-left-stack {
+    grid-template-columns: 1.05fr 1fr 1fr !important;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 1250px) {
+  .user-left-stack {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .user-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-card h3,
+  .user-card-topline,
+  .user-info-grid,
+  .user-actions,
+  .user-edit-panel {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .user-card h3 {
+    margin: 4px 0 0 !important;
+  }
+
+  .user-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 860px) {
+  .user-left-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================
+   PROFESSIONAL TOOL CARDS + COLLAPSIBLE CATEGORIES
+   ========================= */
+
+.user-left-stack {
+  align-items: stretch !important;
+}
+
+.user-left-stack > section {
+  min-height: 520px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.user-create-card form,
+.user-admin-card form {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Make the main action buttons feel aligned */
+.user-create-card form > .user-primary-btn {
+  margin-top: auto !important;
+}
+
+.user-category-add-form {
+  margin-bottom: 12px !important;
+}
+
+/* Make category card balanced */
+.user-category-toggle-row {
+  margin-top: auto !important;
+}
+
+.user-category-toggle-btn {
+  width: 100% !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.user-category-toggle-btn span {
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+}
+
+/* Collapsible category list */
+.user-category-list {
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  display: grid !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+  padding-right: 4px !important;
+}
+
+/* Cleaner scrollbar */
+.user-category-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.user-category-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.08);
+}
+
+.user-category-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.35);
+}
+
+/* Compact professional category rows */
+.user-category-row {
+  gap: 8px !important;
+  padding: 10px !important;
+  border-radius: 16px !important;
+}
+
+.user-category-row-main {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 92px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.user-category-row-main > div {
+  min-width: 0 !important;
+}
+
+.user-category-row-main strong {
+  display: block !important;
+  overflow: hidden !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.9rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-category-row-main span {
+  display: block !important;
+  margin-top: 2px !important;
+  overflow: hidden !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.user-category-row-main button {
+  min-height: 34px !important;
+  width: 92px !important;
+  padding: 0 10px !important;
+  font-size: 0.58rem !important;
+}
+
+/* Counts in one clean row */
+.user-category-counts {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.user-category-counts span {
+  min-height: 28px !important;
+  padding: 0 6px !important;
+  font-size: 0.58rem !important;
+}
+
+/* Import card button placement */
+.user-csv-actions {
+  margin-top: auto !important;
+}
+
+/* Make cards not too tall on smaller screens */
+@media (max-width: 1250px) {
+  .user-left-stack > section {
+    min-height: auto !important;
+  }
+
+  .user-category-toggle-row {
+    margin-top: 12px !important;
+  }
+
+  .user-csv-actions {
+    margin-top: 12px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .user-category-row-main {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-category-row-main button {
+    width: 100% !important;
+  }
+
+  .user-category-counts {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================
+   EXISTING USERS PROFESSIONAL ROW FIX + LOAD MORE
+   ========================= */
+
+.user-list-card {
+  overflow: hidden !important;
+}
+
+.user-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+}
+
+/* Clean row layout */
+.user-card {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(360px, 1.35fr) 250px !important;
+  grid-template-areas:
+    "email info actions"
+    "name info actions"
+    "note note actions"
+    "edit edit edit" !important;
+  gap: 12px 18px !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  padding: 18px !important;
+  overflow: hidden !important;
+}
+
+.user-card-topline {
+  grid-area: email !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-width: 0 !important;
+}
+
+.user-card h3 {
+  grid-area: name !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  margin: 4px 0 0 !important;
+  font-size: 1.25rem !important;
+  line-height: 1.15 !important;
+  text-align: left !important;
+}
+
+.user-info-grid {
+  grid-area: info !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.user-suspension-note {
+  grid-area: note !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  margin-top: 0 !important;
+}
+
+.user-edit-panel {
+  grid-area: edit !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+.user-actions {
+  grid-area: actions !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  align-self: stretch !important;
+  margin: 0 !important;
+}
+
+.user-actions button {
+  width: 100% !important;
+  min-height: 38px !important;
+  padding: 0 10px !important;
+  font-size: 0.6rem !important;
+  line-height: 1.1 !important;
+  white-space: normal !important;
+}
+
+/* Load more */
+.user-load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(30, 41, 59, 0.18);
+}
+
+.user-load-more-row button {
+  min-width: 220px;
+  min-height: 44px;
+}
+
+/* At medium width, stack users cleanly */
+@media (max-width: 1250px) {
+  .user-card {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "email"
+      "name"
+      "info"
+      "note"
+      "edit"
+      "actions" !important;
+  }
+
+  .user-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .user-info-grid,
+  .user-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-load-more-row button {
+    width: 100%;
+  }
+}
+/* =========================
+   EXISTING USERS SMALLER COMPACT CARDS
+   ========================= */
+
+.user-list-card {
+  overflow: hidden !important;
+}
+
+/* Make each user card shorter */
+.user-card {
+  display: grid !important;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(360px, 1.25fr) minmax(360px, 0.9fr) !important;
+  grid-template-areas:
+    "identity info actions"
+    "name info actions"
+    "note note actions"
+    "edit edit edit" !important;
+  gap: 10px 14px !important;
+  align-items: center !important;
+
+  min-height: 145px !important;
+  height: auto !important;
+  padding: 12px 14px !important;
+  border-radius: 18px !important;
+}
+
+/* Smaller yellow corner decoration */
+.user-card::after {
+  width: 62px !important;
+  height: 62px !important;
+  top: -28px !important;
+  right: -28px !important;
+}
+
+/* Left identity section */
+.user-card-topline {
+  grid-area: identity !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  gap: 6px !important;
+}
+
+.user-card-topline > span {
+  font-size: 0.58rem !important;
+  max-width: 100% !important;
+}
+
+.user-card-topline strong {
+  min-height: 24px !important;
+  padding: 0 9px !important;
+  font-size: 0.56rem !important;
+}
+
+/* Name */
+.user-card h3 {
+  grid-area: name !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  margin: 0 !important;
+  font-size: 1.05rem !important;
+  line-height: 1.1 !important;
+  text-align: left !important;
+}
+
+/* Info boxes smaller */
+.user-info-grid {
+  grid-area: info !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+.user-info-grid div {
+  min-height: 52px !important;
+  padding: 7px 9px !important;
+  border-radius: 12px !important;
+}
+
+.user-info-grid span {
+  font-size: 0.5rem !important;
+}
+
+.user-info-grid strong {
+  margin-top: 2px !important;
+  font-size: 0.72rem !important;
+}
+
+/* Actions become compact 2x2 buttons */
+.user-actions {
+  grid-area: actions !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  align-self: center !important;
+  margin: 0 !important;
+}
+
+.user-actions button {
+  width: 100% !important;
+  min-height: 36px !important;
+  padding: 0 8px !important;
+  font-size: 0.54rem !important;
+  line-height: 1.05 !important;
+  white-space: normal !important;
+  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+}
+
+/* Suspension note stays compact */
+.user-suspension-note {
+  grid-area: note !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  margin-top: 0 !important;
+  padding: 8px 10px !important;
+}
+
+/* Edit panel full width when editing */
+.user-edit-panel {
+  grid-area: edit !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+/* Load more area */
+.user-load-more-row {
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+  border-top: 2px dashed rgba(30, 41, 59, 0.18) !important;
+}
+
+.user-load-more-row button {
+  min-width: 210px !important;
+  min-height: 42px !important;
+}
+
+/* Medium screens */
+@media (max-width: 1350px) {
+  .user-card {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "identity"
+      "name"
+      "info"
+      "note"
+      "edit"
+      "actions" !important;
+    min-height: 0 !important;
+  }
+
+  .user-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .user-info-grid,
+  .user-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-load-more-row button {
+    width: 100% !important;
+  }
+}
