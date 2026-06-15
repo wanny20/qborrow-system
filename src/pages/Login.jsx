@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -7,113 +8,196 @@ import { auth } from "../firebase/firebaseConfig";
 import "../styles/Login.css";
 
 function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  function showStatus(message, type) {
+    setStatusMessage(message);
+    setStatusType(type);
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
+    setIsLoading(true);
+    showStatus("", "");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login successful!");
-      window.location.href = "/dashboard";
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      showStatus("Login successful. Redirecting to your dashboard...", "success");
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
     } catch (error) {
-      alert("Invalid email or password.");
       console.error(error);
+      showStatus("Invalid email or password. Please check your assigned account.", "error");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   async function handleForgotPassword() {
-    if (!email) {
-      alert("Please enter your email first before clicking forgot password.");
+    if (!email.trim()) {
+      showStatus("Please enter your email first before resetting your password.", "error");
       return;
     }
 
+    setIsLoading(true);
+    showStatus("", "");
+
     try {
-      await sendPasswordResetEmail(auth, email);
-      alert("Password reset email sent. Please check your inbox.");
+      await sendPasswordResetEmail(auth, email.trim());
+      showStatus("Password reset email sent. Please check your inbox.", "success");
     } catch (error) {
-      alert("Failed to send password reset email.");
       console.error(error);
+      showStatus("Failed to send password reset email. Please check your email address.", "error");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
-    <div className="login-page">
-      <section className="login-left">
-        <div className="brand-wrapper">
-          <img src="/qborrow-logo.png" alt="QBorrow Logo" className="brand-logo" />
+    <main className="login-page qb-page">
+      <div className="login-shape login-shape-one" aria-hidden="true"></div>
+      <div className="login-shape login-shape-two" aria-hidden="true"></div>
+      <div className="login-shape login-shape-three" aria-hidden="true"></div>
+      <div className="login-dot-grid" aria-hidden="true"></div>
 
-          <h1>QBorrow</h1>
+      <section className="login-shell qb-container" aria-label="QBorrow login">
+        <div className="login-brand-panel">
+          <button
+            type="button"
+            className="login-brand"
+            onClick={() => navigate("/")}
+            aria-label="Go back to landing page"
+          >
+            <span className="login-brand-logo">
+              <img src="/qborrow-logo.png" alt="" />
+            </span>
+            <span>QBorrow</span>
+          </button>
 
-          <p>Scan • Borrow • Track • Return</p>
+          <div className="login-hero-copy">
+            <p className="qb-kicker">Admin Assigned Access</p>
+
+            <h1 className="qb-heading">
+              Scan.
+              <br />
+              Borrow.
+              <br />
+              Track.
+            </h1>
+
+            <p>
+              Use the account assigned by your administrator. Borrowers,
+              category admins, and super admins are managed through the system.
+            </p>
+          </div>
+
+          <div className="login-role-cards" aria-label="Supported roles">
+            <span>Borrower</span>
+            <span>Category Admin</span>
+            <span>Super Admin</span>
+          </div>
         </div>
-      </section>
 
-      <section className="login-right">
-        <div className="login-form-box">
-          <h2>LOGIN</h2>
-
-          <form onSubmit={handleLogin}>
-            <div className="field-group">
-              <label className="input-label">
-                <span className="mail-icon">✉</span>
-                Your Email
-              </label>
-
-              <input
-                type="email"
-                placeholder="Email"
-                className="login-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+        <div className="login-form-panel">
+          <div className="login-card qb-card">
+            <div className="login-card-badge" aria-hidden="true">
+              QB
             </div>
 
-            <div className="field-group">
-              <label className="input-label">
-                <span className="lock-icon">🔒</span>
-                Your Password
-              </label>
+            <div className="login-card-header">
+              <p className="qb-kicker">Account Access</p>
+              <h2 className="qb-heading">Welcome back</h2>
+              <p>
+                Enter your assigned email and password to access your QBorrow
+                dashboard.
+              </p>
+            </div>
 
-              <div className="password-box">
+            {statusMessage && (
+              <div className={`login-status login-status-${statusType}`} role="status">
+                {statusMessage}
+              </div>
+            )}
+
+            <form className="login-form" onSubmit={handleLogin}>
+              <div className="login-field">
+                <label className="qb-label" htmlFor="email">
+                  Email Address
+                </label>
+
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  className="login-input password-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="email"
+                  type="email"
+                  className="qb-input"
+                  placeholder="example@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   required
                 />
-
-                <button
-                  type="button"
-                  className="eye-btn"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label="Show or hide password"
-                >
-                  👁
-                </button>
               </div>
-            </div>
 
-            <button
-              type="button"
-              className="forgot-password"
-              onClick={handleForgotPassword}
-            >
-              Forgot Password?
-            </button>
+              <div className="login-field">
+                <label className="qb-label" htmlFor="password">
+                  Password
+                </label>
 
-            <button type="submit" className="login-btn">
-              Login
-            </button>
-          </form>
+                <div className="login-password-wrap">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    className="qb-input login-password-input"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="login-password-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="login-forgot-btn"
+                onClick={handleForgotPassword}
+                disabled={isLoading}
+              >
+                Forgot password?
+              </button>
+
+              <button
+                type="submit"
+                className="qb-btn qb-btn-primary login-submit-btn"
+                disabled={isLoading}
+              >
+                {isLoading ? "Checking..." : "Access Dashboard"}
+                <span className="qb-btn-icon" aria-hidden="true">
+                  →
+                </span>
+              </button>
+            </form>
+          </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
 

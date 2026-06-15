@@ -1,0 +1,44 @@
+.protected-route-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(251, 191, 36, 0.32), transparent 26%),
+    radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.2), transparent 28%),
+    radial-gradient(circle at 78% 84%, rgba(52, 211, 153, 0.22), transparent 30%),
+    var(--qb-bg);
+  color: var(--qb-foreground);
+  padding: 24px;
+}
+
+.protected-route-card {
+  width: min(440px, 100%);
+  border: 2px solid var(--qb-border);
+  border-radius: 30px;
+  background: var(--qb-surface);
+  box-shadow: 8px 8px 0 0 var(--qb-accent);
+  padding: 34px;
+  text-align: center;
+}
+
+.protected-route-card img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+}
+
+.protected-route-card h2 {
+  margin: 0;
+  font-family: var(--qb-heading-font);
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.protected-route-card p {
+  margin: 10px 0 0;
+  color: var(--qb-muted-foreground);
+  font-weight: 700;
+  line-height: 1.6;
+}

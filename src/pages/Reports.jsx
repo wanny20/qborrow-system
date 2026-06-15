@@ -1,12 +1,85 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import "../styles/Reports.css";
 
 function Reports() {
+  const navigate = useNavigate();
+  const outletContext = useOutletContext() || {};
+  const { userData } = outletContext;
+
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  const isCategoryAdmin = userData?.role === "categoryAdmin";
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function getItemCategoryId(item) {
+    return item.categoryId || item.category || "";
+  }
+
+  function getItemCategoryName(item) {
+    return item.categoryName || item.category || item.categoryId || "Uncategorized";
+  }
+
+  function getRequestCategoryId(request) {
+    return request.categoryId || request.category || "";
+  }
+
+  function getRequestCategoryName(request) {
+    return (
+      request.categoryName ||
+      request.category ||
+      request.categoryId ||
+      "Uncategorized"
+    );
+  }
+
+  function canCategoryAdminSeeCategory(categoryId, categoryName) {
+    if (!isCategoryAdmin) return true;
+
+    const assignedCategories = Array.isArray(userData?.assignedCategories)
+      ? userData.assignedCategories.map(normalizeText)
+      : [];
+
+    return (
+      assignedCategories.includes(normalizeText(categoryId)) ||
+      assignedCategories.includes(normalizeText(categoryName))
+    );
+  }
+
+  function checkOverdue(request) {
+    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+      return false;
+    }
+
+    if (!request.expectedReturnDate) return false;
+
+    const today = new Date();
+    const expectedDate = new Date(request.expectedReturnDate);
+
+    today.setHours(0, 0, 0, 0);
+    expectedDate.setHours(0, 0, 0, 0);
+
+    return today > expectedDate;
+  }
+
+  function getCreatedTime(record) {
+    if (record.createdAt?.toMillis) return record.createdAt.toMillis();
+    if (record.createdAt?.seconds) return record.createdAt.seconds * 1000;
+    return 0;
+  }
 
   async function fetchReportsData() {
+    setLoading(true);
+
     try {
       const itemsSnapshot = await getDocs(collection(db, "items"));
       const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
@@ -25,199 +98,579 @@ function Reports() {
       setRequests(requestData);
     } catch (error) {
       alert("Error loading reports: " + error.message);
+    } finally {
+      setLoading(false);
     }
-  }
-
-  function checkOverdue(request) {
-    if (request.approvalStatus !== "Approved") {
-      return false;
-    }
-
-    const today = new Date();
-    const expectedDate = new Date(request.expectedReturnDate);
-
-    today.setHours(0, 0, 0, 0);
-    expectedDate.setHours(0, 0, 0, 0);
-
-    return today > expectedDate;
-  }
-
-  function getFrequentlyBorrowedItems() {
-    const countMap = {};
-
-    requests.forEach((request) => {
-      if (!countMap[request.itemName]) {
-        countMap[request.itemName] = 0;
-      }
-
-      countMap[request.itemName]++;
-    });
-
-    return Object.entries(countMap)
-      .map(([itemName, count]) => ({
-        itemName,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count);
   }
 
   useEffect(() => {
     fetchReportsData();
   }, []);
 
-  const borrowingHistory = requests;
-  const overdueItems = requests.filter((request) => checkOverdue(request));
-  const damagedLostItems = items.filter(
-    (item) => item.condition === "Damaged" || item.condition === "Lost"
-  );
+  const visibleItems = useMemo(() => {
+    return items.filter((item) =>
+      canCategoryAdminSeeCategory(getItemCategoryId(item), getItemCategoryName(item))
+    );
+  }, [items, userData]);
 
-  const availableItems = items.filter(
+  const visibleRequests = useMemo(() => {
+    return requests.filter((request) =>
+      canCategoryAdminSeeCategory(
+        getRequestCategoryId(request),
+        getRequestCategoryName(request)
+      )
+    );
+  }, [requests, userData]);
+
+  const availableItems = visibleItems.filter(
     (item) => item.availability === "Available"
   );
 
-  const borrowedItems = items.filter(
+  const reservedItems = visibleItems.filter(
+    (item) => item.availability === "Reserved"
+  );
+
+  const borrowedItems = visibleItems.filter(
     (item) => item.availability === "Borrowed"
   );
 
-  const frequentlyBorrowedItems = getFrequentlyBorrowedItems();
+  const damagedLostItems = visibleItems.filter(
+    (item) =>
+      item.condition === "Damaged" ||
+      item.condition === "Lost" ||
+      item.availability === "Damaged" ||
+      item.availability === "Lost"
+  );
+
+  const overdueRequests = visibleRequests.filter((request) =>
+    checkOverdue(request)
+  );
+
+  const pendingRequests = visibleRequests.filter(
+    (request) => request.approvalStatus === "Pending"
+  );
+
+  const approvedRequests = visibleRequests.filter(
+    (request) => request.approvalStatus === "Approved"
+  );
+
+  const borrowedRequests = visibleRequests.filter(
+    (request) => request.approvalStatus === "Borrowed"
+  );
+
+  const returnedRequests = visibleRequests.filter(
+    (request) => request.approvalStatus === "Returned"
+  );
+
+  const closedRequests = visibleRequests.filter(
+    (request) =>
+      request.approvalStatus === "Rejected" ||
+      request.approvalStatus === "Cancelled"
+  );
+
+  const filteredHistory = visibleRequests
+    .filter((request) => {
+      const searchableText = `
+        ${request.itemName || ""}
+        ${request.itemCode || ""}
+        ${request.borrowerName || ""}
+        ${request.borrowerEmail || ""}
+        ${request.purpose || ""}
+        ${getRequestCategoryName(request)}
+        ${request.approvalStatus || ""}
+      `.toLowerCase();
+
+      const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "All" || request.approvalStatus === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
+
+  const frequentlyBorrowedItems = useMemo(() => {
+    const countMap = {};
+
+    visibleRequests.forEach((request) => {
+      const countedStatuses = ["Borrowed", "Returned"];
+
+      if (!countedStatuses.includes(request.approvalStatus)) return;
+
+      const itemKey = request.itemName || request.itemId || "Unknown Item";
+
+      if (!countMap[itemKey]) {
+        countMap[itemKey] = {
+          itemName: itemKey,
+          categoryName: getRequestCategoryName(request),
+          count: 0,
+        };
+      }
+
+      countMap[itemKey].count += 1;
+    });
+
+    return Object.values(countMap).sort((a, b) => b.count - a.count);
+  }, [visibleRequests]);
+
+  const categoryReports = useMemo(() => {
+    const categoryMap = {};
+
+    visibleItems.forEach((item) => {
+      const categoryId = getItemCategoryId(item) || getItemCategoryName(item);
+      const categoryName = getItemCategoryName(item);
+
+      if (!categoryMap[categoryId]) {
+        categoryMap[categoryId] = {
+          categoryId,
+          categoryName,
+          totalItems: 0,
+          available: 0,
+          reserved: 0,
+          borrowed: 0,
+          damagedLost: 0,
+          totalRequests: 0,
+        };
+      }
+
+      categoryMap[categoryId].totalItems += 1;
+
+      if (item.availability === "Available") categoryMap[categoryId].available += 1;
+      if (item.availability === "Reserved") categoryMap[categoryId].reserved += 1;
+      if (item.availability === "Borrowed") categoryMap[categoryId].borrowed += 1;
+
+      if (
+        item.condition === "Damaged" ||
+        item.condition === "Lost" ||
+        item.availability === "Damaged" ||
+        item.availability === "Lost"
+      ) {
+        categoryMap[categoryId].damagedLost += 1;
+      }
+    });
+
+    visibleRequests.forEach((request) => {
+      const categoryId = getRequestCategoryId(request) || getRequestCategoryName(request);
+      const categoryName = getRequestCategoryName(request);
+
+      if (!categoryMap[categoryId]) {
+        categoryMap[categoryId] = {
+          categoryId,
+          categoryName,
+          totalItems: 0,
+          available: 0,
+          reserved: 0,
+          borrowed: 0,
+          damagedLost: 0,
+          totalRequests: 0,
+        };
+      }
+
+      categoryMap[categoryId].totalRequests += 1;
+    });
+
+    return Object.values(categoryMap).sort((a, b) =>
+      a.categoryName.localeCompare(b.categoryName)
+    );
+  }, [visibleItems, visibleRequests]);
+
+  if (loading) {
+    return (
+      <div className="reports-loading">
+        <div className="reports-loading-card">
+          <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+          <h2>Loading reports...</h2>
+          <p>Preparing inventory and borrowing analytics.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
+    <div className="reports-page">
+      <section className="reports-header">
+        <div>
+          <p className="qb-kicker">Admin Analytics</p>
+
+          <h1>Reports</h1>
+
+          <p>
+            Monitor inventory status, borrowing activity, overdue records,
+            damaged/lost items, and category-based performance.
+          </p>
+
+          {isCategoryAdmin && (
+            <div className="reports-assigned-note">
+              Assigned categories:{" "}
+              {Array.isArray(userData?.assignedCategories) &&
+              userData.assignedCategories.length > 0
+                ? userData.assignedCategories.join(", ")
+                : "No assigned categories yet"}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="reports-secondary-btn"
+          onClick={() => navigate("/dashboard")}
+        >
+          Back to Dashboard
+        </button>
+      </section>
+
+      <section className="reports-summary-grid">
+        <div>
+          <span>Σ</span>
+          <h3>{visibleItems.length}</h3>
+          <p>Total Items</p>
+        </div>
+
+        <div>
+          <span>✓</span>
+          <h3>{availableItems.length}</h3>
+          <p>Available</p>
+        </div>
+
+        <div>
+          <span>R</span>
+          <h3>{reservedItems.length}</h3>
+          <p>Reserved</p>
+        </div>
+
+        <div>
+          <span>↗</span>
+          <h3>{borrowedItems.length}</h3>
+          <p>Borrowed</p>
+        </div>
+
+        <div>
+          <span>!</span>
+          <h3>{overdueRequests.length}</h3>
+          <p>Overdue</p>
+        </div>
+
+        <div>
+          <span>×</span>
+          <h3>{damagedLostItems.length}</h3>
+          <p>Damaged/Lost</p>
+        </div>
+      </section>
+
+      <section className="reports-request-summary">
+        <div>
+          <span>?</span>
+          <h3>{pendingRequests.length}</h3>
+          <p>Pending</p>
+        </div>
+
+        <div>
+          <span>✓</span>
+          <h3>{approvedRequests.length}</h3>
+          <p>Approved</p>
+        </div>
+
+        <div>
+          <span>↗</span>
+          <h3>{borrowedRequests.length}</h3>
+          <p>Active Borrowed</p>
+        </div>
+
+        <div>
+          <span>↩</span>
+          <h3>{returnedRequests.length}</h3>
+          <p>Returned</p>
+        </div>
+
+        <div>
+          <span>×</span>
+          <h3>{closedRequests.length}</h3>
+          <p>Closed</p>
+        </div>
+      </section>
+
+      <section className="reports-tools">
+        <div>
+          <label className="qb-label" htmlFor="reports-search">
+            Search History
+          </label>
+
+          <input
+            id="reports-search"
+            type="text"
+            placeholder="Search item, borrower, purpose, category..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="qb-label" htmlFor="reports-status-filter">
+            Request Status
+          </label>
+
+          <select
+            id="reports-status-filter"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="All">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Borrowed">Borrowed</option>
+            <option value="Returned">Returned</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          className="reports-refresh-btn"
+          onClick={fetchReportsData}
+        >
+          Refresh
+        </button>
+      </section>
+
+      <section className="reports-panel">
+        <div className="reports-section-heading">
+          <div>
+            <h2>Category Report</h2>
+            <p>Item and request totals grouped by category.</p>
+          </div>
+        </div>
+
+        {categoryReports.length === 0 ? (
+          <div className="reports-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+            <h2>No category data</h2>
+            <p>No items or requests are available for your assigned categories.</p>
+          </div>
+        ) : (
+          <div className="reports-category-grid">
+            {categoryReports.map((category) => (
+              <article className="reports-category-card" key={category.categoryId}>
+                <h3>{category.categoryName}</h3>
+
+                <div className="reports-category-stats">
+                  <div>
+                    <span>Total Items</span>
+                    <strong>{category.totalItems}</strong>
+                  </div>
+
+                  <div>
+                    <span>Available</span>
+                    <strong>{category.available}</strong>
+                  </div>
+
+                  <div>
+                    <span>Reserved</span>
+                    <strong>{category.reserved}</strong>
+                  </div>
+
+                  <div>
+                    <span>Borrowed</span>
+                    <strong>{category.borrowed}</strong>
+                  </div>
+
+                  <div>
+                    <span>Damaged/Lost</span>
+                    <strong>{category.damagedLost}</strong>
+                  </div>
+
+                  <div>
+                    <span>Requests</span>
+                    <strong>{category.totalRequests}</strong>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="reports-two-column">
+        <div className="reports-panel">
+          <div className="reports-section-heading">
+            <div>
+              <h2>Frequently Borrowed Items</h2>
+              <p>Based on Borrowed and Returned request records.</p>
+            </div>
+          </div>
+
+          {frequentlyBorrowedItems.length === 0 ? (
+            <div className="reports-empty small">
+              <h2>No borrowed items yet</h2>
+              <p>No item has been released or returned yet.</p>
+            </div>
+          ) : (
+            <div className="reports-list">
+              {frequentlyBorrowedItems.slice(0, 8).map((item) => (
+                <article className="reports-mini-card" key={item.itemName}>
+                  <div>
+                    <h3>{item.itemName}</h3>
+                    <p>{item.categoryName}</p>
+                  </div>
+
+                  <strong>{item.count}</strong>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="reports-panel">
+          <div className="reports-section-heading">
+            <div>
+              <h2>Overdue Items</h2>
+              <p>Approved or borrowed requests past expected return date.</p>
+            </div>
+          </div>
+
+          {overdueRequests.length === 0 ? (
+            <div className="reports-empty small">
+              <h2>No overdue items</h2>
+              <p>All active records are within their return date.</p>
+            </div>
+          ) : (
+            <div className="reports-list">
+              {overdueRequests.slice(0, 8).map((request) => (
+                <article className="reports-mini-card danger" key={request.id}>
+                  <div>
+                    <h3>{request.itemName}</h3>
+                    <p>{request.borrowerEmail}</p>
+                    <p>Expected: {request.expectedReturnDate}</p>
+                  </div>
+
+                  <strong>Overdue</strong>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+<section className="reports-panel">
+  <div className="reports-section-heading">
     <div>
-      <h1>Reports Module</h1>
-
-      <button onClick={() => (window.location.href = "/dashboard")}>
-        Back to Dashboard
-      </button>
-
-      <hr />
-
-      <h2>Available vs Borrowed Items</h2>
-      <p>
-        <strong>Available Items:</strong> {availableItems.length}
-      </p>
-      <p>
-        <strong>Borrowed Items:</strong> {borrowedItems.length}
-      </p>
-
-      <hr />
-
       <h2>Borrowing History</h2>
+      <p>
+        Showing {filteredHistory.length} of {visibleRequests.length} request
+        record{visibleRequests.length === 1 ? "" : "s"}.
+      </p>
+    </div>
+  </div>
 
-      {borrowingHistory.length === 0 ? (
-        <p>No borrowing history found.</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Borrower Email</th>
-              <th>Purpose</th>
-              <th>Borrow Date</th>
-              <th>Expected Return</th>
-              <th>Actual Return</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+  {filteredHistory.length === 0 ? (
+    <div className="reports-empty">
+      <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+      <h2>No borrowing history found</h2>
+      <p>Try changing the search keyword or status filter.</p>
+    </div>
+  ) : (
+    <div className="reports-history-list">
+      {filteredHistory.map((request) => (
+        <article className="reports-history-row" key={request.id}>
+          <div className="reports-history-main">
+            <div className="reports-history-titleline">
+              <div>
+                <span className="reports-row-code">
+                  {request.itemCode || request.itemId || "No code"}
+                </span>
+                <h3>{request.itemName || "Untitled Item"}</h3>
+              </div>
 
-          <tbody>
-            {borrowingHistory.map((request) => (
-              <tr key={request.id}>
-                <td>{request.itemName}</td>
-                <td>{request.borrowerEmail}</td>
-                <td>{request.purpose}</td>
-                <td>{request.borrowDate}</td>
-                <td>{request.expectedReturnDate}</td>
-                <td>{request.actualReturnDate || "Not returned yet"}</td>
-                <td>{request.approvalStatus}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+              <strong
+                className={`reports-status-pill status-${String(
+                  request.approvalStatus || "Unknown"
+                ).toLowerCase()}`}
+              >
+                {request.approvalStatus || "Unknown"}
+              </strong>
+            </div>
 
-      <hr />
+            <div className="reports-history-subline">
+              <span>{request.borrowerName || "Unnamed Borrower"}</span>
+              <span>{request.borrowerEmail || "No email"}</span>
+              <span>{getRequestCategoryName(request)}</span>
+            </div>
+          </div>
 
-      <h2>Frequently Borrowed Items</h2>
+          <div className="reports-history-date-list">
+            <div>
+              <span>Borrow</span>
+              <strong>{request.borrowDate || "Not set"}</strong>
+            </div>
 
-      {frequentlyBorrowedItems.length === 0 ? (
-        <p>No borrowed items yet.</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Borrow Count</th>
-            </tr>
-          </thead>
+            <div>
+              <span>Expected</span>
+              <strong>{request.expectedReturnDate || "Not set"}</strong>
+            </div>
 
-          <tbody>
-            {frequentlyBorrowedItems.map((item) => (
-              <tr key={item.itemName}>
-                <td>{item.itemName}</td>
-                <td>{item.count}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            <div>
+              <span>Actual</span>
+              <strong>{request.actualReturnDate || "Not returned"}</strong>
+            </div>
 
-      <hr />
+            <div>
+              <span>Condition</span>
+              <strong>{request.returnCondition || "N/A"}</strong>
+            </div>
+          </div>
 
-      <h2>Overdue Items</h2>
+          <div className="reports-history-purpose-list">
+            <span>Purpose</span>
+            <p>{request.purpose || "No purpose provided."}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</section>
 
-      {overdueItems.length === 0 ? (
-        <p>No overdue items.</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Borrower Email</th>
-              <th>Expected Return Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+<section className="reports-panel">
+  <div className="reports-section-heading">
+    <div>
+      <h2>Damaged / Lost Items</h2>
+      <p>Items currently marked as damaged or lost.</p>
+    </div>
+  </div>
 
-          <tbody>
-            {overdueItems.map((request) => (
-              <tr key={request.id}>
-                <td>{request.itemName}</td>
-                <td>{request.borrowerEmail}</td>
-                <td>{request.expectedReturnDate}</td>
-                <td>Overdue</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  {damagedLostItems.length === 0 ? (
+    <div className="reports-empty">
+      <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+      <h2>No damaged or lost items</h2>
+      <p>Your visible inventory has no damaged or lost records.</p>
+    </div>
+  ) : (
+    <div className="reports-damaged-list">
+      {damagedLostItems.map((item) => (
+        <article className="reports-damaged-row" key={item.id}>
+          <div className="reports-damaged-main">
+            <span className="reports-row-code">{item.itemCode || item.id}</span>
+            <h3>{item.itemName || "Untitled Item"}</h3>
+            <p>{getItemCategoryName(item)}</p>
+          </div>
 
-      <hr />
+          <div className="reports-damaged-meta">
+            <div>
+              <span>Availability</span>
+              <strong>{item.availability || "N/A"}</strong>
+            </div>
 
-      <h2>Damaged/Lost Items</h2>
-
-      {damagedLostItems.length === 0 ? (
-        <p>No damaged or lost items.</p>
-      ) : (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Item Name</th>
-              <th>Condition</th>
-              <th>Availability</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {damagedLostItems.map((item) => (
-              <tr key={item.id}>
-                <td>{item.itemName}</td>
-                <td>{item.condition}</td>
-                <td>{item.availability}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            <div>
+              <span>Condition</span>
+              <strong className="reports-damage-pill">
+                {item.condition || item.availability || "N/A"}
+              </strong>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</section>
     </div>
   );
 }
