@@ -959,3 +959,99 @@
     padding: 10px !important;
   }
 }
+/* =========================================================
+   RELEASE ITEM SCANNER ACTIONS
+   Paste at the very bottom of ReleaseItem.css
+========================================================= */
+
+.release-scanner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.release-scanner-actions button {
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .release-scanner-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+/* =========================================================
+   RELEASE ITEM SCANNER ACTIONS + CLEAN RESTART
+========================================================= */
+
+.release-scanner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.release-scanner-actions button {
+  width: 100%;
+}
+
+#release-item-reader {
+  min-height: 280px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+#release-item-reader video {
+  width: 100% !important;
+  min-height: 280px !important;
+  object-fit: cover !important;
+}
+
+@media (max-width: 760px) {
+  .release-scanner-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #release-item-reader {
+    min-height: 220px;
+  }
+
+  #release-item-reader video {
+    min-height: 220px !important;
+  }
+}
+/* =========================================================
+   RELEASE ITEM CAMERA SELECT
+========================================================= */
+
+.release-camera-select {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.release-camera-select select {
+  width: 100%;
+  min-height: 44px;
+  border: 2px solid #cbd5e1;
+  border-radius: 15px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 13px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  outline: none;
+}
+
+.release-camera-select select:focus {
+  border-color: var(--qb-accent);
+  box-shadow: 3px 3px 0 0 rgba(139, 92, 246, 0.22);
+}
+
+@media (max-width: 760px) {
+  .release-camera-select select {
+    min-height: 42px;
+    border-radius: 14px;
+    font-size: 0.78rem;
+  }
+}

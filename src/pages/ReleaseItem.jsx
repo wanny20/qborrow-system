@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
-  Html5QrcodeScanner,
+  Html5Qrcode,
   Html5QrcodeSupportedFormats,
 } from "html5-qrcode";
 import {
@@ -24,7 +24,14 @@ function ReleaseItem() {
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
-  const [scannerOpen, setScannerOpen] = useState(false);
+const [scannerOpen, setScannerOpen] = useState(false);
+const [scannerKey, setScannerKey] = useState(0);
+const [startingScanner, setStartingScanner] = useState(false);
+const [cameras, setCameras] = useState([]);
+const [selectedCameraId, setSelectedCameraId] = useState("");
+  const scannerRef = useRef(null);
+  const scannerRunningRef = useRef(false);
+  const hasScannedRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [releasing, setReleasing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -52,7 +59,148 @@ function ReleaseItem() {
 
     return text;
   }
+  function clearScannerDom() {
+  const scannerElement = document.getElementById("release-item-reader");
 
+  if (scannerElement) {
+    scannerElement.innerHTML = "";
+  }
+}
+
+async function stopReleaseScanner(showMessage = false) {
+  try {
+    if (scannerRef.current) {
+      if (scannerRunningRef.current) {
+        await scannerRef.current.stop();
+      }
+
+      await scannerRef.current.clear();
+    }
+  } catch (error) {
+    console.log("Release scanner stop error:", error);
+  } finally {
+    scannerRef.current = null;
+    scannerRunningRef.current = false;
+    hasScannedRef.current = false;
+
+    clearScannerDom();
+
+    setScannerOpen(false);
+
+    if (showMessage) {
+      showStatus("Scanner closed.", "success");
+    }
+  }
+}
+async function getCameraList() {
+  const devices = await Html5Qrcode.getCameras();
+
+  setCameras(devices);
+
+  if (devices.length > 0 && !selectedCameraId) {
+    const backCamera =
+      devices.find((camera) =>
+        String(camera.label || "").toLowerCase().includes("back")
+      ) ||
+      devices.find((camera) =>
+        String(camera.label || "").toLowerCase().includes("rear")
+      ) ||
+      devices[0];
+
+    setSelectedCameraId(backCamera.id);
+    return {
+      devices,
+      cameraId: backCamera.id,
+    };
+  }
+
+  return {
+    devices,
+    cameraId: selectedCameraId || devices[0]?.id || "",
+  };
+}
+async function startReleaseScanner() {
+  if (startingScanner || releasing) return;
+
+  setStartingScanner(true);
+  showStatus("Starting scanner...", "success");
+
+  try {
+    await stopReleaseScanner(false);
+
+    hasScannedRef.current = false;
+    setScannerKey((current) => current + 1);
+    setScannerOpen(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 180));
+
+    clearScannerDom();
+
+    const scanner = new Html5Qrcode("release-item-reader", {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+      ],
+    });
+
+    scannerRef.current = scanner;
+
+const scannerConfig = {
+  fps: 10,
+  qrbox: {
+    width: 250,
+    height: 250,
+  },
+  aspectRatio: 1.333,
+};
+
+const cameraResult = await getCameraList();
+const cameraId = cameraResult.cameraId;
+
+if (!cameraId) {
+  throw new Error("No camera found on this device.");
+}
+
+await scanner.start(
+  cameraId,
+  scannerConfig,
+        async (decodedText) => {
+          if (hasScannedRef.current) return;
+
+          hasScannedRef.current = true;
+
+          const itemId = extractItemId(decodedText);
+
+          await stopReleaseScanner(false);
+          await findApprovedRequestByItemId(itemId);
+        },
+        () => {}
+      );
+
+    showStatus("Scanner opened. Point the camera at the QR code or barcode.", "success");
+  } catch (error) {
+    await stopReleaseScanner(false);
+    showStatus("Scanner could not start: " + error.message, "error");
+  } finally {
+    setStartingScanner(false);
+  }
+}
+
+async function restartReleaseScanner() {
+  showStatus("Restarting scanner...", "success");
+  await startReleaseScanner();
+}
+  function openScannerFresh() {
+  setScannerKey((current) => current + 1);
+  setScannerOpen(true);
+  showStatus("Scanner ready. Point the camera at the QR code or barcode.", "success");
+    }
+
+    function restartScanner() {
+      setScannerKey((current) => current + 1);
+      setScannerOpen(true);
+      showStatus("Scanner restarted. Try scanning again.", "success");
+    }
   function getRequestCategoryId(request) {
     return request.categoryId || request.category || "";
   }
@@ -243,55 +391,17 @@ function ReleaseItem() {
   useEffect(() => {
     fetchApprovedRequests();
   }, []);
+useEffect(() => {
+  getCameraList().catch((error) => {
+    console.log("Camera list error:", error);
+  });
+}, []);
 
-  useEffect(() => {
-    if (!scannerOpen) return;
-
-    let scannerCleared = false;
-
-    const scanner = new Html5QrcodeScanner(
-      "release-item-reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.CODE_128,
-        ],
-      },
-      false
-    );
-
-    async function clearScanner() {
-      if (scannerCleared) return;
-
-      scannerCleared = true;
-
-      try {
-        await scanner.clear();
-      } catch (error) {
-        console.log("Scanner clear error:", error);
-      }
-    }
-
-    scanner.render(
-      async (decodedText) => {
-        const itemId = extractItemId(decodedText);
-
-        setScannerOpen(false);
-        await clearScanner();
-        findApprovedRequestByItemId(itemId);
-      },
-      () => {}
-    );
-
-    return () => {
-      clearScanner();
-    };
-  }, [scannerOpen]);
+useEffect(() => {
+  return () => {
+    stopReleaseScanner(false);
+  };
+}, []);
 
   if (loading) {
     return (
@@ -353,20 +463,61 @@ function ReleaseItem() {
               only the item ID.
             </p>
           </div>
+{cameras.length > 0 && (
+  <div className="release-camera-select">
+    <label className="qb-label" htmlFor="release-camera">
+      Camera
+    </label>
 
-          <button
-            type="button"
-            className="release-primary-btn"
-            onClick={() => setScannerOpen((current) => !current)}
-          >
-            {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
-          </button>
+    <select
+      id="release-camera"
+      value={selectedCameraId}
+      onChange={(event) => setSelectedCameraId(event.target.value)}
+      disabled={scannerOpen || startingScanner}
+    >
+      {cameras.map((camera, index) => (
+        <option key={camera.id} value={camera.id}>
+          {camera.label || `Camera ${index + 1}`}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+<div className="release-scanner-actions">
+  <button
+    type="button"
+    className="release-primary-btn"
+    onClick={() => {
+      if (scannerOpen) {
+        stopReleaseScanner(true);
+      } else {
+        startReleaseScanner();
+      }
+    }}
+    disabled={startingScanner}
+  >
+    {startingScanner
+      ? "Opening..."
+      : scannerOpen
+        ? "Close Scanner"
+        : "Open QR / Barcode Scanner"}
+  </button>
 
-          {scannerOpen && (
-            <div className="release-scanner-box">
-              <div id="release-item-reader"></div>
-            </div>
-          )}
+  <button
+    type="button"
+    className="release-secondary-btn"
+    onClick={restartReleaseScanner}
+    disabled={startingScanner}
+  >
+    Restart Scanner
+  </button>
+</div>
+
+{scannerOpen && (
+  <div className="release-scanner-box" key={scannerKey}>
+    <div id="release-item-reader"></div>
+  </div>
+)}
 
           <div className="release-manual-form">
             <label className="qb-label" htmlFor="manual-item-id">

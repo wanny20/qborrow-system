@@ -78,8 +78,8 @@ function ScanQR() {
     }
   }
 
-  async function startScanner() {
-    if (scannerActive || startingScanner || isSearching) return;
+  async function startScanner(forceStart = false) {
+    if ((!forceStart && scannerActive) || startingScanner || isSearching) return;
 
     hasScannedRef.current = false;
     setScanResult("");
@@ -278,7 +278,7 @@ function ScanQR() {
     setStatusMessage("");
     setStatusType("");
 
-    await startScanner();
+    await startScanner(true);
   }
 
   useEffect(() => {
