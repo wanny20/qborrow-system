@@ -15,6 +15,8 @@ import {
   orderBy,
   limit,
   startAfter,
+  where,
+  getCountFromServer,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, secondaryAuth, functions } from "../firebase/firebaseConfig";
@@ -32,6 +34,14 @@ function UserManagement() {
   const [lastUserDoc, setLastUserDoc] = useState(null);
   const [hasMoreUsers, setHasMoreUsers] = useState(false);
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
+
+  const [userStats, setUserStats] = useState({
+  total: 0,
+  borrowers: 0,
+  categoryAdmins: 0,
+  superAdmins: 0,
+  suspended: 0,
+});
 
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
@@ -238,6 +248,39 @@ function UserManagement() {
       mobileNumber: cleanInput(editMobileNumber),
     };
   }
+  async function fetchUserStats() {
+  const usersRef = collection(db, "users");
+
+  const [
+    totalSnapshot,
+    borrowersSnapshot,
+    categoryAdminsSnapshot,
+    superAdminsSnapshot,
+    suspendedSnapshot,
+  ] = await Promise.all([
+    getCountFromServer(usersRef),
+    getCountFromServer(
+      firestoreQuery(usersRef, where("role", "==", "borrower"))
+    ),
+    getCountFromServer(
+      firestoreQuery(usersRef, where("role", "==", "categoryAdmin"))
+    ),
+    getCountFromServer(
+      firestoreQuery(usersRef, where("role", "==", "superAdmin"))
+    ),
+    getCountFromServer(
+      firestoreQuery(usersRef, where("canBorrow", "==", false))
+    ),
+  ]);
+
+  setUserStats({
+    total: totalSnapshot.data().count || 0,
+    borrowers: borrowersSnapshot.data().count || 0,
+    categoryAdmins: categoryAdminsSnapshot.data().count || 0,
+    superAdmins: superAdminsSnapshot.data().count || 0,
+    suspended: suspendedSnapshot.data().count || 0,
+  });
+}
 
   async function fetchUsersPage(mode = "reset") {
     const userQuery =
@@ -329,7 +372,10 @@ function UserManagement() {
       setItems(itemData);
       setBorrowRequests(requestData);
 
-      await fetchUsersPage("reset");
+      await Promise.all([
+  fetchUserStats(),
+  fetchUsersPage("reset"),
+]);
     } catch (error) {
       showStatus("Error loading user management data: " + error.message, "error");
     } finally {
@@ -1018,20 +1064,6 @@ function UserManagement() {
     return matchesSearch && matchesRole;
   });
 
-  const userStats = useMemo(
-    () => ({
-      total: users.length,
-      borrowers: users.filter((user) => user.role === "borrower").length,
-      categoryAdmins: users.filter((user) => user.role === "categoryAdmin")
-        .length,
-      superAdmins: users.filter((user) => user.role === "superAdmin").length,
-      suspended: users.filter(
-        (user) => user.canBorrow === false || isUserSuspended(user)
-      ).length,
-    }),
-    [users]
-  );
-
   if (loading) {
     return (
       <div className="user-management-loading">
@@ -1080,7 +1112,7 @@ function UserManagement() {
         <div>
           <span>Σ</span>
           <h3>{userStats.total}</h3>
-          <p>Loaded Users</p>
+          <p>Total Users</p>
         </div>
 
         <div>
