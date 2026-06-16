@@ -566,3 +566,239 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* =========================================================
+   FINAL DASHBOARD MOBILE RESPONSIVE FIX
+   Paste at the very bottom of Dashboard.css
+========================================================= */
+
+.dashboard-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.dashboard-page * {
+  box-sizing: border-box;
+}
+
+.dashboard-hero {
+  grid-template-columns: 1fr !important;
+}
+
+.dashboard-hero > div,
+.dashboard-role-row div,
+.dashboard-stat-card,
+.dashboard-panel {
+  max-width: 100%;
+}
+
+.dashboard-stat-card {
+  min-width: 0;
+}
+
+/* Tablet */
+@media (max-width: 1050px) {
+  .dashboard-hero,
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Phone landscape / big phones */
+@media (max-width: 720px) {
+  .dashboard-page {
+    min-height: auto !important;
+    display: grid;
+    gap: 14px;
+  }
+
+  .dashboard-hero {
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-hero > div {
+    padding: 16px !important;
+    border-radius: 20px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .dashboard-hero > div::after {
+    width: 38px !important;
+    height: 38px !important;
+    right: 14px !important;
+    top: 14px !important;
+  }
+
+  .dashboard-eyebrow {
+    max-width: calc(100% - 50px);
+    font-size: 0.58rem !important;
+    padding: 6px 9px !important;
+  }
+
+  .dashboard-hero h1 {
+    max-width: 100%;
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1.02 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-hero p {
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .dashboard-assigned-note {
+    width: 100% !important;
+    font-size: 0.7rem !important;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-role-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-role-row div {
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .dashboard-role-row span,
+  .dashboard-stat-card span {
+    font-size: 0.58rem !important;
+  }
+
+  .dashboard-role-row strong {
+    font-size: 0.78rem !important;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-stat-card {
+    min-height: 92px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+    box-shadow: 3px 3px 0 0 #e2e8f0 !important;
+  }
+
+  .dashboard-stat-card strong {
+    font-size: 1.65rem !important;
+  }
+
+  .dashboard-stat-card::after {
+    width: 42px !important;
+    height: 42px !important;
+    right: -16px !important;
+    bottom: -16px !important;
+  }
+
+  .dashboard-stat-hint {
+    display: none !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .dashboard-panel {
+    padding: 14px !important;
+    border-radius: 18px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .dashboard-panel-heading {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .dashboard-panel-heading h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .dashboard-panel-heading p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .dashboard-search-heading button {
+    width: 100% !important;
+  }
+
+  .dashboard-action-list,
+  .dashboard-attention-list,
+  .dashboard-item-preview-list {
+    gap: 9px !important;
+  }
+
+  .dashboard-action-list button,
+  .dashboard-attention-list button,
+  .dashboard-item-preview-list article {
+    border-radius: 15px !important;
+    padding: 11px !important;
+  }
+
+  .dashboard-action-list strong,
+  .dashboard-attention-list span,
+  .dashboard-item-preview-list strong {
+    font-size: 0.8rem !important;
+  }
+
+  .dashboard-action-list span,
+  .dashboard-item-preview-list span {
+    font-size: 0.68rem !important;
+  }
+
+  .dashboard-attention-list strong {
+    min-width: 38px !important;
+    height: 34px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .dashboard-search-input {
+    min-height: 42px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .dashboard-item-preview-list article {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-item-preview-list article button {
+    width: 100% !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-stat-card {
+    min-height: 86px !important;
+    padding: 10px !important;
+  }
+
+  .dashboard-stat-card strong {
+    font-size: 1.45rem !important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 340px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -423,4 +423,240 @@
 .settings-field input:focus {
   border-color: var(--qb-accent);
   box-shadow: 3px 3px 0 0 rgba(139, 92, 246, 0.25);
+}/* =========================================================
+   FINAL SETTINGS MOBILE RESPONSIVE FIX
+   Paste at the very bottom of Settings.css
+========================================================= */
+
+.settings-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.settings-page * {
+  box-sizing: border-box;
+}
+
+.settings-header,
+.settings-layout,
+.settings-card,
+.settings-profile-preview,
+.settings-theme-box {
+  max-width: 100%;
+}
+
+/* Tablet cleanup */
+@media (max-width: 1020px) {
+  .settings-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Phone layout */
+@media (max-width: 620px) {
+  .settings-page {
+    gap: 12px !important;
+  }
+
+  .settings-header,
+  .settings-card {
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .settings-header::after {
+    width: 56px !important;
+    height: 56px !important;
+    right: 14px !important;
+    bottom: -22px !important;
+    opacity: 0.75 !important;
+  }
+
+  .settings-header h1 {
+    max-width: calc(100% - 54px) !important;
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .settings-header p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .settings-status {
+    border-radius: 15px !important;
+    padding: 11px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .settings-layout {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .settings-section-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .settings-section-heading h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .settings-section-heading p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Profile preview */
+  .settings-profile-preview {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    border-radius: 15px !important;
+    padding: 12px !important;
+    text-align: center !important;
+  }
+
+  .settings-avatar {
+    width: 92px !important;
+    height: 92px !important;
+    margin: 0 auto !important;
+    border-radius: 20px !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .settings-avatar span {
+    font-size: 2.25rem !important;
+  }
+
+  .settings-profile-preview h3 {
+    font-size: 1.1rem !important;
+    line-height: 1.1 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .settings-profile-preview p {
+    font-size: 0.74rem !important;
+  }
+
+  .settings-profile-preview span {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Fields */
+  .settings-field {
+    gap: 6px !important;
+    margin-top: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .settings-field input {
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    font-size: 0.8rem !important;
+    padding: 0 12px !important;
+  }
+
+  .settings-field input[type="file"] {
+    min-height: auto !important;
+    padding: 10px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .settings-field small {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Theme */
+  .settings-theme-box {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    border-radius: 15px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .settings-theme-box h3 {
+    font-size: 0.95rem !important;
+  }
+
+  .settings-theme-box p {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .settings-theme-toggle {
+    width: 100% !important;
+    min-height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.62rem !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+
+  .settings-theme-toggle span {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Buttons */
+  .settings-primary-btn,
+  .settings-secondary-btn {
+    width: 100% !important;
+    min-height: 40px !important;
+    font-size: 0.6rem !important;
+    padding: 0 12px !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+
+  /* Loading */
+  .settings-loading-card {
+    width: 100% !important;
+    border-radius: 18px !important;
+    padding: 22px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .settings-loading-card img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .settings-loading-card h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .settings-loading-card p {
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 440px) {
+  .settings-header,
+  .settings-card {
+    padding: 12px !important;
+  }
+
+  .settings-header h1 {
+    font-size: clamp(1.35rem, 8vw, 1.75rem) !important;
+  }
+
+  .settings-avatar {
+    width: 82px !important;
+    height: 82px !important;
+  }
+
+  .settings-avatar span {
+    font-size: 2rem !important;
+  }
 }

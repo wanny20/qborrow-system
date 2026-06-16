@@ -1114,3 +1114,447 @@
     height: 30px !important;
   }
 }
+/* =========================================================
+   FINAL LANDING PAGE MOBILE RESPONSIVE FIX
+   Paste at the very bottom of LandingPage.css
+========================================================= */
+
+.landing-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden !important;
+}
+
+.landing-page * {
+  box-sizing: border-box;
+}
+
+.landing-shell,
+.landing-navbar,
+.landing-hero,
+.landing-features,
+.landing-workflow,
+.landing-about,
+.landing-feature-grid,
+.landing-device-card {
+  max-width: 100%;
+}
+
+/* Keep fixed navbar stable */
+:root {
+  --landing-navbar-height: 82px;
+}
+
+.landing-page {
+  padding-top: var(--landing-navbar-height) !important;
+}
+
+.landing-navbar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  min-height: var(--landing-navbar-height) !important;
+  z-index: 9999 !important;
+  border-radius: 0 !important;
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 2px solid var(--qb-border) !important;
+  background: rgba(255, 253, 245, 0.96) !important;
+  box-shadow: 0 4px 0 rgba(30, 41, 59, 0.08) !important;
+  padding: 14px clamp(20px, 5vw, 64px) !important;
+}
+
+.landing-shell {
+  width: min(calc(100% - 32px), var(--qb-container)) !important;
+  margin: 0 auto !important;
+}
+
+/* Tablet */
+@media (max-width: 1120px) {
+  .landing-hero {
+    grid-template-columns: 1fr !important;
+    gap: 34px !important;
+    min-height: auto !important;
+  }
+
+  .landing-hero-copy {
+    max-width: 100% !important;
+  }
+
+  .landing-visual {
+    min-height: 460px !important;
+  }
+
+  .landing-device-card {
+    margin: 0 auto !important;
+  }
+
+  .landing-feature-grid,
+  .landing-workflow,
+  .landing-about,
+  .landing-section-heading {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-feature-card {
+    min-height: auto !important;
+  }
+}
+
+/* Phone */
+@media (max-width: 780px) {
+  :root {
+    --landing-navbar-height: 74px;
+  }
+
+  .landing-page {
+    padding-top: var(--landing-navbar-height) !important;
+  }
+
+  .landing-shell {
+    width: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .landing-navbar {
+    min-height: var(--landing-navbar-height) !important;
+    padding: 12px 16px !important;
+  }
+
+  .landing-brand {
+    gap: 10px !important;
+    font-size: 0.92rem !important;
+  }
+
+  .landing-brand-mark {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .landing-brand-mark img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .landing-nav-links {
+    display: none !important;
+  }
+
+  .landing-hero,
+  .landing-features,
+  .landing-workflow,
+  .landing-about {
+    padding: 44px 16px !important;
+  }
+
+  .landing-hero {
+    gap: 28px !important;
+  }
+
+  .landing-hero::before {
+    width: 250px !important;
+    height: 250px !important;
+    left: -120px !important;
+    top: 40px !important;
+  }
+
+  .landing-kicker {
+    margin-bottom: 16px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .landing-title {
+    font-size: clamp(3rem, 17vw, 4.6rem) !important;
+    line-height: 0.95 !important;
+    letter-spacing: -0.055em !important;
+  }
+
+  .landing-description {
+    margin-top: 18px !important;
+    font-size: 0.86rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .landing-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-top: 24px !important;
+  }
+
+  .landing-actions .qb-btn {
+    width: 100% !important;
+    min-height: 46px !important;
+    justify-content: center !important;
+    font-size: 0.72rem !important;
+  }
+
+  .landing-trust-strip {
+    gap: 8px !important;
+    margin-top: 20px !important;
+  }
+
+  .landing-trust-strip span {
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 0.66rem !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+
+  /* Hide heavy decorations on phone */
+  .landing-yellow-blob,
+  .landing-floating-card,
+  .landing-confetti,
+  .landing-dot-grid {
+    display: none !important;
+  }
+
+  .landing-visual {
+    min-height: auto !important;
+  }
+
+  .landing-device-card {
+    width: 100% !important;
+    max-width: 390px !important;
+    transform: none !important;
+    animation: none !important;
+    border-radius: 22px !important;
+    padding: 16px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-accent) !important;
+  }
+
+  .landing-device-header {
+    margin-bottom: 14px !important;
+  }
+
+  .landing-scan-status {
+    border-radius: 16px !important;
+    padding: 12px !important;
+  }
+
+  .landing-scan-status strong {
+    margin-top: 10px !important;
+    font-size: 1rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .landing-scan-status p {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .landing-qr-card {
+    width: 140px !important;
+    height: 140px !important;
+    margin: 18px auto !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .landing-qr-grid {
+    gap: 3px !important;
+  }
+
+  .landing-mini-dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .landing-mini-dashboard div {
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .landing-mini-dashboard strong {
+    font-size: 1.2rem !important;
+  }
+
+  .landing-mini-dashboard span {
+    font-size: 0.62rem !important;
+  }
+
+  /* Sections */
+  .landing-section-heading {
+    gap: 12px !important;
+    margin-bottom: 28px !important;
+  }
+
+  .landing-section-heading h2,
+  .landing-workflow-copy h2,
+  .landing-about h2 {
+    font-size: clamp(2rem, 12vw, 3.1rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .landing-feature-grid {
+    gap: 18px !important;
+  }
+
+  .landing-feature-card {
+    border-radius: 20px !important;
+    padding: 50px 16px 18px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .landing-feature-icon {
+    width: 52px !important;
+    height: 52px !important;
+    top: -20px !important;
+    left: 16px !important;
+    font-size: 0.72rem !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .landing-feature-card > span {
+    font-size: 0.68rem !important;
+  }
+
+  .landing-feature-card h3 {
+    font-size: 1.1rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .landing-feature-card p {
+    font-size: 0.78rem !important;
+    line-height: 1.5 !important;
+  }
+
+  .landing-workflow {
+    gap: 24px !important;
+  }
+
+  .landing-workflow-copy p:last-child {
+    margin-top: 14px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .landing-workflow-list {
+    gap: 10px !important;
+  }
+
+  .landing-workflow-list li {
+    grid-template-columns: 44px 1fr !important;
+    gap: 10px !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .landing-workflow-list span {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .landing-workflow-list p {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .landing-about {
+    gap: 20px !important;
+  }
+
+  .landing-about > p {
+    border-radius: 20px !important;
+    padding: 16px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.55 !important;
+    box-shadow: 4px 4px 0 0 var(--qb-secondary) !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .landing-navbar {
+    padding: 10px 14px !important;
+  }
+
+  .landing-brand span:last-child {
+    display: inline !important;
+    font-size: 0.9rem !important;
+  }
+
+  .landing-title {
+    font-size: clamp(2.65rem, 16vw, 3.8rem) !important;
+  }
+
+  .landing-mini-dashboard {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-qr-card {
+    width: 128px !important;
+    height: 128px !important;
+  }
+}
+/* =========================================================
+   LANDING TOP BAR CTA RESPONSIVE FIX
+   Paste at the very bottom of LandingPage.css
+========================================================= */
+
+.landing-nav-cta {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-accent);
+  color: #ffffff;
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  padding: 0 18px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    transform 180ms var(--qb-ease-bounce),
+    box-shadow 180ms var(--qb-ease-bounce);
+}
+
+.landing-nav-cta:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--qb-border);
+}
+
+@media (max-width: 780px) {
+  .landing-navbar {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px !important;
+  }
+
+  .landing-nav-links {
+    display: none !important;
+  }
+
+  .landing-nav-cta {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 0.62rem !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-brand span:last-child {
+    display: none !important;
+  }
+
+  .landing-nav-cta {
+    padding: 0 12px !important;
+  }
+}

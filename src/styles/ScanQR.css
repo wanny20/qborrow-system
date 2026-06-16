@@ -1131,3 +1131,292 @@
     height: 280px !important;
   }
 }
+/* =========================================================
+   FINAL SCAN QR MOBILE RESPONSIVE FIX
+   Paste at the very bottom of ScanQR.css
+========================================================= */
+
+.scan-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.scan-page * {
+  box-sizing: border-box;
+}
+
+.scan-header,
+.scan-layout,
+.scan-card,
+.scan-side-panel,
+.scan-reader-shell,
+.scan-custom-reader,
+#qr-reader {
+  max-width: 100%;
+}
+
+/* Desktop/tablet cleanup */
+@media (max-width: 1180px) {
+  .scan-layout {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    margin: 0 !important;
+  }
+
+  .scan-card,
+  .scan-side-panel {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .scan-side-panel {
+    position: static !important;
+  }
+}
+
+/* Phone layout */
+@media (max-width: 760px) {
+  .scan-page {
+    gap: 12px !important;
+  }
+
+  .scan-header > div,
+  .scan-card,
+  .scan-side-panel {
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .scan-header > div::after {
+    width: 56px !important;
+    height: 56px !important;
+    right: 14px !important;
+    bottom: -22px !important;
+    opacity: 0.75 !important;
+  }
+
+  .scan-header-topline {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .scan-header h1 {
+    max-width: calc(100% - 54px) !important;
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .scan-header p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .scan-status {
+    border-radius: 15px !important;
+    padding: 11px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .scan-primary-btn,
+  .scan-secondary-btn {
+    width: 100% !important;
+    min-height: 40px !important;
+    font-size: 0.6rem !important;
+    padding: 0 12px !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .scan-layout {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .scan-section-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .scan-section-heading h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .scan-section-heading p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Scanner */
+  .scan-reader-shell {
+    min-height: auto !important;
+    border-radius: 15px !important;
+    padding: 10px !important;
+  }
+
+  .scan-custom-reader {
+    width: 100% !important;
+  }
+
+  #qr-reader {
+    width: 100% !important;
+    min-height: 240px !important;
+    height: auto !important;
+    border-radius: 15px !important;
+  }
+
+  #qr-reader video {
+    width: 100% !important;
+    height: 240px !important;
+    min-height: 240px !important;
+    max-height: 240px !important;
+    object-fit: cover !important;
+  }
+
+  #qr-reader__scan_region {
+    min-height: 220px !important;
+    max-height: 240px !important;
+    padding: 10px !important;
+  }
+
+  #qr-reader__scan_region img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .scan-reader-paused {
+    width: 100% !important;
+    min-height: 240px !important;
+    height: auto !important;
+    border-radius: 15px !important;
+    padding: 18px !important;
+  }
+
+  .scan-reader-paused span {
+    width: 54px !important;
+    height: 54px !important;
+    font-size: 1.35rem !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .scan-reader-paused h3 {
+    font-size: 1.05rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .scan-reader-paused p {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Camera controls */
+  .scan-camera-controls {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .scan-camera-controls select {
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .scan-camera-controls button {
+    width: 100% !important;
+  }
+
+  /* Scan result */
+  .scan-result-box {
+    margin-top: 12px !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .scan-result-box span {
+    font-size: 0.52rem !important;
+  }
+
+  .scan-result-box strong {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Manual search */
+  .scan-manual-form {
+    gap: 8px !important;
+  }
+
+  .scan-manual-form input {
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Upload image card */
+  .scan-upload-card,
+  .scan-help-card,
+  .scan-admin-shortcuts {
+    margin-top: 12px !important;
+    border-radius: 15px !important;
+    padding: 12px !important;
+  }
+
+  .scan-upload-card h3,
+  .scan-help-card h3,
+  .scan-admin-shortcuts h3 {
+    font-size: 0.95rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .scan-upload-card p,
+  .scan-help-card li {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .scan-upload-name {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .scan-help-card ul {
+    margin-top: 8px !important;
+    padding-left: 16px !important;
+  }
+
+  .scan-admin-shortcuts div {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 440px) {
+  .scan-header > div,
+  .scan-card,
+  .scan-side-panel {
+    padding: 12px !important;
+  }
+
+  .scan-header h1 {
+    font-size: clamp(1.35rem, 8vw, 1.75rem) !important;
+  }
+
+  #qr-reader video,
+  #qr-reader__scan_region,
+  .scan-reader-paused {
+    min-height: 210px !important;
+    height: 210px !important;
+  }
+}

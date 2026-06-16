@@ -7,7 +7,15 @@ import "../styles/AppLayout.css";
 
 function AppLayout() {
   const [userData, setUserData] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.innerWidth > 820;
+  });
+
   const [loading, setLoading] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
 

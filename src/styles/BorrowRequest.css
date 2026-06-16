@@ -508,3 +508,307 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================================
+   FINAL BORROW REQUEST MOBILE RESPONSIVE FIX
+   Paste at the very bottom of BorrowRequest.css
+========================================================= */
+
+.borrow-request-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.borrow-request-page * {
+  box-sizing: border-box;
+}
+
+.borrow-request-header,
+.borrow-request-layout,
+.borrow-request-item-card,
+.borrow-request-form-card {
+  max-width: 100%;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .borrow-request-header,
+  .borrow-request-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-header > button {
+    width: 100% !important;
+  }
+
+  .borrow-request-layout {
+    gap: 18px !important;
+  }
+}
+
+/* Phone */
+@media (max-width: 720px) {
+  .borrow-request-page {
+    min-height: auto !important;
+  }
+
+  .borrow-request-page::before {
+    display: none !important;
+  }
+
+  .borrow-request-header {
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .borrow-request-header > div:first-child,
+  .borrow-request-item-card,
+  .borrow-request-form-card {
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .borrow-request-header > div:first-child::after {
+    width: 58px !important;
+    height: 58px !important;
+    right: 14px !important;
+    bottom: -24px !important;
+    opacity: 0.75 !important;
+  }
+
+  .borrow-request-header h1 {
+    max-width: calc(100% - 54px) !important;
+    margin-top: 12px !important;
+    font-size: clamp(1.8rem, 11vw, 2.6rem) !important;
+    line-height: 0.98 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .borrow-request-header p {
+    margin-top: 10px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .borrow-request-secondary-btn {
+    min-height: 42px !important;
+    font-size: 0.66rem !important;
+    padding: 0 14px !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .borrow-request-layout {
+    gap: 14px !important;
+  }
+
+  /* Item card */
+  .borrow-request-item-card {
+    display: grid !important;
+    grid-template-columns: 96px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    align-items: start !important;
+  }
+
+  .borrow-request-item-media {
+    width: 96px !important;
+    height: 120px !important;
+    border-radius: 14px !important;
+  }
+
+  .borrow-request-item-media img {
+    object-fit: cover !important;
+  }
+
+  .borrow-request-item-media span {
+    width: 54px !important;
+    height: 54px !important;
+    font-size: 1.6rem !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .borrow-request-item-info {
+    min-width: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .borrow-request-item-code {
+    font-size: 0.58rem !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .borrow-request-item-info h2 {
+    margin-top: 6px !important;
+    font-size: 1.2rem !important;
+    line-height: 1.05 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .borrow-request-item-info > p {
+    margin-top: 7px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .borrow-request-meta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  .borrow-request-item-card .borrow-request-meta-grid {
+    grid-column: 1 / -1 !important;
+  }
+
+  .borrow-request-meta-grid div {
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .borrow-request-meta-grid span {
+    font-size: 0.58rem !important;
+  }
+
+  .borrow-request-meta-grid strong {
+    display: block !important;
+    font-size: 0.78rem !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Form */
+  .borrow-request-form-heading h2 {
+    font-size: 1.6rem !important;
+    line-height: 1 !important;
+  }
+
+  .borrow-request-form-heading p {
+    margin-top: 8px !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .borrow-request-status,
+  .borrow-request-warning {
+    margin-top: 12px !important;
+    border-radius: 15px !important;
+    padding: 11px !important;
+    font-size: 0.76rem !important;
+    line-height: 1.4 !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .borrow-request-borrower-preview {
+    margin-top: 12px !important;
+    border-radius: 16px !important;
+    padding: 11px !important;
+  }
+
+  .borrow-request-borrower-preview .borrow-request-meta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .borrow-request-form-card form {
+    margin-top: 16px !important;
+  }
+
+  .borrow-request-field {
+    margin-bottom: 13px !important;
+  }
+
+  .borrow-request-field textarea,
+  .borrow-request-field input {
+    border-radius: 14px !important;
+    padding: 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .borrow-request-field textarea {
+    min-height: 118px !important;
+    line-height: 1.45 !important;
+  }
+
+  .borrow-request-field input {
+    min-height: 44px !important;
+  }
+
+  .borrow-request-field p {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .borrow-request-date-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .borrow-request-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-top: 18px !important;
+  }
+
+  .borrow-request-actions button,
+  .borrow-request-primary-btn,
+  .borrow-request-secondary-btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .borrow-request-primary-btn {
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 440px) {
+  .borrow-request-header > div:first-child,
+  .borrow-request-item-card,
+  .borrow-request-form-card {
+    padding: 12px !important;
+  }
+
+  .borrow-request-item-card {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .borrow-request-item-media {
+    width: 82px !important;
+    height: 108px !important;
+  }
+
+  .borrow-request-item-info h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .borrow-request-item-info > p {
+    font-size: 0.68rem !important;
+  }
+
+  .borrow-request-form-heading h2 {
+    font-size: 1.45rem !important;
+  }
+
+  .borrow-request-meta-grid div {
+    padding: 9px !important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 340px) {
+  .borrow-request-item-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-item-media {
+    width: 100% !important;
+    height: 150px !important;
+  }
+}

@@ -541,3 +541,287 @@
     border-radius: 22px;
   }
 }
+/* =========================================================
+   FINAL EDIT ITEM MOBILE RESPONSIVE FIX
+   Paste at the very bottom of EditItem.css
+========================================================= */
+
+.edit-item-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.edit-item-page * {
+  box-sizing: border-box;
+}
+
+.edit-item-header,
+.edit-item-layout,
+.edit-item-form-card,
+.edit-item-preview-card,
+.edit-item-empty {
+  max-width: 100%;
+}
+
+/* Tablet cleanup */
+@media (max-width: 1120px) {
+  .edit-item-header,
+  .edit-item-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .edit-item-header > button,
+  .edit-item-header > .edit-item-secondary-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  .edit-item-preview-card {
+    position: static !important;
+  }
+}
+
+/* Phone layout */
+@media (max-width: 720px) {
+  .edit-item-page {
+    min-height: auto !important;
+  }
+
+  .edit-item-page::before {
+    display: none !important;
+  }
+
+  .edit-item-header {
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .edit-item-header > div:first-child,
+  .edit-item-form-card,
+  .edit-item-preview-card,
+  .edit-item-empty {
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .edit-item-header > div:first-child::after {
+    width: 56px !important;
+    height: 56px !important;
+    right: 14px !important;
+    bottom: -22px !important;
+    opacity: 0.75 !important;
+  }
+
+  .edit-item-header h1 {
+    max-width: calc(100% - 54px) !important;
+    margin-top: 12px !important;
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .edit-item-header p {
+    margin-top: 10px !important;
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .edit-item-assigned-note {
+    width: 100% !important;
+    font-size: 0.68rem !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .edit-item-status {
+    margin-bottom: 12px !important;
+    border-radius: 15px !important;
+    padding: 11px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .edit-item-primary-btn,
+  .edit-item-secondary-btn {
+    width: 100% !important;
+    min-height: 40px !important;
+    font-size: 0.6rem !important;
+    padding: 0 12px !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+    text-align: center !important;
+  }
+
+  .edit-item-layout {
+    gap: 12px !important;
+  }
+
+  .edit-item-section-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .edit-item-section-heading h2 {
+    font-size: 1.15rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .edit-item-section-heading p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .edit-item-grid {
+    grid-template-columns: 1fr !important;
+    gap: 11px !important;
+  }
+
+  .edit-item-field {
+    margin-bottom: 11px !important;
+  }
+
+  .edit-item-field input,
+  .edit-item-field select,
+  .edit-item-field textarea {
+    border-radius: 14px !important;
+    font-size: 0.8rem !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .edit-item-field input,
+  .edit-item-field select {
+    min-height: 42px !important;
+  }
+
+  .edit-item-field textarea {
+    min-height: 105px !important;
+    padding-top: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  .edit-item-field input[type="file"] {
+    min-height: auto !important;
+    padding: 10px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .edit-item-field p {
+    margin-top: 6px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .edit-item-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .edit-item-actions button {
+    width: 100% !important;
+  }
+
+  /* Preview */
+  .edit-item-preview-media {
+    height: 210px !important;
+    border-radius: 15px !important;
+  }
+
+  .edit-item-preview-media span {
+    width: 58px !important;
+    height: 58px !important;
+    font-size: 1.7rem !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .edit-item-preview-info {
+    margin-top: 12px !important;
+  }
+
+  .edit-item-preview-info > span {
+    font-size: 0.56rem !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .edit-item-preview-info h3 {
+    margin-top: 6px !important;
+    font-size: 1.1rem !important;
+    line-height: 1.05 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .edit-item-preview-info > p {
+    margin-top: 8px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .edit-item-preview-meta {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 11px !important;
+  }
+
+  .edit-item-preview-meta div,
+  .edit-item-qr-note {
+    border-radius: 13px !important;
+    padding: 9px !important;
+  }
+
+  .edit-item-preview-meta span {
+    font-size: 0.52rem !important;
+  }
+
+  .edit-item-preview-meta strong {
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .edit-item-qr-note strong {
+    font-size: 0.72rem !important;
+  }
+
+  .edit-item-qr-note p {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Empty state */
+  .edit-item-empty {
+    min-height: 220px !important;
+  }
+
+  .edit-item-empty img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .edit-item-empty h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .edit-item-empty p {
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 440px) {
+  .edit-item-header > div:first-child,
+  .edit-item-form-card,
+  .edit-item-preview-card,
+  .edit-item-empty {
+    padding: 12px !important;
+  }
+
+  .edit-item-header h1 {
+    font-size: clamp(1.35rem, 8vw, 1.75rem) !important;
+  }
+
+  .edit-item-preview-media {
+    height: 185px !important;
+  }
+}

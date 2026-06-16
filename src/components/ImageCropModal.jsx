@@ -18,7 +18,24 @@ function ImageCropModal({
   const [offsetY, setOffsetY] = useState(0);
   const [processing, setProcessing] = useState(false);
 
-  const cropBoxSize = 320;
+  const [cropBoxSize, setCropBoxSize] = useState(320);
+
+useEffect(() => {
+  function updateCropBoxSize() {
+    const availableWidth = window.innerWidth - 72;
+    const nextSize = Math.min(320, Math.max(240, availableWidth));
+
+    setCropBoxSize(nextSize);
+  }
+
+  updateCropBoxSize();
+
+  window.addEventListener("resize", updateCropBoxSize);
+
+  return () => {
+    window.removeEventListener("resize", updateCropBoxSize);
+  };
+}, []);
 
   useEffect(() => {
     if (!file) return;
@@ -63,7 +80,7 @@ function ImageCropModal({
       maxOffsetX: Math.max(0, (displayWidth - cropBoxSize) / 2),
       maxOffsetY: Math.max(0, (displayHeight - cropBoxSize) / 2),
     };
-  }, [imageSize, zoom]);
+  }, [imageSize, zoom, cropBoxSize]);
 
   useEffect(() => {
     setOffsetX((current) =>
