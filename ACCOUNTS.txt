@@ -9,3 +9,17 @@ Admin can set the overdue duration of each item that will be burrowed
 
 Admin Account: admin@gmail.com 
             : admin123
+
+borrower account: borrower@gmail.com 
+            :borrower123
+
+IT:  qborrow_it@gmail.com
+            :admin123
+
+SPORTS: qborrow_sports@gmail.com    
+            :admin123
+
+LAB:    qborrow_lab@gmail.com
+            :admin123
+AudioVisual: qborrow_audiovisual@gmail.com
+            :admin123
