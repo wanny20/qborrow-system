@@ -15,8 +15,20 @@ const DEFAULT_CATEGORIES = [
   { id: "it", name: "IT Items" },
 ];
 
+const VALID_USER_TYPES = ["Student", "Faculty", "Staff"];
+
 function cleanText(value) {
   return String(value || "").trim();
+}
+
+function cleanUserType(value) {
+  const cleanedValue = cleanText(value);
+
+  if (VALID_USER_TYPES.includes(cleanedValue)) {
+    return cleanedValue;
+  }
+
+  return "Student";
 }
 
 function normalizeCategoryId(value) {
@@ -25,6 +37,37 @@ function normalizeCategoryId(value) {
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function getBorrowerDetailsPayload(borrower) {
+  const userType = cleanUserType(borrower.userType || borrower.borrowerType);
+  const studentNumber = cleanText(borrower.studentNumber || borrower.studentId);
+  const employeeId = cleanText(borrower.employeeId || borrower.employeeNumber);
+  const courseDepartment = cleanText(
+    borrower.courseDepartment ||
+      borrower.course ||
+      borrower.department ||
+      borrower.courseOrDepartment
+  );
+  const yearLevel = cleanText(borrower.yearLevel || borrower.year);
+  const section = cleanText(borrower.section);
+  const mobileNumber = cleanText(
+    borrower.mobileNumber ||
+      borrower.mobile ||
+      borrower.phone ||
+      borrower.phoneNumber ||
+      borrower.contactNumber
+  );
+
+  return {
+    userType,
+    studentNumber: userType === "Student" ? studentNumber : "",
+    employeeId: userType === "Faculty" || userType === "Staff" ? employeeId : "",
+    courseDepartment,
+    yearLevel: userType === "Student" ? yearLevel : "",
+    section: userType === "Student" ? section : "",
+    mobileNumber,
+  };
 }
 
 async function requireSuperAdmin(request) {
@@ -329,6 +372,8 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
         email,
         role: "borrower",
         assignedCategories: [],
+
+        ...getBorrowerDetailsPayload(borrower),
 
         overdueCount: 0,
         suspendedUntil: "",

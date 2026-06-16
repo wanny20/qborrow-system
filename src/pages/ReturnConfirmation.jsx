@@ -82,6 +82,34 @@ function ReturnConfirmation() {
     );
   }
 
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType(request) {
+    return cleanDisplay(request?.borrowerUserType, "Student");
+  }
+
+  function getBorrowerIdNumber(request) {
+    const borrowerType = getBorrowerUserType(request);
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(request?.borrowerEmployeeId);
+    }
+
+    return cleanDisplay(request?.borrowerStudentNumber);
+  }
+
+  function getBorrowerYearSection(request) {
+    const values = [
+      request?.borrowerYearLevel,
+      request?.borrowerSection,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
+  }
+
   function canCategoryAdminSeeRequest(request) {
     if (!isCategoryAdmin) return true;
 
@@ -531,6 +559,31 @@ function ReturnConfirmation() {
                 </div>
 
                 <div>
+                  <span>User Type</span>
+                  <strong>{getBorrowerUserType(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>ID Number</span>
+                  <strong>{getBorrowerIdNumber(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>Course / Department</span>
+                  <strong>{cleanDisplay(selectedRequest.borrowerCourseDepartment)}</strong>
+                </div>
+
+                <div>
+                  <span>Year / Section</span>
+                  <strong>{getBorrowerYearSection(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>Mobile Number</span>
+                  <strong>{cleanDisplay(selectedRequest.borrowerMobileNumber)}</strong>
+                </div>
+
+                <div>
                   <span>Category</span>
                   <strong>{getRequestCategoryName(selectedRequest)}</strong>
                 </div>
@@ -657,6 +710,21 @@ function ReturnConfirmation() {
                   <div>
                     <span>Borrower</span>
                     <strong>{request.borrowerName || request.borrowerEmail}</strong>
+                  </div>
+
+                  <div>
+                    <span>User Type</span>
+                    <strong>{getBorrowerUserType(request)}</strong>
+                  </div>
+
+                  <div>
+                    <span>ID Number</span>
+                    <strong>{getBorrowerIdNumber(request)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Course / Department</span>
+                    <strong>{cleanDisplay(request.borrowerCourseDepartment)}</strong>
                   </div>
 
                   <div>

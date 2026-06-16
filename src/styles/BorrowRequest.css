@@ -461,3 +461,50 @@
     height: 210px;
   }
 }
+
+/* =========================
+   BORROWER DETAILS PREVIEW
+   Added for Student / Faculty / Staff borrower information
+   ========================= */
+
+.borrow-request-borrower-preview {
+  margin-top: 18px;
+  border: 2px dashed var(--qb-border);
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(52, 211, 153, 0.1)),
+    var(--qb-bg);
+  padding: 14px;
+}
+
+.borrow-request-borrower-preview > .qb-kicker {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.borrow-request-borrower-preview .borrow-request-meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 0;
+}
+
+.borrow-request-borrower-preview .borrow-request-meta-grid div {
+  background: #ffffff;
+}
+
+.borrow-request-borrower-preview .borrow-request-meta-grid strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1320px) {
+  .borrow-request-borrower-preview .borrow-request-meta-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .borrow-request-borrower-preview .borrow-request-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}

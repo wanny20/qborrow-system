@@ -1529,3 +1529,67 @@
     width: 100% !important;
   }
 }
+/* =========================
+   BORROWER DETAILS EXTENSION
+   ========================= */
+
+.user-borrower-details-box,
+.user-csv-template {
+  border: 2px dashed var(--qb-border);
+  border-radius: 18px;
+  background: var(--qb-bg);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.user-borrower-details-box.compact {
+  margin: 12px 0 0;
+}
+
+.user-borrower-details-box > span,
+.user-csv-template strong {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.user-borrower-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.user-borrower-details-grid .user-field {
+  margin-bottom: 0;
+}
+
+.user-csv-template span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.user-card .user-info-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 1250px) {
+  .user-card .user-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-card .user-info-grid,
+  .user-borrower-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -23,12 +23,11 @@ function ManageRequests() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(
-  searchParams.get("status") || "Pending"
-);
+    searchParams.get("status") || "Pending"
+  );
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
 
-  const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
   function showStatus(message, type) {
@@ -53,46 +52,80 @@ function ManageRequests() {
     );
   }
 
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType(request) {
+    return cleanDisplay(request.borrowerUserType, "Student");
+  }
+
+  function getBorrowerIdNumber(request) {
+    const borrowerType = getBorrowerUserType(request);
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(request.borrowerEmployeeId);
+    }
+
+    return cleanDisplay(request.borrowerStudentNumber);
+  }
+
+  function getBorrowerYearSection(request) {
+    const values = [
+      request.borrowerYearLevel,
+      request.borrowerSection,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
+  }
+
   function getAdminId() {
     return userData?.uid || auth.currentUser?.uid || "";
   }
 
   function getAdminName() {
-    return userData?.fullName || userData?.email || auth.currentUser?.email || "Admin";
+    return (
+      userData?.fullName ||
+      userData?.email ||
+      auth.currentUser?.email ||
+      "Admin"
+    );
   }
+
   function isRequestOverdue(request) {
-  if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
-    return false;
+    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+      return false;
+    }
+
+    if (!request.expectedReturnDate) {
+      return false;
+    }
+
+    const today = new Date();
+    const expectedDate = new Date(request.expectedReturnDate);
+
+    today.setHours(0, 0, 0, 0);
+    expectedDate.setHours(0, 0, 0, 0);
+
+    return today > expectedDate;
   }
 
-  if (!request.expectedReturnDate) {
-    return false;
+  function handleStatusFilterChange(value) {
+    setStatusFilter(value);
+
+    if (value === "Pending") {
+      setSearchParams({ status: "Pending" });
+      return;
+    }
+
+    if (value === "All") {
+      setSearchParams({});
+      return;
+    }
+
+    setSearchParams({ status: value });
   }
-
-  const today = new Date();
-  const expectedDate = new Date(request.expectedReturnDate);
-
-  today.setHours(0, 0, 0, 0);
-  expectedDate.setHours(0, 0, 0, 0);
-
-  return today > expectedDate;
-}
-
-function handleStatusFilterChange(value) {
-  setStatusFilter(value);
-
-  if (value === "Pending") {
-    setSearchParams({ status: "Pending" });
-    return;
-  }
-
-  if (value === "All") {
-    setSearchParams({});
-    return;
-  }
-
-  setSearchParams({ status: value });
-}
 
   function canCategoryAdminSeeRequest(request) {
     if (!isCategoryAdmin) return true;
@@ -196,6 +229,73 @@ function handleStatusFilterChange(value) {
     }
   }
 
+  async function handleReleaseRequest(request) {
+    if (request.approvalStatus !== "Approved") {
+      showStatus("Only approved requests can be released.", "error");
+      return;
+    }
+
+    const confirmRelease = window.confirm(
+      `Release ${request.itemName} to ${request.borrowerName || request.borrowerEmail}? This will mark the request as Borrowed.`
+    );
+
+    if (!confirmRelease) return;
+
+    setActionLoadingId(request.id);
+    showStatus("", "");
+
+    try {
+      const requestRef = doc(db, "borrowRequests", request.id);
+      const itemRef = doc(db, "items", request.itemId);
+      const itemSnap = await getDoc(itemRef);
+
+      if (!itemSnap.exists()) {
+        showStatus("Item not found. This request cannot be released.", "error");
+        return;
+      }
+
+      const itemData = itemSnap.data();
+
+      if (itemData.availability !== "Reserved") {
+        showStatus(
+          `This item is currently ${itemData.availability}. Only reserved items can be released.`,
+          "error"
+        );
+        return;
+      }
+
+      await updateDoc(requestRef, {
+        approvalStatus: "Borrowed",
+        releasedBy: getAdminId(),
+        releasedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      await updateDoc(itemRef, {
+        availability: "Borrowed",
+        updatedAt: serverTimestamp(),
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        userId: request.borrowerId,
+        targetRole: "borrower",
+        categoryId: getRequestCategoryId(request),
+        title: "Item Released",
+        message: `${request.itemName} has been released to you. Please return it on or before ${request.expectedReturnDate || "the expected return date"}.`,
+        status: "Unread",
+        createdAt: serverTimestamp(),
+        link: "/my-requests",
+      });
+
+      showStatus("Item released successfully. Request is now marked as borrowed.", "success");
+      fetchRequests();
+    } catch (error) {
+      showStatus("Error releasing item: " + error.message, "error");
+    } finally {
+      setActionLoadingId("");
+    }
+  }
+
   async function handleRejectRequest(request) {
     if (request.approvalStatus !== "Pending") {
       showStatus("Only pending requests can be rejected.", "error");
@@ -242,13 +342,14 @@ function handleStatusFilterChange(value) {
   useEffect(() => {
     fetchRequests();
   }, []);
-  useEffect(() => {
-  const statusFromUrl = searchParams.get("status");
 
-  if (statusFromUrl) {
-    setStatusFilter(statusFromUrl);
-  }
-}, [searchParams]);
+  useEffect(() => {
+    const statusFromUrl = searchParams.get("status");
+
+    if (statusFromUrl) {
+      setStatusFilter(statusFromUrl);
+    }
+  }, [searchParams]);
 
   const visibleRequests = useMemo(() => {
     if (isCategoryAdmin) {
@@ -264,6 +365,13 @@ function handleStatusFilterChange(value) {
       ${request.itemCode || ""}
       ${request.borrowerName || ""}
       ${request.borrowerEmail || ""}
+      ${request.borrowerUserType || ""}
+      ${request.borrowerStudentNumber || ""}
+      ${request.borrowerEmployeeId || ""}
+      ${request.borrowerCourseDepartment || ""}
+      ${request.borrowerYearLevel || ""}
+      ${request.borrowerSection || ""}
+      ${request.borrowerMobileNumber || ""}
       ${request.purpose || ""}
       ${getRequestCategoryId(request)}
       ${getRequestCategoryName(request)}
@@ -280,25 +388,26 @@ function handleStatusFilterChange(value) {
     return matchesSearch && matchesStatus;
   });
 
-    const requestStats = {
-      total: visibleRequests.length,
-      pending: visibleRequests.filter(
-        (request) => request.approvalStatus === "Pending"
-      ).length,
-      approved: visibleRequests.filter(
-        (request) => request.approvalStatus === "Approved"
-      ).length,
-      borrowed: visibleRequests.filter(
-        (request) => request.approvalStatus === "Borrowed"
-      ).length,
-      overdue: visibleRequests.filter((request) => isRequestOverdue(request)).length,
-      returned: visibleRequests.filter(
-        (request) => request.approvalStatus === "Returned"
-      ).length,
-      rejected: visibleRequests.filter(
-        (request) => request.approvalStatus === "Rejected"
-      ).length,
-    };
+  const requestStats = {
+    total: visibleRequests.length,
+    pending: visibleRequests.filter(
+      (request) => request.approvalStatus === "Pending"
+    ).length,
+    approved: visibleRequests.filter(
+      (request) => request.approvalStatus === "Approved"
+    ).length,
+    borrowed: visibleRequests.filter(
+      (request) => request.approvalStatus === "Borrowed"
+    ).length,
+    overdue: visibleRequests.filter((request) => isRequestOverdue(request)).length,
+    returned: visibleRequests.filter(
+      (request) => request.approvalStatus === "Returned"
+    ).length,
+    rejected: visibleRequests.filter(
+      (request) => request.approvalStatus === "Rejected"
+    ).length,
+  };
+
   if (loading) {
     return (
       <div className="manage-requests-loading">
@@ -320,8 +429,8 @@ function handleStatusFilterChange(value) {
           <h1>Manage Requests</h1>
 
           <p>
-            Review borrower requests, approve available items into reserved
-            status, or reject requests that cannot proceed.
+            Review borrower requests, approve available items, release approved
+            items to borrowers, or reject requests that cannot proceed.
           </p>
 
           {isCategoryAdmin && (
@@ -376,9 +485,9 @@ function handleStatusFilterChange(value) {
         </div>
 
         <div>
-        <span>!</span>
-        <h3>{requestStats.overdue}</h3>
-        <p>Overdue</p>
+          <span>!</span>
+          <h3>{requestStats.overdue}</h3>
+          <p>Overdue</p>
         </div>
 
         <div>
@@ -403,7 +512,7 @@ function handleStatusFilterChange(value) {
           <input
             id="request-search"
             type="text"
-            placeholder="Search item, borrower, category, purpose..."
+            placeholder="Search item, borrower, ID, section, category, purpose..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
           />
@@ -414,11 +523,11 @@ function handleStatusFilterChange(value) {
             Status
           </label>
 
-            <select
-              id="status-filter"
-              value={statusFilter}
-              onChange={(event) => handleStatusFilterChange(event.target.value)}
-            >
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(event) => handleStatusFilterChange(event.target.value)}
+          >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
             <option value="Approved">Approved</option>
@@ -466,11 +575,12 @@ function handleStatusFilterChange(value) {
                   >
                     {request.approvalStatus || "Unknown"}
                   </span>
+
                   {isRequestOverdue(request) && (
-                  <span className="manage-status-pill status-overdue">
-                    Overdue
-                  </span>
-                )}
+                    <span className="manage-status-pill status-overdue">
+                      Overdue
+                    </span>
+                  )}
                 </div>
 
                 <h3>{request.itemName || "Untitled Item"}</h3>
@@ -480,6 +590,31 @@ function handleStatusFilterChange(value) {
                     <span>Borrower</span>
                     <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
                     <p>{request.borrowerEmail}</p>
+                  </div>
+
+                  <div>
+                    <span>User Type</span>
+                    <strong>{getBorrowerUserType(request)}</strong>
+                  </div>
+
+                  <div>
+                    <span>ID Number</span>
+                    <strong>{getBorrowerIdNumber(request)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Course / Department</span>
+                    <strong>{cleanDisplay(request.borrowerCourseDepartment)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Year / Section</span>
+                    <strong>{getBorrowerYearSection(request)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Mobile Number</span>
+                    <strong>{cleanDisplay(request.borrowerMobileNumber)}</strong>
                   </div>
 
                   <div>
@@ -512,7 +647,7 @@ function handleStatusFilterChange(value) {
                     View Item
                   </button>
 
-                  {request.approvalStatus === "Pending" ? (
+                  {request.approvalStatus === "Pending" && (
                     <>
                       <button
                         type="button"
@@ -532,14 +667,39 @@ function handleStatusFilterChange(value) {
                         Reject
                       </button>
                     </>
-                  ) : (
+                  )}
+
+                  {request.approvalStatus === "Approved" && (
+                    <button
+                      type="button"
+                      className="manage-release-btn"
+                      onClick={() => handleReleaseRequest(request)}
+                      disabled={actionLoadingId === request.id}
+                    >
+                      {actionLoadingId === request.id ? "..." : "Release Item"}
+                    </button>
+                  )}
+
+                  {!["Pending", "Approved"].includes(request.approvalStatus) && (
                     <span className="manage-no-action">No action needed</span>
                   )}
                 </div>
 
                 {request.approvedBy && (
                   <p className="manage-approved-by">
-                    Approved by: {request.approvedBy === getAdminId() ? getAdminName() : request.approvedBy}
+                    Approved by:{" "}
+                    {request.approvedBy === getAdminId()
+                      ? getAdminName()
+                      : request.approvedBy}
+                  </p>
+                )}
+
+                {request.releasedBy && (
+                  <p className="manage-approved-by">
+                    Released by:{" "}
+                    {request.releasedBy === getAdminId()
+                      ? getAdminName()
+                      : request.releasedBy}
                   </p>
                 )}
               </article>

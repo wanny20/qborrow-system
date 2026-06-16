@@ -748,3 +748,64 @@
     width: 100%;
   }
 }
+
+/* =========================
+   BORROWER DETAILS IN REPORTS
+   Added for Student / Faculty / Staff borrower information
+   ========================= */
+
+.reports-history-subline {
+  align-items: flex-start;
+}
+
+.reports-history-subline span {
+  max-width: 100%;
+  line-height: 1.35;
+}
+
+.reports-mini-card div {
+  min-width: 0;
+}
+
+.reports-mini-card p {
+  overflow-wrap: anywhere;
+}
+
+.reports-history-row {
+  grid-template-columns: minmax(320px, 1.15fr) minmax(420px, 1fr);
+}
+
+.reports-history-titleline {
+  min-width: 0;
+}
+
+.reports-history-main,
+.reports-history-titleline > div {
+  min-width: 0;
+}
+
+.reports-history-main h3 {
+  overflow-wrap: anywhere;
+}
+
+.reports-status-pill {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 1320px) {
+  .reports-history-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-history-subline {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .reports-history-subline span {
+    width: 100%;
+  }
+}

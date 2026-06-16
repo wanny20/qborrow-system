@@ -118,6 +118,7 @@
 .manage-refresh-btn,
 .manage-view-btn,
 .manage-approve-btn,
+.manage-release-btn,
 .manage-reject-btn {
   min-height: 42px;
   border: 2px solid var(--qb-border);
@@ -166,16 +167,23 @@
   color: var(--qb-foreground);
 }
 
+.manage-release-btn {
+  background: var(--qb-accent);
+  color: #ffffff;
+}
+
 .manage-secondary-btn:hover,
 .manage-refresh-btn:hover,
 .manage-view-btn:hover,
 .manage-approve-btn:hover,
+.manage-release-btn:hover,
 .manage-reject-btn:hover {
   transform: translate(-1px, -1px);
   box-shadow: 4px 4px 0 0 var(--qb-border);
 }
 
 .manage-approve-btn:disabled,
+.manage-release-btn:disabled,
 .manage-reject-btn:disabled {
   cursor: not-allowed;
   opacity: 0.65;
@@ -599,5 +607,69 @@
   .manage-no-action {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* =========================
+   BORROWER DETAILS IN REQUEST CARDS
+   Added for Student / Faculty / Staff borrower information
+   ========================= */
+
+.manage-summary-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.manage-summary-grid > div:nth-child(7) {
+  box-shadow: inset 0 -4px 0 0 #fecaca;
+}
+
+.manage-request-topline {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.manage-request-topline > span:first-child {
+  margin-right: auto;
+}
+
+.manage-request-info {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.manage-request-info div:first-child {
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.12)),
+    #ffffff;
+}
+
+.manage-request-info strong,
+.manage-request-info p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1380px) {
+  .manage-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .manage-request-info {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .manage-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .manage-request-info {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .manage-summary-grid,
+  .manage-request-info {
+    grid-template-columns: 1fr;
   }
 }

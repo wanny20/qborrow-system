@@ -83,6 +83,54 @@ function BorrowRequest() {
     );
   }
 
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType() {
+    return cleanDisplay(currentUserData?.userType, "Student");
+  }
+
+  function getBorrowerIdNumber() {
+    const borrowerType = getBorrowerUserType();
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(currentUserData?.employeeId);
+    }
+
+    return cleanDisplay(currentUserData?.studentNumber);
+  }
+
+  function getBorrowerYearSection() {
+    const values = [
+      currentUserData?.yearLevel,
+      currentUserData?.section,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
+  }
+
+  function getBorrowerDetailsSnapshot() {
+    const borrowerType = getBorrowerUserType();
+
+    return {
+      borrowerUserType: borrowerType,
+      borrowerStudentNumber:
+        borrowerType === "Student" ? String(currentUserData?.studentNumber || "").trim() : "",
+      borrowerEmployeeId:
+        borrowerType === "Faculty" || borrowerType === "Staff"
+          ? String(currentUserData?.employeeId || "").trim()
+          : "",
+      borrowerCourseDepartment: String(currentUserData?.courseDepartment || "").trim(),
+      borrowerYearLevel:
+        borrowerType === "Student" ? String(currentUserData?.yearLevel || "").trim() : "",
+      borrowerSection:
+        borrowerType === "Student" ? String(currentUserData?.section || "").trim() : "",
+      borrowerMobileNumber: String(currentUserData?.mobileNumber || "").trim(),
+    };
+  }
+
   function getMaxBorrowDays() {
     const parsedMaxDays = Number(item?.maxBorrowDays);
 
@@ -325,6 +373,7 @@ function BorrowRequest() {
         borrowerId: currentUser.uid,
         borrowerEmail: currentUser.email,
         borrowerName: getBorrowerName(),
+        ...getBorrowerDetailsSnapshot(),
 
         purpose: purpose.trim(),
         borrowDate,
@@ -493,6 +542,39 @@ function BorrowRequest() {
             <div className="borrow-request-warning">
               <strong>Admin account detected</strong>
               <p>Only borrower accounts can submit borrow requests.</p>
+            </div>
+          )}
+
+          {currentUserData?.role === "borrower" && (
+            <div className="borrow-request-borrower-preview">
+              <span className="qb-kicker">Borrower Details</span>
+
+              <div className="borrow-request-meta-grid">
+                <div>
+                  <span>User Type</span>
+                  <strong>{getBorrowerUserType()}</strong>
+                </div>
+
+                <div>
+                  <span>ID Number</span>
+                  <strong>{getBorrowerIdNumber()}</strong>
+                </div>
+
+                <div>
+                  <span>Course / Department</span>
+                  <strong>{cleanDisplay(currentUserData?.courseDepartment)}</strong>
+                </div>
+
+                <div>
+                  <span>Year / Section</span>
+                  <strong>{getBorrowerYearSection()}</strong>
+                </div>
+
+                <div>
+                  <span>Mobile Number</span>
+                  <strong>{cleanDisplay(currentUserData?.mobileNumber)}</strong>
+                </div>
+              </div>
             </div>
           )}
 

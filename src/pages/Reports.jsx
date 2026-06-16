@@ -72,6 +72,34 @@ function Reports() {
     );
   }
 
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType(request) {
+    return cleanDisplay(request.borrowerUserType, "Student");
+  }
+
+  function getBorrowerIdNumber(request) {
+    const borrowerType = getBorrowerUserType(request);
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(request.borrowerEmployeeId);
+    }
+
+    return cleanDisplay(request.borrowerStudentNumber);
+  }
+
+  function getBorrowerYearSection(request) {
+    const values = [
+      request.borrowerYearLevel,
+      request.borrowerSection,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
+  }
+
   function canCategoryAdminSeeCategory(categoryId, categoryName) {
     if (!isCategoryAdmin) return true;
 
@@ -228,6 +256,13 @@ function Reports() {
         ${request.itemCode || ""}
         ${request.borrowerName || ""}
         ${request.borrowerEmail || ""}
+        ${request.borrowerUserType || ""}
+        ${request.borrowerStudentNumber || ""}
+        ${request.borrowerEmployeeId || ""}
+        ${request.borrowerCourseDepartment || ""}
+        ${request.borrowerYearLevel || ""}
+        ${request.borrowerSection || ""}
+        ${request.borrowerMobileNumber || ""}
         ${request.purpose || ""}
         ${getRequestCategoryId(request)}
         ${getRequestCategoryName(request)}
@@ -619,6 +654,8 @@ function Reports() {
                   <div>
                     <h3>{request.itemName || "Untitled Item"}</h3>
                     <p>{request.borrowerEmail || "No email"}</p>
+                    <p>{getBorrowerIdNumber(request)}</p>
+                    <p>{cleanDisplay(request.borrowerCourseDepartment)}</p>
                     <p>Expected: {request.expectedReturnDate || "Not set"}</p>
                   </div>
 
@@ -673,6 +710,11 @@ function Reports() {
                   <div className="reports-history-subline">
                     <span>{request.borrowerName || "Unnamed Borrower"}</span>
                     <span>{request.borrowerEmail || "No email"}</span>
+                    <span>{getBorrowerUserType(request)}</span>
+                    <span>{getBorrowerIdNumber(request)}</span>
+                    <span>{cleanDisplay(request.borrowerCourseDepartment)}</span>
+                    <span>{getBorrowerYearSection(request)}</span>
+                    <span>{cleanDisplay(request.borrowerMobileNumber)}</span>
                     <span>{getRequestCategoryName(request)}</span>
                   </div>
                 </div>

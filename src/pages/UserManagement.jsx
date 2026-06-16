@@ -21,6 +21,8 @@ import { db, secondaryAuth, functions } from "../firebase/firebaseConfig";
 import "../styles/UserManagement.css";
 
 const USERS_PAGE_SIZE = 5;
+const USER_TYPES = ["Student", "Faculty", "Staff"];
+const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
 
 function UserManagement() {
   const outletContext = useOutletContext() || {};
@@ -47,6 +49,14 @@ function UserManagement() {
   const [role, setRole] = useState("borrower");
   const [assignedCategories, setAssignedCategories] = useState([]);
 
+  const [userType, setUserType] = useState("Student");
+  const [studentNumber, setStudentNumber] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
+  const [courseDepartment, setCourseDepartment] = useState("");
+  const [yearLevel, setYearLevel] = useState("");
+  const [section, setSection] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCategoryList, setShowCategoryList] = useState(false);
 
@@ -58,6 +68,14 @@ function UserManagement() {
   const [editRole, setEditRole] = useState("borrower");
   const [editAssignedCategories, setEditAssignedCategories] = useState([]);
 
+  const [editUserType, setEditUserType] = useState("Student");
+  const [editStudentNumber, setEditStudentNumber] = useState("");
+  const [editEmployeeId, setEditEmployeeId] = useState("");
+  const [editCourseDepartment, setEditCourseDepartment] = useState("");
+  const [editYearLevel, setEditYearLevel] = useState("");
+  const [editSection, setEditSection] = useState("");
+  const [editMobileNumber, setEditMobileNumber] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusMessage, setStatusMessage] = useState("");
@@ -68,8 +86,18 @@ function UserManagement() {
     setStatusType(type);
   }
 
+  function cleanInput(value) {
+    return String(value || "").trim();
+  }
+
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
+  }
+
+  function getSafeUserType(value) {
+    const cleanedValue = cleanInput(value);
+
+    return USER_TYPES.includes(cleanedValue) ? cleanedValue : "Student";
   }
 
   function formatSuspendedUntil(value) {
@@ -110,6 +138,31 @@ function UserManagement() {
     return "Borrower";
   }
 
+  function getUserTypeLabel(user) {
+    if (user.role !== "borrower") return "N/A";
+    return user.userType || "Student";
+  }
+
+  function getIdNumberLabel(user) {
+    if (user.role !== "borrower") return "N/A";
+
+    if (user.userType === "Faculty" || user.userType === "Staff") {
+      return user.employeeId || "Not set";
+    }
+
+    return user.studentNumber || "Not set";
+  }
+
+  function getYearSectionLabel(user) {
+    if (user.role !== "borrower") return "N/A";
+
+    const values = [user.yearLevel, user.section].filter(Boolean);
+
+    if (values.length === 0) return "Not set";
+
+    return values.join(" - ");
+  }
+
   function getCategoryName(categoryId) {
     const category = categories.find(
       (item) => normalizeText(item.id) === normalizeText(categoryId)
@@ -124,6 +177,66 @@ function UserManagement() {
     }
 
     return categoryIds.map(getCategoryName).join(", ");
+  }
+
+  function getBorrowerDetailsPayload(sourceRole = role) {
+    if (sourceRole !== "borrower") {
+      return {
+        userType: "",
+        studentNumber: "",
+        employeeId: "",
+        courseDepartment: "",
+        yearLevel: "",
+        section: "",
+        mobileNumber: "",
+      };
+    }
+
+    const safeUserType = getSafeUserType(userType);
+
+    return {
+      userType: safeUserType,
+      studentNumber:
+        safeUserType === "Student" ? cleanInput(studentNumber) : "",
+      employeeId:
+        safeUserType === "Faculty" || safeUserType === "Staff"
+          ? cleanInput(employeeId)
+          : "",
+      courseDepartment: cleanInput(courseDepartment),
+      yearLevel: safeUserType === "Student" ? cleanInput(yearLevel) : "",
+      section: safeUserType === "Student" ? cleanInput(section) : "",
+      mobileNumber: cleanInput(mobileNumber),
+    };
+  }
+
+  function getEditBorrowerDetailsPayload(sourceRole = editRole) {
+    if (sourceRole !== "borrower") {
+      return {
+        userType: "",
+        studentNumber: "",
+        employeeId: "",
+        courseDepartment: "",
+        yearLevel: "",
+        section: "",
+        mobileNumber: "",
+      };
+    }
+
+    const safeUserType = getSafeUserType(editUserType);
+
+    return {
+      userType: safeUserType,
+      studentNumber:
+        safeUserType === "Student" ? cleanInput(editStudentNumber) : "",
+      employeeId:
+        safeUserType === "Faculty" || safeUserType === "Staff"
+          ? cleanInput(editEmployeeId)
+          : "",
+      courseDepartment: cleanInput(editCourseDepartment),
+      yearLevel: safeUserType === "Student" ? cleanInput(editYearLevel) : "",
+      section: safeUserType === "Student" ? cleanInput(editSection) : "",
+      mobileNumber: cleanInput(editMobileNumber),
+    };
   }
 
   async function fetchUsersPage(mode = "reset") {
@@ -244,12 +357,23 @@ function UserManagement() {
     });
   }
 
+  function resetBorrowerDetails() {
+    setUserType("Student");
+    setStudentNumber("");
+    setEmployeeId("");
+    setCourseDepartment("");
+    setYearLevel("");
+    setSection("");
+    setMobileNumber("");
+  }
+
   function resetCreateForm() {
     setFullName("");
     setEmail("");
     setTemporaryPassword("");
     setRole("borrower");
     setAssignedCategories([]);
+    resetBorrowerDetails();
   }
 
   async function handleCreateUser(e) {
@@ -257,7 +381,7 @@ function UserManagement() {
     showStatus("", "");
 
     if (!fullName.trim() || !email.trim() || !temporaryPassword.trim() || !role) {
-      showStatus("Please fill in all fields.", "error");
+      showStatus("Please fill in name, email, password, and role.", "error");
       return;
     }
 
@@ -292,6 +416,7 @@ function UserManagement() {
         email: email.trim().toLowerCase(),
         role,
         assignedCategories: role === "categoryAdmin" ? assignedCategories : [],
+        ...getBorrowerDetailsPayload(role),
         overdueCount: 0,
         suspendedUntil: "",
         suspensionReason: "",
@@ -409,12 +534,28 @@ function UserManagement() {
     setEditAssignedCategories(
       Array.isArray(user.assignedCategories) ? user.assignedCategories : []
     );
+
+    setEditUserType(getSafeUserType(user.userType));
+    setEditStudentNumber(user.studentNumber || "");
+    setEditEmployeeId(user.employeeId || "");
+    setEditCourseDepartment(user.courseDepartment || "");
+    setEditYearLevel(user.yearLevel || "");
+    setEditSection(user.section || "");
+    setEditMobileNumber(user.mobileNumber || "");
   }
 
   function cancelEditingUser() {
     setEditingUserId("");
     setEditRole("borrower");
     setEditAssignedCategories([]);
+
+    setEditUserType("Student");
+    setEditStudentNumber("");
+    setEditEmployeeId("");
+    setEditCourseDepartment("");
+    setEditYearLevel("");
+    setEditSection("");
+    setEditMobileNumber("");
   }
 
   async function handleSaveUserChanges(user) {
@@ -436,13 +577,13 @@ function UserManagement() {
 
       await updateDoc(userRef, {
         role: editRole,
-        assignedCategories: editRole === "categoryAdmin"
-          ? editAssignedCategories
-          : [],
+        assignedCategories:
+          editRole === "categoryAdmin" ? editAssignedCategories : [],
+        ...getEditBorrowerDetailsPayload(editRole),
         updatedAt: serverTimestamp(),
       });
 
-      showStatus("User role and categories updated successfully.", "success");
+      showStatus("User details updated successfully.", "success");
       cancelEditingUser();
       fetchData();
     } catch (error) {
@@ -615,6 +756,11 @@ function UserManagement() {
     return headers.findIndex((header) => possibleNames.includes(header));
   }
 
+  function getOptionalCsvValue(row, index) {
+    if (index === -1) return "";
+    return row[index] || "";
+  }
+
   async function handleCsvChange(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -657,6 +803,56 @@ function UserManagement() {
         "temp password",
       ]);
 
+      const userTypeIndex = findHeaderIndex(headers, [
+        "user type",
+        "borrower type",
+        "type",
+        "account type",
+      ]);
+
+      const studentNumberIndex = findHeaderIndex(headers, [
+        "student number",
+        "student no",
+        "student no.",
+        "student id",
+        "student id number",
+      ]);
+
+      const employeeIdIndex = findHeaderIndex(headers, [
+        "employee id",
+        "employee number",
+        "faculty id",
+        "staff id",
+      ]);
+
+      const courseDepartmentIndex = findHeaderIndex(headers, [
+        "course department",
+        "course/department",
+        "course or department",
+        "course",
+        "department",
+      ]);
+
+      const yearLevelIndex = findHeaderIndex(headers, [
+        "year level",
+        "year",
+        "yearlevel",
+      ]);
+
+      const sectionIndex = findHeaderIndex(headers, [
+        "section",
+        "class section",
+      ]);
+
+      const mobileNumberIndex = findHeaderIndex(headers, [
+        "mobile number",
+        "mobile",
+        "phone",
+        "phone number",
+        "contact",
+        "contact number",
+      ]);
+
       if (nameIndex === -1 || emailIndex === -1 || passwordIndex === -1) {
         showStatus(
           "CSV headers must include Name, Email, and Password.",
@@ -671,6 +867,13 @@ function UserManagement() {
           fullName: row[nameIndex] || "",
           email: row[emailIndex] || "",
           password: row[passwordIndex] || "",
+          userType: getOptionalCsvValue(row, userTypeIndex),
+          studentNumber: getOptionalCsvValue(row, studentNumberIndex),
+          employeeId: getOptionalCsvValue(row, employeeIdIndex),
+          courseDepartment: getOptionalCsvValue(row, courseDepartmentIndex),
+          yearLevel: getOptionalCsvValue(row, yearLevelIndex),
+          section: getOptionalCsvValue(row, sectionIndex),
+          mobileNumber: getOptionalCsvValue(row, mobileNumberIndex),
         }))
         .filter(
           (borrower) =>
@@ -798,6 +1001,13 @@ function UserManagement() {
       ${user.fullName || ""}
       ${user.email || ""}
       ${user.role || ""}
+      ${user.userType || ""}
+      ${user.studentNumber || ""}
+      ${user.employeeId || ""}
+      ${user.courseDepartment || ""}
+      ${user.yearLevel || ""}
+      ${user.section || ""}
+      ${user.mobileNumber || ""}
       ${formatAssignedCategories(user.assignedCategories)}
       ${user.suspensionReason || ""}
     `.toLowerCase();
@@ -904,8 +1114,8 @@ function UserManagement() {
             <div className="user-section-heading">
               <h2>Create User</h2>
               <p>
-                Use a temporary password. The user can login using the assigned
-                email and password.
+                Use a temporary password. Borrower details are optional but
+                recommended for students, faculty, and staff.
               </p>
             </div>
 
@@ -966,6 +1176,10 @@ function UserManagement() {
                     if (e.target.value !== "categoryAdmin") {
                       setAssignedCategories([]);
                     }
+
+                    if (e.target.value !== "borrower") {
+                      resetBorrowerDetails();
+                    }
                   }}
                 >
                   <option value="borrower">Borrower</option>
@@ -973,6 +1187,133 @@ function UserManagement() {
                   <option value="superAdmin">Super Admin</option>
                 </select>
               </div>
+
+              {role === "borrower" && (
+                <div className="user-borrower-details-box">
+                  <span>Borrower Details</span>
+
+                  <div className="user-borrower-details-grid">
+                    <div className="user-field">
+                      <label className="qb-label" htmlFor="user-type">
+                        User Type
+                      </label>
+
+                      <select
+                        id="user-type"
+                        value={userType}
+                        onChange={(e) => {
+                          setUserType(e.target.value);
+                          setStudentNumber("");
+                          setEmployeeId("");
+                          setYearLevel("");
+                          setSection("");
+                        }}
+                      >
+                        {USER_TYPES.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {userType === "Student" ? (
+                      <div className="user-field">
+                        <label className="qb-label" htmlFor="student-number">
+                          Student Number
+                        </label>
+
+                        <input
+                          id="student-number"
+                          type="text"
+                          placeholder="Example: 2023-00125"
+                          value={studentNumber}
+                          onChange={(e) => setStudentNumber(e.target.value)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="user-field">
+                        <label className="qb-label" htmlFor="employee-id">
+                          Employee ID
+                        </label>
+
+                        <input
+                          id="employee-id"
+                          type="text"
+                          placeholder="Example: EMP-00015"
+                          value={employeeId}
+                          onChange={(e) => setEmployeeId(e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="user-field">
+                      <label className="qb-label" htmlFor="course-department">
+                        Course / Department
+                      </label>
+
+                      <input
+                        id="course-department"
+                        type="text"
+                        placeholder="Example: BSCS / Computer Studies"
+                        value={courseDepartment}
+                        onChange={(e) => setCourseDepartment(e.target.value)}
+                      />
+                    </div>
+
+                    {userType === "Student" && (
+                      <>
+                        <div className="user-field">
+                          <label className="qb-label" htmlFor="year-level">
+                            Year Level
+                          </label>
+
+                          <select
+                            id="year-level"
+                            value={yearLevel}
+                            onChange={(e) => setYearLevel(e.target.value)}
+                          >
+                            <option value="">Select Year Level</option>
+                            {YEAR_LEVELS.map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="user-field">
+                          <label className="qb-label" htmlFor="section">
+                            Section
+                          </label>
+
+                          <input
+                            id="section"
+                            type="text"
+                            placeholder="Example: BSCS 3A"
+                            value={section}
+                            onChange={(e) => setSection(e.target.value)}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="user-field">
+                      <label className="qb-label" htmlFor="mobile-number">
+                        Mobile Number
+                      </label>
+
+                      <input
+                        id="mobile-number"
+                        type="text"
+                        placeholder="Example: 09XXXXXXXXX"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {role === "categoryAdmin" && (
                 <div className="user-category-box">
@@ -1118,9 +1459,18 @@ function UserManagement() {
             <div className="user-section-heading">
               <h2>Import Borrowers</h2>
               <p>
-                CSV must include Name, Email, and Password. Passwords are used
-                only to create accounts.
+                Required CSV headers: Name, Email, Password. Optional headers:
+                User Type, Student Number, Employee ID, Course Department, Year
+                Level, Section, Mobile Number.
               </p>
+            </div>
+
+            <div className="user-csv-template">
+              <strong>CSV Format</strong>
+              <span>
+                Name, Email, Password, User Type, Student Number, Employee ID,
+                Course Department, Year Level, Section, Mobile Number
+              </span>
             </div>
 
             <div className="user-field">
@@ -1203,7 +1553,7 @@ function UserManagement() {
               <input
                 id="user-search"
                 type="text"
-                placeholder="Search name, email, role, category..."
+                placeholder="Search name, email, role, ID, course, section..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
@@ -1261,6 +1611,39 @@ function UserManagement() {
 
                       <div className="user-info-grid">
                         <div>
+                          <span>User Type</span>
+                          <strong>{getUserTypeLabel(user)}</strong>
+                        </div>
+
+                        <div>
+                          <span>ID Number</span>
+                          <strong>{getIdNumberLabel(user)}</strong>
+                        </div>
+
+                        <div>
+                          <span>Course / Department</span>
+                          <strong>
+                            {user.role === "borrower"
+                              ? user.courseDepartment || "Not set"
+                              : "N/A"}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Year / Section</span>
+                          <strong>{getYearSectionLabel(user)}</strong>
+                        </div>
+
+                        <div>
+                          <span>Mobile Number</span>
+                          <strong>
+                            {user.role === "borrower"
+                              ? user.mobileNumber || "Not set"
+                              : "N/A"}
+                          </strong>
+                        </div>
+
+                        <div>
                           <span>Assigned Categories</span>
                           <strong>
                             {formatAssignedCategories(user.assignedCategories)}
@@ -1307,6 +1690,16 @@ function UserManagement() {
                                 if (e.target.value !== "categoryAdmin") {
                                   setEditAssignedCategories([]);
                                 }
+
+                                if (e.target.value !== "borrower") {
+                                  setEditUserType("Student");
+                                  setEditStudentNumber("");
+                                  setEditEmployeeId("");
+                                  setEditCourseDepartment("");
+                                  setEditYearLevel("");
+                                  setEditSection("");
+                                  setEditMobileNumber("");
+                                }
                               }}
                             >
                               <option value="borrower">Borrower</option>
@@ -1316,6 +1709,129 @@ function UserManagement() {
                               <option value="superAdmin">Super Admin</option>
                             </select>
                           </div>
+
+                          {editRole === "borrower" && (
+                            <div className="user-borrower-details-box compact">
+                              <span>Edit Borrower Details</span>
+
+                              <div className="user-borrower-details-grid">
+                                <div className="user-field">
+                                  <label className="qb-label">User Type</label>
+
+                                  <select
+                                    value={editUserType}
+                                    onChange={(e) => {
+                                      setEditUserType(e.target.value);
+                                      setEditStudentNumber("");
+                                      setEditEmployeeId("");
+                                      setEditYearLevel("");
+                                      setEditSection("");
+                                    }}
+                                  >
+                                    {USER_TYPES.map((type) => (
+                                      <option key={type} value={type}>
+                                        {type}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {editUserType === "Student" ? (
+                                  <div className="user-field">
+                                    <label className="qb-label">
+                                      Student Number
+                                    </label>
+
+                                    <input
+                                      type="text"
+                                      value={editStudentNumber}
+                                      onChange={(e) =>
+                                        setEditStudentNumber(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="user-field">
+                                    <label className="qb-label">
+                                      Employee ID
+                                    </label>
+
+                                    <input
+                                      type="text"
+                                      value={editEmployeeId}
+                                      onChange={(e) =>
+                                        setEditEmployeeId(e.target.value)
+                                      }
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="user-field">
+                                  <label className="qb-label">
+                                    Course / Department
+                                  </label>
+
+                                  <input
+                                    type="text"
+                                    value={editCourseDepartment}
+                                    onChange={(e) =>
+                                      setEditCourseDepartment(e.target.value)
+                                    }
+                                  />
+                                </div>
+
+                                {editUserType === "Student" && (
+                                  <>
+                                    <div className="user-field">
+                                      <label className="qb-label">
+                                        Year Level
+                                      </label>
+
+                                      <select
+                                        value={editYearLevel}
+                                        onChange={(e) =>
+                                          setEditYearLevel(e.target.value)
+                                        }
+                                      >
+                                        <option value="">Select Year Level</option>
+                                        {YEAR_LEVELS.map((year) => (
+                                          <option key={year} value={year}>
+                                            {year}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div className="user-field">
+                                      <label className="qb-label">Section</label>
+
+                                      <input
+                                        type="text"
+                                        value={editSection}
+                                        onChange={(e) =>
+                                          setEditSection(e.target.value)
+                                        }
+                                      />
+                                    </div>
+                                  </>
+                                )}
+
+                                <div className="user-field">
+                                  <label className="qb-label">
+                                    Mobile Number
+                                  </label>
+
+                                  <input
+                                    type="text"
+                                    value={editMobileNumber}
+                                    onChange={(e) =>
+                                      setEditMobileNumber(e.target.value)
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
                           {editRole === "categoryAdmin" && (
                             <div className="user-category-box compact">
