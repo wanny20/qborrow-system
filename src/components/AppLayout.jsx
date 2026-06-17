@@ -169,13 +169,13 @@ function AppLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    const savedTheme =
-      userData?.themeMode || localStorage.getItem("qborrowTheme") || "light";
+    useEffect(() => {
+      const savedTheme =
+        localStorage.getItem("qborrowTheme") || userData?.themeMode || "light";
 
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    localStorage.setItem("qborrowTheme", savedTheme);
-  }, [userData?.themeMode]);
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      localStorage.setItem("qborrowTheme", savedTheme);
+    }, [userData?.themeMode]);
 
   useEffect(() => {
     if (!userData?.uid) return;

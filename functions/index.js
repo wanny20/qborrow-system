@@ -548,23 +548,26 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
         disabled: false,
       });
 
-      await db.collection("users").doc(createdUser.uid).set({
-        fullName,
-        email,
-        role: "borrower",
-        assignedCategories: [],
+await db.collection("users").doc(createdUser.uid).set({
+  fullName,
+  email,
+  role: "borrower",
+  assignedCategories: [],
 
-        ...getBorrowerDetailsPayload(borrower),
+  ...getBorrowerDetailsPayload(borrower),
 
-        overdueCount: 0,
-        suspendedUntil: "",
-        suspensionReason: "",
-        canBorrow: true,
+  overdueCount: 0,
+  suspendedUntil: "",
+  suspensionReason: "",
+  canBorrow: true,
 
-        createdBy: currentUser.uid,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+  mustChangePassword: true,
+  passwordChangedAt: "",
+
+  createdBy: currentUser.uid,
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 
       results.push({
         email,

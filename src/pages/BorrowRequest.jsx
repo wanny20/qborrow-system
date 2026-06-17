@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react"; 
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   doc,
@@ -7,6 +7,8 @@ import {
   addDoc,
   getDocs,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
@@ -49,8 +51,11 @@ function BorrowRequest() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -222,10 +227,17 @@ function BorrowRequest() {
       newExpectedReturnDate >= existingBorrowDate
     );
   }
+    async function checkRequestConflict() {
+    if (!item?.id) return null;
 
-  async function checkRequestConflict() {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
     const activeStatuses = ["Pending", "Approved", "Borrowed"];
+
+    const requestsQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", item.id)
+    );
+
+    const requestsSnapshot = await getDocs(requestsQuery);
 
     const conflictingRequest = requestsSnapshot.docs
       .map((document) => ({
@@ -233,7 +245,6 @@ function BorrowRequest() {
         ...document.data(),
       }))
       .find((request) => {
-        if (request.itemId !== item.id) return false;
         if (!activeStatuses.includes(request.approvalStatus)) return false;
 
         return hasDateConflict(borrowDate, expectedReturnDate, request);
@@ -244,6 +255,8 @@ function BorrowRequest() {
 
   useEffect(() => {
     async function loadPageData(user) {
+      setLoading(true);
+
       try {
         const itemRef = doc(db, "items", itemId);
         const itemSnap = await getDoc(itemRef);
@@ -295,10 +308,20 @@ function BorrowRequest() {
     return () => unsubscribe();
   }, [itemId, navigate, outletContext?.userData]);
 
-  async function handleSubmitRequest(e) {
-    e.preventDefault();
-    showStatus("", "");
+async function handleSubmitRequest(e) {
+  e.preventDefault();
 
+  if (submitLockRef.current || submitting || requestSubmitted) {
+    return;
+  }
+
+  submitLockRef.current = true;
+  setSubmitting(true);
+  showStatus("", "");
+
+  let submittedSuccessfully = false;
+
+  try {
     if (currentUserData?.role && currentUserData.role !== "borrower") {
       showStatus("Only borrower accounts can submit borrow requests.", "error");
       return;
@@ -349,87 +372,89 @@ function BorrowRequest() {
       return;
     }
 
-    setSubmitting(true);
+    const conflictingRequest = await checkRequestConflict();
 
-    try {
-      const conflictingRequest = await checkRequestConflict();
+    if (conflictingRequest) {
+      showStatus(
+        `This item already has an active request from ${conflictingRequest.borrowDate} to ${conflictingRequest.expectedReturnDate}. Please choose another item.`,
+        "error"
+      );
+      return;
+    }
 
-      if (conflictingRequest) {
-        showStatus(
-          `This item already has an active request from ${conflictingRequest.borrowDate} to ${conflictingRequest.expectedReturnDate}. Please choose another item.`,
-          "error"
-        );
-        setSubmitting(false);
-        return;
-      }
+    await addDoc(collection(db, "borrowRequests"), {
+      itemId: item.id,
+      itemCode: getItemCode(),
+      itemName: item.itemName || "Untitled Item",
+      categoryId: getCategoryId(),
+      categoryName: getCategoryName(),
 
-      await addDoc(collection(db, "borrowRequests"), {
-        itemId: item.id,
-        itemCode: getItemCode(),
-        itemName: item.itemName || "Untitled Item",
-        categoryId: getCategoryId(),
-        categoryName: getCategoryName(),
+      borrowerId: currentUser.uid,
+      borrowerEmail: currentUser.email,
+      borrowerName: getBorrowerName(),
+      ...getBorrowerDetailsSnapshot(),
 
-        borrowerId: currentUser.uid,
-        borrowerEmail: currentUser.email,
-        borrowerName: getBorrowerName(),
-        ...getBorrowerDetailsSnapshot(),
+      purpose: purpose.trim(),
+      borrowDate,
+      expectedReturnDate,
+      actualReturnDate: "",
 
-        purpose: purpose.trim(),
-        borrowDate,
-        expectedReturnDate,
-        actualReturnDate: "",
+      approvalStatus: "Pending",
 
-        approvalStatus: "Pending",
+      assignedAdminId: "",
+      approvedBy: "",
+      releasedBy: "",
+      returnedBy: "",
 
-        assignedAdminId: "",
-        approvedBy: "",
-        releasedBy: "",
-        returnedBy: "",
+      returnCondition: "",
+      damageLostReport: "",
 
-        returnCondition: "",
-        damageLostReport: "",
+      createdAt: serverTimestamp(),
+      approvedAt: "",
+      rejectedAt: "",
+      releasedAt: "",
+      returnedAt: "",
+    });
 
-        createdAt: serverTimestamp(),
-        approvedAt: "",
-        rejectedAt: "",
-        releasedAt: "",
-        returnedAt: "",
-      });
+    await addDoc(collection(db, "notifications"), {
+      userId: currentUser.uid,
+      targetRole: "borrower",
+      categoryId: getCategoryId(),
+      title: "Borrow Request Submitted",
+      message: `Your request for ${item.itemName} has been submitted and is waiting for admin approval.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
 
-      await addDoc(collection(db, "notifications"), {
-        userId: currentUser.uid,
-        targetRole: "borrower",
-        categoryId: getCategoryId(),
-        title: "Borrow Request Submitted",
-        message: `Your request for ${item.itemName} has been submitted and is waiting for admin approval.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
+    await addDoc(collection(db, "notifications"), {
+      userId: "",
+      targetRole: "categoryAdmin",
+      categoryId: getCategoryId(),
+      title: "New Borrow Request",
+      message: `${getBorrowerName()} requested ${item.itemName}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/manage-requests",
+    });
 
-      await addDoc(collection(db, "notifications"), {
-        userId: "",
-        targetRole: "categoryAdmin",
-        categoryId: getCategoryId(),
-        title: "New Borrow Request",
-        message: `${getBorrowerName()} requested ${item.itemName}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/manage-requests",
-      });
+    submittedSuccessfully = true;
+    setRequestSubmitted(true);
 
-      showStatus("Borrow request submitted successfully. Redirecting...", "success");
+    showStatus("Borrow request submitted successfully. Redirecting...", "success");
 
-      setTimeout(() => {
-        navigate("/my-requests");
-      }, 700);
-    } catch (error) {
-      showStatus("Error submitting request: " + error.message, "error");
-    } finally {
+    setTimeout(() => {
+      navigate("/my-requests");
+    }, 700);
+  } catch (error) {
+    showStatus("Error submitting request: " + error.message, "error");
+  } finally {
+    if (!submittedSuccessfully) {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }
+}
 
   const maxExpectedReturnDate = getMaxExpectedReturnDate();
 
@@ -589,6 +614,7 @@ function BorrowRequest() {
                 placeholder="Example: For classroom presentation"
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
+                disabled={submitting || requestSubmitted}
                 required
               />
             </div>
@@ -622,6 +648,7 @@ function BorrowRequest() {
                   min={today}
                   max={maxExpectedReturnDate || undefined}
                   onChange={(e) => setExpectedReturnDate(e.target.value)}
+                  disabled={submitting || requestSubmitted}
                   required
                 />
 
@@ -634,20 +661,29 @@ function BorrowRequest() {
             </div>
 
             <div className="borrow-request-actions">
-              <button
-                type="button"
-                className="borrow-request-secondary-btn"
-                onClick={() => navigate(`/item/${itemId}`)}
-              >
-                Cancel
-              </button>
+            <button
+              type="button"
+              className="borrow-request-secondary-btn"
+              onClick={() => navigate(`/item/${itemId}`)}
+              disabled={submitting || requestSubmitted}
+            >
+              Cancel
+            </button>
 
               <button
                 type="submit"
                 className="borrow-request-primary-btn"
-                disabled={submitting || item?.availability !== "Available"}
+                disabled={
+                  submitting ||
+                  requestSubmitted ||
+                  item?.availability !== "Available"
+                }
               >
-                {submitting ? "Submitting..." : "Submit Request"}
+                {requestSubmitted
+                  ? "Submitted"
+                  : submitting
+                  ? "Submitting..."
+                  : "Submit Request"}
               </button>
             </div>
           </form>

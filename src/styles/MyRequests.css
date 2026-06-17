@@ -883,3 +883,30 @@
     grid-template-columns: 1fr !important;
   }
 }
+/* =========================================================
+   MY REQUESTS LOAD MORE
+========================================================= */
+
+.my-requests-load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(30, 41, 59, 0.18);
+}
+
+.my-requests-load-more-row button {
+  min-width: 230px;
+  min-height: 44px;
+}
+
+.my-requests-load-more-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 760px) {
+  .my-requests-load-more-row button {
+    width: 100%;
+  }
+}

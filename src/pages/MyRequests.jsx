@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -8,16 +8,34 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  orderBy,
+  limit,
+  startAfter,
+  getCountFromServer,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/MyRequests.css";
+const REQUESTS_PAGE_SIZE = 10;
 
 function MyRequests() {
   const navigate = useNavigate();
 
-  const [requests, setRequests] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+const [requests, setRequests] = useState([]);
+const [lastRequestDoc, setLastRequestDoc] = useState(null);
+const [hasMoreRequests, setHasMoreRequests] = useState(false);
+const [loadingMoreRequests, setLoadingMoreRequests] = useState(false);
+
+const [currentUser, setCurrentUser] = useState(null);
+
+const [requestStats, setRequestStats] = useState({
+  total: 0,
+  pending: 0,
+  approved: 0,
+  borrowed: 0,
+  returned: 0,
+  closed: 0,
+});
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,32 +111,146 @@ function MyRequests() {
 
     return "neutral";
   }
+  async function fetchMyRequestStats(userId) {
+  const requestsRef = collection(db, "borrowRequests");
 
-  async function fetchMyRequests(userId) {
+  const [
+    totalSnapshot,
+    pendingSnapshot,
+    approvedSnapshot,
+    borrowedSnapshot,
+    returnedSnapshot,
+    rejectedSnapshot,
+    cancelledSnapshot,
+  ] = await Promise.all([
+    getCountFromServer(query(requestsRef, where("borrowerId", "==", userId))),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Pending")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Approved")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Borrowed")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Returned")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Rejected")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Cancelled")
+      )
+    ),
+  ]);
+
+  setRequestStats({
+    total: totalSnapshot.data().count || 0,
+    pending: pendingSnapshot.data().count || 0,
+    approved: approvedSnapshot.data().count || 0,
+    borrowed: borrowedSnapshot.data().count || 0,
+    returned: returnedSnapshot.data().count || 0,
+    closed:
+      (rejectedSnapshot.data().count || 0) +
+      (cancelledSnapshot.data().count || 0),
+  });
+}
+
+async function fetchMyRequests(userId, mode = "reset") {
+  if (mode === "reset") {
     setLoading(true);
+  }
 
-    try {
-      const requestsQuery = query(
-        collection(db, "borrowRequests"),
-        where("borrowerId", "==", userId)
-      );
+  try {
+    const requestsQuery =
+      mode === "more" && lastRequestDoc
+        ? query(
+            collection(db, "borrowRequests"),
+            where("borrowerId", "==", userId),
+            orderBy("createdAt", "desc"),
+            startAfter(lastRequestDoc),
+            limit(REQUESTS_PAGE_SIZE + 1)
+          )
+        : query(
+            collection(db, "borrowRequests"),
+            where("borrowerId", "==", userId),
+            orderBy("createdAt", "desc"),
+            limit(REQUESTS_PAGE_SIZE + 1)
+          );
 
-      const querySnapshot = await getDocs(requestsQuery);
+    const querySnapshot = await getDocs(requestsQuery);
+    const docs = querySnapshot.docs;
+    const visibleDocs = docs.slice(0, REQUESTS_PAGE_SIZE);
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
+    const requestData = visibleDocs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
 
-      setRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading your requests: " + error.message, "error");
-    } finally {
+    setHasMoreRequests(docs.length > REQUESTS_PAGE_SIZE);
+    setLastRequestDoc(visibleDocs[visibleDocs.length - 1] || null);
+
+    if (mode === "more") {
+      setRequests((previousRequests) => {
+        const existingIds = new Set(previousRequests.map((request) => request.id));
+        const newRequests = requestData.filter(
+          (request) => !existingIds.has(request.id)
+        );
+
+        return [...previousRequests, ...newRequests];
+      });
+
+      return;
+    }
+
+    setRequests(requestData);
+    await fetchMyRequestStats(userId);
+  } catch (error) {
+    showStatus("Error loading your requests: " + error.message, "error");
+  } finally {
+    if (mode === "reset") {
       setLoading(false);
     }
   }
+}
+async function handleLoadMoreRequests() {
+  if (!currentUser?.uid || !hasMoreRequests || loadingMoreRequests) return;
+
+  setLoadingMoreRequests(true);
+  showStatus("", "");
+
+  try {
+    await fetchMyRequests(currentUser.uid, "more");
+  } catch (error) {
+    showStatus("Error loading more requests: " + error.message, "error");
+  } finally {
+    setLoadingMoreRequests(false);
+  }
+}
 
   async function handleCancelRequest(request) {
     if (request.approvalStatus !== "Pending") {
@@ -147,7 +279,7 @@ function MyRequests() {
       showStatus("Request cancelled successfully.", "success");
 
       if (currentUser?.uid) {
-        fetchMyRequests(currentUser.uid);
+        fetchMyRequests(currentUser.uid, "reset");
       }
     } catch (error) {
       showStatus("Error cancelling request: " + error.message, "error");
@@ -188,29 +320,6 @@ function MyRequests() {
     return matchesSearch && matchesStatus;
   });
 
-  const requestStats = useMemo(
-    () => ({
-      total: requests.length,
-      pending: requests.filter(
-        (request) => request.approvalStatus === "Pending"
-      ).length,
-      approved: requests.filter(
-        (request) => request.approvalStatus === "Approved"
-      ).length,
-      borrowed: requests.filter(
-        (request) => request.approvalStatus === "Borrowed"
-      ).length,
-      returned: requests.filter(
-        (request) => request.approvalStatus === "Returned"
-      ).length,
-      closed: requests.filter(
-        (request) =>
-          request.approvalStatus === "Rejected" ||
-          request.approvalStatus === "Cancelled"
-      ).length,
-    }),
-    [requests]
-  );
 
   if (loading) {
     return (
@@ -334,7 +443,7 @@ function MyRequests() {
         <button
           type="button"
           className="my-requests-refresh-btn"
-          onClick={() => currentUser?.uid && fetchMyRequests(currentUser.uid)}
+          onClick={() => currentUser?.uid && fetchMyRequests(currentUser.uid, "reset")}
         >
           Refresh
         </button>
@@ -345,8 +454,9 @@ function MyRequests() {
           <div>
             <h2>Request History</h2>
             <p>
-              Showing {filteredRequests.length} of {requests.length} request
-              {requests.length === 1 ? "" : "s"}.
+              Showing {filteredRequests.length} of {requests.length} loaded request
+{requests.length === 1 ? "" : "s"}.
+{hasMoreRequests ? " Load more to view older requests." : ""}
             </p>
           </div>
         </div>
@@ -447,8 +557,21 @@ function MyRequests() {
     </article>
   ))}
 </div>
+
         )}
       </section>
+      {hasMoreRequests && (
+  <div className="my-requests-load-more-row">
+    <button
+      type="button"
+      className="my-requests-secondary-btn"
+      onClick={handleLoadMoreRequests}
+      disabled={loadingMoreRequests}
+    >
+      {loadingMoreRequests ? "Loading..." : "Load More Requests"}
+    </button>
+  </div>
+)}
     </div>
   );
 }

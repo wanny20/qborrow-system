@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
+import ForcePasswordChange from "./pages/ForcePasswordChange";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AddItem from "./pages/AddItem";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/scan-qr" element={<ScanQR />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/settings" element={<Settings />} />
+          
 
           {/* Optional alias if you accidentally type /scan */}
           <Route path="/scan" element={<Navigate to="/scan-qr" replace />} />
@@ -142,7 +144,14 @@ function App() {
           {/* Unknown protected route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
-
+<Route
+  path="/force-password-change"
+  element={
+    <ProtectedRoute allowedRoles={["superAdmin", "categoryAdmin", "borrower"]}>
+      <ForcePasswordChange />
+    </ProtectedRoute>
+  }
+/>
         {/* Unknown public route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

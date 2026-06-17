@@ -6,6 +6,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
@@ -144,18 +146,22 @@ function ItemDetails() {
     }
   }
 
-  async function hasActiveBorrowRequest() {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+async function hasActiveBorrowRequest() {
+  if (!item?.id) return false;
 
-    return requestsSnapshot.docs.some((document) => {
-      const request = document.data();
+  const requestsQuery = firestoreQuery(
+    collection(db, "borrowRequests"),
+    where("itemId", "==", item.id)
+  );
 
-      return (
-        request.itemId === item.id &&
-        activeRequestStatuses.includes(request.approvalStatus)
-      );
-    });
-  }
+  const requestsSnapshot = await getDocs(requestsQuery);
+
+  return requestsSnapshot.docs.some((document) => {
+    const request = document.data();
+
+    return activeRequestStatuses.includes(request.approvalStatus);
+  });
+}
 
   async function handleDeleteItem() {
     if (!item) return;

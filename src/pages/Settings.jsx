@@ -95,11 +95,11 @@ function Settings() {
       setUserRecord(data);
       setFullName(data.fullName || "");
 
-      const savedTheme =
-        data.themeMode || localStorage.getItem("qborrowTheme") || "light";
+        const savedTheme =
+          localStorage.getItem("qborrowTheme") || data.themeMode || "light";
 
-      setThemeMode(savedTheme);
-      applyTheme(savedTheme);
+        setThemeMode(savedTheme);
+        applyTheme(savedTheme);
 
       if (data.photoURL) {
         setPhotoPreview(data.photoURL);

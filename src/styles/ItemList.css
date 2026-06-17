@@ -1060,4 +1060,32 @@
     border-right: 0 !important;
     border-bottom: 2px solid var(--qb-border) !important;
   }
+} 
+/* =========================================================
+   INVENTORY LOAD MORE BUTTON
+   Paste at the very bottom of ItemList.css
+========================================================= */
+
+.inventory-load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(30, 41, 59, 0.18);
+}
+
+.inventory-load-more-row button {
+  min-width: 220px;
+  min-height: 44px;
+}
+
+.inventory-load-more-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 760px) {
+  .inventory-load-more-row button {
+    width: 100%;
+  }
 }

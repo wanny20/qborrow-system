@@ -5,6 +5,12 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  query as firestoreQuery,
+  orderBy,
+  limit,
+  startAfter,
+  documentId,
+  where,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
@@ -12,11 +18,16 @@ import { db, auth } from "../firebase/firebaseConfig";
 import "../styles/ItemList.css";
 
 const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
+const ITEMS_PAGE_SIZE = 12;
 
 function ItemList() {
   const [searchParams] = useSearchParams();
 
   const [items, setItems] = useState([]);
+  const [lastItemDoc, setLastItemDoc] = useState(null);
+  const [hasMoreItems, setHasMoreItems] = useState(false);
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+
   const [categories, setCategories] = useState([]);
   const [localUserData, setLocalUserData] = useState(null);
 
@@ -86,47 +97,102 @@ function ItemList() {
     );
   }
 
-  async function fetchItemsAndCategories() {
-    try {
-      const [itemSnapshot, categorySnapshot] = await Promise.all([
-        getDocs(collection(db, "items")),
-        getDocs(collection(db, "categories")),
-      ]);
+async function fetchCategories() {
+  const categorySnapshot = await getDocs(collection(db, "categories"));
 
-      const itemData = itemSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+  const categoryData = categorySnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((category) => category.isActive !== false)
+    .sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || ""))
+    );
 
-      const categoryData = categorySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((category) => category.isActive !== false)
-        .sort((a, b) =>
-          String(a.name || "").localeCompare(String(b.name || ""))
+  setCategories(categoryData);
+}
+
+async function fetchItemsPage(mode = "reset") {
+  const itemQuery =
+    mode === "more" && lastItemDoc
+      ? firestoreQuery(
+          collection(db, "items"),
+          orderBy(documentId()),
+          startAfter(lastItemDoc),
+          limit(ITEMS_PAGE_SIZE + 1)
+        )
+      : firestoreQuery(
+          collection(db, "items"),
+          orderBy(documentId()),
+          limit(ITEMS_PAGE_SIZE + 1)
         );
 
-      setItems(itemData);
-      setCategories(categoryData);
-    } catch (error) {
-      alert("Error loading items: " + error.message);
-    }
-  }
+  const itemSnapshot = await getDocs(itemQuery);
+  const docs = itemSnapshot.docs;
+  const visibleDocs = docs.slice(0, ITEMS_PAGE_SIZE);
 
-  async function hasActiveBorrowRequest(itemId) {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+  const itemData = visibleDocs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  }));
 
-    return requestsSnapshot.docs.some((document) => {
-      const request = document.data();
+  setHasMoreItems(docs.length > ITEMS_PAGE_SIZE);
+  setLastItemDoc(visibleDocs[visibleDocs.length - 1] || null);
 
-      return (
-        request.itemId === itemId &&
-        activeRequestStatuses.includes(request.approvalStatus)
-      );
+  if (mode === "more") {
+    setItems((previousItems) => {
+      const existingIds = new Set(previousItems.map((item) => item.id));
+      const newItems = itemData.filter((item) => !existingIds.has(item.id));
+
+      return [...previousItems, ...newItems];
     });
+
+    return;
   }
+
+  setItems(itemData);
+}
+
+async function fetchItemsAndCategories() {
+  try {
+    await Promise.all([
+      fetchCategories(),
+      fetchItemsPage("reset"),
+    ]);
+  } catch (error) {
+    alert("Error loading items: " + error.message);
+  }
+}
+
+async function handleLoadMoreItems() {
+  if (!hasMoreItems || loadingMoreItems) return;
+
+  setLoadingMoreItems(true);
+
+  try {
+    await fetchItemsPage("more");
+  } catch (error) {
+    alert("Error loading more items: " + error.message);
+  } finally {
+    setLoadingMoreItems(false);
+  }
+}
+
+async function hasActiveBorrowRequest(itemId) {
+  const requestsQuery = firestoreQuery(
+    collection(db, "borrowRequests"),
+    where("itemId", "==", itemId)
+  );
+
+  const requestsSnapshot = await getDocs(requestsQuery);
+
+  return requestsSnapshot.docs.some((document) => {
+    const request = document.data();
+
+    return activeRequestStatuses.includes(request.approvalStatus);
+  });
+}
 
   async function handleDeleteItem(item) {
     if (!isAdmin) return;
@@ -464,8 +530,9 @@ function ItemList() {
           <div>
             <h2>Items</h2>
             <p>
-              Showing {filteredItems.length} of {roleVisibleItems.length} item
+              Showing {filteredItems.length} of {roleVisibleItems.length} loaded item
               {roleVisibleItems.length === 1 ? "" : "s"}.
+              {hasMoreItems && " Load more items to continue browsing."}
             </p>
           </div>
 
@@ -618,6 +685,18 @@ function ItemList() {
             ))}
           </div>
         )}
+        {hasMoreItems && (
+  <div className="inventory-load-more-row">
+    <button
+      type="button"
+      className="inventory-refresh-btn"
+      onClick={handleLoadMoreItems}
+      disabled={loadingMoreItems}
+    >
+      {loadingMoreItems ? "Loading..." : "Load More Items"}
+    </button>
+  </div>
+)}
       </section>
     </div>
   );
