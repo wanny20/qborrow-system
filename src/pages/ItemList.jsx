@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   getDocs,
@@ -42,10 +42,32 @@ function ItemList() {
   const outletContext = useOutletContext() || {};
   const userData = outletContext?.userData || localUserData;
 
+  const deleteLockRef = useRef("");
+
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
   const isAdmin = isSuperAdmin || isCategoryAdmin;
+
+  function startDeleteAction(itemId) {
+  if (deleteLockRef.current || deletingId) {
+    return false;
+  }
+
+  deleteLockRef.current = itemId;
+  setDeletingId(itemId);
+
+  return true;
+}
+
+function finishDeleteAction() {
+  deleteLockRef.current = "";
+  setDeletingId("");
+}
+
+function isDeleteBusy() {
+  return Boolean(deleteLockRef.current || deletingId);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -194,39 +216,65 @@ async function hasActiveBorrowRequest(itemId) {
   });
 }
 
-  async function handleDeleteItem(item) {
-    if (!isAdmin) return;
+async function handleDeleteItem(item) {
+  if (!isAdmin) return;
 
-    if (["Reserved", "Borrowed"].includes(item.availability)) {
-      alert("This item cannot be deleted because it is reserved or borrowed.");
+  if (isDeleteBusy()) return;
+
+  if (["Reserved", "Borrowed"].includes(item.availability)) {
+    alert("This item cannot be deleted because it is reserved or borrowed.");
+    return;
+  }
+
+  const confirmDelete = window.confirm(
+    `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
+  );
+
+  if (!confirmDelete) return;
+
+  const started = startDeleteAction(item.id);
+
+  if (!started) return;
+
+  try {
+    const itemRef = doc(db, "items", item.id);
+    const latestItemSnap = await getDoc(itemRef);
+
+    if (!latestItemSnap.exists()) {
+      alert("This item no longer exists.");
+      await fetchItemsAndCategories();
       return;
     }
 
-    const confirmDelete = window.confirm(
-      `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
-    );
+    const latestItem = {
+      id: latestItemSnap.id,
+      ...latestItemSnap.data(),
+    };
 
-    if (!confirmDelete) return;
-
-    setDeletingId(item.id);
-
-    try {
-      const hasActiveRequest = await hasActiveBorrowRequest(item.id);
-
-      if (hasActiveRequest) {
-        alert("This item cannot be deleted because it has an active borrow request.");
-        return;
-      }
-
-      await deleteDoc(doc(db, "items", item.id));
-      alert("Item deleted successfully.");
+    if (["Reserved", "Borrowed"].includes(latestItem.availability)) {
+      alert("This item cannot be deleted because it is now reserved or borrowed.");
       await fetchItemsAndCategories();
-    } catch (error) {
-      alert("Error deleting item: " + error.message);
-    } finally {
-      setDeletingId("");
+      return;
     }
+
+    const hasActiveRequest = await hasActiveBorrowRequest(item.id);
+
+    if (hasActiveRequest) {
+      alert("This item cannot be deleted because it has an active borrow request.");
+      await fetchItemsAndCategories();
+      return;
+    }
+
+    await deleteDoc(itemRef);
+
+    alert("Item deleted successfully.");
+    await fetchItemsAndCategories();
+  } catch (error) {
+    alert("Error deleting item: " + error.message);
+  } finally {
+    finishDeleteAction();
   }
+}
 
   useEffect(() => {
     const availabilityFromUrl = searchParams.get("availability");
@@ -540,6 +588,7 @@ async function hasActiveBorrowRequest(itemId) {
             type="button"
             className="inventory-refresh-btn"
             onClick={fetchItemsAndCategories}
+            disabled={isDeleteBusy() || loadingMoreItems}
           >
             Refresh
           </button>
@@ -590,30 +639,32 @@ async function hasActiveBorrowRequest(itemId) {
                 </div>
 
                 <div className="inventory-admin-actions">
-                  <button
-                    type="button"
-                    className="view-btn"
-                    onClick={() => navigate(`/item/${item.id}`)}
-                  >
-                    View
-                  </button>
+<button
+  type="button"
+  className="view-btn"
+  onClick={() => navigate(`/item/${item.id}`)}
+  disabled={isDeleteBusy()}
+>
+  View
+</button>
 
-                  <button
-                    type="button"
-                    className="edit-btn"
-                    onClick={() => navigate(`/edit-item?id=${item.id}`)}
-                  >
-                    Edit
-                  </button>
+<button
+  type="button"
+  className="edit-btn"
+  onClick={() => navigate(`/edit-item?id=${item.id}`)}
+  disabled={isDeleteBusy()}
+>
+  Edit
+</button>
 
-                  <button
-                    type="button"
-                    className="delete-btn"
-                    onClick={() => handleDeleteItem(item)}
-                    disabled={deletingId === item.id}
-                  >
-                    {deletingId === item.id ? "Deleting..." : "Delete"}
-                  </button>
+<button
+  type="button"
+  className="delete-btn"
+  onClick={() => handleDeleteItem(item)}
+  disabled={isDeleteBusy()}
+>
+  {deletingId === item.id ? "Deleting..." : "Delete"}
+</button>
                 </div>
               </article>
             ))}
@@ -691,7 +742,7 @@ async function hasActiveBorrowRequest(itemId) {
       type="button"
       className="inventory-refresh-btn"
       onClick={handleLoadMoreItems}
-      disabled={loadingMoreItems}
+      disabled={loadingMoreItems || isDeleteBusy()}
     >
       {loadingMoreItems ? "Loading..." : "Load More Items"}
     </button>

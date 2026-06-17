@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -42,6 +42,7 @@ function AddItem() {
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -166,9 +167,11 @@ function AddItem() {
     }
   }
 
-  function handleImageChange(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+function handleImageChange(event) {
+  if (submitting) return;
+
+  const file = event.target.files?.[0];
+  event.target.value = "";
 
     if (!file) return;
 
@@ -214,10 +217,18 @@ function AddItem() {
     return getDownloadURL(imageRef);
   }
 
-  async function handleAddItem(e) {
-    e.preventDefault();
-    showStatus("", "");
+async function handleAddItem(e) {
+  e.preventDefault();
 
+  if (submitLockRef.current || submitting) {
+    return;
+  }
+
+  submitLockRef.current = true;
+  setSubmitting(true);
+  showStatus("", "");
+
+  try {
     if (!isSuperAdmin && !isCategoryAdmin) {
       showStatus("Only super admins and category admins can add items.", "error");
       return;
@@ -256,53 +267,51 @@ function AddItem() {
       return;
     }
 
-    setSubmitting(true);
+    const finalItemCode = itemCode.trim() || generateItemCode();
+    const imageUrl = await uploadItemImage(finalItemCode);
 
-    try {
-      const finalItemCode = itemCode.trim() || generateItemCode();
-      const imageUrl = await uploadItemImage(finalItemCode);
+    const itemRef = await addDoc(collection(db, "items"), {
+      itemCode: finalItemCode,
+      itemName: itemName.trim(),
+      imageUrl,
+      description: description.trim(),
 
-      const itemRef = await addDoc(collection(db, "items"), {
-        itemCode: finalItemCode,
-        itemName: itemName.trim(),
-        imageUrl,
-        description: description.trim(),
+      categoryId: selectedCategory.id,
+      categoryName: selectedCategory.name,
+      category: selectedCategory.id,
 
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        category: selectedCategory.id,
+      condition,
+      availability: getFinalAvailability(),
+      maxBorrowDays: Number(maxBorrowDays),
 
-        condition,
-        availability: getFinalAvailability(),
-        maxBorrowDays: Number(maxBorrowDays),
+      qrValue: "",
+      barcodeValue: "",
 
-        qrValue: "",
-        barcodeValue: "",
+      createdBy: userData?.uid || auth.currentUser?.uid || "",
+      createdByEmail: userData?.email || auth.currentUser?.email || "",
 
-        createdBy: userData?.uid || auth.currentUser?.uid || "",
-        createdByEmail: userData?.email || auth.currentUser?.email || "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+    const qrValue = `${window.location.origin}/item/${itemRef.id}`;
+    const barcodeValue = itemRef.id;
 
-      const qrValue = `${window.location.origin}/item/${itemRef.id}`;
-      const barcodeValue = itemRef.id;
+    await updateDoc(itemRef, {
+      qrValue,
+      barcodeValue,
+      updatedAt: serverTimestamp(),
+    });
 
-      await updateDoc(itemRef, {
-        qrValue,
-        barcodeValue,
-        updatedAt: serverTimestamp(),
-      });
-
-      showStatus("Item added successfully.", "success");
-      resetForm();
-    } catch (error) {
-      showStatus("Error adding item: " + error.message, "error");
-    } finally {
-      setSubmitting(false);
-    }
+    showStatus("Item added successfully.", "success");
+    resetForm();
+  } catch (error) {
+    showStatus("Error adding item: " + error.message, "error");
+  } finally {
+    submitLockRef.current = false;
+    setSubmitting(false);
   }
+}
 
   const selectedCategory = getSelectedCategory();
 
@@ -381,6 +390,7 @@ function AddItem() {
                 placeholder="Example: Projector"
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
+                disabled={submitting}
               />
             </div>
 
@@ -395,6 +405,7 @@ function AddItem() {
                 placeholder="Leave blank to auto-generate"
                 value={itemCode}
                 onChange={(e) => setItemCode(e.target.value)}
+                disabled={submitting}
               />
 
               <p>Example: IT-12345. Leave this blank for automatic code.</p>
@@ -410,6 +421,7 @@ function AddItem() {
                 placeholder="Describe the item, included accessories, or notes..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                disabled={submitting}
               />
             </div>
 
@@ -423,7 +435,7 @@ function AddItem() {
                   id="category"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={loadingCategories || availableCategories.length === 0}
+                  disabled={submitting || loadingCategories || availableCategories.length === 0}
                 >
                   {loadingCategories ? (
                     <option value="">Loading categories...</option>
@@ -450,6 +462,7 @@ function AddItem() {
                   min="1"
                   value={maxBorrowDays}
                   onChange={(e) => setMaxBorrowDays(e.target.value)}
+                  disabled={submitting}
                 />
               </div>
             </div>
@@ -464,6 +477,7 @@ function AddItem() {
                   id="condition"
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
+                  disabled={submitting}
                 >
                   <option value="Good">Good</option>
                   <option value="Fair">Fair</option>
@@ -481,7 +495,7 @@ function AddItem() {
                   id="availability"
                   value={availability}
                   onChange={(e) => setAvailability(e.target.value)}
-                  disabled={condition === "Damaged" || condition === "Lost"}
+                  disabled={submitting || condition === "Damaged" || condition === "Lost"}
                 >
                   <option value="Available">Available</option>
                   <option value="Unavailable">Unavailable</option>
@@ -503,6 +517,7 @@ function AddItem() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                disabled={submitting}
               />
 
               <p>

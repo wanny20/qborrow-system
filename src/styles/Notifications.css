@@ -905,3 +905,12 @@
     grid-template-columns: 1fr !important;
   }
 }
+.notifications-load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.notifications-load-more-row .notifications-refresh-btn {
+  min-width: 210px;
+}

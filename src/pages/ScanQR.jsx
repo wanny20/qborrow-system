@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query as firestoreQuery,
+  where,
+  limit,
+} from "firebase/firestore";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/ScanQR.css";
@@ -12,6 +20,7 @@ function ScanQR() {
 
   const scannerRef = useRef(null);
   const hasScannedRef = useRef(false);
+  const scanActionLockRef = useRef(false);
   const fileInputRef = useRef(null);
 
   const [scanResult, setScanResult] = useState("");
@@ -33,7 +42,29 @@ function ScanQR() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function startScanAction() {
+  if (scanActionLockRef.current || isSearching) {
+    return false;
+  }
 
+  scanActionLockRef.current = true;
+  setIsSearching(true);
+
+  return true;
+}
+
+function finishScanAction() {
+  scanActionLockRef.current = false;
+  setIsSearching(false);
+}
+
+function isScanBusy() {
+  return Boolean(scanActionLockRef.current || isSearching || startingScanner);
+}
+
+function canUseAsDocumentId(value) {
+  return Boolean(value && !String(value).includes("/"));
+}
   function extractItemIdentifier(scannedText) {
     const text = String(scannedText || "").trim();
 
@@ -143,13 +174,14 @@ function ScanQR() {
     }
   }
 
-  async function findItemByScannedValue(scannedValue) {
-    const identifier = extractItemIdentifier(scannedValue);
+async function findItemByScannedValue(scannedValue) {
+  const identifier = extractItemIdentifier(scannedValue);
 
-    if (!identifier) {
-      throw new Error("No QR or barcode value detected.");
-    }
+  if (!identifier) {
+    throw new Error("No QR or barcode value detected.");
+  }
 
+  if (canUseAsDocumentId(identifier)) {
     const directItemRef = doc(db, "items", identifier);
     const directItemSnap = await getDoc(directItemRef);
 
@@ -159,73 +191,117 @@ function ScanQR() {
         ...directItemSnap.data(),
       };
     }
-
-    const itemsSnapshot = await getDocs(collection(db, "items"));
-
-    const matchedItem = itemsSnapshot.docs
-      .map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }))
-      .find((item) => {
-        return (
-          item.itemCode === identifier ||
-          item.barcodeValue === identifier ||
-          item.qrValue === scannedValue ||
-          item.qrValue === identifier
-        );
-      });
-
-    if (!matchedItem) {
-      throw new Error("No matching item found.");
-    }
-
-    return matchedItem;
   }
 
-  async function handleDetectedValue(value) {
-    if (!value || hasScannedRef.current || isSearching) return;
+  const searchCandidates = [
+    {
+      field: "itemCode",
+      value: identifier,
+    },
+    {
+      field: "barcodeValue",
+      value: identifier,
+    },
+    {
+      field: "qrValue",
+      value: scannedValue,
+    },
+    {
+      field: "qrValue",
+      value: identifier,
+    },
+  ];
 
-    hasScannedRef.current = true;
-    setScanResult(value);
-    setIsSearching(true);
-    showStatus("Scanning item record...", "success");
+  const usedQueries = new Set();
 
-    try {
-      const item = await findItemByScannedValue(value);
+  for (const candidate of searchCandidates) {
+    const cleanedValue = String(candidate.value || "").trim();
 
-      await stopScanner(true);
+    if (!cleanedValue) continue;
 
-      showStatus(`Found item: ${item.itemName || item.id}`, "success");
+    const queryKey = `${candidate.field}:${cleanedValue}`;
 
-      setTimeout(() => {
-        navigate(`/item/${item.id}`);
-      }, 600);
-    } catch (error) {
-      hasScannedRef.current = false;
-      showStatus(error.message, "error");
-    } finally {
-      setIsSearching(false);
+    if (usedQueries.has(queryKey)) continue;
+
+    usedQueries.add(queryKey);
+
+    const itemQuery = firestoreQuery(
+      collection(db, "items"),
+      where(candidate.field, "==", cleanedValue),
+      limit(1)
+    );
+
+    const itemSnapshot = await getDocs(itemQuery);
+
+    if (!itemSnapshot.empty) {
+      const matchedDocument = itemSnapshot.docs[0];
+
+      return {
+        id: matchedDocument.id,
+        ...matchedDocument.data(),
+      };
     }
   }
 
-  async function handleManualSearch(e) {
-    e.preventDefault();
+  throw new Error("No matching item found.");
+}
 
-    if (!manualCode.trim()) {
-      showStatus("Please enter an item ID, item code, or barcode value.", "error");
-      return;
-    }
+async function handleDetectedValue(value) {
+  if (!value || hasScannedRef.current) return;
 
-    await handleDetectedValue(manualCode.trim());
+  const started = startScanAction();
+
+  if (!started) return;
+
+  hasScannedRef.current = true;
+  setScanResult(value);
+  showStatus("Scanning item record...", "success");
+
+  try {
+    const item = await findItemByScannedValue(value);
+
+    await stopScanner(true);
+
+    showStatus(`Found item: ${item.itemName || item.id}`, "success");
+
+    setTimeout(() => {
+      navigate(`/item/${item.id}`);
+    }, 600);
+  } catch (error) {
+    hasScannedRef.current = false;
+    showStatus(error.message, "error");
+  } finally {
+    finishScanAction();
   }
-  async function handleUploadedImageScan(event) {
+}
+
+async function handleManualSearch(e) {
+  e.preventDefault();
+
+  if (isScanBusy()) return;
+
+  if (!manualCode.trim()) {
+    showStatus("Please enter an item ID, item code, or barcode value.", "error");
+    return;
+  }
+
+  hasScannedRef.current = false;
+  await handleDetectedValue(manualCode.trim());
+}
+
+async function handleUploadedImageScan(event) {
+  if (isScanBusy()) return;
+
   const file = event.target.files?.[0];
 
   if (!file) return;
 
+  const started = startScanAction();
+
+  if (!started) return;
+
+  hasScannedRef.current = true;
   setUploadedFileName(file.name);
-  setIsSearching(true);
   showStatus("Reading uploaded QR/barcode image...", "success");
 
   try {
@@ -264,22 +340,25 @@ function ScanQR() {
       navigate(`/item/${item.id}`);
     }, 600);
   } catch (error) {
+    hasScannedRef.current = false;
     showStatus("Upload scan failed: " + error.message, "error");
   } finally {
-    setIsSearching(false);
+    finishScanAction();
     event.target.value = "";
   }
 }
-  async function restartScanner() {
-    await stopScanner(false);
+async function restartScanner() {
+  if (isScanBusy()) return;
 
-    hasScannedRef.current = false;
-    setScanResult("");
-    setStatusMessage("");
-    setStatusType("");
+  await stopScanner(false);
 
-    await startScanner(true);
-  }
+  hasScannedRef.current = false;
+  setScanResult("");
+  setStatusMessage("");
+  setStatusType("");
+
+  await startScanner(true);
+}
 
   useEffect(() => {
     return () => {
@@ -353,7 +432,7 @@ function ScanQR() {
               <select
                 value={selectedCameraId}
                 onChange={(event) => setSelectedCameraId(event.target.value)}
-                disabled={scannerActive || startingScanner}
+                disabled={scannerActive || startingScanner || isSearching}
               >
                 {cameras.map((camera, index) => (
                   <option key={camera.id} value={camera.id}>
@@ -376,7 +455,7 @@ function ScanQR() {
               type="button"
               className="scan-secondary-btn"
               onClick={() => stopScanner(false)}
-              disabled={!scannerActive}
+              disabled={!scannerActive || isSearching}
             >
               Stop Scanning
             </button>
@@ -385,7 +464,7 @@ function ScanQR() {
               type="button"
               className="scan-secondary-btn"
               onClick={restartScanner}
-              disabled={startingScanner || isSearching}
+              disabled={isScanBusy()}
             >
               Restart Scanner
             </button>
@@ -418,12 +497,13 @@ function ScanQR() {
               placeholder="Paste or type scanned value"
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
+              disabled={isScanBusy()}
             />
 
             <button
               type="submit"
               className="scan-primary-btn"
-              disabled={isSearching}
+              disabled={isScanBusy()} 
             >
               {isSearching ? "Searching..." : "Open Item"}
             </button>
@@ -447,7 +527,7 @@ function ScanQR() {
     type="button"
     className="scan-secondary-btn"
     onClick={() => fileInputRef.current?.click()}
-    disabled={isSearching}
+    disabled={isScanBusy()}
   >
     {isSearching ? "Reading..." : "Upload Image"}
   </button>
@@ -479,6 +559,7 @@ function ScanQR() {
                   type="button"
                   className="scan-secondary-btn"
                   onClick={() => navigate("/release-item")}
+                  disabled={isScanBusy()}
                 >
                   Release Item
                 </button>
@@ -487,6 +568,7 @@ function ScanQR() {
                   type="button"
                   className="scan-secondary-btn"
                   onClick={() => navigate("/return-confirmation")}
+                  disabled={isScanBusy()}
                 >
                   Return Item
                 </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   Html5QrcodeScanner,
@@ -12,6 +12,8 @@ import {
   updateDoc,
   addDoc,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/ReturnConfirmation.css";
@@ -42,6 +44,8 @@ function ReturnConfirmation() {
   const [confirming, setConfirming] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const returnLockRef = useRef(false);
+  const scannerLockRef = useRef(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
@@ -49,6 +53,25 @@ function ReturnConfirmation() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function startReturnAction() {
+  if (returnLockRef.current || confirming) {
+    return false;
+  }
+
+  returnLockRef.current = true;
+  setConfirming(true);
+
+  return true;
+}
+
+function finishReturnAction() {
+  returnLockRef.current = false;
+  setConfirming(false);
+}
+
+function isReturnBusy() {
+  return Boolean(returnLockRef.current || confirming);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -166,26 +189,29 @@ function ReturnConfirmation() {
     return "Unavailable";
   }
 
-  async function fetchBorrowedRequests() {
-    setLoading(true);
+async function fetchBorrowedRequests() {
+  setLoading(true);
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  try {
+    const borrowedQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("approvalStatus", "==", "Borrowed")
+    );
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((request) => request.approvalStatus === "Borrowed");
+    const querySnapshot = await getDocs(borrowedQuery);
 
-      setRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading borrowed requests: " + error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    const requestData = querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setRequests(requestData);
+  } catch (error) {
+    showStatus("Error loading borrowed requests: " + error.message, "error");
+  } finally {
+    setLoading(false);
   }
+}
 
   const visibleBorrowedRequests = useMemo(() => {
     if (isCategoryAdmin) {
@@ -195,53 +221,77 @@ function ReturnConfirmation() {
     return requests;
   }, [requests, userData]);
 
-  async function findBorrowedRequestByItemId(rawItemId) {
-    const itemId = extractItemId(rawItemId);
-    showStatus("", "");
+async function findBorrowedRequestByItemId(rawItemId) {
+  if (isReturnBusy()) return;
 
-    if (!itemId) {
-      showStatus("Please scan or enter an item ID, barcode, or QR URL.", "error");
-      return;
-    }
+  const itemId = extractItemId(rawItemId);
+  showStatus("", "");
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  if (!itemId) {
+    showStatus("Please scan or enter an item ID, item code, barcode, or QR URL.", "error");
+    return;
+  }
 
-      const matchingRequest = querySnapshot.docs
+  try {
+    const itemRequestQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", itemId)
+    );
+
+    const querySnapshot = await getDocs(itemRequestQuery);
+
+    let matchingRequest = querySnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .find((request) => request.approvalStatus === "Borrowed");
+
+    if (!matchingRequest) {
+      const borrowedQuery = firestoreQuery(
+        collection(db, "borrowRequests"),
+        where("approvalStatus", "==", "Borrowed")
+      );
+
+      const borrowedSnapshot = await getDocs(borrowedQuery);
+
+      matchingRequest = borrowedSnapshot.docs
         .map((document) => ({
           id: document.id,
           ...document.data(),
         }))
         .find(
           (request) =>
-            request.itemId === itemId && request.approvalStatus === "Borrowed"
+            request.itemId === itemId ||
+            request.itemCode === itemId ||
+            request.barcodeValue === itemId
         );
-
-      if (!matchingRequest) {
-        setSelectedRequest(null);
-        showStatus("No active borrowed request found for this item.", "error");
-        return;
-      }
-
-      if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
-        setSelectedRequest(null);
-        showStatus(
-          "This borrowed item belongs to a category that is not assigned to your account.",
-          "error"
-        );
-        return;
-      }
-
-      setSelectedRequest(matchingRequest);
-      setManualItemId(itemId);
-      setReturnCondition("Good");
-      setDamageLostReport("");
-      showStatus("Borrowed request found. Review details before confirming return.", "success");
-    } catch (error) {
-      showStatus("Error finding borrowed request: " + error.message, "error");
     }
-  }
 
+    if (!matchingRequest) {
+      setSelectedRequest(null);
+      showStatus("No active borrowed request found for this item.", "error");
+      return;
+    }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
+      setSelectedRequest(null);
+      showStatus(
+        "This borrowed item belongs to a category that is not assigned to your account.",
+        "error"
+      );
+      return;
+    }
+
+    setSelectedRequest(matchingRequest);
+    setManualItemId(itemId);
+    setReturnCondition("Good");
+    setDamageLostReport("");
+    showStatus("Borrowed request found. Review details before confirming return.", "success");
+  } catch (error) {
+    showStatus("Error finding borrowed request: " + error.message, "error");
+  }
+}
   async function updateBorrowerOverdueRecord(request) {
     if (!isOverdue(request.expectedReturnDate)) return;
 
@@ -274,35 +324,40 @@ function ReturnConfirmation() {
     await updateDoc(borrowerRef, updatePayload);
   }
 
-  async function handleReturn() {
-    if (!selectedRequest) {
-      showStatus("Please scan or select a borrowed request first.", "error");
-      return;
-    }
+async function handleReturn() {
+  if (!selectedRequest) {
+    showStatus("Please scan or select a borrowed request first.", "error");
+    return;
+  }
 
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-      showStatus("You are not allowed to confirm returns for this category.", "error");
-      return;
-    }
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showStatus("You are not allowed to confirm returns for this category.", "error");
+    return;
+  }
 
-    if (!actualReturnDate) {
-      showStatus("Actual return date is required.", "error");
-      return;
-    }
+  if (!actualReturnDate) {
+    showStatus("Actual return date is required.", "error");
+    return;
+  }
 
-    if (!returnCondition) {
-      showStatus("Return condition is required.", "error");
-      return;
-    }
+  if (!returnCondition) {
+    showStatus("Return condition is required.", "error");
+    return;
+  }
 
-    if (
-      (returnCondition === "Damaged" || returnCondition === "Lost") &&
-      !damageLostReport.trim()
-    ) {
-      showStatus("Damage/lost report is required.", "error");
-      return;
-    }
+  if (
+    (returnCondition === "Damaged" || returnCondition === "Lost") &&
+    !damageLostReport.trim()
+  ) {
+    showStatus("Damage/lost report is required.", "error");
+    return;
+  }
 
+  const started = startReturnAction();
+
+  if (!started) return;
+
+  try {
     const confirmReturn = window.confirm(
       `Confirm return of ${selectedRequest.itemName} from ${
         selectedRequest.borrowerName || selectedRequest.borrowerEmail
@@ -311,67 +366,101 @@ function ReturnConfirmation() {
 
     if (!confirmReturn) return;
 
-    setConfirming(true);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-      const itemRef = doc(db, "items", selectedRequest.itemId);
+    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      await updateDoc(requestRef, {
-        approvalStatus: "Returned",
-        actualReturnDate,
-        returnCondition,
-        damageLostReport: damageLostReport.trim(),
-        returnedAt: serverTimestamp(),
-        returnedBy: getAdminId(),
-      });
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
+      return;
+    }
 
-      await updateDoc(itemRef, {
-        availability: getNewItemAvailability(),
-        condition: returnCondition,
-        updatedAt: serverTimestamp(),
-      });
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
 
-      await updateBorrowerOverdueRecord(selectedRequest);
-
-      await addDoc(collection(db, "notifications"), {
-        userId: selectedRequest.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(selectedRequest),
-        title: "Item Return Confirmed",
-        message: `${selectedRequest.itemName} has been returned successfully with condition: ${returnCondition}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      if (returnCondition === "Damaged" || returnCondition === "Lost") {
-        await addDoc(collection(db, "notifications"), {
-          userId: "",
-          targetRole: "categoryAdmin",
-          categoryId: getRequestCategoryId(selectedRequest),
-          title: `${returnCondition} Item Reported`,
-          message: `${selectedRequest.itemName} was returned as ${returnCondition}.`,
-          status: "Unread",
-          createdAt: serverTimestamp(),
-          link: "/reports",
-        });
-      }
-
-      showStatus("Item return confirmed successfully.", "success");
+    if (latestRequest.approvalStatus !== "Borrowed") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing return queue...`,
+        "error"
+      );
 
       setSelectedRequest(null);
       setManualItemId("");
-      setReturnCondition("Good");
-      setDamageLostReport("");
-      fetchBorrowedRequests();
-    } catch (error) {
-      showStatus("Error confirming return: " + error.message, "error");
-    } finally {
-      setConfirming(false);
+      await fetchBorrowedRequests();
+      return;
     }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+      showStatus("You are not allowed to confirm returns for this category.", "error");
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item record not found. Return cannot continue.", "error");
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Returned",
+      actualReturnDate,
+      returnCondition,
+      damageLostReport: damageLostReport.trim(),
+      returnedAt: serverTimestamp(),
+      returnedBy: getAdminId(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: getNewItemAvailability(),
+      condition: returnCondition,
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateBorrowerOverdueRecord(latestRequest);
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Item Return Confirmed",
+      message: `${latestRequest.itemName} has been returned successfully with condition: ${returnCondition}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    if (returnCondition === "Damaged" || returnCondition === "Lost") {
+      await addDoc(collection(db, "notifications"), {
+        userId: "",
+        targetRole: "categoryAdmin",
+        categoryId: getRequestCategoryId(latestRequest),
+        title: `${returnCondition} Item Reported`,
+        message: `${latestRequest.itemName} was returned as ${returnCondition}.`,
+        status: "Unread",
+        createdAt: serverTimestamp(),
+        link: "/reports",
+      });
+    }
+
+    showStatus("Item return confirmed successfully.", "success");
+
+    setSelectedRequest(null);
+    setManualItemId("");
+    setReturnCondition("Good");
+    setDamageLostReport("");
+    await fetchBorrowedRequests();
+  } catch (error) {
+    showStatus("Error confirming return: " + error.message, "error");
+  } finally {
+    finishReturnAction();
   }
+}
 
   useEffect(() => {
     fetchBorrowedRequests();
@@ -398,28 +487,36 @@ function ReturnConfirmation() {
       false
     );
 
-    async function clearScanner() {
-      if (scannerCleared) return;
+async function clearScanner() {
+  if (scannerCleared) return;
 
-      scannerCleared = true;
+  scannerCleared = true;
 
-      try {
-        await scanner.clear();
-      } catch (error) {
-        console.log("Scanner clear error:", error);
-      }
-    }
+  try {
+    await scanner.clear();
+  } catch (error) {
+    console.log("Scanner clear error:", error);
+  } finally {
+    scannerLockRef.current = false;
+  }
+}
 
-    scanner.render(
-      async (decodedText) => {
-        const itemId = extractItemId(decodedText);
+scanner.render(
+  async (decodedText) => {
+    if (scannerLockRef.current || isReturnBusy()) return;
 
-        setScannerOpen(false);
-        await clearScanner();
-        findBorrowedRequestByItemId(itemId);
-      },
-      () => {}
-    );
+    scannerLockRef.current = true;
+
+    const itemId = extractItemId(decodedText);
+
+    setScannerOpen(false);
+    await clearScanner();
+    await findBorrowedRequestByItemId(itemId);
+
+    scannerLockRef.current = false;
+  },
+  () => {}
+);
 
     return () => {
       clearScanner();
@@ -488,11 +585,15 @@ function ReturnConfirmation() {
           </div>
 
           <button
-            type="button"
-            className="return-primary-btn"
-            onClick={() => setScannerOpen((current) => !current)}
-          >
-            {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
+                type="button"
+                className="return-primary-btn"
+                onClick={() => {
+                  if (isReturnBusy()) return;
+                  setScannerOpen((current) => !current);
+                }}
+                disabled={confirming}
+              >
+              {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
           </button>
 
           {scannerOpen && (
@@ -507,21 +608,23 @@ function ReturnConfirmation() {
             </label>
 
             <div className="return-manual-row">
-              <input
-                id="manual-return-item-id"
-                type="text"
-                value={manualItemId}
-                onChange={(e) => setManualItemId(e.target.value)}
-                placeholder="Example: item ID or /item/itemId"
-              />
+                <input
+                  id="manual-return-item-id"
+                  type="text"
+                  value={manualItemId}
+                  onChange={(e) => setManualItemId(e.target.value)}
+                  placeholder="Example: item ID or /item/itemId"
+                  disabled={confirming}
+                />
 
-              <button
-                type="button"
-                className="return-secondary-btn"
-                onClick={() => findBorrowedRequestByItemId(manualItemId)}
-              >
-                Find
-              </button>
+            <button
+              type="button"
+              className="return-secondary-btn"
+              onClick={() => findBorrowedRequestByItemId(manualItemId)}
+              disabled={confirming}
+            >
+              Find
+            </button>
             </div>
           </div>
         </section>
@@ -620,6 +723,7 @@ function ReturnConfirmation() {
                     id="return-condition"
                     value={returnCondition}
                     onChange={(e) => setReturnCondition(e.target.value)}
+                    disabled={confirming}
                   >
                     <option value="Good">Good</option>
                     <option value="Fair">Fair</option>
@@ -639,6 +743,7 @@ function ReturnConfirmation() {
                     value={damageLostReport}
                     onChange={(e) => setDamageLostReport(e.target.value)}
                     placeholder="Describe the damage or lost item issue..."
+                    disabled={confirming}
                   />
                 </div>
               )}
@@ -672,13 +777,14 @@ function ReturnConfirmation() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="return-secondary-btn"
-            onClick={fetchBorrowedRequests}
-          >
-            Refresh
-          </button>
+        <button
+          type="button"
+          className="return-secondary-btn"
+          onClick={fetchBorrowedRequests}
+          disabled={confirming}
+        >
+          Refresh
+        </button>
         </div>
 
         {visibleBorrowedRequests.length === 0 ? (
@@ -737,12 +843,15 @@ function ReturnConfirmation() {
                   type="button"
                   className="return-primary-btn"
                   onClick={() => {
+                    if (confirming) return;
+
                     setSelectedRequest(request);
                     setManualItemId(request.itemId);
                     setReturnCondition("Good");
                     setDamageLostReport("");
                     showStatus("Borrowed request selected.", "success");
                   }}
+                  disabled={confirming}
                 >
                   Select
                 </button>

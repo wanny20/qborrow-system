@@ -12,6 +12,8 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/ReleaseItem.css";
@@ -24,14 +26,15 @@ function ReleaseItem() {
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
-const [scannerOpen, setScannerOpen] = useState(false);
-const [scannerKey, setScannerKey] = useState(0);
-const [startingScanner, setStartingScanner] = useState(false);
-const [cameras, setCameras] = useState([]);
-const [selectedCameraId, setSelectedCameraId] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerKey, setScannerKey] = useState(0);
+  const [startingScanner, setStartingScanner] = useState(false);
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
   const scannerRef = useRef(null);
   const scannerRunningRef = useRef(false);
   const hasScannedRef = useRef(false);
+  const releaseLockRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [releasing, setReleasing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
@@ -44,6 +47,25 @@ const [selectedCameraId, setSelectedCameraId] = useState("");
     setStatusMessage(message);
     setStatusType(type);
   }
+  function startReleaseAction() {
+  if (releaseLockRef.current || releasing) {
+    return false;
+  }
+
+  releaseLockRef.current = true;
+  setReleasing(true);
+
+  return true;
+}
+
+function finishReleaseAction() {
+  releaseLockRef.current = false;
+  setReleasing(false);
+}
+
+function isReleaseBusy() {
+  return Boolean(releaseLockRef.current || releasing || startingScanner);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -234,26 +256,29 @@ async function restartReleaseScanner() {
     );
   }
 
-  async function fetchApprovedRequests() {
-    setLoading(true);
+async function fetchApprovedRequests() {
+  setLoading(true);
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  try {
+    const approvedQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("approvalStatus", "==", "Approved")
+    );
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((request) => request.approvalStatus === "Approved");
+    const querySnapshot = await getDocs(approvedQuery);
 
-      setApprovedRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading approved requests: " + error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    const requestData = querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setApprovedRequests(requestData);
+  } catch (error) {
+    showStatus("Error loading approved requests: " + error.message, "error");
+  } finally {
+    setLoading(false);
   }
+}
 
   const visibleApprovedRequests = useMemo(() => {
     if (isCategoryAdmin) {
@@ -265,62 +290,92 @@ async function restartReleaseScanner() {
     return approvedRequests;
   }, [approvedRequests, userData]);
 
-  async function findApprovedRequestByItemId(rawItemId) {
-    const itemId = extractItemId(rawItemId);
-    showStatus("", "");
+async function findApprovedRequestByItemId(rawItemId) {
+  if (isReleaseBusy()) return;
 
-    if (!itemId) {
-      showStatus("Please scan or enter an item ID, barcode, or QR URL.", "error");
-      return;
-    }
+  const itemId = extractItemId(rawItemId);
+  showStatus("", "");
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  if (!itemId) {
+    showStatus("Please scan or enter an item ID, item code, barcode, or QR URL.", "error");
+    return;
+  }
 
-      const matchingRequest = querySnapshot.docs
+  try {
+    const itemRequestQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", itemId)
+    );
+
+    const querySnapshot = await getDocs(itemRequestQuery);
+
+    let matchingRequest = querySnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .find((request) => request.approvalStatus === "Approved");
+
+    if (!matchingRequest) {
+      const approvedQuery = firestoreQuery(
+        collection(db, "borrowRequests"),
+        where("approvalStatus", "==", "Approved")
+      );
+
+      const approvedSnapshot = await getDocs(approvedQuery);
+
+      matchingRequest = approvedSnapshot.docs
         .map((document) => ({
           id: document.id,
           ...document.data(),
         }))
         .find(
           (request) =>
-            request.itemId === itemId && request.approvalStatus === "Approved"
+            request.itemId === itemId ||
+            request.itemCode === itemId ||
+            request.barcodeValue === itemId
         );
-
-      if (!matchingRequest) {
-        setSelectedRequest(null);
-        showStatus("No approved request found for this item.", "error");
-        return;
-      }
-
-      if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
-        setSelectedRequest(null);
-        showStatus(
-          "This request belongs to a category that is not assigned to your account.",
-          "error"
-        );
-        return;
-      }
-
-      setSelectedRequest(matchingRequest);
-      setManualItemId(itemId);
-      showStatus("Approved request found. Review details before release.", "success");
-    } catch (error) {
-      showStatus("Error finding approved request: " + error.message, "error");
     }
+
+    if (!matchingRequest) {
+      setSelectedRequest(null);
+      showStatus("No approved request found for this item.", "error");
+      return;
+    }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
+      setSelectedRequest(null);
+      showStatus(
+        "This request belongs to a category that is not assigned to your account.",
+        "error"
+      );
+      return;
+    }
+
+    setSelectedRequest(matchingRequest);
+    setManualItemId(itemId);
+    showStatus("Approved request found. Review details before release.", "success");
+  } catch (error) {
+    showStatus("Error finding approved request: " + error.message, "error");
+  }
+}
+
+async function handleConfirmRelease() {
+  if (!selectedRequest) {
+    showStatus("Please scan or select an approved request first.", "error");
+    return;
   }
 
-  async function handleConfirmRelease() {
-    if (!selectedRequest) {
-      showStatus("Please scan or select an approved request first.", "error");
-      return;
-    }
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showStatus("You are not allowed to release this category item.", "error");
+    return;
+  }
 
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-      showStatus("You are not allowed to release this category item.", "error");
-      return;
-    }
+  const started = startReleaseAction();
 
+  if (!started) return;
+
+  try {
     const confirmRelease = window.confirm(
       `Confirm release of ${selectedRequest.itemName} to ${
         selectedRequest.borrowerName || selectedRequest.borrowerEmail
@@ -329,64 +384,92 @@ async function restartReleaseScanner() {
 
     if (!confirmRelease) return;
 
-    setReleasing(true);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-      const itemRef = doc(db, "items", selectedRequest.itemId);
-      const itemSnap = await getDoc(itemRef);
+    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      if (!itemSnap.exists()) {
-        showStatus("Item record not found. Release cannot continue.", "error");
-        return;
-      }
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
+      return;
+    }
 
-      const itemData = itemSnap.data();
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
 
-      if (
-        itemData.availability !== "Reserved" &&
-        itemData.availability !== "Available"
-      ) {
-        showStatus(
-          `This item is currently ${itemData.availability}. It cannot be released.`,
-          "error"
-        );
-        return;
-      }
+    if (latestRequest.approvalStatus !== "Approved") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing release queue...`,
+        "error"
+      );
 
-      await updateDoc(requestRef, {
-        approvalStatus: "Borrowed",
-        releasedAt: serverTimestamp(),
-        releasedBy: getAdminId(),
-      });
-
-      await updateDoc(itemRef, {
-        availability: "Borrowed",
-        updatedAt: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: selectedRequest.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(selectedRequest),
-        title: "Item Released",
-        message: `${selectedRequest.itemName} has been released to you. Please return it on or before ${selectedRequest.expectedReturnDate}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      showStatus("Item released successfully. Request is now Borrowed.", "success");
       setSelectedRequest(null);
       setManualItemId("");
-      fetchApprovedRequests();
-    } catch (error) {
-      showStatus("Error releasing item: " + error.message, "error");
-    } finally {
-      setReleasing(false);
+      await fetchApprovedRequests();
+      return;
     }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+      showStatus("You are not allowed to release this category item.", "error");
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item record not found. Release cannot continue.", "error");
+      return;
+    }
+
+    const itemData = itemSnap.data();
+
+    if (
+      itemData.availability !== "Reserved" &&
+      itemData.availability !== "Available"
+    ) {
+      showStatus(
+        `This item is currently ${itemData.availability}. It cannot be released.`,
+        "error"
+      );
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Borrowed",
+      releasedAt: serverTimestamp(),
+      releasedBy: getAdminId(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: "Borrowed",
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Item Released",
+      message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    showStatus("Item released successfully. Request is now Borrowed.", "success");
+    setSelectedRequest(null);
+    setManualItemId("");
+    await fetchApprovedRequests();
+  } catch (error) {
+    showStatus("Error releasing item: " + error.message, "error");
+  } finally {
+    finishReleaseAction();
   }
+}
 
   useEffect(() => {
     fetchApprovedRequests();
@@ -494,7 +577,7 @@ useEffect(() => {
         startReleaseScanner();
       }
     }}
-    disabled={startingScanner}
+    disabled={startingScanner || releasing}
   >
     {startingScanner
       ? "Opening..."
@@ -507,7 +590,7 @@ useEffect(() => {
     type="button"
     className="release-secondary-btn"
     onClick={restartReleaseScanner}
-    disabled={startingScanner}
+    disabled={startingScanner || releasing}
   >
     Restart Scanner
   </button>
@@ -531,15 +614,17 @@ useEffect(() => {
                 value={manualItemId}
                 onChange={(e) => setManualItemId(e.target.value)}
                 placeholder="Example: item ID or /item/itemId"
+                disabled={releasing}
               />
 
-              <button
-                type="button"
-                className="release-secondary-btn"
-                onClick={() => findApprovedRequestByItemId(manualItemId)}
-              >
-                Find
-              </button>
+            <button
+              type="button"
+              className="release-secondary-btn"
+              onClick={() => findApprovedRequestByItemId(manualItemId)}
+              disabled={releasing}
+            >
+              Find
+            </button>
             </div>
           </div>
         </section>
@@ -622,6 +707,7 @@ useEffect(() => {
             type="button"
             className="release-secondary-btn"
             onClick={fetchApprovedRequests}
+            disabled={releasing}
           >
             Refresh
           </button>
@@ -660,10 +746,13 @@ useEffect(() => {
                   type="button"
                   className="release-primary-btn"
                   onClick={() => {
+                    if (releasing) return;
+
                     setSelectedRequest(request);
                     setManualItemId(request.itemId);
                     showStatus("Approved request selected.", "success");
                   }}
+                  disabled={releasing}
                 >
                   Select
                 </button>

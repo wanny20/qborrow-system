@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import {
   collection,
@@ -21,6 +21,7 @@ function ManageRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState("");
+  const [actionLoadingType, setActionLoadingType] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") || "Pending"
@@ -29,11 +30,37 @@ function ManageRequests() {
   const [statusType, setStatusType] = useState("");
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
+  const actionLockRef = useRef("");
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function startRequestAction(requestId, actionType) {
+  if (actionLockRef.current) {
+    return false;
+  }
+
+  actionLockRef.current = `${requestId}-${actionType}`;
+  setActionLoadingId(requestId);
+  setActionLoadingType(actionType);
+
+  return true;
+}
+
+function finishRequestAction() {
+  actionLockRef.current = "";
+  setActionLoadingId("");
+  setActionLoadingType("");
+}
+
+function hasActiveRequestAction() {
+  return Boolean(actionLockRef.current || actionLoadingId);
+}
+
+function isRequestActionLoading(requestId, actionType) {
+  return actionLoadingId === requestId && actionLoadingType === actionType;
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -162,182 +189,260 @@ function ManageRequests() {
     }
   }
 
-  async function handleApproveRequest(request) {
-    if (request.approvalStatus !== "Pending") {
-      showStatus("Only pending requests can be approved.", "error");
-      return;
-    }
+async function handleApproveRequest(request) {
+  if (hasActiveRequestAction()) return;
 
+  if (request.approvalStatus !== "Pending") {
+    showStatus("Only pending requests can be approved.", "error");
+    return;
+  }
+
+  const started = startRequestAction(request.id, "approve");
+
+  if (!started) return;
+
+  try {
     const confirmApprove = window.confirm(
       `Approve ${request.borrowerName || request.borrowerEmail}'s request for ${request.itemName}?`
     );
 
     if (!confirmApprove) return;
 
-    setActionLoadingId(request.id);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", request.id);
-      const itemRef = doc(db, "items", request.itemId);
-      const itemSnap = await getDoc(itemRef);
+    const requestRef = doc(db, "borrowRequests", request.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      if (!itemSnap.exists()) {
-        showStatus("Item not found. This request cannot be approved.", "error");
-        return;
-      }
-
-      const itemData = itemSnap.data();
-
-      if (itemData.availability !== "Available") {
-        showStatus(
-          `This item is currently ${itemData.availability}. It cannot be approved right now.`,
-          "error"
-        );
-        return;
-      }
-
-      await updateDoc(requestRef, {
-        approvalStatus: "Approved",
-        assignedAdminId: getAdminId(),
-        approvedBy: getAdminId(),
-        approvedAt: serverTimestamp(),
-      });
-
-      await updateDoc(itemRef, {
-        availability: "Reserved",
-        updatedAt: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: request.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(request),
-        title: "Borrow Request Approved",
-        message: `Your request for ${request.itemName} has been approved. Please wait for the admin to release the item.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      showStatus("Request approved successfully. Item is now reserved.", "success");
-      fetchRequests();
-    } catch (error) {
-      showStatus("Error approving request: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
-    }
-  }
-
-  async function handleReleaseRequest(request) {
-    if (request.approvalStatus !== "Approved") {
-      showStatus("Only approved requests can be released.", "error");
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
       return;
     }
 
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
+
+    if (latestRequest.approvalStatus !== "Pending") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
+        "error"
+      );
+      await fetchRequests();
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item not found. This request cannot be approved.", "error");
+      return;
+    }
+
+    const itemData = itemSnap.data();
+
+    if (itemData.availability !== "Available") {
+      showStatus(
+        `This item is currently ${itemData.availability}. It cannot be approved right now.`,
+        "error"
+      );
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Approved",
+      assignedAdminId: getAdminId(),
+      approvedBy: getAdminId(),
+      approvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: "Reserved",
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Borrow Request Approved",
+      message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    showStatus("Request approved successfully. Item is now reserved.", "success");
+    await fetchRequests();
+  } catch (error) {
+    showStatus("Error approving request: " + error.message, "error");
+  } finally {
+    finishRequestAction();
+  }
+}
+
+async function handleReleaseRequest(request) {
+  if (hasActiveRequestAction()) return;
+
+  if (request.approvalStatus !== "Approved") {
+    showStatus("Only approved requests can be released.", "error");
+    return;
+  }
+
+  const started = startRequestAction(request.id, "release");
+
+  if (!started) return;
+
+  try {
     const confirmRelease = window.confirm(
       `Release ${request.itemName} to ${request.borrowerName || request.borrowerEmail}? This will mark the request as Borrowed.`
     );
 
     if (!confirmRelease) return;
 
-    setActionLoadingId(request.id);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", request.id);
-      const itemRef = doc(db, "items", request.itemId);
-      const itemSnap = await getDoc(itemRef);
+    const requestRef = doc(db, "borrowRequests", request.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      if (!itemSnap.exists()) {
-        showStatus("Item not found. This request cannot be released.", "error");
-        return;
-      }
-
-      const itemData = itemSnap.data();
-
-      if (itemData.availability !== "Reserved") {
-        showStatus(
-          `This item is currently ${itemData.availability}. Only reserved items can be released.`,
-          "error"
-        );
-        return;
-      }
-
-      await updateDoc(requestRef, {
-        approvalStatus: "Borrowed",
-        releasedBy: getAdminId(),
-        releasedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      await updateDoc(itemRef, {
-        availability: "Borrowed",
-        updatedAt: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: request.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(request),
-        title: "Item Released",
-        message: `${request.itemName} has been released to you. Please return it on or before ${request.expectedReturnDate || "the expected return date"}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      showStatus("Item released successfully. Request is now marked as borrowed.", "success");
-      fetchRequests();
-    } catch (error) {
-      showStatus("Error releasing item: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
-    }
-  }
-
-  async function handleRejectRequest(request) {
-    if (request.approvalStatus !== "Pending") {
-      showStatus("Only pending requests can be rejected.", "error");
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
       return;
     }
 
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
+
+    if (latestRequest.approvalStatus !== "Approved") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
+        "error"
+      );
+      await fetchRequests();
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item not found. This request cannot be released.", "error");
+      return;
+    }
+
+    const itemData = itemSnap.data();
+
+    if (itemData.availability !== "Reserved") {
+      showStatus(
+        `This item is currently ${itemData.availability}. Only reserved items can be released.`
+      );
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Borrowed",
+      releasedBy: getAdminId(),
+      releasedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: "Borrowed",
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Item Released",
+      message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate || "the expected return date"}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    showStatus("Item released successfully. Request is now marked as borrowed.", "success");
+    await fetchRequests();
+  } catch (error) {
+    showStatus("Error releasing item: " + error.message, "error");
+  } finally {
+    finishRequestAction();
+  }
+}
+
+async function handleRejectRequest(request) {
+  if (hasActiveRequestAction()) return;
+
+  if (request.approvalStatus !== "Pending") {
+    showStatus("Only pending requests can be rejected.", "error");
+    return;
+  }
+
+  const started = startRequestAction(request.id, "reject");
+
+  if (!started) return;
+
+  try {
     const confirmReject = window.confirm(
       `Reject ${request.borrowerName || request.borrowerEmail}'s request for ${request.itemName}?`
     );
 
     if (!confirmReject) return;
 
-    setActionLoadingId(request.id);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", request.id);
+    const requestRef = doc(db, "borrowRequests", request.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      await updateDoc(requestRef, {
-        approvalStatus: "Rejected",
-        rejectedAt: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: request.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(request),
-        title: "Borrow Request Rejected",
-        message: `Your request for ${request.itemName} has been rejected.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      showStatus("Request rejected successfully.", "success");
-      fetchRequests();
-    } catch (error) {
-      showStatus("Error rejecting request: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
+      return;
     }
+
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
+
+    if (latestRequest.approvalStatus !== "Pending") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
+        "error"
+      );
+      await fetchRequests();
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Rejected",
+      rejectedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Borrow Request Rejected",
+      message: `Your request for ${latestRequest.itemName} has been rejected.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    showStatus("Request rejected successfully.", "success");
+    await fetchRequests();
+  } catch (error) {
+    showStatus("Error rejecting request: " + error.message, "error");
+  } finally {
+    finishRequestAction();
   }
+}
 
   useEffect(() => {
     fetchRequests();
@@ -539,7 +644,12 @@ function ManageRequests() {
           </select>
         </div>
 
-        <button type="button" className="manage-refresh-btn" onClick={fetchRequests}>
+        <button
+          type="button"
+          className="manage-refresh-btn"
+          onClick={fetchRequests}
+          disabled={hasActiveRequestAction()}
+        >
           Refresh
         </button>
       </section>
@@ -649,22 +759,22 @@ function ManageRequests() {
 
                   {request.approvalStatus === "Pending" && (
                     <>
-                      <button
-                        type="button"
-                        className="manage-approve-btn"
-                        onClick={() => handleApproveRequest(request)}
-                        disabled={actionLoadingId === request.id}
-                      >
-                        {actionLoadingId === request.id ? "..." : "Approve"}
-                      </button>
+                    <button
+                      type="button"
+                      className="manage-approve-btn"
+                      onClick={() => handleApproveRequest(request)}
+                      disabled={hasActiveRequestAction()}
+                    >
+                      {isRequestActionLoading(request.id, "approve") ? "Approving..." : "Approve"}
+                    </button>
 
                       <button
                         type="button"
                         className="manage-reject-btn"
                         onClick={() => handleRejectRequest(request)}
-                        disabled={actionLoadingId === request.id}
+                        disabled={hasActiveRequestAction()}
                       >
-                        Reject
+                        {isRequestActionLoading(request.id, "reject") ? "Rejecting..." : "Reject"}
                       </button>
                     </>
                   )}
@@ -674,9 +784,11 @@ function ManageRequests() {
                       type="button"
                       className="manage-release-btn"
                       onClick={() => handleReleaseRequest(request)}
-                      disabled={actionLoadingId === request.id}
+                      disabled={hasActiveRequestAction()}
                     >
-                      {actionLoadingId === request.id ? "..." : "Release Item"}
+                      {isRequestActionLoading(request.id, "release")
+                        ? "Releasing..."
+                        : "Release Item"}
                     </button>
                   )}
 

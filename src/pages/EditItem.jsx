@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -47,6 +47,7 @@ function EditItem() {
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -190,9 +191,11 @@ function EditItem() {
     }
   }
 
-  function handleImageChange(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+function handleImageChange(event) {
+  if (submitting) return;
+
+  const file = event.target.files?.[0];
+  event.target.value = "";
 
     if (!file) return;
 
@@ -240,10 +243,20 @@ function EditItem() {
     return getDownloadURL(imageRef);
   }
 
-  async function handleUpdateItem(e) {
-    e.preventDefault();
-    showStatus("", "");
+async function handleUpdateItem(e) {
+  e.preventDefault();
 
+  if (submitLockRef.current || submitting) {
+    return;
+  }
+
+  submitLockRef.current = true;
+  setSubmitting(true);
+  showStatus("", "");
+
+  let updatedSuccessfully = false;
+
+  try {
     if (!isSuperAdmin && !isCategoryAdmin) {
       showStatus("Only super admins and category admins can edit items.", "error");
       return;
@@ -284,49 +297,50 @@ function EditItem() {
       return;
     }
 
-    setSubmitting(true);
+    const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
+    const finalImageUrl = await uploadItemImage(finalItemCode);
+    const itemRef = doc(db, "items", itemId);
 
-    try {
-      const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
-      const finalImageUrl = await uploadItemImage(finalItemCode);
-      const itemRef = doc(db, "items", itemId);
+    await updateDoc(itemRef, {
+      itemCode: finalItemCode,
+      itemName: itemName.trim(),
+      imageUrl: finalImageUrl,
+      description: description.trim(),
 
-      await updateDoc(itemRef, {
-        itemCode: finalItemCode,
-        itemName: itemName.trim(),
-        imageUrl: finalImageUrl,
-        description: description.trim(),
+      categoryId: selectedCategory.id,
+      categoryName: selectedCategory.name,
+      category: selectedCategory.id,
 
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        category: selectedCategory.id,
+      condition,
+      availability: getFinalAvailability(),
+      maxBorrowDays: Number(maxBorrowDays),
 
-        condition,
-        availability: getFinalAvailability(),
-        maxBorrowDays: Number(maxBorrowDays),
+      qrValue:
+        originalItem?.qrValue ||
+        `${window.location.origin}/item/${itemId}`,
+      barcodeValue: originalItem?.barcodeValue || itemId,
 
-        qrValue:
-          originalItem?.qrValue ||
-          `${window.location.origin}/item/${itemId}`,
-        barcodeValue: originalItem?.barcodeValue || itemId,
+      updatedBy: userData?.uid || auth.currentUser?.uid || "",
+      updatedByEmail: userData?.email || auth.currentUser?.email || "",
+      updatedAt: serverTimestamp(),
+    });
 
-        updatedBy: userData?.uid || auth.currentUser?.uid || "",
-        updatedByEmail: userData?.email || auth.currentUser?.email || "",
-        updatedAt: serverTimestamp(),
-      });
+    updatedSuccessfully = true;
 
-      showStatus("Item updated successfully.", "success");
+    showStatus("Item updated successfully.", "success");
 
-      setTimeout(() => {
-        navigate("/items");
-      }, 700);
-    } catch (error) {
-      showStatus("Error updating item: " + error.message, "error");
-    } finally {
+    setTimeout(() => {
+      navigate("/items");
+    }, 700);
+  } catch (error) {
+    showStatus("Error updating item: " + error.message, "error");
+  } finally {
+    if (!updatedSuccessfully) {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }
-
+}
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const idFromUrl = params.get("id");
@@ -448,6 +462,7 @@ function EditItem() {
                   type="text"
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
+                  disabled={submitting}
                 />
               </div>
 
@@ -461,6 +476,7 @@ function EditItem() {
                   type="text"
                   value={itemCode}
                   onChange={(e) => setItemCode(e.target.value)}
+                  disabled={submitting}
                   placeholder="Example: IT-12345"
                 />
               </div>
@@ -474,6 +490,7 @@ function EditItem() {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  disabled={submitting}
                   placeholder="Describe the item..."
                 />
               </div>
@@ -488,7 +505,7 @@ function EditItem() {
                     id="category"
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    disabled={availableCategories.length === 0}
+                    disabled={submitting || availableCategories.length === 0}
                   >
                     {availableCategories.length === 0 ? (
                       <option value="">No assigned category</option>
@@ -513,6 +530,7 @@ function EditItem() {
                     min="1"
                     value={maxBorrowDays}
                     onChange={(e) => setMaxBorrowDays(e.target.value)}
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -527,6 +545,7 @@ function EditItem() {
                     id="condition"
                     value={condition}
                     onChange={(e) => setCondition(e.target.value)}
+                    disabled={submitting}
                   >
                     <option value="Good">Good</option>
                     <option value="Fair">Fair</option>
@@ -544,7 +563,7 @@ function EditItem() {
                     id="availability"
                     value={availability}
                     onChange={(e) => setAvailability(e.target.value)}
-                    disabled={condition === "Damaged" || condition === "Lost"}
+                    disabled={submitting || condition === "Damaged" || condition === "Lost"}
                   >
                     <option value="Available">Available</option>
                     <option value="Reserved">Reserved</option>
@@ -568,6 +587,7 @@ function EditItem() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
+                  disabled={submitting}
                 />
 
                 <p>
