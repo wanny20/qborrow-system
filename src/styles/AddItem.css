@@ -667,3 +667,34 @@
     aspect-ratio: 4 / 3 !important;
   }
 }
+/* =========================
+   ADD ITEM FIELD VALIDATION
+   ========================= */
+
+.required-star {
+  color: #dc2626;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+.field-error-message {
+  margin: 7px 0 0;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.add-item-field input.input-error,
+.add-item-field textarea.input-error,
+.add-item-field select.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 3px 3px 0 0 rgba(239, 68, 68, 0.25) !important;
+}
+
+.add-item-field input:disabled,
+.add-item-field textarea:disabled,
+.add-item-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}

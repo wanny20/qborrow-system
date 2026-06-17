@@ -39,6 +39,7 @@ function AddItem() {
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
@@ -47,6 +48,41 @@ function AddItem() {
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
+  }
+
+  function clearFieldError(fieldName) {
+    setFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      [fieldName]: "",
+    }));
+  }
+
+  function validateAddItemForm() {
+    const errors = {};
+
+    if (!itemName.trim()) {
+      errors.itemName = "Item name is required.";
+    }
+
+    if (!categoryId) {
+      errors.categoryId = "Category is required.";
+    }
+
+    if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+      errors.maxBorrowDays = "Max borrow days must be greater than 0.";
+    }
+
+    if (!condition) {
+      errors.condition = "Condition is required.";
+    }
+
+    if (!getFinalAvailability()) {
+      errors.availability = "Availability is required.";
+    }
+
+    setFieldErrors(errors);
+
+    return Object.keys(errors).length === 0;
   }
 
   function normalizeText(value) {
@@ -161,17 +197,18 @@ function AddItem() {
     setImageFile(null);
     setImagePreview("");
     setCropSourceFile(null);
+    setFieldErrors({});
 
     if (availableCategories.length > 0) {
       setCategoryId(availableCategories[0].id);
     }
   }
 
-function handleImageChange(event) {
-  if (submitting) return;
+  function handleImageChange(event) {
+    if (submitting) return;
 
-  const file = event.target.files?.[0];
-  event.target.value = "";
+    const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) return;
 
@@ -217,101 +254,99 @@ function handleImageChange(event) {
     return getDownloadURL(imageRef);
   }
 
-async function handleAddItem(e) {
-  e.preventDefault();
+  async function handleAddItem(e) {
+    e.preventDefault();
 
-  if (submitLockRef.current || submitting) {
-    return;
+    if (submitLockRef.current || submitting) {
+      return;
+    }
+
+    showStatus("", "");
+
+    const isValid = validateAddItemForm();
+
+    if (!isValid) {
+      showStatus("Please correct the highlighted fields.", "error");
+      return;
+    }
+
+    submitLockRef.current = true;
+    setSubmitting(true);
+
+    try {
+      if (!isSuperAdmin && !isCategoryAdmin) {
+        showStatus("Only super admins and category admins can add items.", "error");
+        return;
+      }
+
+      if (categories.length === 0) {
+        showStatus(
+          "No categories found. Go to User Management and seed or add categories first.",
+          "error"
+        );
+        return;
+      }
+
+      if (availableCategories.length === 0) {
+        showStatus(
+          "You do not have assigned categories yet. Ask the super admin to assign categories first.",
+          "error"
+        );
+        return;
+      }
+
+      const selectedCategory = getSelectedCategory();
+
+      if (!selectedCategory) {
+        showStatus("Selected category is invalid.", "error");
+        return;
+      }
+
+      const finalItemCode = itemCode.trim() || generateItemCode();
+      const imageUrl = await uploadItemImage(finalItemCode);
+
+      const itemRef = await addDoc(collection(db, "items"), {
+        itemCode: finalItemCode,
+        itemName: itemName.trim(),
+        imageUrl,
+        description: description.trim(),
+
+        categoryId: selectedCategory.id,
+        categoryName: selectedCategory.name,
+        category: selectedCategory.id,
+
+        condition,
+        availability: getFinalAvailability(),
+        maxBorrowDays: Number(maxBorrowDays),
+
+        qrValue: "",
+        barcodeValue: "",
+
+        createdBy: userData?.uid || auth.currentUser?.uid || "",
+        createdByEmail: userData?.email || auth.currentUser?.email || "",
+
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      const qrValue = `${window.location.origin}/item/${itemRef.id}`;
+      const barcodeValue = itemRef.id;
+
+      await updateDoc(itemRef, {
+        qrValue,
+        barcodeValue,
+        updatedAt: serverTimestamp(),
+      });
+
+      showStatus("Item added successfully.", "success");
+      resetForm();
+    } catch (error) {
+      showStatus("Error adding item: " + error.message, "error");
+    } finally {
+      submitLockRef.current = false;
+      setSubmitting(false);
+    }
   }
-
-  submitLockRef.current = true;
-  setSubmitting(true);
-  showStatus("", "");
-
-  try {
-    if (!isSuperAdmin && !isCategoryAdmin) {
-      showStatus("Only super admins and category admins can add items.", "error");
-      return;
-    }
-
-    if (categories.length === 0) {
-      showStatus(
-        "No categories found. Go to User Management and seed or add categories first.",
-        "error"
-      );
-      return;
-    }
-
-    if (availableCategories.length === 0) {
-      showStatus(
-        "You do not have assigned categories yet. Ask the super admin to assign categories first.",
-        "error"
-      );
-      return;
-    }
-
-    if (!itemName.trim() || !categoryId) {
-      showStatus("Please fill in item name and category.", "error");
-      return;
-    }
-
-    if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
-      showStatus("Max borrow days must be greater than 0.", "error");
-      return;
-    }
-
-    const selectedCategory = getSelectedCategory();
-
-    if (!selectedCategory) {
-      showStatus("Selected category is invalid.", "error");
-      return;
-    }
-
-    const finalItemCode = itemCode.trim() || generateItemCode();
-    const imageUrl = await uploadItemImage(finalItemCode);
-
-    const itemRef = await addDoc(collection(db, "items"), {
-      itemCode: finalItemCode,
-      itemName: itemName.trim(),
-      imageUrl,
-      description: description.trim(),
-
-      categoryId: selectedCategory.id,
-      categoryName: selectedCategory.name,
-      category: selectedCategory.id,
-
-      condition,
-      availability: getFinalAvailability(),
-      maxBorrowDays: Number(maxBorrowDays),
-
-      qrValue: "",
-      barcodeValue: "",
-
-      createdBy: userData?.uid || auth.currentUser?.uid || "",
-      createdByEmail: userData?.email || auth.currentUser?.email || "",
-
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    const qrValue = `${window.location.origin}/item/${itemRef.id}`;
-    const barcodeValue = itemRef.id;
-
-    await updateDoc(itemRef, {
-      qrValue,
-      barcodeValue,
-      updatedAt: serverTimestamp(),
-    });
-
-    showStatus("Item added successfully.", "success");
-    resetForm();
-  } catch (error) {
-    showStatus("Error adding item: " + error.message, "error");
-  } finally {
-    submitLockRef.current = false;
-    setSubmitting(false);
-  }
-}
 
   const selectedCategory = getSelectedCategory();
 
@@ -378,22 +413,33 @@ async function handleAddItem(e) {
             </p>
           </div>
 
-          <form onSubmit={handleAddItem}>
+          <form onSubmit={handleAddItem} noValidate>
+            {/* Item Name */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-name">
-                Item Name
+                Item Name <span className="required-star">*</span>
               </label>
 
               <input
                 id="item-name"
                 type="text"
+                className={fieldErrors.itemName ? "input-error" : ""}
                 placeholder="Example: Projector"
                 value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
+                onFocus={() => clearFieldError("itemName")}
+                onChange={(e) => {
+                  setItemName(e.target.value);
+                  clearFieldError("itemName");
+                }}
                 disabled={submitting}
               />
+
+              {fieldErrors.itemName && (
+                <p className="field-error-message">{fieldErrors.itemName}</p>
+              )}
             </div>
 
+            {/* Item Code */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-code">
                 Item Code
@@ -411,6 +457,7 @@ async function handleAddItem(e) {
               <p>Example: IT-12345. Leave this blank for automatic code.</p>
             </div>
 
+            {/* Description */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="description">
                 Description
@@ -426,15 +473,21 @@ async function handleAddItem(e) {
             </div>
 
             <div className="add-item-grid">
+              {/* Category */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="category">
-                  Category
+                  Category <span className="required-star">*</span>
                 </label>
 
                 <select
                   id="category"
+                  className={fieldErrors.categoryId ? "input-error" : ""}
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
+                  onFocus={() => clearFieldError("categoryId")}
+                  onChange={(e) => {
+                    setCategoryId(e.target.value);
+                    clearFieldError("categoryId");
+                  }}
                   disabled={submitting || loadingCategories || availableCategories.length === 0}
                 >
                   {loadingCategories ? (
@@ -449,34 +502,55 @@ async function handleAddItem(e) {
                     ))
                   )}
                 </select>
+
+                {fieldErrors.categoryId && (
+                  <p className="field-error-message">{fieldErrors.categoryId}</p>
+                )}
               </div>
 
+              {/* Max Borrow Days */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="max-borrow-days">
-                  Max Borrow Days
+                  Max Borrow Days <span className="required-star">*</span>
                 </label>
 
                 <input
                   id="max-borrow-days"
                   type="number"
                   min="1"
+                  className={fieldErrors.maxBorrowDays ? "input-error" : ""}
                   value={maxBorrowDays}
-                  onChange={(e) => setMaxBorrowDays(e.target.value)}
+                  onFocus={() => clearFieldError("maxBorrowDays")}
+                  onChange={(e) => {
+                    setMaxBorrowDays(e.target.value);
+                    clearFieldError("maxBorrowDays");
+                  }}
                   disabled={submitting}
                 />
+
+                {fieldErrors.maxBorrowDays && (
+                  <p className="field-error-message">{fieldErrors.maxBorrowDays}</p>
+                )}
               </div>
             </div>
 
             <div className="add-item-grid">
+              {/* Condition */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="condition">
-                  Condition
+                  Condition <span className="required-star">*</span>
                 </label>
 
                 <select
                   id="condition"
+                  className={fieldErrors.condition ? "input-error" : ""}
                   value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
+                  onFocus={() => clearFieldError("condition")}
+                  onChange={(e) => {
+                    setCondition(e.target.value);
+                    clearFieldError("condition");
+                    clearFieldError("availability");
+                  }}
                   disabled={submitting}
                 >
                   <option value="Good">Good</option>
@@ -484,22 +558,36 @@ async function handleAddItem(e) {
                   <option value="Damaged">Damaged</option>
                   <option value="Lost">Lost</option>
                 </select>
+
+                {fieldErrors.condition && (
+                  <p className="field-error-message">{fieldErrors.condition}</p>
+                )}
               </div>
 
+              {/* Availability */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="availability">
-                  Availability
+                  Availability <span className="required-star">*</span>
                 </label>
 
                 <select
                   id="availability"
+                  className={fieldErrors.availability ? "input-error" : ""}
                   value={availability}
-                  onChange={(e) => setAvailability(e.target.value)}
+                  onFocus={() => clearFieldError("availability")}
+                  onChange={(e) => {
+                    setAvailability(e.target.value);
+                    clearFieldError("availability");
+                  }}
                   disabled={submitting || condition === "Damaged" || condition === "Lost"}
                 >
                   <option value="Available">Available</option>
                   <option value="Unavailable">Unavailable</option>
                 </select>
+
+                {fieldErrors.availability && (
+                  <p className="field-error-message">{fieldErrors.availability}</p>
+                )}
 
                 {(condition === "Damaged" || condition === "Lost") && (
                   <p>Availability will automatically become {condition}.</p>
@@ -507,6 +595,7 @@ async function handleAddItem(e) {
               </div>
             </div>
 
+            {/* Item Image */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-image">
                 Item Image

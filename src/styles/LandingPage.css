@@ -1558,3 +1558,367 @@
     padding: 0 12px !important;
   }
 }
+/* =========================================================
+   LANDING PAGE CLEAN RESPONSIVE REDESIGN
+   Removes big shell card + floating card effect
+========================================================= */
+
+/* Remove the big card/container around the whole landing content */
+.landing-shell {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* Make the page feel full-width and clean */
+.landing-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+  background:
+    radial-gradient(circle at 10% 16%, rgba(251, 191, 36, 0.22), transparent 28%),
+    radial-gradient(circle at 90% 22%, rgba(244, 114, 182, 0.12), transparent 28%),
+    var(--qb-bg) !important;
+}
+
+/* Remove unnecessary floating decorations that make the page crowded */
+.landing-floating-card,
+.landing-confetti,
+.landing-dot-grid {
+  display: none !important;
+}
+
+/* Remove floating animation from the device preview */
+.landing-device-card {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Keep the yellow blob but make it calmer */
+.landing-yellow-blob {
+  animation: none !important;
+  opacity: 0.9 !important;
+}
+
+/* Hero becomes cleaner and responsive */
+.landing-hero {
+  width: min(100% - 48px, 1500px) !important;
+  margin: 0 auto !important;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 480px) !important;
+  gap: clamp(28px, 5vw, 70px) !important;
+  min-height: calc(100vh - var(--landing-navbar-height)) !important;
+  padding: clamp(46px, 7vw, 90px) 0 clamp(54px, 7vw, 90px) !important;
+  align-items: center !important;
+}
+
+/* Big yellow circle behind text, not a card */
+.landing-hero::before {
+  width: clamp(260px, 34vw, 520px) !important;
+  height: clamp(260px, 34vw, 520px) !important;
+  left: clamp(-150px, -8vw, -80px) !important;
+  top: clamp(40px, 8vw, 90px) !important;
+  opacity: 0.9 !important;
+}
+
+/* Fix giant text so it does not get cut on different screens */
+.landing-title {
+  max-width: 760px !important;
+  font-size: clamp(4rem, 8vw, 7.4rem) !important;
+  line-height: 0.92 !important;
+  letter-spacing: -0.07em !important;
+}
+
+.landing-description {
+  max-width: 680px !important;
+  font-size: clamp(0.94rem, 1.2vw, 1.08rem) !important;
+  line-height: 1.7 !important;
+}
+
+/* Visual side */
+.landing-visual {
+  min-height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.landing-device-card {
+  width: min(100%, 420px) !important;
+  margin: 0 auto !important;
+  box-shadow: 8px 8px 0 0 var(--qb-accent) !important;
+}
+
+/* Sections should be clean full-width bands, not inside a shell card */
+.landing-features,
+.landing-workflow,
+.landing-about {
+  width: 100% !important;
+  border-top: 2px solid var(--qb-border) !important;
+}
+
+.landing-features > *,
+.landing-workflow > *,
+.landing-about > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep section content aligned like a container */
+.landing-features,
+.landing-workflow,
+.landing-about {
+  padding-left: max(24px, calc((100vw - 1500px) / 2 + 24px)) !important;
+  padding-right: max(24px, calc((100vw - 1500px) / 2 + 24px)) !important;
+}
+
+/* Feature cards less floaty */
+.landing-feature-card {
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+.landing-feature-card:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 7px 7px 0 0 var(--qb-border) !important;
+}
+
+/* Workflow cards less floaty */
+.landing-workflow-list li:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+/* Tablet */
+@media (max-width: 1120px) {
+  .landing-hero {
+    width: min(100% - 40px, 900px) !important;
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+    padding-top: 56px !important;
+    text-align: left !important;
+  }
+
+  .landing-hero-copy {
+    max-width: 100% !important;
+  }
+
+  .landing-title {
+    max-width: 860px !important;
+    font-size: clamp(3.6rem, 11vw, 6.4rem) !important;
+  }
+
+  .landing-visual {
+    justify-content: center !important;
+  }
+
+  .landing-device-card {
+    max-width: 430px !important;
+  }
+
+  .landing-section-heading,
+  .landing-workflow,
+  .landing-about {
+    grid-template-columns: 1fr !important;
+  }
+
+  .landing-feature-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Phone */
+@media (max-width: 780px) {
+  .landing-page {
+    padding-top: var(--landing-navbar-height) !important;
+  }
+
+  .landing-hero {
+    width: 100% !important;
+    padding: 42px 16px 48px !important;
+    gap: 30px !important;
+  }
+
+  .landing-hero::before {
+    width: 260px !important;
+    height: 260px !important;
+    left: -130px !important;
+    top: 34px !important;
+  }
+
+  .landing-kicker {
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+    padding: 8px 14px !important;
+    font-size: 0.64rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .landing-title {
+    max-width: 100% !important;
+    font-size: clamp(3rem, 16vw, 4.8rem) !important;
+    line-height: 0.94 !important;
+    overflow-wrap: normal !important;
+  }
+
+  .landing-description {
+    margin-top: 18px !important;
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .landing-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-top: 24px !important;
+  }
+
+  .landing-actions .qb-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .landing-trust-strip {
+    margin-top: 20px !important;
+  }
+
+  .landing-visual {
+    width: 100% !important;
+  }
+
+  .landing-yellow-blob {
+    display: none !important;
+  }
+
+  .landing-device-card {
+    width: 100% !important;
+    max-width: 390px !important;
+    border-radius: 22px !important;
+    padding: 16px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-accent) !important;
+  }
+
+  .landing-features,
+  .landing-workflow,
+  .landing-about {
+    padding: 44px 16px !important;
+  }
+
+  .landing-section-heading {
+    gap: 14px !important;
+    margin-bottom: 28px !important;
+  }
+
+  .landing-section-heading h2,
+  .landing-workflow-copy h2,
+  .landing-about h2 {
+    font-size: clamp(2rem, 11vw, 3.2rem) !important;
+    line-height: 0.96 !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .landing-hero {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .landing-title {
+    font-size: clamp(2.65rem, 15vw, 3.75rem) !important;
+  }
+
+  .landing-brand span:last-child {
+    display: inline !important;
+  }
+
+  .landing-nav-cta {
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    font-size: 0.6rem !important;
+  }
+
+  .landing-device-card {
+    max-width: 100% !important;
+  }
+}/* =========================================================
+   RESTORE LANDING DEVICE FLOATING ANIMATION
+   Keeps the phone/card preview alive without bringing back the big shell card
+========================================================= */
+
+/* Restore the main device floating motion on desktop/tablet */
+@media (min-width: 781px) {
+  .landing-device-card {
+    animation: landingDeviceSoftFloat 5.5s ease-in-out infinite !important;
+    transform-origin: center !important;
+  }
+
+  .landing-floating-card {
+    display: block !important;
+    animation: landingMiniCardFloat 4.8s ease-in-out infinite !important;
+  }
+
+  .landing-floating-card-left {
+    left: -18px !important;
+    bottom: 112px !important;
+    transform: rotate(4deg) !important;
+    background: var(--qb-quaternary) !important;
+  }
+
+  .landing-floating-card-right {
+    right: -8px !important;
+    top: 86px !important;
+    transform: rotate(-5deg) !important;
+    background: var(--qb-secondary) !important;
+    animation-delay: 600ms !important;
+  }
+}
+
+/* Keep mobile clean and responsive */
+@media (max-width: 780px) {
+  .landing-device-card {
+    animation: landingDeviceMobileFloat 5.5s ease-in-out infinite !important;
+  }
+
+  .landing-floating-card {
+    display: none !important;
+  }
+}
+
+@keyframes landingDeviceSoftFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(1deg);
+  }
+}
+
+@keyframes landingDeviceMobileFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes landingMiniCardFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -10px;
+  }
+}
