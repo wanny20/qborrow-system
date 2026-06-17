@@ -1229,3 +1229,12 @@
     grid-template-columns: 1fr !important;
   }
 }
+.reports-load-more-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.reports-load-more-row .reports-secondary-btn {
+  min-width: 190px;
+}

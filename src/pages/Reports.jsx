@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/Reports.css";
+const REPORTS_HISTORY_PAGE_SIZE = 10;
 
 function Reports() {
   const navigate = useNavigate();
@@ -16,21 +17,73 @@ function Reports() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(
+    REPORTS_HISTORY_PAGE_SIZE
+  );
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
+  const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
+  const UNCATEGORIZED_CATEGORY_NAME = "Uncategorized";
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
   }
 
-  function getCategoryNameById(categoryId) {
-    const category = categories.find(
-      (categoryItem) =>
-        normalizeText(categoryItem.id) === normalizeText(categoryId)
-    );
+function isPlaceholderCategory(value) {
+  const normalizedValue = normalizeText(value);
 
-    return category?.name || categoryId || "Unknown";
+  return (
+    !normalizedValue ||
+    normalizedValue === "unknown" ||
+    normalizedValue === "equipment" ||
+    normalizedValue === "n/a" ||
+    normalizedValue === "not set"
+  );
+}
+
+function findActiveCategory(value) {
+  if (isPlaceholderCategory(value)) {
+    return null;
   }
+
+  return categories.find((categoryItem) => {
+    const categoryId = normalizeText(categoryItem.id);
+    const categoryName = normalizeText(categoryItem.name);
+    const searchValue = normalizeText(value);
+
+    return categoryId === searchValue || categoryName === searchValue;
+  });
+}
+
+function getCategoryNameById(categoryId) {
+  const category = findActiveCategory(categoryId);
+
+  return category?.name || UNCATEGORIZED_CATEGORY_NAME;
+}
+
+function getCategoryInfo(record) {
+  const possibleValues = [
+    record.categoryId,
+    record.categoryName,
+    record.category,
+  ];
+
+  for (const value of possibleValues) {
+    const matchedCategory = findActiveCategory(value);
+
+    if (matchedCategory) {
+      return {
+        id: matchedCategory.id,
+        name: matchedCategory.name || matchedCategory.id,
+      };
+    }
+  }
+
+  return {
+    id: UNCATEGORIZED_CATEGORY_ID,
+    name: UNCATEGORIZED_CATEGORY_NAME,
+  };
+}
 
   function getAssignedCategoryNames() {
     if (!Array.isArray(userData?.assignedCategories)) {
@@ -41,36 +94,28 @@ function Reports() {
       return "No assigned categories yet";
     }
 
-    return userData.assignedCategories.map(getCategoryNameById).join(", ");
+    return userData.assignedCategories
+  .map((categoryId) => {
+    const category = findActiveCategory(categoryId);
+    return category?.name || categoryId;
+  })
+  .join(", ");
   }
+function getItemCategoryId(item) {
+  return getCategoryInfo(item).id;
+}
 
-  function getItemCategoryId(item) {
-    return item.categoryId || item.category || "";
-  }
+function getItemCategoryName(item) {
+  return getCategoryInfo(item).name;
+}
 
-  function getItemCategoryName(item) {
-    return (
-      item.categoryName ||
-      getCategoryNameById(item.categoryId || item.category) ||
-      item.category ||
-      item.categoryId ||
-      "Uncategorized"
-    );
-  }
+function getRequestCategoryId(request) {
+  return getCategoryInfo(request).id;
+}
 
-  function getRequestCategoryId(request) {
-    return request.categoryId || request.category || "";
-  }
-
-  function getRequestCategoryName(request) {
-    return (
-      request.categoryName ||
-      getCategoryNameById(request.categoryId || request.category) ||
-      request.category ||
-      request.categoryId ||
-      "Uncategorized"
-    );
-  }
+function getRequestCategoryName(request) {
+  return getCategoryInfo(request).name;
+}
 
   function cleanDisplay(value, fallback = "Not set") {
     const cleanedValue = String(value || "").trim();
@@ -184,6 +229,9 @@ function Reports() {
   useEffect(() => {
     fetchReportsData();
   }, []);
+  useEffect(() => {
+  setVisibleHistoryCount(REPORTS_HISTORY_PAGE_SIZE);
+}, [searchTerm, statusFilter]);
 
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
@@ -280,6 +328,14 @@ function Reports() {
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
+    const displayedHistory = filteredHistory.slice(0, visibleHistoryCount);
+const hasMoreHistory = visibleHistoryCount < filteredHistory.length;
+
+function handleLoadMoreHistory() {
+  setVisibleHistoryCount((currentCount) =>
+    Math.min(currentCount + REPORTS_HISTORY_PAGE_SIZE, filteredHistory.length)
+  );
+}
 
   const frequentlyBorrowedItems = useMemo(() => {
     const countMap = {};
@@ -325,8 +381,9 @@ function Reports() {
     });
 
     visibleItems.forEach((item) => {
-      const categoryId = getItemCategoryId(item) || getItemCategoryName(item);
-      const categoryName = getItemCategoryName(item);
+      const categoryInfo = getCategoryInfo(item);
+      const categoryId = categoryInfo.id;
+      const categoryName = categoryInfo.name;
 
       if (!categoryMap[categoryId]) {
         categoryMap[categoryId] = {
@@ -366,9 +423,9 @@ function Reports() {
     });
 
     visibleRequests.forEach((request) => {
-      const categoryId =
-        getRequestCategoryId(request) || getRequestCategoryName(request);
-      const categoryName = getRequestCategoryName(request);
+      const categoryInfo = getCategoryInfo(request);
+      const categoryId = categoryInfo.id;
+      const categoryName = categoryInfo.name;
 
       if (!categoryMap[categoryId]) {
         categoryMap[categoryId] = {
@@ -386,9 +443,15 @@ function Reports() {
       categoryMap[categoryId].totalRequests += 1;
     });
 
-    return Object.values(categoryMap).sort((a, b) =>
-      a.categoryName.localeCompare(b.categoryName)
-    );
+return Object.values(categoryMap)
+  .filter((category) => {
+    if (category.categoryId !== UNCATEGORIZED_CATEGORY_ID) {
+      return true;
+    }
+
+    return category.totalItems > 0;
+  })
+  .sort((a, b) => a.categoryName.localeCompare(b.categoryName));
   }, [categories, visibleItems, visibleRequests, userData]);
 
   if (loading) {
@@ -672,8 +735,8 @@ function Reports() {
           <div>
             <h2>Borrowing History</h2>
             <p>
-              Showing {filteredHistory.length} of {visibleRequests.length} request
-              record{visibleRequests.length === 1 ? "" : "s"}.
+              Showing {displayedHistory.length} of {filteredHistory.length} matched request
+              record{filteredHistory.length === 1 ? "" : "s"}.
             </p>
           </div>
         </div>
@@ -685,8 +748,10 @@ function Reports() {
             <p>Try changing the search keyword or status filter.</p>
           </div>
         ) : (
-          <div className="reports-history-list">
-            {filteredHistory.map((request) => (
+
+          <>
+            <div className="reports-history-list">
+              {displayedHistory.map((request) => (
               <article className="reports-history-row" key={request.id}>
                 <div className="reports-history-main">
                   <div className="reports-history-titleline">
@@ -747,7 +812,20 @@ function Reports() {
                 </div>
               </article>
             ))}
-          </div>
+            </div>
+
+            {hasMoreHistory && (
+              <div className="reports-load-more-row">
+                <button
+                  type="button"
+                  className="reports-secondary-btn"
+                  onClick={handleLoadMoreHistory}
+                >
+                  Load More History
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 
