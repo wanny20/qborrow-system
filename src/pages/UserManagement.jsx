@@ -282,20 +282,41 @@ function UserManagement() {
   });
 }
 
-  async function fetchUsersPage(mode = "reset") {
-    const userQuery =
-      mode === "more" && lastUserDoc
-        ? firestoreQuery(
-            collection(db, "users"),
-            orderBy("email", "asc"),
-            startAfter(lastUserDoc),
-            limit(USERS_PAGE_SIZE + 1)
-          )
-        : firestoreQuery(
-            collection(db, "users"),
-            orderBy("email", "asc"),
-            limit(USERS_PAGE_SIZE + 1)
-          );
+  async function fetchUsersPage(mode = "reset", selectedRole = roleFilter) {
+    const usersRef = collection(db, "users");
+    const isRoleFiltered = selectedRole !== "All";
+
+    let userQuery;
+
+    if (isRoleFiltered) {
+      userQuery =
+        mode === "more" && lastUserDoc
+          ? firestoreQuery(
+              usersRef,
+              where("role", "==", selectedRole),
+              startAfter(lastUserDoc),
+              limit(USERS_PAGE_SIZE + 1)
+            )
+          : firestoreQuery(
+              usersRef,
+              where("role", "==", selectedRole),
+              limit(USERS_PAGE_SIZE + 1)
+            );
+    } else {
+      userQuery =
+        mode === "more" && lastUserDoc
+          ? firestoreQuery(
+              usersRef,
+              orderBy("email", "asc"),
+              startAfter(lastUserDoc),
+              limit(USERS_PAGE_SIZE + 1)
+            )
+          : firestoreQuery(
+              usersRef,
+              orderBy("email", "asc"),
+              limit(USERS_PAGE_SIZE + 1)
+            );
+    }
 
     const usersSnapshot = await getDocs(userQuery);
     const docs = usersSnapshot.docs;
@@ -330,7 +351,7 @@ function UserManagement() {
     showStatus("", "");
 
     try {
-      await fetchUsersPage("more");
+      await fetchUsersPage("more", roleFilter);
     } catch (error) {
       showStatus("Error loading more users: " + error.message, "error");
     } finally {
@@ -338,6 +359,25 @@ function UserManagement() {
     }
   }
 
+    async function handleRoleFilterChange(event) {
+    const selectedRole = event.target.value;
+
+    setRoleFilter(selectedRole);
+    setEditingUserId("");
+    setUsers([]);
+    setLastUserDoc(null);
+    setHasMoreUsers(false);
+    setLoadingMoreUsers(true);
+    showStatus("", "");
+
+    try {
+      await fetchUsersPage("reset", selectedRole);
+    } catch (error) {
+      showStatus("Error loading selected role: " + error.message, "error");
+    } finally {
+      setLoadingMoreUsers(false);
+    }
+  }
   async function fetchData() {
     setLoading(true);
 
@@ -373,9 +413,9 @@ function UserManagement() {
       setBorrowRequests(requestData);
 
       await Promise.all([
-  fetchUserStats(),
-  fetchUsersPage("reset"),
-]);
+        fetchUserStats(),
+        fetchUsersPage("reset", roleFilter),
+      ]);
     } catch (error) {
       showStatus("Error loading user management data: " + error.message, "error");
     } finally {
@@ -467,6 +507,8 @@ function UserManagement() {
         suspendedUntil: "",
         suspensionReason: "",
         canBorrow: true,
+        mustChangePassword: true,
+        passwordChangedAt: "",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -1596,11 +1638,12 @@ function UserManagement() {
                 Role
               </label>
 
-              <select
-                id="user-role-filter"
-                value={roleFilter}
-                onChange={(event) => setRoleFilter(event.target.value)}
-              >
+                <select
+                  id="user-role-filter"
+                  value={roleFilter}
+                  onChange={handleRoleFilterChange}
+                  disabled={loadingMoreUsers}
+                >
                 <option value="All">All Roles</option>
                 <option value="borrower">Borrower</option>
                 <option value="categoryAdmin">Category Admin</option>

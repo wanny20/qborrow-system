@@ -1,18 +1,38 @@
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getCountFromServer,
+  getDocs,
+  limit as queryLimit,
+  query,
+  where,
+} from "firebase/firestore";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/Dashboard.css";
+
+const emptyDashboardCounts = {
+  totalItems: 0,
+  availableItems: 0,
+  borrowedRequests: 0,
+  pendingRequests: 0,
+  overdueRequests: 0,
+  damagedLostItems: 0,
+};
 
 function Dashboard() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
+  const currentUser = auth.currentUser;
+
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [dashboardCounts, setDashboardCounts] = useState(emptyDashboardCounts);
   const [borrowerSearch, setBorrowerSearch] = useState("");
+  const [dismissedDueTodayAlert, setDismissedDueTodayAlert] = useState(false);
 
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -47,6 +67,13 @@ function Dashboard() {
     );
   }
 
+  function getTodayDateKey() {
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
   function isOverdue(request) {
     if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
       return false;
@@ -63,25 +90,138 @@ function Dashboard() {
     return today > expectedDate;
   }
 
+  function isDueToday(request) {
+    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+      return false;
+    }
+
+    if (!request.expectedReturnDate) return false;
+
+    return request.expectedReturnDate === getTodayDateKey();
+  }
+
+  function mapSnapshot(snapshot) {
+    return snapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+  }
+
+  async function getServerCount(queryReference) {
+    const countSnapshot = await getCountFromServer(queryReference);
+    return countSnapshot.data().count || 0;
+  }
+
+  async function fetchSuperAdminDashboardData() {
+    const itemsRef = collection(db, "items");
+    const requestsRef = collection(db, "borrowRequests");
+    const todayKey = getTodayDateKey();
+
+    const [
+      totalItemsCount,
+      availableItemsCount,
+      borrowedRequestsCount,
+      pendingRequestsCount,
+      overdueSnapshot,
+      conditionDamagedSnapshot,
+      conditionLostSnapshot,
+      availabilityDamagedSnapshot,
+      availabilityLostSnapshot,
+    ] = await Promise.all([
+      getServerCount(itemsRef),
+      getServerCount(query(itemsRef, where("availability", "==", "Available"))),
+      getServerCount(query(requestsRef, where("approvalStatus", "==", "Borrowed"))),
+      getServerCount(query(requestsRef, where("approvalStatus", "==", "Pending"))),
+      getDocs(query(requestsRef, where("expectedReturnDate", "<", todayKey))),
+      getDocs(query(itemsRef, where("condition", "==", "Damaged"))),
+      getDocs(query(itemsRef, where("condition", "==", "Lost"))),
+      getDocs(query(itemsRef, where("availability", "==", "Damaged"))),
+      getDocs(query(itemsRef, where("availability", "==", "Lost"))),
+    ]);
+
+    const overdueCount = overdueSnapshot.docs.filter((document) =>
+      ["Approved", "Borrowed"].includes(document.data().approvalStatus)
+    ).length;
+
+    const damagedLostItemIds = new Set();
+
+    [
+      conditionDamagedSnapshot,
+      conditionLostSnapshot,
+      availabilityDamagedSnapshot,
+      availabilityLostSnapshot,
+    ].forEach((snapshot) => {
+      snapshot.docs.forEach((document) => {
+        damagedLostItemIds.add(document.id);
+      });
+    });
+
+    setItems([]);
+    setRequests([]);
+
+    setDashboardCounts({
+      totalItems: totalItemsCount,
+      availableItems: availableItemsCount,
+      borrowedRequests: borrowedRequestsCount,
+      pendingRequests: pendingRequestsCount,
+      overdueRequests: overdueCount,
+      damagedLostItems: damagedLostItemIds.size,
+    });
+  }
+
+  async function fetchBorrowerDashboardData() {
+    const itemsRef = collection(db, "items");
+    const requestsRef = collection(db, "borrowRequests");
+
+    if (!currentUser) {
+      setItems([]);
+      setRequests([]);
+      setDashboardCounts(emptyDashboardCounts);
+      return;
+    }
+
+    const [availableItemsCount, availablePreviewSnapshot, myRequestsSnapshot] =
+      await Promise.all([
+        getServerCount(query(itemsRef, where("availability", "==", "Available"))),
+        getDocs(
+          query(
+            itemsRef,
+            where("availability", "==", "Available"),
+            queryLimit(20)
+          )
+        ),
+        getDocs(query(requestsRef, where("borrowerId", "==", currentUser.uid))),
+      ]);
+
+    setItems(mapSnapshot(availablePreviewSnapshot));
+    setRequests(mapSnapshot(myRequestsSnapshot));
+
+    setDashboardCounts({
+      ...emptyDashboardCounts,
+      availableItems: availableItemsCount,
+    });
+  }
+
+  async function fetchCategoryAdminDashboardData() {
+    const itemsSnapshot = await getDocs(collection(db, "items"));
+    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+
+    setItems(mapSnapshot(itemsSnapshot));
+    setRequests(mapSnapshot(requestsSnapshot));
+    setDashboardCounts(emptyDashboardCounts);
+  }
+
   async function fetchDashboardData() {
     setLoading(true);
 
     try {
-      const itemsSnapshot = await getDocs(collection(db, "items"));
-      const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
-
-      const itemData = itemsSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
-
-      const requestData = requestsSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
-
-      setItems(itemData);
-      setRequests(requestData);
+      if (isSuperAdmin) {
+        await fetchSuperAdminDashboardData();
+      } else if (isCategoryAdmin) {
+        await fetchCategoryAdminDashboardData();
+      } else {
+        await fetchBorrowerDashboardData();
+      }
     } catch (error) {
       alert("Error loading dashboard: " + error.message);
     } finally {
@@ -90,8 +230,10 @@ function Dashboard() {
   }
 
   useEffect(() => {
+    if (!userData?.role) return;
+
     fetchDashboardData();
-  }, []);
+  }, [userData?.role, userData?.assignedCategories?.join("|"), currentUser?.uid]);
 
   const visibleItems = useMemo(() => {
     if (isCategoryAdmin) {
@@ -105,22 +247,30 @@ function Dashboard() {
     if (isCategoryAdmin) {
       return requests.filter((request) => canCategoryAdminSee(request));
     }
-    
+
     return requests;
   }, [requests, userData]);
-
-  const currentUser = auth.currentUser;
 
   const myRequests = currentUser
     ? requests.filter((request) => request.borrowerId === currentUser.uid)
     : [];
 
+  const myDueTodayRequests = myRequests.filter((request) => isDueToday(request));
+  const priorityDueTodayRequest = myDueTodayRequests[0];
+
+  const dueTodaySessionKey = currentUser
+    ? `qborrowDueTodayDismissed-${currentUser.uid}-${getTodayDateKey()}`
+    : "";
+
+  const shouldShowDueTodayAlert =
+    isBorrower &&
+    priorityDueTodayRequest &&
+    !dismissedDueTodayAlert &&
+    dueTodaySessionKey &&
+    sessionStorage.getItem(dueTodaySessionKey) !== "true";
+
   const availableItems = visibleItems.filter(
     (item) => item.availability === "Available"
-  );
-
-  const borrowedItems = visibleItems.filter(
-    (item) => item.availability === "Borrowed"
   );
 
   const pendingRequests = visibleRequests.filter(
@@ -148,85 +298,114 @@ function Dashboard() {
   const myBorrowedRequests = myRequests.filter(
     (request) => request.approvalStatus === "Borrowed"
   );
+
   const borrowedRequests = visibleRequests.filter(
-  (request) => request.approvalStatus === "Borrowed"
-);
+    (request) => request.approvalStatus === "Borrowed"
+  );
 
   const myReturnedRequests = myRequests.filter(
     (request) => request.approvalStatus === "Returned"
   );
 
-const adminStats = [
-  {
-    label: "Total Items",
-    value: visibleItems.length,
-    tone: "purple",
-    path: "/admin-list/items",
-  },
-  {
-    label: "Available",
-    value: availableItems.length,
-    tone: "green",
-    path: "/admin-list/available",
-  },
-  {
-    label: "Borrowed",
-    value: borrowedRequests.length,
-    tone: "yellow",
-    path: "/admin-list/borrowed",
-  },
-  {
-    label: "Pending",
-    value: pendingRequests.length,
-    tone: "pink",
-    path: "/admin-list/pending",
-  },
-  {
-    label: "Overdue",
-    value: overdueRequests.length,
-    tone: "red",
-    path: "/admin-list/overdue",
-  },
-  {
-    label: "Damaged/Lost",
-    value: damagedLostItems.length,
-    tone: "red",
-    path: "/admin-list/damaged-lost",
-  },
-];
+  const totalItemsValue = isSuperAdmin
+    ? dashboardCounts.totalItems
+    : visibleItems.length;
 
-const borrowerStats = [
-  {
-    label: "Available Items",
-    value: items.filter((item) => item.availability === "Available").length,
-    tone: "green",
-    path: "/items",
-  },
-  {
-    label: "Pending",
-    value: myPendingRequests.length,
-    tone: "yellow",
-    path: "/my-requests",
-  },
-  {
-    label: "Approved",
-    value: myApprovedRequests.length,
-    tone: "purple",
-    path: "/my-requests",
-  },
-  {
-    label: "Borrowed",
-    value: myBorrowedRequests.length,
-    tone: "pink",
-    path: "/my-requests",
-  },
-  {
-    label: "Returned",
-    value: myReturnedRequests.length,
-    tone: "green",
-    path: "/my-requests",
-  },
-];
+  const availableItemsValue = isSuperAdmin
+    ? dashboardCounts.availableItems
+    : availableItems.length;
+
+  const borrowedRequestsValue = isSuperAdmin
+    ? dashboardCounts.borrowedRequests
+    : borrowedRequests.length;
+
+  const pendingRequestsValue = isSuperAdmin
+    ? dashboardCounts.pendingRequests
+    : pendingRequests.length;
+
+  const overdueRequestsValue = isSuperAdmin
+    ? dashboardCounts.overdueRequests
+    : overdueRequests.length;
+
+  const damagedLostItemsValue = isSuperAdmin
+    ? dashboardCounts.damagedLostItems
+    : damagedLostItems.length;
+
+  const borrowerAvailableItemsValue = isBorrower
+    ? dashboardCounts.availableItems
+    : items.filter((item) => item.availability === "Available").length;
+
+  const adminStats = [
+    {
+      label: "Total Items",
+      value: totalItemsValue,
+      tone: "purple",
+      path: "/admin-list/items",
+    },
+    {
+      label: "Available",
+      value: availableItemsValue,
+      tone: "green",
+      path: "/admin-list/available",
+    },
+    {
+      label: "Borrowed",
+      value: borrowedRequestsValue,
+      tone: "yellow",
+      path: "/admin-list/borrowed",
+    },
+    {
+      label: "Pending",
+      value: pendingRequestsValue,
+      tone: "pink",
+      path: "/admin-list/pending",
+    },
+    {
+      label: "Overdue",
+      value: overdueRequestsValue,
+      tone: "red",
+      path: "/admin-list/overdue",
+    },
+    {
+      label: "Damaged/Lost",
+      value: damagedLostItemsValue,
+      tone: "red",
+      path: "/admin-list/damaged-lost",
+    },
+  ];
+
+  const borrowerStats = [
+    {
+      label: "Available Items",
+      value: borrowerAvailableItemsValue,
+      tone: "green",
+      path: "/items",
+    },
+    {
+      label: "Pending",
+      value: myPendingRequests.length,
+      tone: "yellow",
+      path: "/my-requests",
+    },
+    {
+      label: "Approved",
+      value: myApprovedRequests.length,
+      tone: "purple",
+      path: "/my-requests",
+    },
+    {
+      label: "Borrowed",
+      value: myBorrowedRequests.length,
+      tone: "pink",
+      path: "/my-requests",
+    },
+    {
+      label: "Returned",
+      value: myReturnedRequests.length,
+      tone: "green",
+      path: "/my-requests",
+    },
+  ];
 
   const adminActions = [
     {
@@ -303,8 +482,16 @@ const borrowerStats = [
     ? "Category Admin"
     : "Borrower";
 
+  function handleDismissDueTodayAlert() {
+    if (dueTodaySessionKey) {
+      sessionStorage.setItem(dueTodaySessionKey, "true");
+    }
+
+    setDismissedDueTodayAlert(true);
+  }
+
   const notificationCount = isAdmin
-    ? pendingRequests.length + overdueRequests.length + damagedLostItems.length
+    ? pendingRequestsValue + overdueRequestsValue + damagedLostItemsValue
     : myPendingRequests.length + myApprovedRequests.length + myBorrowedRequests.length;
 
   if (loading) {
@@ -321,6 +508,73 @@ const borrowerStats = [
 
   return (
     <div className="dashboard-page">
+      {shouldShowDueTodayAlert && (
+        <div className="dashboard-due-overlay" role="dialog" aria-modal="true">
+          <section className="dashboard-due-card">
+            <div className="dashboard-due-icon">!</div>
+
+            <div>
+              <p className="qb-kicker">Priority Reminder</p>
+              <h2>You have an item due today</h2>
+
+              <p>
+                Please return or coordinate the item before the day ends to avoid
+                overdue records.
+              </p>
+            </div>
+
+            <div className="dashboard-due-item">
+              <span>Item</span>
+              <strong>{priorityDueTodayRequest.itemName || "Untitled Item"}</strong>
+            </div>
+
+            <div className="dashboard-due-grid">
+              <div>
+                <span>Item Code</span>
+                <strong>
+                  {priorityDueTodayRequest.itemCode ||
+                    priorityDueTodayRequest.itemId ||
+                    "N/A"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Expected Return</span>
+                <strong>{priorityDueTodayRequest.expectedReturnDate}</strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong>{priorityDueTodayRequest.approvalStatus}</strong>
+              </div>
+
+              <div>
+                <span>Total Due Today</span>
+                <strong>{myDueTodayRequests.length}</strong>
+              </div>
+            </div>
+
+            <div className="dashboard-due-actions">
+              <button
+                type="button"
+                className="dashboard-due-secondary"
+                onClick={() => navigate("/my-requests")}
+              >
+                View My Requests
+              </button>
+
+              <button
+                type="button"
+                className="dashboard-due-primary"
+                onClick={handleDismissDueTodayAlert}
+              >
+                OK
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       <section className="dashboard-hero">
         <div>
           <p className="dashboard-eyebrow">QBorrow Dashboard</p>
@@ -355,21 +609,21 @@ const borrowerStats = [
         </div>
       </section>
 
-        <section className="dashboard-stats-grid">
-          {(isAdmin ? adminStats : borrowerStats).map((stat) => (
-            <button
-              type="button"
-              className={`dashboard-stat-card dashboard-stat-${stat.tone}`}
-              key={stat.label}
-              onClick={() => navigate(stat.path)}
-              aria-label={`Open ${stat.label}`}
-            >
-              <span className="dashboard-stat-label">{stat.label}</span>
-              <strong>{stat.value}</strong>
-              <span className="dashboard-stat-hint">View</span>
-            </button>
-          ))}
-        </section>
+      <section className="dashboard-stats-grid">
+        {(isAdmin ? adminStats : borrowerStats).map((stat) => (
+          <button
+            type="button"
+            className={`dashboard-stat-card dashboard-stat-${stat.tone}`}
+            key={stat.label}
+            onClick={() => navigate(stat.path)}
+            aria-label={`Open ${stat.label}`}
+          >
+            <span className="dashboard-stat-label">{stat.label}</span>
+            <strong>{stat.value}</strong>
+            <span className="dashboard-stat-hint">View</span>
+          </button>
+        ))}
+      </section>
 
       {isAdmin ? (
         <section className="dashboard-main-grid">
@@ -410,17 +664,17 @@ const borrowerStats = [
             <div className="dashboard-attention-list">
               <button type="button" onClick={() => navigate("/manage-requests")}>
                 <span>Pending Requests</span>
-                <strong>{pendingRequests.length}</strong>
+                <strong>{pendingRequestsValue}</strong>
               </button>
 
               <button type="button" onClick={() => navigate("/reports")}>
                 <span>Overdue Records</span>
-                <strong>{overdueRequests.length}</strong>
+                <strong>{overdueRequestsValue}</strong>
               </button>
 
               <button type="button" onClick={() => navigate("/reports")}>
                 <span>Damaged/Lost Items</span>
-                <strong>{damagedLostItems.length}</strong>
+                <strong>{damagedLostItemsValue}</strong>
               </button>
             </div>
           </div>
