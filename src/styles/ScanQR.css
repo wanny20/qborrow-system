@@ -1420,3 +1420,156 @@
     height: 210px !important;
   }
 }
+/* =========================
+   SCAN QR FIELD VALIDATION
+========================= */
+
+.required-star {
+  color: #dc2626;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+.field-error-message {
+  margin: 7px 0 0;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.scan-manual-form input.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 3px 3px 0 0 rgba(239, 68, 68, 0.25) !important;
+}
+
+.scan-manual-form input:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+/* =========================================================
+   SCAN QR COMPACT HEADER FIX
+   Removes repeated page title because topbar already shows it
+========================================================= */
+
+.scan-page {
+  gap: 14px !important;
+}
+
+/* Compact header */
+
+.scan-header-compact {
+  display: block !important;
+  grid-template-columns: 1fr !important;
+}
+
+.scan-header-compact > div,
+.scan-header-compact > .scan-header-content {
+  min-height: 96px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 20px 24px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.16)),
+    #ffffff !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.scan-header-compact > div::after,
+.scan-header-compact > .scan-header-content::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 78px !important;
+  height: 78px !important;
+  right: 24px !important;
+  bottom: -30px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: var(--qb-tertiary) !important;
+  opacity: 0.85 !important;
+}
+
+.scan-header-text {
+  position: relative !important;
+  z-index: 1 !important;
+  min-width: 0 !important;
+}
+
+.scan-header-text p {
+  max-width: 900px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.scan-header-back-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  width: auto !important;
+  min-width: 180px !important;
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.scan-header-back-btn:hover {
+  background: var(--qb-tertiary) !important;
+}
+
+/* Slightly tighten cards after header cleanup */
+
+.scan-card,
+.scan-side-panel {
+  border-radius: 22px !important;
+  padding: 16px !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+.scan-section-heading {
+  margin-bottom: 12px !important;
+}
+
+.scan-section-heading h2 {
+  font-size: 1.28rem !important;
+  line-height: 1.05 !important;
+}
+
+.scan-section-heading p {
+  font-size: 0.76rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Responsive */
+
+@media (max-width: 1180px) {
+  .scan-header-compact > div,
+  .scan-header-compact > .scan-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .scan-header-back-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .scan-header-compact > div,
+  .scan-header-compact > .scan-header-content {
+    min-height: auto !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .scan-header-text p {
+    font-size: 0.76rem !important;
+  }
+}

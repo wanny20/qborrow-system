@@ -39,6 +39,7 @@ function ReleaseItem() {
   const [releasing, setReleasing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -47,6 +48,39 @@ function ReleaseItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateManualFindForm(value) {
+  const errors = {};
+
+  if (!String(value || "").trim()) {
+    errors.manualItemId = "Manual Item ID, barcode, or QR URL is required.";
+  }
+
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    ...errors,
+  }));
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateReleaseForm() {
+  const errors = {};
+
+  if (!selectedRequest) {
+    errors.selectedRequest = "Please scan, enter, or select an approved request first.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
   function startReleaseAction() {
   if (releaseLockRef.current || releasing) {
     return false;
@@ -293,13 +327,17 @@ async function fetchApprovedRequests() {
 async function findApprovedRequestByItemId(rawItemId) {
   if (isReleaseBusy()) return;
 
-  const itemId = extractItemId(rawItemId);
-  showStatus("", "");
+const itemId = extractItemId(rawItemId);
+showStatus("", "");
 
-  if (!itemId) {
-    showStatus("Please scan or enter an item ID, item code, barcode, or QR URL.", "error");
-    return;
-  }
+const isValid = validateManualFindForm(itemId);
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+clearFieldError("manualItemId");
 
   try {
     const itemRequestQuery = firestoreQuery(
@@ -352,17 +390,22 @@ async function findApprovedRequestByItemId(rawItemId) {
       return;
     }
 
-    setSelectedRequest(matchingRequest);
-    setManualItemId(itemId);
-    showStatus("Approved request found. Review details before release.", "success");
+setSelectedRequest(matchingRequest);
+setManualItemId(itemId);
+setFieldErrors({});
+showStatus("Approved request found. Review details before release.", "success");
   } catch (error) {
     showStatus("Error finding approved request: " + error.message, "error");
   }
 }
 
 async function handleConfirmRelease() {
-  if (!selectedRequest) {
-    showStatus("Please scan or select an approved request first.", "error");
+  showStatus("", "");
+
+  const isValid = validateReleaseForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
     return;
   }
 
@@ -500,36 +543,34 @@ useEffect(() => {
 
   return (
     <div className="release-page">
-      <section className="release-header">
-        <div>
-          <p className="qb-kicker">Release Scan</p>
+<section className="release-header release-header-compact">
+  <div className="release-header-content">
+    <div className="release-header-text">
+      <p>
+        Scan the item QR code or barcode before giving it to the borrower.
+        This confirms the approved item is physically released.
+      </p>
 
-          <h1>Release Item</h1>
-
-          <p>
-            Scan the item QR code or barcode before giving it to the borrower.
-            This confirms the approved item is physically released.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="release-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="release-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="release-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="release-secondary-btn release-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`release-status release-status-${statusType}`} role="status">
@@ -603,19 +644,24 @@ useEffect(() => {
 )}
 
           <div className="release-manual-form">
-            <label className="qb-label" htmlFor="manual-item-id">
-              Manual Item ID / Barcode / QR URL
-            </label>
+<label className="qb-label" htmlFor="manual-item-id">
+  Manual Item ID / Barcode / QR URL <span className="required-star">*</span>
+</label>
 
             <div className="release-manual-row">
-              <input
-                id="manual-item-id"
-                type="text"
-                value={manualItemId}
-                onChange={(e) => setManualItemId(e.target.value)}
-                placeholder="Example: item ID or /item/itemId"
-                disabled={releasing}
-              />
+<input
+  id="manual-item-id"
+  type="text"
+  className={fieldErrors.manualItemId ? "input-error" : ""}
+  value={manualItemId}
+  onFocus={() => clearFieldError("manualItemId")}
+  onChange={(e) => {
+    setManualItemId(e.target.value);
+    clearFieldError("manualItemId");
+  }}
+  placeholder="Example: item ID or /item/itemId"
+  disabled={releasing}
+/>
 
             <button
               type="button"
@@ -626,6 +672,9 @@ useEffect(() => {
               Find
             </button>
             </div>
+            {fieldErrors.manualItemId && (
+  <p className="field-error-message">{fieldErrors.manualItemId}</p>
+)}
           </div>
         </section>
 
@@ -684,11 +733,15 @@ useEffect(() => {
               </button>
             </>
           ) : (
-            <div className="release-empty-selected">
-              <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-              <h3>No selected request yet</h3>
-              <p>Scan an item or select from the approved request queue.</p>
-            </div>
+ <div className="release-empty-selected">
+  <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+  <h3>No selected request yet</h3>
+  <p>Scan an item or select from the approved request queue.</p>
+
+  {fieldErrors.selectedRequest && (
+    <p className="field-error-message">{fieldErrors.selectedRequest}</p>
+  )}
+</div>
           )}
         </section>
       </section>
@@ -720,45 +773,69 @@ useEffect(() => {
             <p>No items are currently waiting for release.</p>
           </div>
         ) : (
-          <div className="release-request-grid">
-            {visibleApprovedRequests.map((request) => (
-              <article className="release-request-card" key={request.id}>
-                <div className="release-request-topline">
-                  <span>{request.itemCode || request.itemId}</span>
-                  <strong>{request.approvalStatus}</strong>
-                </div>
+<>
+  <div className="release-approved-table-header">
+    <span>Item</span>
+    <span>Borrower</span>
+    <span>Category</span>
+    <span>Expected Return</span>
+    <span>Status</span>
+    <span>Action</span>
+  </div>
 
-                <h3>{request.itemName}</h3>
+  <div className="release-approved-table-grid">
+    {visibleApprovedRequests.map((request) => (
+      <article
+        className={`release-approved-row ${
+          selectedRequest?.id === request.id ? "selected" : ""
+        }`}
+        key={request.id}
+      >
+        <div className="release-approved-cell release-approved-item-cell">
+          <span>{request.itemCode || request.itemId}</span>
+          <strong>{request.itemName || "Untitled Item"}</strong>
+        </div>
 
-                <div className="release-request-meta">
-                  <div>
-                    <span>Borrower</span>
-                    <strong>{request.borrowerName || request.borrowerEmail}</strong>
-                  </div>
+        <div className="release-approved-cell release-approved-borrower-cell">
+          <span>{request.borrowerEmail || "No email"}</span>
+          <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+        </div>
 
-                  <div>
-                    <span>Expected Return</span>
-                    <strong>{request.expectedReturnDate}</strong>
-                  </div>
-                </div>
+        <div className="release-approved-cell">
+          <span>Category</span>
+          <strong>{getRequestCategoryName(request)}</strong>
+        </div>
 
-                <button
-                  type="button"
-                  className="release-primary-btn"
-                  onClick={() => {
-                    if (releasing) return;
+        <div className="release-approved-cell">
+          <span>Expected Return</span>
+          <strong>{request.expectedReturnDate || "Not set"}</strong>
+        </div>
 
-                    setSelectedRequest(request);
-                    setManualItemId(request.itemId);
-                    showStatus("Approved request selected.", "success");
-                  }}
-                  disabled={releasing}
-                >
-                  Select
-                </button>
-              </article>
-            ))}
-          </div>
+        <div className="release-approved-status-cell">
+          <span>{request.approvalStatus || "Approved"}</span>
+        </div>
+
+        <div className="release-approved-actions">
+          <button
+            type="button"
+            className="release-primary-btn"
+            onClick={() => {
+              if (releasing) return;
+
+              setSelectedRequest(request);
+              setManualItemId(request.itemId);
+              setFieldErrors({});
+              showStatus("Approved request selected.", "success");
+            }}
+            disabled={releasing || selectedRequest?.id === request.id}
+          >
+            {selectedRequest?.id === request.id ? "Selected" : "Select"}
+          </button>
+        </div>
+      </article>
+    ))}
+  </div>
+</>
         )}
       </section>
     </div>

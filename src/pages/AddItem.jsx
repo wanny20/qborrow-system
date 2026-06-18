@@ -363,36 +363,34 @@ function AddItem() {
         />
       )}
 
-      <section className="add-item-header">
-        <div>
-          <p className="qb-kicker">Inventory Setup</p>
+<section className="add-item-header add-item-header-compact">
+  <div className="add-item-header-content">
+    <div className="add-item-header-text">
+      <p>
+        Create a borrowable item record with category, condition, availability,
+        image, QR value, and barcode value.
+      </p>
 
-          <h1>Add Item</h1>
-
-          <p>
-            Create a borrowable item record with category, condition,
-            availability, image, QR value, and barcode value.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="add-item-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.map(getCategoryName).join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="add-item-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="add-item-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="add-item-secondary-btn add-item-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -473,40 +471,63 @@ function AddItem() {
             </div>
 
             <div className="add-item-grid">
-              {/* Category */}
-              <div className="add-item-field">
-                <label className="qb-label" htmlFor="category">
-                  Category <span className="required-star">*</span>
-                </label>
+ {/* Category */}
+<div className="add-item-field">
+  <label className="qb-label" htmlFor="category">
+    Category <span className="required-star">*</span>
+  </label>
 
-                <select
-                  id="category"
-                  className={fieldErrors.categoryId ? "input-error" : ""}
-                  value={categoryId}
-                  onFocus={() => clearFieldError("categoryId")}
-                  onChange={(e) => {
-                    setCategoryId(e.target.value);
-                    clearFieldError("categoryId");
-                  }}
-                  disabled={submitting || loadingCategories || availableCategories.length === 0}
-                >
-                  {loadingCategories ? (
-                    <option value="">Loading categories...</option>
-                  ) : availableCategories.length === 0 ? (
-                    <option value="">No assigned category</option>
-                  ) : (
-                    availableCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+  {isCategoryAdmin ? (
+    <div
+      className={`add-item-fixed-category-card ${
+        fieldErrors.categoryId ? "input-error" : ""
+      }`}
+    >
+      <span>Fixed Assigned Category</span>
 
-                {fieldErrors.categoryId && (
-                  <p className="field-error-message">{fieldErrors.categoryId}</p>
-                )}
-              </div>
+      <strong>
+        {loadingCategories
+          ? "Loading category..."
+          : selectedCategory?.name || "No assigned category"}
+      </strong>
+
+      <p>
+        Category admins cannot manually select a category. Items will be saved
+        under the assigned category only.
+      </p>
+    </div>
+  ) : (
+    <select
+      id="category"
+      className={fieldErrors.categoryId ? "input-error" : ""}
+      value={categoryId}
+      onFocus={() => clearFieldError("categoryId")}
+      onChange={(e) => {
+        setCategoryId(e.target.value);
+        clearFieldError("categoryId");
+      }}
+      disabled={
+        submitting || loadingCategories || availableCategories.length === 0
+      }
+    >
+      {loadingCategories ? (
+        <option value="">Loading categories...</option>
+      ) : availableCategories.length === 0 ? (
+        <option value="">No category available</option>
+      ) : (
+        availableCategories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))
+      )}
+    </select>
+  )}
+
+  {fieldErrors.categoryId && (
+    <p className="field-error-message">{fieldErrors.categoryId}</p>
+  )}
+</div>
 
               {/* Max Borrow Days */}
               <div className="add-item-field">

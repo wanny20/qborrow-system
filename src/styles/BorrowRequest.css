@@ -633,3 +633,347 @@
     max-width: 100%;
   }
 }
+/* =========================
+   BORROW REQUEST FIELD VALIDATION
+========================= */
+
+.required-star {
+  color: #dc2626;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+.field-error-message {
+  margin: 7px 0 0;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.borrow-request-field textarea.input-error,
+.borrow-request-field input.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 3px 3px 0 0 rgba(239, 68, 68, 0.25) !important;
+}
+
+.borrow-request-field textarea:disabled,
+.borrow-request-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+/* =========================================================
+   BORROW REQUEST COMPACT HEADER + CLEANER LAYOUT
+   Removes repeated page title because topbar already shows it
+========================================================= */
+
+.borrow-request-page {
+  gap: 14px !important;
+}
+
+/* Compact header */
+
+.borrow-request-header-compact {
+  display: block !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.borrow-request-header-compact::after {
+  display: none !important;
+}
+
+.borrow-request-header-content {
+  min-height: 96px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 20px 24px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.16)),
+    var(--qb-surface) !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.borrow-request-header-content::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 78px !important;
+  height: 78px !important;
+  right: 24px !important;
+  bottom: -30px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: var(--qb-tertiary) !important;
+  opacity: 0.85 !important;
+}
+
+.borrow-request-header-text {
+  position: relative !important;
+  z-index: 1 !important;
+  min-width: 0 !important;
+}
+
+.borrow-request-header-text p {
+  max-width: 900px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.borrow-request-header-back-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  width: auto !important;
+  min-width: 150px !important;
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  background: var(--qb-surface) !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.borrow-request-header-back-btn:hover {
+  background: var(--qb-tertiary) !important;
+}
+
+/* Cleaner main layout */
+
+.borrow-request-layout {
+  gap: 14px !important;
+}
+
+.borrow-request-item-card,
+.borrow-request-form-card {
+  border-radius: 22px !important;
+  padding: 16px !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+/* Compact item card */
+
+.borrow-request-item-media {
+  height: 180px !important;
+  border-radius: 16px !important;
+}
+
+.borrow-request-item-info {
+  margin-top: 12px !important;
+}
+
+.borrow-request-item-code {
+  font-size: 0.62rem !important;
+}
+
+.borrow-request-item-info h2 {
+  margin-top: 6px !important;
+  font-size: 1.35rem !important;
+  line-height: 1.05 !important;
+}
+
+.borrow-request-item-info > p {
+  margin-top: 8px !important;
+  font-size: 0.76rem !important;
+  line-height: 1.4 !important;
+}
+
+/* Compact meta boxes */
+
+.borrow-request-meta-grid {
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+.borrow-request-meta-grid div {
+  border-radius: 12px !important;
+  padding: 8px !important;
+}
+
+.borrow-request-meta-grid span {
+  margin-bottom: 4px !important;
+  font-size: 0.52rem !important;
+}
+
+.borrow-request-meta-grid strong {
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Compact form */
+
+.borrow-request-form-heading {
+  margin-bottom: 12px !important;
+}
+
+.borrow-request-form-heading h2 {
+  font-size: 1.28rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.borrow-request-form-heading p {
+  margin-top: 6px !important;
+  font-size: 0.76rem !important;
+  line-height: 1.35 !important;
+}
+
+.borrow-request-form-card form {
+  margin-top: 12px !important;
+}
+
+.borrow-request-field {
+  gap: 6px !important;
+  margin-bottom: 10px !important;
+}
+
+.borrow-request-field textarea,
+.borrow-request-field input {
+  border-radius: 13px !important;
+  padding: 10px 12px !important;
+  font-size: 0.78rem !important;
+}
+
+.borrow-request-field textarea {
+  min-height: 96px !important;
+  line-height: 1.4 !important;
+}
+
+.borrow-request-field input {
+  min-height: 40px !important;
+}
+
+.borrow-request-field p {
+  font-size: 0.68rem !important;
+  line-height: 1.35 !important;
+}
+
+.borrow-request-date-grid {
+  gap: 10px !important;
+}
+
+/* Compact borrower preview */
+
+.borrow-request-borrower-preview {
+  margin-top: 12px !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+}
+
+.borrow-request-borrower-preview > .qb-kicker {
+  margin-bottom: 8px !important;
+  font-size: 0.58rem !important;
+}
+
+/* Status and warnings */
+
+.borrow-request-status,
+.borrow-request-warning {
+  margin-top: 10px !important;
+  border-radius: 15px !important;
+  padding: 10px 12px !important;
+  font-size: 0.74rem !important;
+  line-height: 1.35 !important;
+  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+}
+
+/* Compact buttons */
+
+.borrow-request-actions {
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.borrow-request-primary-btn,
+.borrow-request-secondary-btn {
+  min-height: 38px !important;
+  min-width: 130px !important;
+  padding: 0 12px !important;
+  font-size: 0.58rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .borrow-request-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-header-back-btn {
+    width: 100% !important;
+  }
+
+  .borrow-request-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .borrow-request-header-content {
+    min-height: auto !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .borrow-request-header-text p {
+    font-size: 0.76rem !important;
+  }
+
+  .borrow-request-item-card,
+  .borrow-request-form-card {
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .borrow-request-item-card {
+    grid-template-columns: 96px minmax(0, 1fr) !important;
+  }
+
+  .borrow-request-item-media {
+    width: 96px !important;
+    height: 120px !important;
+  }
+
+  .borrow-request-item-card .borrow-request-meta-grid {
+    grid-column: 1 / -1 !important;
+  }
+
+  .borrow-request-meta-grid,
+  .borrow-request-borrower-preview .borrow-request-meta-grid,
+  .borrow-request-date-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-actions button,
+  .borrow-request-primary-btn,
+  .borrow-request-secondary-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .borrow-request-item-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .borrow-request-item-media {
+    width: 100% !important;
+    height: 160px !important;
+  }
+}

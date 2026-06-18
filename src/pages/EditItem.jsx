@@ -42,8 +42,9 @@ function EditItem() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isForbidden, setIsForbidden] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState(""); 
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
@@ -53,6 +54,40 @@ function EditItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateEditItemForm() {
+  const errors = {};
+
+  if (!itemName.trim()) {
+    errors.itemName = "Item name is required.";
+  }
+
+  if (!categoryId) {
+    errors.categoryId = "Category is required.";
+  }
+
+  if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+    errors.maxBorrowDays = "Max borrow days must be greater than 0.";
+  }
+
+  if (!condition) {
+    errors.condition = "Condition is required.";
+  }
+
+  if (!getFinalAvailability()) {
+    errors.availability = "Availability is required.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -250,11 +285,19 @@ async function handleUpdateItem(e) {
     return;
   }
 
-  submitLockRef.current = true;
-  setSubmitting(true);
-  showStatus("", "");
+showStatus("", "");
 
-  let updatedSuccessfully = false;
+const isValid = validateEditItemForm();
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+submitLockRef.current = true;
+setSubmitting(true);
+
+let updatedSuccessfully = false;
 
   try {
     if (!isSuperAdmin && !isCategoryAdmin) {
@@ -382,36 +425,38 @@ async function handleUpdateItem(e) {
         />
       )}
 
-      <section className="edit-item-header">
-        <div>
-          <p className="qb-kicker">Inventory Update</p>
+<section className="edit-item-header edit-item-header-compact">
+  <div className="edit-item-header-content">
+    <div className="edit-item-header-text">
+      <span>{itemCode || itemId || "Edit Item"}</span>
 
-          <h1>Edit Item</h1>
+      <h2>Edit Item</h2>
 
-          <p>
-            Update item details, image, category, condition, availability, and
-            borrowing limits.
-          </p>
+      <p>
+        Update item details, image, category, condition, availability, and
+        borrowing limits.
+      </p>
 
-          {isCategoryAdmin && (
-            <div className="edit-item-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.map(getCategoryName).join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="edit-item-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.map(getCategoryName).join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="edit-item-secondary-btn"
-          onClick={() => navigate("/items")}
-        >
-          Back to Item List
-        </button>
-      </section>
+    <button
+      type="button"
+      className="edit-item-secondary-btn edit-item-header-back-btn"
+      onClick={() => navigate("/items")}
+    >
+      Back to Item List
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -451,20 +496,55 @@ async function handleUpdateItem(e) {
               </p>
             </div>
 
-            <form onSubmit={handleUpdateItem}>
-              <div className="edit-item-field">
-                <label className="qb-label" htmlFor="item-name">
-                  Item Name
-                </label>
+            <form onSubmit={handleUpdateItem} noValidate>
+<div className="edit-item-field">
+  <label className="qb-label" htmlFor="category">
+    Category <span className="required-star">*</span>
+  </label>
 
-                <input
-                  id="item-name"
-                  type="text"
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  disabled={submitting}
-                />
-              </div>
+  {isCategoryAdmin ? (
+    <div
+      className={`edit-item-fixed-category-card ${
+        fieldErrors.categoryId ? "input-error" : ""
+      }`}
+    >
+      <span>Fixed Assigned Category</span>
+
+      <strong>{selectedCategory?.name || "No assigned category"}</strong>
+
+      <p>
+        Category admins cannot manually change the item category. This item can
+        only stay within your assigned category.
+      </p>
+    </div>
+  ) : (
+    <select
+      id="category"
+      className={fieldErrors.categoryId ? "input-error" : ""}
+      value={categoryId}
+      onFocus={() => clearFieldError("categoryId")}
+      onChange={(e) => {
+        setCategoryId(e.target.value);
+        clearFieldError("categoryId");
+      }}
+      disabled={submitting || availableCategories.length === 0}
+    >
+      {availableCategories.length === 0 ? (
+        <option value="">No category available</option>
+      ) : (
+        availableCategories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))
+      )}
+    </select>
+  )}
+
+  {fieldErrors.categoryId && (
+    <p className="field-error-message">{fieldErrors.categoryId}</p>
+  )}
+</div>
 
               <div className="edit-item-field">
                 <label className="qb-label" htmlFor="item-code">
@@ -496,42 +576,29 @@ async function handleUpdateItem(e) {
               </div>
 
               <div className="edit-item-grid">
-                <div className="edit-item-field">
-                  <label className="qb-label" htmlFor="category">
-                    Category
-                  </label>
-
-                  <select
-                    id="category"
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    disabled={submitting || availableCategories.length === 0}
-                  >
-                    {availableCategories.length === 0 ? (
-                      <option value="">No assigned category</option>
-                    ) : (
-                      availableCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
 
                 <div className="edit-item-field">
-                  <label className="qb-label" htmlFor="max-borrow-days">
-                    Max Borrow Days
-                  </label>
+<label className="qb-label" htmlFor="max-borrow-days">
+  Max Borrow Days <span className="required-star">*</span>
+</label>
 
-                  <input
-                    id="max-borrow-days"
-                    type="number"
-                    min="1"
-                    value={maxBorrowDays}
-                    onChange={(e) => setMaxBorrowDays(e.target.value)}
-                    disabled={submitting}
-                  />
+<input
+  id="max-borrow-days"
+  type="number"
+  min="1"
+  className={fieldErrors.maxBorrowDays ? "input-error" : ""}
+  value={maxBorrowDays}
+  onFocus={() => clearFieldError("maxBorrowDays")}
+  onChange={(e) => {
+    setMaxBorrowDays(e.target.value);
+    clearFieldError("maxBorrowDays");
+  }}
+  disabled={submitting}
+/>
+
+{fieldErrors.maxBorrowDays && (
+  <p className="field-error-message">{fieldErrors.maxBorrowDays}</p>
+)}
                 </div>
               </div>
 

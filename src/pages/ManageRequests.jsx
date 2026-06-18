@@ -28,6 +28,7 @@ function ManageRequests() {
   );
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [viewingRequest, setViewingRequest] = useState(null);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const actionLockRef = useRef("");
@@ -242,13 +243,13 @@ async function handleApproveRequest(request) {
 
     const itemData = itemSnap.data();
 
-    if (itemData.availability !== "Available") {
-      showStatus(
-        `This item is currently ${itemData.availability}. It cannot be approved right now.`,
-        "error"
-      );
-      return;
-    }
+if (itemData.availability !== "Available") {
+  showStatus(
+    `This item is currently ${itemData.availability}. Only available items can be approved.`,
+    "error"
+  );
+  return;
+}
 
     await updateDoc(requestRef, {
       approvalStatus: "Approved",
@@ -336,12 +337,13 @@ async function handleReleaseRequest(request) {
 
     const itemData = itemSnap.data();
 
-    if (itemData.availability !== "Reserved") {
-      showStatus(
-        `This item is currently ${itemData.availability}. Only reserved items can be released.`
-      );
-      return;
-    }
+if (itemData.availability !== "Reserved") {
+  showStatus(
+    `This item is currently ${itemData.availability}. Only reserved items can be released.`,
+    "error"
+  );
+  return;
+}
 
     await updateDoc(requestRef, {
       approvalStatus: "Borrowed",
@@ -527,36 +529,34 @@ async function handleRejectRequest(request) {
 
   return (
     <div className="manage-requests-page">
-      <section className="manage-requests-header">
-        <div>
-          <p className="qb-kicker">Admin Request Control</p>
+<section className="manage-requests-header manage-requests-header-compact">
+  <div className="manage-requests-header-content">
+    <div className="manage-requests-header-text">
+      <p>
+        Review borrower requests, approve available items, release approved
+        items to borrowers, or reject requests that cannot proceed.
+      </p>
 
-          <h1>Manage Requests</h1>
-
-          <p>
-            Review borrower requests, approve available items, release approved
-            items to borrowers, or reject requests that cannot proceed.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="manage-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="manage-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="manage-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="manage-secondary-btn manage-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`manage-status manage-status-${statusType}`} role="status">
@@ -671,154 +671,240 @@ async function handleRejectRequest(request) {
             <h2>No requests found</h2>
             <p>Try changing the status filter or search keyword.</p>
           </div>
-        ) : (
-          <div className="manage-request-grid">
-            {filteredRequests.map((request) => (
-              <article className="manage-request-card" key={request.id}>
-                <div className="manage-request-topline">
-                  <span>{request.itemCode || request.itemId}</span>
+) : (
+  <>
+    <div className="manage-request-table-header">
+      <span>Item</span>
+      <span>Borrower</span>
+      <span>Category</span>
+      <span>Borrow Date</span>
+      <span>Expected Return</span>
+      <span>Status</span>
+      <span>Actions</span>
+    </div>
 
-                  <span
-                    className={`manage-status-pill status-${String(
-                      request.approvalStatus || "Unknown"
-                    ).toLowerCase()}`}
-                  >
-                    {request.approvalStatus || "Unknown"}
-                  </span>
-
-                  {isRequestOverdue(request) && (
-                    <span className="manage-status-pill status-overdue">
-                      Overdue
-                    </span>
-                  )}
-                </div>
-
-                <h3>{request.itemName || "Untitled Item"}</h3>
-
-                <div className="manage-request-info">
-                  <div>
-                    <span>Borrower</span>
-                    <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
-                    <p>{request.borrowerEmail}</p>
-                  </div>
-
-                  <div>
-                    <span>User Type</span>
-                    <strong>{getBorrowerUserType(request)}</strong>
-                  </div>
-
-                  <div>
-                    <span>ID Number</span>
-                    <strong>{getBorrowerIdNumber(request)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Course / Department</span>
-                    <strong>{cleanDisplay(request.borrowerCourseDepartment)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Year / Section</span>
-                    <strong>{getBorrowerYearSection(request)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Mobile Number</span>
-                    <strong>{cleanDisplay(request.borrowerMobileNumber)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Category</span>
-                    <strong>{getRequestCategoryName(request)}</strong>
-                  </div>
-
-                  <div>
-                    <span>Borrow Date</span>
-                    <strong>{request.borrowDate || "Not set"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Expected Return</span>
-                    <strong>{request.expectedReturnDate || "Not set"}</strong>
-                  </div>
-                </div>
-
-                <div className="manage-purpose-box">
-                  <span>Purpose</span>
-                  <p>{request.purpose || "No purpose provided."}</p>
-                </div>
-
-                <div className="manage-request-actions">
-                  <button
-                    type="button"
-                    className="manage-view-btn"
-                    onClick={() => navigate(`/item/${request.itemId}`)}
-                  >
-                    View Item
-                  </button>
-
-                  {request.approvalStatus === "Pending" && (
-                    <>
-                    <button
-                      type="button"
-                      className="manage-approve-btn"
-                      onClick={() => handleApproveRequest(request)}
-                      disabled={hasActiveRequestAction()}
-                    >
-                      {isRequestActionLoading(request.id, "approve") ? "Approving..." : "Approve"}
-                    </button>
-
-                      <button
-                        type="button"
-                        className="manage-reject-btn"
-                        onClick={() => handleRejectRequest(request)}
-                        disabled={hasActiveRequestAction()}
-                      >
-                        {isRequestActionLoading(request.id, "reject") ? "Rejecting..." : "Reject"}
-                      </button>
-                    </>
-                  )}
-
-                  {request.approvalStatus === "Approved" && (
-                    <button
-                      type="button"
-                      className="manage-release-btn"
-                      onClick={() => handleReleaseRequest(request)}
-                      disabled={hasActiveRequestAction()}
-                    >
-                      {isRequestActionLoading(request.id, "release")
-                        ? "Releasing..."
-                        : "Release Item"}
-                    </button>
-                  )}
-
-                  {!["Pending", "Approved"].includes(request.approvalStatus) && (
-                    <span className="manage-no-action">No action needed</span>
-                  )}
-                </div>
-
-                {request.approvedBy && (
-                  <p className="manage-approved-by">
-                    Approved by:{" "}
-                    {request.approvedBy === getAdminId()
-                      ? getAdminName()
-                      : request.approvedBy}
-                  </p>
-                )}
-
-                {request.releasedBy && (
-                  <p className="manage-approved-by">
-                    Released by:{" "}
-                    {request.releasedBy === getAdminId()
-                      ? getAdminName()
-                      : request.releasedBy}
-                  </p>
-                )}
-              </article>
-            ))}
+    <div className="manage-request-grid manage-request-table-grid">
+      {filteredRequests.map((request) => (
+        <article className="manage-request-row" key={request.id}>
+          <div className="manage-request-cell manage-request-item-cell">
+            <span>{request.itemCode || request.itemId}</span>
+            <strong>{request.itemName || "Untitled Item"}</strong>
           </div>
-        )}
+
+          <div className="manage-request-cell manage-request-borrower-cell">
+            <span>{request.borrowerEmail || "No email"}</span>
+            <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+          </div>
+
+          <div className="manage-request-cell">
+            <span>Category</span>
+            <strong>{getRequestCategoryName(request)}</strong>
+          </div>
+
+          <div className="manage-request-cell">
+            <span>Borrow Date</span>
+            <strong>{request.borrowDate || "Not set"}</strong>
+          </div>
+
+          <div className="manage-request-cell">
+            <span>Expected Return</span>
+            <strong>{request.expectedReturnDate || "Not set"}</strong>
+          </div>
+
+          <div className="manage-request-status-cell">
+            <span
+              className={`manage-status-pill status-${String(
+                request.approvalStatus || "Unknown"
+              ).toLowerCase()}`}
+            >
+              {request.approvalStatus || "Unknown"}
+            </span>
+
+            {isRequestOverdue(request) && (
+              <span className="manage-status-pill status-overdue">Overdue</span>
+            )}
+          </div>
+
+          <div className="manage-request-row-actions">
+            <button
+              type="button"
+              className="manage-view-btn"
+              onClick={() => setViewingRequest(request)}
+            >
+              Details
+            </button>
+
+            <button
+              type="button"
+              className="manage-view-btn"
+              onClick={() => navigate(`/item/${request.itemId}`)}
+            >
+              Item
+            </button>
+
+            {request.approvalStatus === "Pending" && (
+              <>
+                <button
+                  type="button"
+                  className="manage-approve-btn"
+                  onClick={() => handleApproveRequest(request)}
+                  disabled={hasActiveRequestAction()}
+                >
+                  {isRequestActionLoading(request.id, "approve")
+                    ? "Approving..."
+                    : "Approve"}
+                </button>
+
+                <button
+                  type="button"
+                  className="manage-reject-btn"
+                  onClick={() => handleRejectRequest(request)}
+                  disabled={hasActiveRequestAction()}
+                >
+                  {isRequestActionLoading(request.id, "reject")
+                    ? "Rejecting..."
+                    : "Reject"}
+                </button>
+              </>
+            )}
+
+            {request.approvalStatus === "Approved" && (
+              <button
+                type="button"
+                className="manage-release-btn"
+                onClick={() => handleReleaseRequest(request)}
+                disabled={hasActiveRequestAction()}
+              >
+                {isRequestActionLoading(request.id, "release")
+                  ? "Releasing..."
+                  : "Release"}
+              </button>
+            )}
+
+            {!["Pending", "Approved"].includes(request.approvalStatus) && (
+              <span className="manage-no-action">Done</span>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  </>
+)}
       </section>
+
+      {viewingRequest && (
+        <div
+          className="manage-request-view-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Borrow request details"
+        >
+          <section className="manage-request-view-modal">
+            <button
+              type="button"
+              className="manage-request-modal-close"
+              onClick={() => setViewingRequest(null)}
+              aria-label="Close request details"
+            >
+              ×
+            </button>
+
+            <div className="manage-section-heading">
+              <div>
+                <h2>{viewingRequest.itemName || "Untitled Item"}</h2>
+                <p>{viewingRequest.itemCode || viewingRequest.itemId}</p>
+              </div>
+            </div>
+
+            <div className="manage-request-view-status">
+              <span
+                className={`manage-status-pill status-${String(
+                  viewingRequest.approvalStatus || "Unknown"
+                ).toLowerCase()}`}
+              >
+                {viewingRequest.approvalStatus || "Unknown"}
+              </span>
+
+              {isRequestOverdue(viewingRequest) && (
+                <span className="manage-status-pill status-overdue">
+                  Overdue
+                </span>
+              )}
+            </div>
+
+            <div className="manage-request-view-grid">
+              <div>
+                <span>Borrower</span>
+                <strong>{viewingRequest.borrowerName || "Unnamed Borrower"}</strong>
+                <p>{viewingRequest.borrowerEmail || "No email"}</p>
+              </div>
+
+              <div>
+                <span>User Type</span>
+                <strong>{getBorrowerUserType(viewingRequest)}</strong>
+              </div>
+
+              <div>
+                <span>ID Number</span>
+                <strong>{getBorrowerIdNumber(viewingRequest)}</strong>
+              </div>
+
+              <div>
+                <span>Course / Department</span>
+                <strong>{cleanDisplay(viewingRequest.borrowerCourseDepartment)}</strong>
+              </div>
+
+              <div>
+                <span>Year / Section</span>
+                <strong>{getBorrowerYearSection(viewingRequest)}</strong>
+              </div>
+
+              <div>
+                <span>Mobile Number</span>
+                <strong>{cleanDisplay(viewingRequest.borrowerMobileNumber)}</strong>
+              </div>
+
+              <div>
+                <span>Category</span>
+                <strong>{getRequestCategoryName(viewingRequest)}</strong>
+              </div>
+
+              <div>
+                <span>Borrow Date</span>
+                <strong>{viewingRequest.borrowDate || "Not set"}</strong>
+              </div>
+
+              <div>
+                <span>Expected Return</span>
+                <strong>{viewingRequest.expectedReturnDate || "Not set"}</strong>
+              </div>
+            </div>
+
+            <div className="manage-request-view-purpose">
+              <span>Purpose</span>
+              <p>{viewingRequest.purpose || "No purpose provided."}</p>
+            </div>
+
+            <div className="manage-request-view-actions">
+              <button
+                type="button"
+                className="manage-secondary-btn"
+                onClick={() => setViewingRequest(null)}
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                className="manage-view-btn"
+                onClick={() => navigate(`/item/${viewingRequest.itemId}`)}
+              >
+                View Item
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
