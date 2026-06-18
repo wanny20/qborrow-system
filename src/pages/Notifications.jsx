@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -13,6 +13,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/Notifications.css";
+const NOTIFICATIONS_PAGE_SIZE = 10;
 
 function Notifications() {
   const navigate = useNavigate();
@@ -28,14 +29,37 @@ function Notifications() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusType, setStatusType] = useState("");
+  const [visibleNotificationCount, setVisibleNotificationCount] = useState(
+    NOTIFICATIONS_PAGE_SIZE
+  );
+const [statusMessage, setStatusMessage] = useState("");
+const [statusType, setStatusType] = useState("");
+const [selectedNotification, setSelectedNotification] = useState(null);
+const notificationActionLockRef = useRef("");
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function startNotificationAction(actionId) {
+  if (notificationActionLockRef.current || actionLoadingId) {
+    return false;
+  }
 
+  notificationActionLockRef.current = actionId;
+  setActionLoadingId(actionId);
+
+  return true;
+  }
+
+  function finishNotificationAction() {
+    notificationActionLockRef.current = "";
+    setActionLoadingId("");
+  }
+
+  function isNotificationActionBusy() {
+    return Boolean(notificationActionLockRef.current || actionLoadingId);
+  }
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
   }
@@ -193,144 +217,262 @@ function Notifications() {
     }
   }
 
-  async function handleMarkAsRead(notification) {
-    if (isNotificationRead(notification)) return;
+async function handleMarkAsRead(notification) {
+  if (!currentUser) return;
 
-    setActionLoadingId(notification.id);
-    showStatus("", "");
+  if (isNotificationRead(notification)) return;
 
-    try {
-      const notificationRef = doc(db, "notifications", notification.id);
+  const started = startNotificationAction(notification.id);
 
-      if (notification.userId === currentUser?.uid) {
-        await updateDoc(notificationRef, {
-          status: "Read",
-          readAt: serverTimestamp(),
-        });
+  if (!started) return;
 
-        setNotifications((previousNotifications) =>
-          previousNotifications.map((item) =>
-            item.id === notification.id ? { ...item, status: "Read" } : item
-          )
-        );
-      } else {
-        await updateDoc(notificationRef, {
-          readBy: arrayUnion(currentUser.uid),
-          lastReadAt: serverTimestamp(),
-        });
+  showStatus("", "");
 
-        setNotifications((previousNotifications) =>
-          previousNotifications.map((item) =>
-            item.id === notification.id
-              ? {
-                  ...item,
-                  readBy: Array.isArray(item.readBy)
-                    ? [...new Set([...item.readBy, currentUser.uid])]
-                    : [currentUser.uid],
-                }
-              : item
-          )
-        );
-      }
+  try {
+    const notificationRef = doc(db, "notifications", notification.id);
+    const latestNotificationSnap = await getDoc(notificationRef);
 
-      showStatus("Notification marked as read.", "success");
-    } catch (error) {
-      showStatus("Error updating notification: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
-    }
-  }
+    if (!latestNotificationSnap.exists()) {
+      setNotifications((previousNotifications) =>
+        previousNotifications.filter((item) => item.id !== notification.id)
+      );
 
-  async function handleMarkAllAsRead() {
-    const unreadNotifications = filteredNotifications.filter(
-      (notification) => !isNotificationRead(notification)
-    );
-
-    if (unreadNotifications.length === 0) {
-      showStatus("No unread notifications to mark.", "success");
+      showStatus("This notification no longer exists.", "error");
       return;
     }
 
+    if (notification.userId === currentUser.uid) {
+      await updateDoc(notificationRef, {
+        status: "Read",
+        readAt: serverTimestamp(),
+      });
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.map((item) =>
+          item.id === notification.id ? { ...item, status: "Read" } : item
+        )
+      );
+    } else {
+      await updateDoc(notificationRef, {
+        readBy: arrayUnion(currentUser.uid),
+        lastReadAt: serverTimestamp(),
+      });
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.map((item) =>
+          item.id === notification.id
+            ? {
+                ...item,
+                readBy: Array.isArray(item.readBy)
+                  ? [...new Set([...item.readBy, currentUser.uid])]
+                  : [currentUser.uid],
+              }
+            : item
+        )
+      );
+    }
+
+    showStatus("Notification marked as read.", "success");
+  } catch (error) {
+    showStatus("Error updating notification: " + error.message, "error");
+  } finally {
+    finishNotificationAction();
+  }
+}
+
+async function handleOpenNotification(notification) {
+  if (!currentUser) return;
+
+  setSelectedNotification(notification);
+
+  if (isNotificationRead(notification)) {
+    return;
+  }
+
+  const actionId = `open-${notification.id}`;
+  const started = startNotificationAction(actionId);
+
+  if (!started) return;
+
+  showStatus("", "");
+
+  try {
+    const notificationRef = doc(db, "notifications", notification.id);
+    const latestNotificationSnap = await getDoc(notificationRef);
+
+    if (!latestNotificationSnap.exists()) {
+      setSelectedNotification(null);
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.filter((item) => item.id !== notification.id)
+      );
+
+      showStatus("This notification no longer exists.", "error");
+      return;
+    }
+
+    if (notification.userId === currentUser.uid) {
+      await updateDoc(notificationRef, {
+        status: "Read",
+        readAt: serverTimestamp(),
+      });
+
+      const updatedNotification = {
+        ...notification,
+        status: "Read",
+      };
+
+      setSelectedNotification(updatedNotification);
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.map((item) =>
+          item.id === notification.id ? { ...item, status: "Read" } : item
+        )
+      );
+
+      return;
+    }
+
+    await updateDoc(notificationRef, {
+      readBy: arrayUnion(currentUser.uid),
+      lastReadAt: serverTimestamp(),
+    });
+
+    const updatedReadBy = Array.isArray(notification.readBy)
+      ? [...new Set([...notification.readBy, currentUser.uid])]
+      : [currentUser.uid];
+
+    const updatedNotification = {
+      ...notification,
+      readBy: updatedReadBy,
+    };
+
+    setSelectedNotification(updatedNotification);
+
+    setNotifications((previousNotifications) =>
+      previousNotifications.map((item) =>
+        item.id === notification.id
+          ? {
+              ...item,
+              readBy: Array.isArray(item.readBy)
+                ? [...new Set([...item.readBy, currentUser.uid])]
+                : [currentUser.uid],
+            }
+          : item
+      )
+    );
+  } catch (error) {
+    showStatus("Error opening notification: " + error.message, "error");
+  } finally {
+    finishNotificationAction();
+  }
+}
+
+async function handleMarkAllAsRead() {
+  if (!currentUser) return;
+
+  if (isNotificationActionBusy()) return;
+
+  const unreadNotifications = filteredNotifications.filter(
+    (notification) => !isNotificationRead(notification)
+  );
+
+  if (unreadNotifications.length === 0) {
+    showStatus("No unread notifications to mark.", "success");
+    return;
+  }
+
+  const started = startNotificationAction("all");
+
+  if (!started) return;
+
+  try {
     const confirmRead = window.confirm(
       `Mark ${unreadNotifications.length} notification(s) as read?`
     );
 
     if (!confirmRead) return;
 
-    setActionLoadingId("all");
     showStatus("", "");
 
-    try {
-      await Promise.all(
-        unreadNotifications.map((notification) => {
-          const notificationRef = doc(db, "notifications", notification.id);
+    await Promise.all(
+      unreadNotifications.map((notification) => {
+        const notificationRef = doc(db, "notifications", notification.id);
 
-          if (notification.userId === currentUser?.uid) {
-            return updateDoc(notificationRef, {
-              status: "Read",
-              readAt: serverTimestamp(),
-            });
-          }
-
+        if (notification.userId === currentUser.uid) {
           return updateDoc(notificationRef, {
-            readBy: arrayUnion(currentUser.uid),
-            lastReadAt: serverTimestamp(),
+            status: "Read",
+            readAt: serverTimestamp(),
           });
-        })
-      );
+        }
 
-      setNotifications((previousNotifications) =>
-        previousNotifications.map((notification) => {
-          const shouldUpdate = unreadNotifications.some(
-            (unread) => unread.id === notification.id
-          );
+        return updateDoc(notificationRef, {
+          readBy: arrayUnion(currentUser.uid),
+          lastReadAt: serverTimestamp(),
+        });
+      })
+    );
 
-          if (!shouldUpdate) return notification;
+    setNotifications((previousNotifications) =>
+      previousNotifications.map((notification) => {
+        const shouldUpdate = unreadNotifications.some(
+          (unread) => unread.id === notification.id
+        );
 
-          if (notification.userId === currentUser?.uid) {
-            return {
-              ...notification,
-              status: "Read",
-            };
-          }
+        if (!shouldUpdate) return notification;
 
+        if (notification.userId === currentUser.uid) {
           return {
             ...notification,
-            readBy: Array.isArray(notification.readBy)
-              ? [...new Set([...notification.readBy, currentUser.uid])]
-              : [currentUser.uid],
+            status: "Read",
           };
-        })
-      );
+        }
 
-      showStatus("All visible notifications marked as read.", "success");
-    } catch (error) {
-      showStatus("Error marking notifications as read: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
-    }
+        return {
+          ...notification,
+          readBy: Array.isArray(notification.readBy)
+            ? [...new Set([...notification.readBy, currentUser.uid])]
+            : [currentUser.uid],
+        };
+      })
+    );
+
+    showStatus("All visible notifications marked as read.", "success");
+  } catch (error) {
+    showStatus("Error marking notifications as read: " + error.message, "error");
+  } finally {
+    finishNotificationAction();
   }
+}
+
 async function handleDeleteAllNotifications() {
+  if (!currentUser) return;
+
+  if (isNotificationActionBusy()) return;
+
   if (filteredNotifications.length === 0) {
     showStatus("No notifications to delete.", "success");
     return;
   }
 
-  const confirmDelete = window.confirm(
-    `Delete ${filteredNotifications.length} visible notification(s)?`
-  );
+  const started = startNotificationAction("delete-all");
 
-  if (!confirmDelete) return;
-
-  setActionLoadingId("delete-all");
-  showStatus("", "");
+  if (!started) return;
 
   try {
+    const confirmDelete = window.confirm(
+      `Delete ${filteredNotifications.length} visible notification(s)?`
+    );
+
+    if (!confirmDelete) return;
+
+    showStatus("", "");
+
     await Promise.all(
       filteredNotifications.map((notification) => {
         const notificationRef = doc(db, "notifications", notification.id);
 
-        if (notification.userId === currentUser?.uid) {
+        if (notification.userId === currentUser.uid) {
           return deleteDoc(notificationRef);
         }
 
@@ -354,7 +496,7 @@ async function handleDeleteAllNotifications() {
   } catch (error) {
     showStatus("Error deleting notifications: " + error.message, "error");
   } finally {
-    setActionLoadingId("");
+    finishNotificationAction();
   }
 }
   useEffect(() => {
@@ -405,6 +547,10 @@ const filteredNotifications = useMemo(() => {
     .sort((a, b) => getNotificationTime(b) - getNotificationTime(a));
 }, [notifications, filter, searchTerm, currentUser]);
 
+useEffect(() => {
+  setVisibleNotificationCount(NOTIFICATIONS_PAGE_SIZE);
+}, [filter, searchTerm]);
+
   const stats = useMemo(
     () => ({
       total: notifications.length,
@@ -423,6 +569,22 @@ const filteredNotifications = useMemo(() => {
     }),
     [notifications, currentUser]
   );
+  const displayedNotifications = filteredNotifications.slice(
+  0,
+  visibleNotificationCount
+);
+
+const hasMoreNotifications =
+  visibleNotificationCount < filteredNotifications.length;
+
+function handleLoadMoreNotifications() {
+  setVisibleNotificationCount((currentCount) =>
+    Math.min(
+      currentCount + NOTIFICATIONS_PAGE_SIZE,
+      filteredNotifications.length
+    )
+  );
+}
 
   if (loading) {
     return (
@@ -438,26 +600,24 @@ const filteredNotifications = useMemo(() => {
 
   return (
     <div className="notifications-page">
-      <section className="notifications-header">
-        <div>
-          <p className="qb-kicker">QBorrow Updates</p>
+<section className="notifications-header notifications-header-compact">
+  <div className="notifications-header-content">
+    <div className="notifications-header-text">
+      <p>
+        Track borrow request updates, approval results, release confirmations,
+        return confirmations, and admin alerts in one place.
+      </p>
+    </div>
 
-          <h1>Notifications</h1>
-
-          <p>
-            View request updates, approval results, release confirmations, return
-            confirmations, and admin alerts.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="notifications-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="notifications-secondary-btn notifications-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -467,7 +627,94 @@ const filteredNotifications = useMemo(() => {
           {statusMessage}
         </div>
       )}
+{selectedNotification && (
+  <div
+    className="notifications-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setSelectedNotification(null)}
+  >
+    <section
+      className="notifications-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="notifications-modal-close"
+        onClick={() => setSelectedNotification(null)}
+        aria-label="Close notification details"
+      >
+        ×
+      </button>
 
+      <div className="notifications-modal-heading">
+        <span>{formatDate(selectedNotification)}</span>
+
+        <h2>{selectedNotification.title || "Untitled Notification"}</h2>
+
+        <strong
+          className={
+            isNotificationRead(selectedNotification) ? "read" : "unread"
+          }
+        >
+          {isNotificationRead(selectedNotification) ? "Read" : "Unread"}
+        </strong>
+      </div>
+
+      <p className="notifications-modal-message">
+        {selectedNotification.message || "No message provided."}
+      </p>
+
+      <div className="notifications-modal-grid">
+        <div>
+          <span>Target Role</span>
+          <strong>{selectedNotification.targetRole || "Not specified"}</strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>
+            {selectedNotification.categoryName ||
+              selectedNotification.categoryId ||
+              "Not specified"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Status</span>
+          <strong>
+            {isNotificationRead(selectedNotification) ? "Read" : "Unread"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Date Created</span>
+          <strong>{formatDate(selectedNotification)}</strong>
+        </div>
+      </div>
+
+      <div className="notifications-modal-actions">
+        {selectedNotification.link && (
+          <button
+            type="button"
+            className="notifications-primary-btn"
+            onClick={() => navigate(selectedNotification.link)}
+          >
+            Go to Related Page
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="notifications-secondary-btn"
+          onClick={() => setSelectedNotification(null)}
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
       <section className="notifications-summary-grid">
         <div>
           <span>Σ</span>
@@ -533,6 +780,7 @@ const filteredNotifications = useMemo(() => {
             currentUserData &&
             fetchNotifications(currentUser, currentUserData)
           }
+          disabled={isNotificationActionBusy()}
         >
           Refresh
         </button>
@@ -543,8 +791,8 @@ const filteredNotifications = useMemo(() => {
   <div>
     <h2>Notification List</h2>
     <p>
-      Showing {filteredNotifications.length} of {notifications.length}{" "}
-      notification{notifications.length === 1 ? "" : "s"}.
+      Showing {displayedNotifications.length} of {filteredNotifications.length} matched notification
+      {filteredNotifications.length === 1 ? "" : "s"}.
     </p>
   </div>
 
@@ -553,7 +801,7 @@ const filteredNotifications = useMemo(() => {
       type="button"
       className="notifications-primary-btn"
       onClick={handleMarkAllAsRead}
-      disabled={actionLoadingId === "all"}
+      disabled={isNotificationActionBusy()}
     >
       {actionLoadingId === "all" ? "Marking..." : "Mark All Read"}
     </button>
@@ -562,7 +810,7 @@ const filteredNotifications = useMemo(() => {
       type="button"
       className="notifications-danger-btn"
       onClick={handleDeleteAllNotifications}
-      disabled={actionLoadingId === "delete-all"}
+      disabled={isNotificationActionBusy()}
     >
       {actionLoadingId === "delete-all" ? "Deleting..." : "Delete All"}
     </button>
@@ -577,7 +825,7 @@ const filteredNotifications = useMemo(() => {
           </div>
         ) : (
  <div className="notifications-list">
-  {filteredNotifications.map((notification) => {
+  {displayedNotifications.map((notification) => {
     const read = isNotificationRead(notification);
 
     return (
@@ -612,31 +860,32 @@ const filteredNotifications = useMemo(() => {
         </div>
 
         <div className="notification-actions">
-          {notification.link && (
-            <button
-              type="button"
-              className="notifications-secondary-btn"
-              onClick={() => navigate(notification.link)}
-            >
-              Open
-            </button>
-          )}
-
-          {!read && (
-            <button
-              type="button"
-              className="notifications-primary-btn"
-              onClick={() => handleMarkAsRead(notification)}
-              disabled={actionLoadingId === notification.id}
-            >
-              {actionLoadingId === notification.id ? "Marking..." : "Mark Read"}
-            </button>
-          )}
+<button
+  type="button"
+  className="notifications-primary-btn"
+  onClick={() => handleOpenNotification(notification)}
+  disabled={isNotificationActionBusy()}
+>
+  {actionLoadingId === `open-${notification.id}` ? "Opening..." : "Open"}
+</button>
         </div>
       </article>
     );
   })}
 </div>
+        )}
+
+        {hasMoreNotifications && (
+          <div className="notifications-load-more-row">
+            <button
+              type="button"
+              className="notifications-refresh-btn"
+              onClick={handleLoadMoreNotifications}
+              disabled={isNotificationActionBusy()}
+            >
+              Load More Notifications
+            </button>
+          </div>
         )}
       </section>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   Html5QrcodeScanner,
@@ -12,6 +12,8 @@ import {
   updateDoc,
   addDoc,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/ReturnConfirmation.css";
@@ -33,6 +35,7 @@ function ReturnConfirmation() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [viewingBorrowedRequest, setViewingBorrowedRequest] = useState(null);
 
   const [actualReturnDate] = useState(today);
   const [returnCondition, setReturnCondition] = useState("Good");
@@ -42,6 +45,10 @@ function ReturnConfirmation() {
   const [confirming, setConfirming] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const returnLockRef = useRef(false);
+  const scannerLockRef = useRef(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
@@ -49,6 +56,74 @@ function ReturnConfirmation() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateManualFindForm(value) {
+  const errors = {};
+
+  if (!String(value || "").trim()) {
+    errors.manualItemId = "Manual Item ID, barcode, or QR URL is required.";
+  }
+
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    ...errors,
+  }));
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateReturnForm() {
+  const errors = {};
+
+  if (!selectedRequest) {
+    errors.selectedRequest = "Please scan, enter, or select a borrowed request first.";
+  }
+
+  if (!actualReturnDate) {
+    errors.actualReturnDate = "Actual return date is required.";
+  }
+
+  if (!returnCondition) {
+    errors.returnCondition = "Return condition is required.";
+  }
+
+  if (
+    (returnCondition === "Damaged" || returnCondition === "Lost") &&
+    !damageLostReport.trim()
+  ) {
+    errors.damageLostReport = "Damage / lost report is required.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+  function startReturnAction() {
+  if (returnLockRef.current || confirming) {
+    return false;
+  }
+
+  returnLockRef.current = true;
+  setConfirming(true);
+
+  return true;
+}
+
+function finishReturnAction() {
+  returnLockRef.current = false;
+  setConfirming(false);
+}
+
+function isReturnBusy() {
+  return Boolean(returnLockRef.current || confirming);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -80,6 +155,34 @@ function ReturnConfirmation() {
       request.categoryId ||
       "Uncategorized"
     );
+  }
+
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType(request) {
+    return cleanDisplay(request?.borrowerUserType, "Student");
+  }
+
+  function getBorrowerIdNumber(request) {
+    const borrowerType = getBorrowerUserType(request);
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(request?.borrowerEmployeeId);
+    }
+
+    return cleanDisplay(request?.borrowerStudentNumber);
+  }
+
+  function getBorrowerYearSection(request) {
+    const values = [
+      request?.borrowerYearLevel,
+      request?.borrowerSection,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
   }
 
   function canCategoryAdminSeeRequest(request) {
@@ -138,26 +241,29 @@ function ReturnConfirmation() {
     return "Unavailable";
   }
 
-  async function fetchBorrowedRequests() {
-    setLoading(true);
+async function fetchBorrowedRequests() {
+  setLoading(true);
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  try {
+    const borrowedQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("approvalStatus", "==", "Borrowed")
+    );
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((request) => request.approvalStatus === "Borrowed");
+    const querySnapshot = await getDocs(borrowedQuery);
 
-      setRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading borrowed requests: " + error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    const requestData = querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setRequests(requestData);
+  } catch (error) {
+    showStatus("Error loading borrowed requests: " + error.message, "error");
+  } finally {
+    setLoading(false);
   }
+}
 
   const visibleBorrowedRequests = useMemo(() => {
     if (isCategoryAdmin) {
@@ -167,53 +273,94 @@ function ReturnConfirmation() {
     return requests;
   }, [requests, userData]);
 
-  async function findBorrowedRequestByItemId(rawItemId) {
-    const itemId = extractItemId(rawItemId);
-    showStatus("", "");
+  function selectBorrowedRequest(request) {
+  if (confirming) return;
 
-    if (!itemId) {
-      showStatus("Please scan or enter an item ID, barcode, or QR URL.", "error");
-      return;
-    }
+  setSelectedRequest(request);
+  setManualItemId(request.itemId);
+  setReturnCondition("Good");
+  setDamageLostReport("");
+  setFieldErrors({});
+  setViewingBorrowedRequest(null);
+  showStatus("Borrowed request selected.", "success");
+}
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+async function findBorrowedRequestByItemId(rawItemId) {
+  if (isReturnBusy()) return;
 
-      const matchingRequest = querySnapshot.docs
+const itemId = extractItemId(rawItemId);
+showStatus("", "");
+
+const isValid = validateManualFindForm(itemId);
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+clearFieldError("manualItemId");
+
+  try {
+    const itemRequestQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", itemId)
+    );
+
+    const querySnapshot = await getDocs(itemRequestQuery);
+
+    let matchingRequest = querySnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .find((request) => request.approvalStatus === "Borrowed");
+
+    if (!matchingRequest) {
+      const borrowedQuery = firestoreQuery(
+        collection(db, "borrowRequests"),
+        where("approvalStatus", "==", "Borrowed")
+      );
+
+      const borrowedSnapshot = await getDocs(borrowedQuery);
+
+      matchingRequest = borrowedSnapshot.docs
         .map((document) => ({
           id: document.id,
           ...document.data(),
         }))
         .find(
           (request) =>
-            request.itemId === itemId && request.approvalStatus === "Borrowed"
+            request.itemId === itemId ||
+            request.itemCode === itemId ||
+            request.barcodeValue === itemId
         );
-
-      if (!matchingRequest) {
-        setSelectedRequest(null);
-        showStatus("No active borrowed request found for this item.", "error");
-        return;
-      }
-
-      if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
-        setSelectedRequest(null);
-        showStatus(
-          "This borrowed item belongs to a category that is not assigned to your account.",
-          "error"
-        );
-        return;
-      }
-
-      setSelectedRequest(matchingRequest);
-      setManualItemId(itemId);
-      setReturnCondition("Good");
-      setDamageLostReport("");
-      showStatus("Borrowed request found. Review details before confirming return.", "success");
-    } catch (error) {
-      showStatus("Error finding borrowed request: " + error.message, "error");
     }
-  }
 
+    if (!matchingRequest) {
+      setSelectedRequest(null);
+      showStatus("No active borrowed request found for this item.", "error");
+      return;
+    }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
+      setSelectedRequest(null);
+      showStatus(
+        "This borrowed item belongs to a category that is not assigned to your account.",
+        "error"
+      );
+      return;
+    }
+
+    setSelectedRequest(matchingRequest);
+    setManualItemId(itemId);
+    setReturnCondition("Good");
+    setDamageLostReport("");
+    setFieldErrors({});
+    showStatus("Borrowed request found. Review details before confirming return.", "success");
+  } catch (error) {
+    showStatus("Error finding borrowed request: " + error.message, "error");
+  }
+}
   async function updateBorrowerOverdueRecord(request) {
     if (!isOverdue(request.expectedReturnDate)) return;
 
@@ -246,35 +393,27 @@ function ReturnConfirmation() {
     await updateDoc(borrowerRef, updatePayload);
   }
 
-  async function handleReturn() {
-    if (!selectedRequest) {
-      showStatus("Please scan or select a borrowed request first.", "error");
-      return;
-    }
+async function handleReturn() {
+  showStatus("", "");
 
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-      showStatus("You are not allowed to confirm returns for this category.", "error");
-      return;
-    }
+  const isValid = validateReturnForm();
 
-    if (!actualReturnDate) {
-      showStatus("Actual return date is required.", "error");
-      return;
-    }
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
 
-    if (!returnCondition) {
-      showStatus("Return condition is required.", "error");
-      return;
-    }
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showStatus("You are not allowed to confirm returns for this category.", "error");
+    return;
+  }
 
-    if (
-      (returnCondition === "Damaged" || returnCondition === "Lost") &&
-      !damageLostReport.trim()
-    ) {
-      showStatus("Damage/lost report is required.", "error");
-      return;
-    }
 
+  const started = startReturnAction();
+
+  if (!started) return;
+
+  try {
     const confirmReturn = window.confirm(
       `Confirm return of ${selectedRequest.itemName} from ${
         selectedRequest.borrowerName || selectedRequest.borrowerEmail
@@ -283,67 +422,101 @@ function ReturnConfirmation() {
 
     if (!confirmReturn) return;
 
-    setConfirming(true);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-      const itemRef = doc(db, "items", selectedRequest.itemId);
+    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      await updateDoc(requestRef, {
-        approvalStatus: "Returned",
-        actualReturnDate,
-        returnCondition,
-        damageLostReport: damageLostReport.trim(),
-        returnedAt: serverTimestamp(),
-        returnedBy: getAdminId(),
-      });
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
+      return;
+    }
 
-      await updateDoc(itemRef, {
-        availability: getNewItemAvailability(),
-        condition: returnCondition,
-        updatedAt: serverTimestamp(),
-      });
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
 
-      await updateBorrowerOverdueRecord(selectedRequest);
-
-      await addDoc(collection(db, "notifications"), {
-        userId: selectedRequest.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(selectedRequest),
-        title: "Item Return Confirmed",
-        message: `${selectedRequest.itemName} has been returned successfully with condition: ${returnCondition}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      if (returnCondition === "Damaged" || returnCondition === "Lost") {
-        await addDoc(collection(db, "notifications"), {
-          userId: "",
-          targetRole: "categoryAdmin",
-          categoryId: getRequestCategoryId(selectedRequest),
-          title: `${returnCondition} Item Reported`,
-          message: `${selectedRequest.itemName} was returned as ${returnCondition}.`,
-          status: "Unread",
-          createdAt: serverTimestamp(),
-          link: "/reports",
-        });
-      }
-
-      showStatus("Item return confirmed successfully.", "success");
+    if (latestRequest.approvalStatus !== "Borrowed") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing return queue...`,
+        "error"
+      );
 
       setSelectedRequest(null);
       setManualItemId("");
-      setReturnCondition("Good");
-      setDamageLostReport("");
-      fetchBorrowedRequests();
-    } catch (error) {
-      showStatus("Error confirming return: " + error.message, "error");
-    } finally {
-      setConfirming(false);
+      await fetchBorrowedRequests();
+      return;
     }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+      showStatus("You are not allowed to confirm returns for this category.", "error");
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item record not found. Return cannot continue.", "error");
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Returned",
+      actualReturnDate,
+      returnCondition,
+      damageLostReport: damageLostReport.trim(),
+      returnedAt: serverTimestamp(),
+      returnedBy: getAdminId(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: getNewItemAvailability(),
+      condition: returnCondition,
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateBorrowerOverdueRecord(latestRequest);
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Item Return Confirmed",
+      message: `${latestRequest.itemName} has been returned successfully with condition: ${returnCondition}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    if (returnCondition === "Damaged" || returnCondition === "Lost") {
+      await addDoc(collection(db, "notifications"), {
+        userId: "",
+        targetRole: "categoryAdmin",
+        categoryId: getRequestCategoryId(latestRequest),
+        title: `${returnCondition} Item Reported`,
+        message: `${latestRequest.itemName} was returned as ${returnCondition}.`,
+        status: "Unread",
+        createdAt: serverTimestamp(),
+        link: "/reports",
+      });
+    }
+
+    showStatus("Item return confirmed successfully.", "success");
+
+    setSelectedRequest(null);
+    setManualItemId("");
+    setReturnCondition("Good");
+    setDamageLostReport("");
+    await fetchBorrowedRequests();
+  } catch (error) {
+    showStatus("Error confirming return: " + error.message, "error");
+  } finally {
+    finishReturnAction();
   }
+}
 
   useEffect(() => {
     fetchBorrowedRequests();
@@ -370,28 +543,36 @@ function ReturnConfirmation() {
       false
     );
 
-    async function clearScanner() {
-      if (scannerCleared) return;
+async function clearScanner() {
+  if (scannerCleared) return;
 
-      scannerCleared = true;
+  scannerCleared = true;
 
-      try {
-        await scanner.clear();
-      } catch (error) {
-        console.log("Scanner clear error:", error);
-      }
-    }
+  try {
+    await scanner.clear();
+  } catch (error) {
+    console.log("Scanner clear error:", error);
+  } finally {
+    scannerLockRef.current = false;
+  }
+}
 
-    scanner.render(
-      async (decodedText) => {
-        const itemId = extractItemId(decodedText);
+scanner.render(
+  async (decodedText) => {
+    if (scannerLockRef.current || isReturnBusy()) return;
 
-        setScannerOpen(false);
-        await clearScanner();
-        findBorrowedRequestByItemId(itemId);
-      },
-      () => {}
-    );
+    scannerLockRef.current = true;
+
+    const itemId = extractItemId(decodedText);
+
+    setScannerOpen(false);
+    await clearScanner();
+    await findBorrowedRequestByItemId(itemId);
+
+    scannerLockRef.current = false;
+  },
+  () => {}
+);
 
     return () => {
       clearScanner();
@@ -412,36 +593,140 @@ function ReturnConfirmation() {
 
   return (
     <div className="return-page">
-      <section className="return-header">
+      {viewingBorrowedRequest && (
+  <div
+    className="return-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setViewingBorrowedRequest(null)}
+  >
+    <section
+      className="return-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="return-modal-close"
+        onClick={() => setViewingBorrowedRequest(null)}
+        aria-label="Close borrowed request details"
+      >
+        ×
+      </button>
+
+      <div className="return-modal-heading">
+        <span>{viewingBorrowedRequest.itemCode || viewingBorrowedRequest.itemId}</span>
+
+        <strong
+          className={
+            isOverdue(viewingBorrowedRequest.expectedReturnDate)
+              ? "return-overdue-pill overdue"
+              : "return-overdue-pill good"
+          }
+        >
+          {getOverdueStatus(viewingBorrowedRequest.expectedReturnDate)}
+        </strong>
+
+        <h2>{viewingBorrowedRequest.itemName || "Untitled Item"}</h2>
+        <p>Review the borrowed request details before selecting it for return.</p>
+      </div>
+
+      <div className="return-modal-info-grid">
         <div>
-          <p className="qb-kicker">Return Scan</p>
-
-          <h1>Return Confirmation</h1>
-
-          <p>
-            Scan the returned item QR code or barcode, verify the borrowed
-            request, then confirm the actual return date and item condition.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="return-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+          <span>Borrower</span>
+          <strong>{viewingBorrowedRequest.borrowerName || "Unnamed Borrower"}</strong>
+          <p>{viewingBorrowedRequest.borrowerEmail || "No email"}</p>
         </div>
 
+        <div>
+          <span>User Type</span>
+          <strong>{getBorrowerUserType(viewingBorrowedRequest)}</strong>
+        </div>
+
+        <div>
+          <span>ID Number</span>
+          <strong>{getBorrowerIdNumber(viewingBorrowedRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Course / Department</span>
+          <strong>{cleanDisplay(viewingBorrowedRequest.borrowerCourseDepartment)}</strong>
+        </div>
+
+        <div>
+          <span>Year / Section</span>
+          <strong>{getBorrowerYearSection(viewingBorrowedRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Mobile Number</span>
+          <strong>{cleanDisplay(viewingBorrowedRequest.borrowerMobileNumber)}</strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>{getRequestCategoryName(viewingBorrowedRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Borrow Date</span>
+          <strong>{viewingBorrowedRequest.borrowDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Expected Return</span>
+          <strong>{viewingBorrowedRequest.expectedReturnDate || "Not set"}</strong>
+        </div>
+      </div>
+
+      <div className="return-modal-actions">
         <button
           type="button"
           className="return-secondary-btn"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => setViewingBorrowedRequest(null)}
         >
-          Back to Dashboard
+          Close
         </button>
-      </section>
+
+        <button
+          type="button"
+          className="return-primary-btn"
+          onClick={() => selectBorrowedRequest(viewingBorrowedRequest)}
+          disabled={confirming}
+        >
+          Select for Return
+        </button>
+      </div>
+    </section>
+  </div>
+)}
+<section className="return-header return-header-compact">
+  <div className="return-header-content">
+    <div className="return-header-text">
+      <p>
+        Scan the returned item QR code or barcode, verify the borrowed
+        request, then confirm the actual return date and item condition.
+      </p>
+
+      {isCategoryAdmin && (
+        <div className="return-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
+        </div>
+      )}
+    </div>
+
+    <button
+      type="button"
+      className="return-secondary-btn return-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`return-status return-status-${statusType}`} role="status">
@@ -460,11 +745,15 @@ function ReturnConfirmation() {
           </div>
 
           <button
-            type="button"
-            className="return-primary-btn"
-            onClick={() => setScannerOpen((current) => !current)}
-          >
-            {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
+                type="button"
+                className="return-primary-btn"
+                onClick={() => {
+                  if (isReturnBusy()) return;
+                  setScannerOpen((current) => !current);
+                }}
+                disabled={confirming}
+              >
+              {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
           </button>
 
           {scannerOpen && (
@@ -474,27 +763,37 @@ function ReturnConfirmation() {
           )}
 
           <div className="return-manual-form">
-            <label className="qb-label" htmlFor="manual-return-item-id">
-              Manual Item ID / Barcode / QR URL
-            </label>
+<label className="qb-label" htmlFor="manual-return-item-id">
+  Manual Item ID / Barcode / QR URL <span className="required-star">*</span>
+</label>
 
             <div className="return-manual-row">
-              <input
-                id="manual-return-item-id"
-                type="text"
-                value={manualItemId}
-                onChange={(e) => setManualItemId(e.target.value)}
-                placeholder="Example: item ID or /item/itemId"
-              />
+<input
+  id="manual-return-item-id"
+  type="text"
+  className={fieldErrors.manualItemId ? "input-error" : ""}
+  value={manualItemId}
+  onFocus={() => clearFieldError("manualItemId")}
+  onChange={(e) => {
+    setManualItemId(e.target.value);
+    clearFieldError("manualItemId");
+  }}
+  placeholder="Example: item ID or /item/itemId"
+  disabled={confirming}
+/>
 
-              <button
-                type="button"
-                className="return-secondary-btn"
-                onClick={() => findBorrowedRequestByItemId(manualItemId)}
-              >
-                Find
-              </button>
+            <button
+              type="button"
+              className="return-secondary-btn"
+              onClick={() => findBorrowedRequestByItemId(manualItemId)}
+              disabled={confirming}
+            >
+              Find
+            </button>
             </div>
+            {fieldErrors.manualItemId && (
+  <p className="field-error-message">{fieldErrors.manualItemId}</p>
+)}
           </div>
         </section>
 
@@ -531,6 +830,31 @@ function ReturnConfirmation() {
                 </div>
 
                 <div>
+                  <span>User Type</span>
+                  <strong>{getBorrowerUserType(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>ID Number</span>
+                  <strong>{getBorrowerIdNumber(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>Course / Department</span>
+                  <strong>{cleanDisplay(selectedRequest.borrowerCourseDepartment)}</strong>
+                </div>
+
+                <div>
+                  <span>Year / Section</span>
+                  <strong>{getBorrowerYearSection(selectedRequest)}</strong>
+                </div>
+
+                <div>
+                  <span>Mobile Number</span>
+                  <strong>{cleanDisplay(selectedRequest.borrowerMobileNumber)}</strong>
+                </div>
+
+                <div>
                   <span>Category</span>
                   <strong>{getRequestCategoryName(selectedRequest)}</strong>
                 </div>
@@ -548,45 +872,71 @@ function ReturnConfirmation() {
 
               <div className="return-form-grid">
                 <div className="return-field">
-                  <label className="qb-label" htmlFor="actual-return-date">
-                    Actual Return Date
-                  </label>
-                  <input
-                    id="actual-return-date"
-                    type="date"
-                    value={actualReturnDate}
-                    readOnly
-                  />
+<label className="qb-label" htmlFor="actual-return-date">
+  Actual Return Date <span className="required-star">*</span>
+</label>
+ <input
+  id="actual-return-date"
+  type="date"
+  className={fieldErrors.actualReturnDate ? "input-error" : ""}
+  value={actualReturnDate}
+  readOnly
+/>
+
+{fieldErrors.actualReturnDate && (
+  <p className="field-error-message">{fieldErrors.actualReturnDate}</p>
+)}
                 </div>
 
                 <div className="return-field">
-                  <label className="qb-label" htmlFor="return-condition">
-                    Return Condition
-                  </label>
-                  <select
-                    id="return-condition"
-                    value={returnCondition}
-                    onChange={(e) => setReturnCondition(e.target.value)}
-                  >
-                    <option value="Good">Good</option>
-                    <option value="Fair">Fair</option>
-                    <option value="Damaged">Damaged</option>
-                    <option value="Lost">Lost</option>
-                  </select>
+<label className="qb-label" htmlFor="return-condition">
+  Return Condition <span className="required-star">*</span>
+</label>
+ <select
+  id="return-condition"
+  className={fieldErrors.returnCondition ? "input-error" : ""}
+  value={returnCondition}
+  onFocus={() => clearFieldError("returnCondition")}
+  onChange={(e) => {
+    setReturnCondition(e.target.value);
+    clearFieldError("returnCondition");
+    clearFieldError("damageLostReport");
+  }}
+  disabled={confirming}
+>
+  <option value="Good">Good</option>
+  <option value="Fair">Fair</option>
+  <option value="Damaged">Damaged</option>
+  <option value="Lost">Lost</option>
+</select>
+
+{fieldErrors.returnCondition && (
+  <p className="field-error-message">{fieldErrors.returnCondition}</p>
+)}
                 </div>
               </div>
 
               {(returnCondition === "Damaged" || returnCondition === "Lost") && (
                 <div className="return-field">
-                  <label className="qb-label" htmlFor="damage-lost-report">
-                    Damage / Lost Report
-                  </label>
-                  <textarea
-                    id="damage-lost-report"
-                    value={damageLostReport}
-                    onChange={(e) => setDamageLostReport(e.target.value)}
-                    placeholder="Describe the damage or lost item issue..."
-                  />
+<label className="qb-label" htmlFor="damage-lost-report">
+  Damage / Lost Report <span className="required-star">*</span>
+</label>
+<textarea
+  id="damage-lost-report"
+  className={fieldErrors.damageLostReport ? "input-error" : ""}
+  value={damageLostReport}
+  onFocus={() => clearFieldError("damageLostReport")}
+  onChange={(e) => {
+    setDamageLostReport(e.target.value);
+    clearFieldError("damageLostReport");
+  }}
+  placeholder="Describe the damage or lost item issue..."
+  disabled={confirming}
+/>
+
+{fieldErrors.damageLostReport && (
+  <p className="field-error-message">{fieldErrors.damageLostReport}</p>
+)}
                 </div>
               )}
 
@@ -619,13 +969,14 @@ function ReturnConfirmation() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="return-secondary-btn"
-            onClick={fetchBorrowedRequests}
-          >
-            Refresh
-          </button>
+        <button
+          type="button"
+          className="return-secondary-btn"
+          onClick={fetchBorrowedRequests}
+          disabled={confirming}
+        >
+          Refresh
+        </button>
         </div>
 
         {visibleBorrowedRequests.length === 0 ? (
@@ -635,52 +986,79 @@ function ReturnConfirmation() {
             <p>No items are currently waiting for return.</p>
           </div>
         ) : (
-          <div className="return-request-grid">
-            {visibleBorrowedRequests.map((request) => (
-              <article className="return-request-card" key={request.id}>
-                <div className="return-request-topline">
-                  <span>{request.itemCode || request.itemId}</span>
-                  <strong
-                    className={
-                      isOverdue(request.expectedReturnDate)
-                        ? "return-overdue-pill overdue"
-                        : "return-overdue-pill good"
-                    }
-                  >
-                    {getOverdueStatus(request.expectedReturnDate)}
-                  </strong>
-                </div>
+<>
+  <div className="return-borrowed-table-header">
+    <span>Item</span>
+    <span>Borrower</span>
+    <span>Category</span>
+    <span>Expected Return</span>
+    <span>Status</span>
+    <span>Actions</span>
+  </div>
 
-                <h3>{request.itemName}</h3>
+  <div className="return-borrowed-table-grid">
+    {visibleBorrowedRequests.map((request) => (
+      <article
+        className={`return-borrowed-row ${
+          selectedRequest?.id === request.id ? "selected" : ""
+        }`}
+        key={request.id}
+      >
+        <div className="return-borrowed-cell return-borrowed-item-cell">
+          <span>{request.itemCode || request.itemId}</span>
+          <strong>{request.itemName || "Untitled Item"}</strong>
+        </div>
 
-                <div className="return-request-meta">
-                  <div>
-                    <span>Borrower</span>
-                    <strong>{request.borrowerName || request.borrowerEmail}</strong>
-                  </div>
+        <div className="return-borrowed-cell return-borrowed-borrower-cell">
+          <span>{request.borrowerEmail || "No email"}</span>
+          <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+        </div>
 
-                  <div>
-                    <span>Expected Return</span>
-                    <strong>{request.expectedReturnDate}</strong>
-                  </div>
-                </div>
+        <div className="return-borrowed-cell">
+          <span>Category</span>
+          <strong>{getRequestCategoryName(request)}</strong>
+        </div>
 
-                <button
-                  type="button"
-                  className="return-primary-btn"
-                  onClick={() => {
-                    setSelectedRequest(request);
-                    setManualItemId(request.itemId);
-                    setReturnCondition("Good");
-                    setDamageLostReport("");
-                    showStatus("Borrowed request selected.", "success");
-                  }}
-                >
-                  Select
-                </button>
-              </article>
-            ))}
-          </div>
+        <div className="return-borrowed-cell">
+          <span>Expected Return</span>
+          <strong>{request.expectedReturnDate || "Not set"}</strong>
+        </div>
+
+        <div className="return-borrowed-status-cell">
+          <strong
+            className={
+              isOverdue(request.expectedReturnDate)
+                ? "return-overdue-pill overdue"
+                : "return-overdue-pill good"
+            }
+          >
+            {getOverdueStatus(request.expectedReturnDate)}
+          </strong>
+        </div>
+
+        <div className="return-borrowed-actions">
+          <button
+            type="button"
+            className="return-secondary-btn"
+            onClick={() => setViewingBorrowedRequest(request)}
+            disabled={confirming}
+          >
+            Details
+          </button>
+
+          <button
+            type="button"
+            className="return-primary-btn"
+            onClick={() => selectBorrowedRequest(request)}
+            disabled={confirming || selectedRequest?.id === request.id}
+          >
+            {selectedRequest?.id === request.id ? "Selected" : "Select"}
+          </button>
+        </div>
+      </article>
+    ))}
+  </div>
+</>
         )}
       </section>
     </div>

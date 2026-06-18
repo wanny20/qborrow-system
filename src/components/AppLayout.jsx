@@ -7,9 +7,19 @@ import "../styles/AppLayout.css";
 
 function AppLayout() {
   const [userData, setUserData] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.innerWidth > 820;
+  });
+
   const [loading, setLoading] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
+const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+const [loggingOut, setLoggingOut] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,9 +39,86 @@ function AppLayout() {
     "/settings": "Settings",
   };
 
-  const currentPageTitle =
-    pageTitles[location.pathname] ||
-    (location.pathname.startsWith("/item/") ? "Item Details" : "QBorrow");
+const currentPath = location.pathname;
+
+const currentPageTitle =
+  pageTitles[currentPath] ||
+  (currentPath.startsWith("/dashboard-list") ? "Dashboard" : "") ||
+  (currentPath.startsWith("/dashboard-items") ? "Dashboard" : "") ||
+  (currentPath.startsWith("/dashboard-requests") ? "Dashboard" : "") ||
+  (currentPath.startsWith("/item/") ? "Item Details" : "") ||
+  (currentPath.startsWith("/edit-item") ? "Edit Item" : "") ||
+  (currentPath.startsWith("/borrow-request") ? "Borrow Request" : "") ||
+  "QBorrow";
+
+const activeSidebarPath = (() => {
+  if (
+    currentPath === "/dashboard" ||
+    currentPath.startsWith("/dashboard/") ||
+    currentPath.startsWith("/dashboard-list") ||
+    currentPath.startsWith("/admin-dashboard-list") ||
+    currentPath.startsWith("/admin-list") ||
+    currentPath.startsWith("/total-items") ||
+    currentPath.startsWith("/available-items") ||
+    currentPath.startsWith("/borrowed-items") ||
+    currentPath.startsWith("/pending-requests") ||
+    currentPath.startsWith("/overdue") ||
+    currentPath.startsWith("/damaged-lost")
+  ) {
+    return "/dashboard";
+  }
+
+  if (
+    currentPath === "/items" ||
+    currentPath.startsWith("/item/") ||
+    currentPath.startsWith("/edit-item") ||
+    currentPath.startsWith("/borrow-request")
+  ) {
+    return "/items";
+  }
+
+  if (currentPath.startsWith("/add-item")) {
+    return "/add-item";
+  }
+
+  if (currentPath.startsWith("/manage-requests")) {
+    return "/manage-requests";
+  }
+
+  if (currentPath.startsWith("/release-item")) {
+    return "/release-item";
+  }
+
+  if (currentPath.startsWith("/return-confirmation")) {
+    return "/return-confirmation";
+  }
+
+  if (currentPath.startsWith("/reports")) {
+    return "/reports";
+  }
+
+  if (currentPath.startsWith("/scan-qr")) {
+    return "/scan-qr";
+  }
+
+  if (currentPath.startsWith("/my-requests")) {
+    return "/my-requests";
+  }
+
+  if (currentPath.startsWith("/notifications")) {
+    return "/notifications";
+  }
+
+  if (currentPath.startsWith("/user-management")) {
+    return "/user-management";
+  }
+
+  if (currentPath.startsWith("/settings")) {
+    return "/settings";
+  }
+
+  return currentPath;
+})();
 
   const isBorrower = userData?.role === "borrower";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -161,13 +248,13 @@ function AppLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    const savedTheme =
-      userData?.themeMode || localStorage.getItem("qborrowTheme") || "light";
+    useEffect(() => {
+      const savedTheme =
+        localStorage.getItem("qborrowTheme") || userData?.themeMode || "light";
 
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    localStorage.setItem("qborrowTheme", savedTheme);
-  }, [userData?.themeMode]);
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      localStorage.setItem("qborrowTheme", savedTheme);
+    }, [userData?.themeMode]);
 
   useEffect(() => {
     if (!userData?.uid) return;
@@ -196,14 +283,36 @@ function AppLayout() {
     return () => unsubscribe();
   }, [userData]);
 
-  async function handleLogout() {
-    try {
-      await signOut(auth);
-      navigate("/");
-    } catch (error) {
-      alert("Logout failed: " + error.message);
-    }
+function handleLogout() {
+  if (loggingOut) return;
+
+  if (typeof window !== "undefined" && window.innerWidth <= 820) {
+    setSidebarOpen(false);
   }
+
+  setShowLogoutConfirm(true);
+}
+
+function closeLogoutConfirm() {
+  if (loggingOut) return;
+  setShowLogoutConfirm(false);
+}
+
+async function confirmLogout() {
+  if (loggingOut) return;
+
+  setLoggingOut(true);
+
+  try {
+    await signOut(auth);
+    setShowLogoutConfirm(false);
+    navigate("/");
+  } catch (error) {
+    alert("Logout failed: " + error.message);
+  } finally {
+    setLoggingOut(false);
+  }
+}
 
   const sharedLinks = [
     {
@@ -217,12 +326,6 @@ function AppLayout() {
       icon: "/icons/items.png",
       fallbackIcon: "□",
       path: "/items",
-    },
-    {
-      label: "Settings",
-      icon: "/icons/settings.png",
-      fallbackIcon: "⚙",
-      path: "/settings",
     },
   ];
 
@@ -283,39 +386,39 @@ function AppLayout() {
     },
   ];
 
-  function renderNavLink(link) {
-    return (
-      <NavLink
-        key={link.label}
-        to={link.path}
-        className={({ isActive }) =>
-          isActive ? "app-nav-link active" : "app-nav-link"
+function renderNavLink(link) {
+  const isActive = activeSidebarPath === link.path;
+
+  return (
+    <NavLink
+      key={link.label}
+      to={link.path}
+      className={isActive ? "app-nav-link active" : "app-nav-link"}
+      onClick={() => {
+        if (window.innerWidth <= 820) {
+          setSidebarOpen(false);
         }
-        onClick={() => {
-          if (window.innerWidth <= 820) {
-            setSidebarOpen(false);
-          }
-        }}
-      >
-        <span className="app-nav-icon">
-          <img
-            src={link.icon}
-            alt=""
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              event.currentTarget.nextElementSibling.style.display = "grid";
-            }}
-          />
+      }}
+    >
+      <span className="app-nav-icon">
+        <img
+          src={link.icon}
+          alt=""
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+            event.currentTarget.nextElementSibling.style.display = "grid";
+          }}
+        />
 
-          <span className="app-nav-fallback-icon">
-            {link.fallbackIcon || "•"}
-          </span>
+        <span className="app-nav-fallback-icon">
+          {link.fallbackIcon || "•"}
         </span>
+      </span>
 
-        <span className="app-nav-text">{link.label}</span>
-      </NavLink>
-    );
-  }
+      <span className="app-nav-text">{link.label}</span>
+    </NavLink>
+  );
+}
 
   if (loading) {
     return (
@@ -397,16 +500,64 @@ function AppLayout() {
         </button>
       </aside>
 
-      {sidebarOpen && (
+{sidebarOpen && (
+  <button
+    type="button"
+    className="app-sidebar-backdrop"
+    onClick={() => setSidebarOpen(false)}
+    aria-label="Close sidebar overlay"
+  />
+)}
+
+{showLogoutConfirm && (
+  <div
+    className="app-logout-confirm-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logout-confirm-title"
+    onClick={closeLogoutConfirm}
+  >
+    <section
+      className="app-logout-confirm-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="app-logout-confirm-icon">↪</div>
+
+      <div className="app-logout-confirm-text">
+        <p>Logout Confirmation</p>
+
+        <h2 id="logout-confirm-title">Are you sure you want to logout?</h2>
+
+        <span>
+          You will be returned to the landing page and will need to sign in again
+          to access QBorrow.
+        </span>
+      </div>
+
+      <div className="app-logout-confirm-actions">
         <button
           type="button"
-          className="app-sidebar-backdrop"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close sidebar overlay"
-        />
-      )}
+          className="app-logout-confirm-cancel"
+          onClick={closeLogoutConfirm}
+          disabled={loggingOut}
+        >
+          Cancel
+        </button>
 
-      <main className="app-main-content">
+        <button
+          type="button"
+          className="app-logout-confirm-yes"
+          onClick={confirmLogout}
+          disabled={loggingOut}
+        >
+          {loggingOut ? "Logging out..." : "Yes, Logout"}
+        </button>
+      </div>
+    </section>
+  </div>
+)}
+
+<main className="app-main-content">
         <header className="app-topbar">
           <div className="app-topbar-left">
             {!sidebarOpen && (
@@ -422,10 +573,9 @@ function AppLayout() {
               </button>
             )}
 
-            <div className="app-topbar-title">
-              <span>Current Page</span>
-              <strong>{currentPageTitle}</strong>
-            </div>
+<div className="app-topbar-title" aria-label="Current page">
+  <strong>{currentPageTitle}</strong>
+</div>
           </div>
 
           <div className="app-topbar-right">
@@ -443,23 +593,38 @@ function AppLayout() {
               )}
             </button>
 
-            <section className="app-topbar-profile" aria-label="Current user">
-              <div className="app-topbar-avatar">
-                {userData?.photoURL ? (
-                  <img
-                    src={userData.photoURL}
-                    alt={userData.fullName || "Profile"}
-                  />
-                ) : (
-                  <span>{getInitials(userData?.fullName, userData?.email)}</span>
-                )}
-              </div>
+              <button
+                type="button"
+                className="app-topbar-profile"
+                onClick={() => navigate("/settings")}
+                aria-label="Open profile settings"
+                title="Open Settings"
+              >
+                <div className="app-topbar-avatar">
+                  {userData?.photoURL ? (
+                    <img
+                      src={userData.photoURL}
+                      alt={userData.fullName || "Profile"}
+                    />
+                  ) : (
+                    <span>{getInitials(userData?.fullName, userData?.email)}</span>
+                  )}
+                </div>
 
-              <div>
-                <strong>{userData?.fullName || "QBorrow User"}</strong>
-                <span>{roleLabel}</span>
-              </div>
-            </section>
+                <div>
+                  <strong>{userData?.fullName || "QBorrow User"}</strong>
+                  <span>{roleLabel}</span>
+                </div>
+              </button>
+              <button
+  type="button"
+  className="app-topbar-logout"
+  onClick={handleLogout}
+  aria-label="Logout"
+>
+  <span className="app-topbar-logout-icon">↪</span>
+  <span>Logout</span>
+</button>
           </div>
         </header>
 

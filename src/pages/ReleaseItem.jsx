@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
-  Html5QrcodeScanner,
+  Html5Qrcode,
   Html5QrcodeSupportedFormats,
 } from "html5-qrcode";
 import {
@@ -12,6 +12,8 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/ReleaseItem.css";
@@ -25,10 +27,19 @@ function ReleaseItem() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerKey, setScannerKey] = useState(0);
+  const [startingScanner, setStartingScanner] = useState(false);
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
+  const scannerRef = useRef(null);
+  const scannerRunningRef = useRef(false);
+  const hasScannedRef = useRef(false);
+  const releaseLockRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [releasing, setReleasing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -37,6 +48,58 @@ function ReleaseItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateManualFindForm(value) {
+  const errors = {};
+
+  if (!String(value || "").trim()) {
+    errors.manualItemId = "Manual Item ID, barcode, or QR URL is required.";
+  }
+
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    ...errors,
+  }));
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateReleaseForm() {
+  const errors = {};
+
+  if (!selectedRequest) {
+    errors.selectedRequest = "Please scan, enter, or select an approved request first.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+  function startReleaseAction() {
+  if (releaseLockRef.current || releasing) {
+    return false;
+  }
+
+  releaseLockRef.current = true;
+  setReleasing(true);
+
+  return true;
+}
+
+function finishReleaseAction() {
+  releaseLockRef.current = false;
+  setReleasing(false);
+}
+
+function isReleaseBusy() {
+  return Boolean(releaseLockRef.current || releasing || startingScanner);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -52,7 +115,148 @@ function ReleaseItem() {
 
     return text;
   }
+  function clearScannerDom() {
+  const scannerElement = document.getElementById("release-item-reader");
 
+  if (scannerElement) {
+    scannerElement.innerHTML = "";
+  }
+}
+
+async function stopReleaseScanner(showMessage = false) {
+  try {
+    if (scannerRef.current) {
+      if (scannerRunningRef.current) {
+        await scannerRef.current.stop();
+      }
+
+      await scannerRef.current.clear();
+    }
+  } catch (error) {
+    console.log("Release scanner stop error:", error);
+  } finally {
+    scannerRef.current = null;
+    scannerRunningRef.current = false;
+    hasScannedRef.current = false;
+
+    clearScannerDom();
+
+    setScannerOpen(false);
+
+    if (showMessage) {
+      showStatus("Scanner closed.", "success");
+    }
+  }
+}
+async function getCameraList() {
+  const devices = await Html5Qrcode.getCameras();
+
+  setCameras(devices);
+
+  if (devices.length > 0 && !selectedCameraId) {
+    const backCamera =
+      devices.find((camera) =>
+        String(camera.label || "").toLowerCase().includes("back")
+      ) ||
+      devices.find((camera) =>
+        String(camera.label || "").toLowerCase().includes("rear")
+      ) ||
+      devices[0];
+
+    setSelectedCameraId(backCamera.id);
+    return {
+      devices,
+      cameraId: backCamera.id,
+    };
+  }
+
+  return {
+    devices,
+    cameraId: selectedCameraId || devices[0]?.id || "",
+  };
+}
+async function startReleaseScanner() {
+  if (startingScanner || releasing) return;
+
+  setStartingScanner(true);
+  showStatus("Starting scanner...", "success");
+
+  try {
+    await stopReleaseScanner(false);
+
+    hasScannedRef.current = false;
+    setScannerKey((current) => current + 1);
+    setScannerOpen(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 180));
+
+    clearScannerDom();
+
+    const scanner = new Html5Qrcode("release-item-reader", {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+      ],
+    });
+
+    scannerRef.current = scanner;
+
+const scannerConfig = {
+  fps: 10,
+  qrbox: {
+    width: 250,
+    height: 250,
+  },
+  aspectRatio: 1.333,
+};
+
+const cameraResult = await getCameraList();
+const cameraId = cameraResult.cameraId;
+
+if (!cameraId) {
+  throw new Error("No camera found on this device.");
+}
+
+await scanner.start(
+  cameraId,
+  scannerConfig,
+        async (decodedText) => {
+          if (hasScannedRef.current) return;
+
+          hasScannedRef.current = true;
+
+          const itemId = extractItemId(decodedText);
+
+          await stopReleaseScanner(false);
+          await findApprovedRequestByItemId(itemId);
+        },
+        () => {}
+      );
+
+    showStatus("Scanner opened. Point the camera at the QR code or barcode.", "success");
+  } catch (error) {
+    await stopReleaseScanner(false);
+    showStatus("Scanner could not start: " + error.message, "error");
+  } finally {
+    setStartingScanner(false);
+  }
+}
+
+async function restartReleaseScanner() {
+  showStatus("Restarting scanner...", "success");
+  await startReleaseScanner();
+}
+  function openScannerFresh() {
+  setScannerKey((current) => current + 1);
+  setScannerOpen(true);
+  showStatus("Scanner ready. Point the camera at the QR code or barcode.", "success");
+    }
+
+    function restartScanner() {
+      setScannerKey((current) => current + 1);
+      setScannerOpen(true);
+      showStatus("Scanner restarted. Try scanning again.", "success");
+    }
   function getRequestCategoryId(request) {
     return request.categoryId || request.category || "";
   }
@@ -86,26 +290,29 @@ function ReleaseItem() {
     );
   }
 
-  async function fetchApprovedRequests() {
-    setLoading(true);
+async function fetchApprovedRequests() {
+  setLoading(true);
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  try {
+    const approvedQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("approvalStatus", "==", "Approved")
+    );
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((request) => request.approvalStatus === "Approved");
+    const querySnapshot = await getDocs(approvedQuery);
 
-      setApprovedRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading approved requests: " + error.message, "error");
-    } finally {
-      setLoading(false);
-    }
+    const requestData = querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setApprovedRequests(requestData);
+  } catch (error) {
+    showStatus("Error loading approved requests: " + error.message, "error");
+  } finally {
+    setLoading(false);
   }
+}
 
   const visibleApprovedRequests = useMemo(() => {
     if (isCategoryAdmin) {
@@ -117,62 +324,101 @@ function ReleaseItem() {
     return approvedRequests;
   }, [approvedRequests, userData]);
 
-  async function findApprovedRequestByItemId(rawItemId) {
-    const itemId = extractItemId(rawItemId);
-    showStatus("", "");
+async function findApprovedRequestByItemId(rawItemId) {
+  if (isReleaseBusy()) return;
 
-    if (!itemId) {
-      showStatus("Please scan or enter an item ID, barcode, or QR URL.", "error");
-      return;
-    }
+const itemId = extractItemId(rawItemId);
+showStatus("", "");
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+const isValid = validateManualFindForm(itemId);
 
-      const matchingRequest = querySnapshot.docs
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+clearFieldError("manualItemId");
+
+  try {
+    const itemRequestQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", itemId)
+    );
+
+    const querySnapshot = await getDocs(itemRequestQuery);
+
+    let matchingRequest = querySnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .find((request) => request.approvalStatus === "Approved");
+
+    if (!matchingRequest) {
+      const approvedQuery = firestoreQuery(
+        collection(db, "borrowRequests"),
+        where("approvalStatus", "==", "Approved")
+      );
+
+      const approvedSnapshot = await getDocs(approvedQuery);
+
+      matchingRequest = approvedSnapshot.docs
         .map((document) => ({
           id: document.id,
           ...document.data(),
         }))
         .find(
           (request) =>
-            request.itemId === itemId && request.approvalStatus === "Approved"
+            request.itemId === itemId ||
+            request.itemCode === itemId ||
+            request.barcodeValue === itemId
         );
-
-      if (!matchingRequest) {
-        setSelectedRequest(null);
-        showStatus("No approved request found for this item.", "error");
-        return;
-      }
-
-      if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
-        setSelectedRequest(null);
-        showStatus(
-          "This request belongs to a category that is not assigned to your account.",
-          "error"
-        );
-        return;
-      }
-
-      setSelectedRequest(matchingRequest);
-      setManualItemId(itemId);
-      showStatus("Approved request found. Review details before release.", "success");
-    } catch (error) {
-      showStatus("Error finding approved request: " + error.message, "error");
     }
+
+    if (!matchingRequest) {
+      setSelectedRequest(null);
+      showStatus("No approved request found for this item.", "error");
+      return;
+    }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
+      setSelectedRequest(null);
+      showStatus(
+        "This request belongs to a category that is not assigned to your account.",
+        "error"
+      );
+      return;
+    }
+
+setSelectedRequest(matchingRequest);
+setManualItemId(itemId);
+setFieldErrors({});
+showStatus("Approved request found. Review details before release.", "success");
+  } catch (error) {
+    showStatus("Error finding approved request: " + error.message, "error");
+  }
+}
+
+async function handleConfirmRelease() {
+  showStatus("", "");
+
+  const isValid = validateReleaseForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
   }
 
-  async function handleConfirmRelease() {
-    if (!selectedRequest) {
-      showStatus("Please scan or select an approved request first.", "error");
-      return;
-    }
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showStatus("You are not allowed to release this category item.", "error");
+    return;
+  }
 
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-      showStatus("You are not allowed to release this category item.", "error");
-      return;
-    }
+  const started = startReleaseAction();
 
+  if (!started) return;
+
+  try {
     const confirmRelease = window.confirm(
       `Confirm release of ${selectedRequest.itemName} to ${
         selectedRequest.borrowerName || selectedRequest.borrowerEmail
@@ -181,117 +427,107 @@ function ReleaseItem() {
 
     if (!confirmRelease) return;
 
-    setReleasing(true);
     showStatus("", "");
 
-    try {
-      const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-      const itemRef = doc(db, "items", selectedRequest.itemId);
-      const itemSnap = await getDoc(itemRef);
+    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
+    const latestRequestSnap = await getDoc(requestRef);
 
-      if (!itemSnap.exists()) {
-        showStatus("Item record not found. Release cannot continue.", "error");
-        return;
-      }
+    if (!latestRequestSnap.exists()) {
+      showStatus("This request no longer exists.", "error");
+      return;
+    }
 
-      const itemData = itemSnap.data();
+    const latestRequest = {
+      id: latestRequestSnap.id,
+      ...latestRequestSnap.data(),
+    };
 
-      if (
-        itemData.availability !== "Reserved" &&
-        itemData.availability !== "Available"
-      ) {
-        showStatus(
-          `This item is currently ${itemData.availability}. It cannot be released.`,
-          "error"
-        );
-        return;
-      }
+    if (latestRequest.approvalStatus !== "Approved") {
+      showStatus(
+        `This request is already ${latestRequest.approvalStatus}. Refreshing release queue...`,
+        "error"
+      );
 
-      await updateDoc(requestRef, {
-        approvalStatus: "Borrowed",
-        releasedAt: serverTimestamp(),
-        releasedBy: getAdminId(),
-      });
-
-      await updateDoc(itemRef, {
-        availability: "Borrowed",
-        updatedAt: serverTimestamp(),
-      });
-
-      await addDoc(collection(db, "notifications"), {
-        userId: selectedRequest.borrowerId,
-        targetRole: "borrower",
-        categoryId: getRequestCategoryId(selectedRequest),
-        title: "Item Released",
-        message: `${selectedRequest.itemName} has been released to you. Please return it on or before ${selectedRequest.expectedReturnDate}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
-
-      showStatus("Item released successfully. Request is now Borrowed.", "success");
       setSelectedRequest(null);
       setManualItemId("");
-      fetchApprovedRequests();
-    } catch (error) {
-      showStatus("Error releasing item: " + error.message, "error");
-    } finally {
-      setReleasing(false);
+      await fetchApprovedRequests();
+      return;
     }
+
+    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+      showStatus("You are not allowed to release this category item.", "error");
+      return;
+    }
+
+    const itemRef = doc(db, "items", latestRequest.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (!itemSnap.exists()) {
+      showStatus("Item record not found. Release cannot continue.", "error");
+      return;
+    }
+
+    const itemData = itemSnap.data();
+
+    if (
+      itemData.availability !== "Reserved" &&
+      itemData.availability !== "Available"
+    ) {
+      showStatus(
+        `This item is currently ${itemData.availability}. It cannot be released.`,
+        "error"
+      );
+      return;
+    }
+
+    await updateDoc(requestRef, {
+      approvalStatus: "Borrowed",
+      releasedAt: serverTimestamp(),
+      releasedBy: getAdminId(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await updateDoc(itemRef, {
+      availability: "Borrowed",
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      userId: latestRequest.borrowerId,
+      targetRole: "borrower",
+      categoryId: getRequestCategoryId(latestRequest),
+      title: "Item Released",
+      message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
+
+    showStatus("Item released successfully. Request is now Borrowed.", "success");
+    setSelectedRequest(null);
+    setManualItemId("");
+    await fetchApprovedRequests();
+  } catch (error) {
+    showStatus("Error releasing item: " + error.message, "error");
+  } finally {
+    finishReleaseAction();
   }
+}
 
   useEffect(() => {
     fetchApprovedRequests();
   }, []);
+useEffect(() => {
+  getCameraList().catch((error) => {
+    console.log("Camera list error:", error);
+  });
+}, []);
 
-  useEffect(() => {
-    if (!scannerOpen) return;
-
-    let scannerCleared = false;
-
-    const scanner = new Html5QrcodeScanner(
-      "release-item-reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.CODE_128,
-        ],
-      },
-      false
-    );
-
-    async function clearScanner() {
-      if (scannerCleared) return;
-
-      scannerCleared = true;
-
-      try {
-        await scanner.clear();
-      } catch (error) {
-        console.log("Scanner clear error:", error);
-      }
-    }
-
-    scanner.render(
-      async (decodedText) => {
-        const itemId = extractItemId(decodedText);
-
-        setScannerOpen(false);
-        await clearScanner();
-        findApprovedRequestByItemId(itemId);
-      },
-      () => {}
-    );
-
-    return () => {
-      clearScanner();
-    };
-  }, [scannerOpen]);
+useEffect(() => {
+  return () => {
+    stopReleaseScanner(false);
+  };
+}, []);
 
   if (loading) {
     return (
@@ -307,36 +543,34 @@ function ReleaseItem() {
 
   return (
     <div className="release-page">
-      <section className="release-header">
-        <div>
-          <p className="qb-kicker">Release Scan</p>
+<section className="release-header release-header-compact">
+  <div className="release-header-content">
+    <div className="release-header-text">
+      <p>
+        Scan the item QR code or barcode before giving it to the borrower.
+        This confirms the approved item is physically released.
+      </p>
 
-          <h1>Release Item</h1>
-
-          <p>
-            Scan the item QR code or barcode before giving it to the borrower.
-            This confirms the approved item is physically released.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="release-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="release-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="release-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="release-secondary-btn release-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`release-status release-status-${statusType}`} role="status">
@@ -353,43 +587,94 @@ function ReleaseItem() {
               only the item ID.
             </p>
           </div>
+{cameras.length > 0 && (
+  <div className="release-camera-select">
+    <label className="qb-label" htmlFor="release-camera">
+      Camera
+    </label>
 
-          <button
-            type="button"
-            className="release-primary-btn"
-            onClick={() => setScannerOpen((current) => !current)}
-          >
-            {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
-          </button>
+    <select
+      id="release-camera"
+      value={selectedCameraId}
+      onChange={(event) => setSelectedCameraId(event.target.value)}
+      disabled={scannerOpen || startingScanner}
+    >
+      {cameras.map((camera, index) => (
+        <option key={camera.id} value={camera.id}>
+          {camera.label || `Camera ${index + 1}`}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+<div className="release-scanner-actions">
+  <button
+    type="button"
+    className="release-primary-btn"
+    onClick={() => {
+      if (scannerOpen) {
+        stopReleaseScanner(true);
+      } else {
+        startReleaseScanner();
+      }
+    }}
+    disabled={startingScanner || releasing}
+  >
+    {startingScanner
+      ? "Opening..."
+      : scannerOpen
+        ? "Close Scanner"
+        : "Open QR / Barcode Scanner"}
+  </button>
 
-          {scannerOpen && (
-            <div className="release-scanner-box">
-              <div id="release-item-reader"></div>
-            </div>
-          )}
+  <button
+    type="button"
+    className="release-secondary-btn"
+    onClick={restartReleaseScanner}
+    disabled={startingScanner || releasing}
+  >
+    Restart Scanner
+  </button>
+</div>
+
+{scannerOpen && (
+  <div className="release-scanner-box" key={scannerKey}>
+    <div id="release-item-reader"></div>
+  </div>
+)}
 
           <div className="release-manual-form">
-            <label className="qb-label" htmlFor="manual-item-id">
-              Manual Item ID / Barcode / QR URL
-            </label>
+<label className="qb-label" htmlFor="manual-item-id">
+  Manual Item ID / Barcode / QR URL <span className="required-star">*</span>
+</label>
 
             <div className="release-manual-row">
-              <input
-                id="manual-item-id"
-                type="text"
-                value={manualItemId}
-                onChange={(e) => setManualItemId(e.target.value)}
-                placeholder="Example: item ID or /item/itemId"
-              />
+<input
+  id="manual-item-id"
+  type="text"
+  className={fieldErrors.manualItemId ? "input-error" : ""}
+  value={manualItemId}
+  onFocus={() => clearFieldError("manualItemId")}
+  onChange={(e) => {
+    setManualItemId(e.target.value);
+    clearFieldError("manualItemId");
+  }}
+  placeholder="Example: item ID or /item/itemId"
+  disabled={releasing}
+/>
 
-              <button
-                type="button"
-                className="release-secondary-btn"
-                onClick={() => findApprovedRequestByItemId(manualItemId)}
-              >
-                Find
-              </button>
+            <button
+              type="button"
+              className="release-secondary-btn"
+              onClick={() => findApprovedRequestByItemId(manualItemId)}
+              disabled={releasing}
+            >
+              Find
+            </button>
             </div>
+            {fieldErrors.manualItemId && (
+  <p className="field-error-message">{fieldErrors.manualItemId}</p>
+)}
           </div>
         </section>
 
@@ -448,11 +733,15 @@ function ReleaseItem() {
               </button>
             </>
           ) : (
-            <div className="release-empty-selected">
-              <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-              <h3>No selected request yet</h3>
-              <p>Scan an item or select from the approved request queue.</p>
-            </div>
+ <div className="release-empty-selected">
+  <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+  <h3>No selected request yet</h3>
+  <p>Scan an item or select from the approved request queue.</p>
+
+  {fieldErrors.selectedRequest && (
+    <p className="field-error-message">{fieldErrors.selectedRequest}</p>
+  )}
+</div>
           )}
         </section>
       </section>
@@ -471,6 +760,7 @@ function ReleaseItem() {
             type="button"
             className="release-secondary-btn"
             onClick={fetchApprovedRequests}
+            disabled={releasing}
           >
             Refresh
           </button>
@@ -483,42 +773,69 @@ function ReleaseItem() {
             <p>No items are currently waiting for release.</p>
           </div>
         ) : (
-          <div className="release-request-grid">
-            {visibleApprovedRequests.map((request) => (
-              <article className="release-request-card" key={request.id}>
-                <div className="release-request-topline">
-                  <span>{request.itemCode || request.itemId}</span>
-                  <strong>{request.approvalStatus}</strong>
-                </div>
+<>
+  <div className="release-approved-table-header">
+    <span>Item</span>
+    <span>Borrower</span>
+    <span>Category</span>
+    <span>Expected Return</span>
+    <span>Status</span>
+    <span>Action</span>
+  </div>
 
-                <h3>{request.itemName}</h3>
+  <div className="release-approved-table-grid">
+    {visibleApprovedRequests.map((request) => (
+      <article
+        className={`release-approved-row ${
+          selectedRequest?.id === request.id ? "selected" : ""
+        }`}
+        key={request.id}
+      >
+        <div className="release-approved-cell release-approved-item-cell">
+          <span>{request.itemCode || request.itemId}</span>
+          <strong>{request.itemName || "Untitled Item"}</strong>
+        </div>
 
-                <div className="release-request-meta">
-                  <div>
-                    <span>Borrower</span>
-                    <strong>{request.borrowerName || request.borrowerEmail}</strong>
-                  </div>
+        <div className="release-approved-cell release-approved-borrower-cell">
+          <span>{request.borrowerEmail || "No email"}</span>
+          <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+        </div>
 
-                  <div>
-                    <span>Expected Return</span>
-                    <strong>{request.expectedReturnDate}</strong>
-                  </div>
-                </div>
+        <div className="release-approved-cell">
+          <span>Category</span>
+          <strong>{getRequestCategoryName(request)}</strong>
+        </div>
 
-                <button
-                  type="button"
-                  className="release-primary-btn"
-                  onClick={() => {
-                    setSelectedRequest(request);
-                    setManualItemId(request.itemId);
-                    showStatus("Approved request selected.", "success");
-                  }}
-                >
-                  Select
-                </button>
-              </article>
-            ))}
-          </div>
+        <div className="release-approved-cell">
+          <span>Expected Return</span>
+          <strong>{request.expectedReturnDate || "Not set"}</strong>
+        </div>
+
+        <div className="release-approved-status-cell">
+          <span>{request.approvalStatus || "Approved"}</span>
+        </div>
+
+        <div className="release-approved-actions">
+          <button
+            type="button"
+            className="release-primary-btn"
+            onClick={() => {
+              if (releasing) return;
+
+              setSelectedRequest(request);
+              setManualItemId(request.itemId);
+              setFieldErrors({});
+              showStatus("Approved request selected.", "success");
+            }}
+            disabled={releasing || selectedRequest?.id === request.id}
+          >
+            {selectedRequest?.id === request.id ? "Selected" : "Select"}
+          </button>
+        </div>
+      </article>
+    ))}
+  </div>
+</>
         )}
       </section>
     </div>

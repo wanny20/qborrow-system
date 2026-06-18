@@ -197,3 +197,139 @@
     width: 100%;
   }
 }
+/* =========================================================
+   FINAL IMAGE CROP MODAL MOBILE RESPONSIVE FIX
+   Paste at the very bottom of ImageCropModal.css
+========================================================= */
+
+.image-crop-backdrop {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.image-crop-backdrop * {
+  box-sizing: border-box;
+}
+
+.image-crop-modal,
+.image-crop-body,
+.image-crop-preview-shell,
+.image-crop-controls {
+  max-width: 100%;
+}
+
+/* Tablet */
+@media (max-width: 760px) {
+  .image-crop-backdrop {
+    align-items: start !important;
+    padding: 12px !important;
+    overflow-y: auto !important;
+  }
+
+  .image-crop-modal {
+    width: 100% !important;
+    max-height: none !important;
+    border-radius: 20px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .image-crop-header {
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .image-crop-header h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .image-crop-header span {
+    font-size: 0.74rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .image-crop-close-btn {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.2rem !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+
+  .image-crop-body {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .image-crop-preview-shell {
+    border-radius: 16px !important;
+    padding: 10px !important;
+    overflow: hidden !important;
+  }
+
+  .image-crop-preview {
+    border-radius: 16px !important;
+    max-width: 100% !important;
+  }
+
+  .image-crop-controls {
+    gap: 10px !important;
+  }
+
+  .image-crop-controls label {
+    border-radius: 15px !important;
+    padding: 10px !important;
+    gap: 6px !important;
+  }
+
+  .image-crop-controls span {
+    font-size: 0.6rem !important;
+  }
+
+  .image-crop-tip {
+    border-radius: 15px !important;
+    padding: 10px !important;
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .image-crop-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .image-crop-actions button {
+    width: 100% !important;
+  }
+
+  .image-crop-primary-btn,
+  .image-crop-secondary-btn {
+    min-height: 40px !important;
+    font-size: 0.6rem !important;
+    padding: 0 12px !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .image-crop-backdrop {
+    padding: 8px !important;
+  }
+
+  .image-crop-modal {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .image-crop-header {
+    align-items: flex-start !important;
+  }
+
+  .image-crop-preview-shell {
+    padding: 8px !important;
+  }
+}

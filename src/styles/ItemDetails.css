@@ -552,3 +552,298 @@
     height: 240px;
   }
 }
+/* =========================================================
+   FINAL ITEM DETAILS MOBILE RESPONSIVE FIX
+   Paste at the very bottom of ItemDetails.css
+========================================================= */
+
+.item-details-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.item-details-page * {
+  box-sizing: border-box;
+}
+
+.item-details-header,
+.item-details-layout,
+.item-details-main-card,
+.item-details-side-card,
+.item-details-info-panel,
+.item-details-qr-box {
+  max-width: 100%;
+}
+
+/* Tablet cleanup */
+@media (max-width: 1100px) {
+  .item-details-header,
+  .item-details-main-card,
+  .item-details-side-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .item-details-header-actions {
+    justify-content: flex-start !important;
+  }
+
+  .item-details-image-panel {
+    height: 300px !important;
+  }
+}
+
+/* Phone layout */
+@media (max-width: 760px) {
+  .item-details-page {
+    gap: 12px !important;
+  }
+
+  .item-details-header,
+  .item-details-main-card,
+  .item-details-side-card {
+    border-radius: 18px !important;
+    padding: 14px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .item-details-header::after {
+    width: 56px !important;
+    height: 56px !important;
+    right: 14px !important;
+    bottom: -22px !important;
+    opacity: 0.75 !important;
+  }
+
+  .item-details-header h1 {
+    max-width: calc(100% - 54px) !important;
+    font-size: clamp(1.35rem, 7.5vw, 2rem) !important;
+    line-height: 1 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .item-details-header p {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .item-details-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .item-details-primary-btn,
+  .item-details-secondary-btn,
+  .item-details-danger-btn,
+  .item-details-admin-shortcuts button {
+    width: 100% !important;
+    min-height: 40px !important;
+    font-size: 0.6rem !important;
+    padding: 0 12px !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  /* Main item card */
+  .item-details-main-card {
+    gap: 12px !important;
+  }
+
+  .item-details-image-panel {
+    height: 220px !important;
+    border-radius: 15px !important;
+  }
+
+  .item-details-image-panel img {
+    object-fit: contain !important;
+  }
+
+  .item-details-placeholder {
+    width: 78px !important;
+    height: 78px !important;
+    font-size: 2rem !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  }
+
+  .item-details-topline {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+  }
+
+  .item-details-topline > span:first-child {
+    max-width: 100% !important;
+    width: 100% !important;
+    font-size: 0.56rem !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .item-details-pill,
+  .item-details-inline-pill {
+    min-height: 25px !important;
+    padding: 0 8px !important;
+    font-size: 0.52rem !important;
+    white-space: normal !important;
+  }
+
+  .item-details-pill::before,
+  .item-details-inline-pill::before {
+    width: 7px !important;
+    height: 7px !important;
+    margin-right: 6px !important;
+  }
+
+  .item-details-info-panel h2 {
+    margin-top: 8px !important;
+    font-size: 1.35rem !important;
+    line-height: 1.05 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .item-details-description {
+    margin-top: 8px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .item-details-meta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .item-details-meta-grid > div {
+    border-radius: 14px !important;
+    padding: 9px !important;
+  }
+
+  .item-details-meta-grid span {
+    font-size: 0.52rem !important;
+  }
+
+  .item-details-meta-grid strong {
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .item-details-action-panel {
+    margin-top: 12px !important;
+  }
+
+  .item-details-warning {
+    border-radius: 15px !important;
+    padding: 10px !important;
+  }
+
+  .item-details-warning strong {
+    font-size: 0.82rem !important;
+  }
+
+  .item-details-warning p {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* QR / Barcode card */
+  .item-details-side-card {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .item-details-qr-header span {
+    font-size: 1.15rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .item-details-qr-header p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .item-details-qr-box {
+    max-height: none !important;
+    border-radius: 15px !important;
+    padding: 10px !important;
+    overflow-x: auto !important;
+  }
+
+  .item-details-qr-box canvas,
+  .item-details-qr-box svg,
+  .item-details-qr-box img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .item-details-scan-values {
+    gap: 8px !important;
+  }
+
+  .item-details-scan-values > div {
+    border-radius: 14px !important;
+    padding: 9px !important;
+  }
+
+  .item-details-scan-values span {
+    font-size: 0.52rem !important;
+  }
+
+  .item-details-scan-values p {
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .item-details-admin-shortcuts {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Empty state */
+  .item-details-empty {
+    width: 100% !important;
+    border-radius: 18px !important;
+    padding: 20px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .item-details-empty img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .item-details-empty h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .item-details-empty p {
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 440px) {
+  .item-details-header,
+  .item-details-main-card,
+  .item-details-side-card {
+    padding: 12px !important;
+  }
+
+  .item-details-image-panel {
+    height: 190px !important;
+  }
+
+  .item-details-info-panel h2 {
+    font-size: 1.2rem !important;
+  }
+
+  .item-details-header h1 {
+    font-size: clamp(1.25rem, 7.5vw, 1.7rem) !important;
+  }
+}

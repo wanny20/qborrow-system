@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query as firestoreQuery,
+  where,
+  limit,
+} from "firebase/firestore";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/ScanQR.css";
@@ -12,12 +20,14 @@ function ScanQR() {
 
   const scannerRef = useRef(null);
   const hasScannedRef = useRef(false);
+  const scanActionLockRef = useRef(false);
   const fileInputRef = useRef(null);
 
   const [scanResult, setScanResult] = useState("");
   const [manualCode, setManualCode] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const [scannerPaused, setScannerPaused] = useState(false);
@@ -33,7 +43,101 @@ function ScanQR() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
 
+function validateManualSearchForm() {
+  const errors = {};
+
+  if (!manualCode.trim()) {
+    errors.manualCode = "Item ID, item code, or barcode is required.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+  function startScanAction() {
+  if (scanActionLockRef.current || isSearching) {
+    return false;
+  }
+
+  scanActionLockRef.current = true;
+  setIsSearching(true);
+
+  return true;
+}
+
+function finishScanAction() {
+  scanActionLockRef.current = false;
+  setIsSearching(false);
+}
+
+function isScanBusy() {
+  return Boolean(scanActionLockRef.current || isSearching || startingScanner);
+}
+
+function canUseAsDocumentId(value) {
+  return Boolean(value && !String(value).includes("/"));
+}
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl);
+      reject(new Error("Unable to read the uploaded image."));
+    };
+
+    image.src = imageUrl;
+  });
+}
+
+async function createScannerFriendlyImageFile(file) {
+  const image = await loadImageFromFile(file);
+
+  const minimumWidth = 1200;
+  const scale = image.width < minimumWidth ? minimumWidth / image.width : 1;
+
+  const scaledWidth = Math.round(image.width * scale);
+  const scaledHeight = Math.round(image.height * scale);
+
+  const padding = Math.max(120, Math.round(scaledWidth * 0.12));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = scaledWidth + padding * 2;
+  canvas.height = scaledHeight + padding * 2;
+
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.imageSmoothingEnabled = false;
+  context.drawImage(image, padding, padding, scaledWidth, scaledHeight);
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/png", 1);
+  });
+
+  if (!blob) {
+    return file;
+  }
+
+  return new File([blob], `scanner-friendly-${file.name}`, {
+    type: "image/png",
+  });
+}
   function extractItemIdentifier(scannedText) {
     const text = String(scannedText || "").trim();
 
@@ -78,8 +182,8 @@ function ScanQR() {
     }
   }
 
-  async function startScanner() {
-    if (scannerActive || startingScanner || isSearching) return;
+  async function startScanner(forceStart = false) {
+    if ((!forceStart && scannerActive) || startingScanner || isSearching) return;
 
     hasScannedRef.current = false;
     setScanResult("");
@@ -143,13 +247,14 @@ function ScanQR() {
     }
   }
 
-  async function findItemByScannedValue(scannedValue) {
-    const identifier = extractItemIdentifier(scannedValue);
+async function findItemByScannedValue(scannedValue) {
+  const identifier = extractItemIdentifier(scannedValue);
 
-    if (!identifier) {
-      throw new Error("No QR or barcode value detected.");
-    }
+  if (!identifier) {
+    throw new Error("No QR or barcode value detected.");
+  }
 
+  if (canUseAsDocumentId(identifier)) {
     const directItemRef = doc(db, "items", identifier);
     const directItemSnap = await getDoc(directItemRef);
 
@@ -159,73 +264,138 @@ function ScanQR() {
         ...directItemSnap.data(),
       };
     }
-
-    const itemsSnapshot = await getDocs(collection(db, "items"));
-
-    const matchedItem = itemsSnapshot.docs
-      .map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }))
-      .find((item) => {
-        return (
-          item.itemCode === identifier ||
-          item.barcodeValue === identifier ||
-          item.qrValue === scannedValue ||
-          item.qrValue === identifier
-        );
-      });
-
-    if (!matchedItem) {
-      throw new Error("No matching item found.");
-    }
-
-    return matchedItem;
   }
 
-  async function handleDetectedValue(value) {
-    if (!value || hasScannedRef.current || isSearching) return;
+  const searchCandidates = [
+    {
+      field: "itemCode",
+      value: identifier,
+    },
+    {
+      field: "barcodeValue",
+      value: identifier,
+    },
+    {
+      field: "qrValue",
+      value: scannedValue,
+    },
+    {
+      field: "qrValue",
+      value: identifier,
+    },
+  ];
 
-    hasScannedRef.current = true;
-    setScanResult(value);
-    setIsSearching(true);
-    showStatus("Scanning item record...", "success");
+  const usedQueries = new Set();
 
-    try {
-      const item = await findItemByScannedValue(value);
+  for (const candidate of searchCandidates) {
+    const cleanedValue = String(candidate.value || "").trim();
 
-      await stopScanner(true);
+    if (!cleanedValue) continue;
 
-      showStatus(`Found item: ${item.itemName || item.id}`, "success");
+    const queryKey = `${candidate.field}:${cleanedValue}`;
 
-      setTimeout(() => {
-        navigate(`/item/${item.id}`);
-      }, 600);
-    } catch (error) {
-      hasScannedRef.current = false;
-      showStatus(error.message, "error");
-    } finally {
-      setIsSearching(false);
+    if (usedQueries.has(queryKey)) continue;
+
+    usedQueries.add(queryKey);
+
+    const itemQuery = firestoreQuery(
+      collection(db, "items"),
+      where(candidate.field, "==", cleanedValue),
+      limit(1)
+    );
+
+    const itemSnapshot = await getDocs(itemQuery);
+
+    if (!itemSnapshot.empty) {
+      const matchedDocument = itemSnapshot.docs[0];
+
+      return {
+        id: matchedDocument.id,
+        ...matchedDocument.data(),
+      };
     }
   }
 
-  async function handleManualSearch(e) {
-    e.preventDefault();
+  throw new Error("No matching item found.");
+}
 
-    if (!manualCode.trim()) {
-      showStatus("Please enter an item ID, item code, or barcode value.", "error");
-      return;
-    }
+async function handleDetectedValue(value) {
+  if (!value || hasScannedRef.current) return;
 
-    await handleDetectedValue(manualCode.trim());
+  const started = startScanAction();
+
+  if (!started) return;
+
+  hasScannedRef.current = true;
+  setScanResult(value);
+  showStatus("Scanning item record...", "success");
+
+  try {
+    const item = await findItemByScannedValue(value);
+
+    await stopScanner(true);
+
+    showStatus(`Found item: ${item.itemName || item.id}`, "success");
+    setFieldErrors({});
+
+    setTimeout(() => {
+      navigate(`/item/${item.id}`);
+    }, 600);
+  } catch (error) {
+    hasScannedRef.current = false;
+    showStatus(error.message, "error");
+  } finally {
+    finishScanAction();
   }
-  async function handleUploadedImageScan(event) {
-  const file = event.target.files?.[0];
+}
 
-  if (!file) return;
+async function handleManualSearch(e) {
+  e.preventDefault();
 
+  if (isScanBusy()) return;
+
+  showStatus("", "");
+
+  const isValid = validateManualSearchForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
+
+  clearFieldError("manualCode");
+
+  hasScannedRef.current = false;
+  await handleDetectedValue(manualCode.trim());
+}
+
+async function handleUploadedImageScan(event) {
+  if (isScanBusy()) return;
+
+const file = event.target.files?.[0];
+
+if (!file) {
+  return;
+}
+
+clearFieldError("uploadImage");
+
+if (!file.type.startsWith("image/")) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    uploadImage: "Please upload an image file only.",
+  }));
+  showStatus("Please upload an image file only.", "error");
+  event.target.value = "";
+  return;
+}
+
+  const started = startScanAction();
+
+  if (!started) return;
+
+  hasScannedRef.current = true;
   setUploadedFileName(file.name);
-  setIsSearching(true);
   showStatus("Reading uploaded QR/barcode image...", "success");
 
   try {
@@ -238,17 +408,24 @@ function ScanQR() {
       ],
     });
 
-    let decodedText = "";
+let decodedText = "";
 
-    try {
-      decodedText = await fileScanner.scanFile(file, false);
-    } finally {
-      try {
-        await fileScanner.clear();
-      } catch (error) {
-        console.log("File scanner clear error:", error);
-      }
-    }
+try {
+  try {
+    decodedText = await fileScanner.scanFile(file, false);
+  } catch (firstScanError) {
+    console.log("Original upload scan failed. Retrying with padded image:", firstScanError);
+
+    const scannerFriendlyFile = await createScannerFriendlyImageFile(file);
+    decodedText = await fileScanner.scanFile(scannerFriendlyFile, false);
+  }
+} finally {
+  try {
+    await fileScanner.clear();
+  } catch (error) {
+    console.log("File scanner clear error:", error);
+  }
+}
 
     if (!decodedText) {
       throw new Error("No QR or barcode detected in the uploaded image.");
@@ -258,28 +435,36 @@ function ScanQR() {
 
     const item = await findItemByScannedValue(decodedText);
 
-    showStatus(`Found item: ${item.itemName || item.id}`, "success");
+showStatus(`Found item: ${item.itemName || item.id}`, "success");
+setFieldErrors({});
 
     setTimeout(() => {
       navigate(`/item/${item.id}`);
     }, 600);
   } catch (error) {
-    showStatus("Upload scan failed: " + error.message, "error");
+    hasScannedRef.current = false;
+    setFieldErrors((previousErrors) => ({
+  ...previousErrors,
+  uploadImage: "Upload scan failed: " + error.message,
+}));
+showStatus("Upload scan failed: " + error.message, "error");
   } finally {
-    setIsSearching(false);
+    finishScanAction();
     event.target.value = "";
   }
 }
-  async function restartScanner() {
-    await stopScanner(false);
+async function restartScanner() {
+  if (isScanBusy()) return;
 
-    hasScannedRef.current = false;
-    setScanResult("");
-    setStatusMessage("");
-    setStatusType("");
+  await stopScanner(false);
 
-    await startScanner();
-  }
+  hasScannedRef.current = false;
+  setScanResult("");
+  setStatusMessage("");
+  setStatusType("");
+
+  await startScanner(true);
+}
 
   useEffect(() => {
     return () => {
@@ -289,28 +474,24 @@ function ScanQR() {
 
   return (
     <div className="scan-page">
-      <section className="scan-header">
-        <div>
-          <div className="scan-header-topline">
-            <p className="qb-kicker">QR / Barcode Scanner</p>
+<section className="scan-header scan-header-compact">
+  <div className="scan-header-content">
+    <div className="scan-header-text">
+      <p>
+        Scan an item QR code or barcode to open its item details. Admins can
+        continue to release and return workflows from this page.
+      </p>
+    </div>
 
-            <button
-              type="button"
-              className="scan-secondary-btn"
-              onClick={() => navigate("/dashboard")}
-            >
-              Back to Dashboard
-            </button>
-          </div>
-
-          <h1>Scan Item</h1>
-
-          <p>
-            Scan the QR code or barcode attached to an item. Borrowers can open
-            item details, while admins can use release and return shortcuts.
-          </p>
-        </div>
-      </section>
+    <button
+      type="button"
+      className="scan-secondary-btn scan-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`scan-status scan-status-${statusType}`} role="status">
@@ -353,7 +534,7 @@ function ScanQR() {
               <select
                 value={selectedCameraId}
                 onChange={(event) => setSelectedCameraId(event.target.value)}
-                disabled={scannerActive || startingScanner}
+                disabled={scannerActive || startingScanner || isSearching}
               >
                 {cameras.map((camera, index) => (
                   <option key={camera.id} value={camera.id}>
@@ -376,7 +557,7 @@ function ScanQR() {
               type="button"
               className="scan-secondary-btn"
               onClick={() => stopScanner(false)}
-              disabled={!scannerActive}
+              disabled={!scannerActive || isSearching}
             >
               Stop Scanning
             </button>
@@ -385,7 +566,7 @@ function ScanQR() {
               type="button"
               className="scan-secondary-btn"
               onClick={restartScanner}
-              disabled={startingScanner || isSearching}
+              disabled={isScanBusy()}
             >
               Restart Scanner
             </button>
@@ -407,23 +588,33 @@ function ScanQR() {
             </p>
           </div>
 
-          <form onSubmit={handleManualSearch} className="scan-manual-form">
-            <label className="qb-label" htmlFor="manual-code">
-              Item ID / Item Code / Barcode
-            </label>
+          <form onSubmit={handleManualSearch} className="scan-manual-form" noValidate>
+<label className="qb-label" htmlFor="manual-code">
+  Item ID / Item Code / Barcode <span className="required-star">*</span>
+</label>
 
-            <input
-              id="manual-code"
-              type="text"
-              placeholder="Paste or type scanned value"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-            />
+<input
+  id="manual-code"
+  type="text"
+  className={fieldErrors.manualCode ? "input-error" : ""}
+  placeholder="Paste or type scanned value"
+  value={manualCode}
+  onFocus={() => clearFieldError("manualCode")}
+  onChange={(e) => {
+    setManualCode(e.target.value);
+    clearFieldError("manualCode");
+  }}
+  disabled={isScanBusy()}
+/>
+
+{fieldErrors.manualCode && (
+  <p className="field-error-message">{fieldErrors.manualCode}</p>
+)}
 
             <button
               type="submit"
               className="scan-primary-btn"
-              disabled={isSearching}
+              disabled={isScanBusy()} 
             >
               {isSearching ? "Searching..." : "Open Item"}
             </button>
@@ -447,7 +638,7 @@ function ScanQR() {
     type="button"
     className="scan-secondary-btn"
     onClick={() => fileInputRef.current?.click()}
-    disabled={isSearching}
+    disabled={isScanBusy()}
   >
     {isSearching ? "Reading..." : "Upload Image"}
   </button>
@@ -455,6 +646,9 @@ function ScanQR() {
   {uploadedFileName && (
     <span className="scan-upload-name">{uploadedFileName}</span>
   )}
+  {fieldErrors.uploadImage && (
+  <p className="field-error-message">{fieldErrors.uploadImage}</p>
+)}
 </div>
 
 <div id="qr-file-reader" className="scan-file-reader-hidden"></div>
@@ -479,6 +673,7 @@ function ScanQR() {
                   type="button"
                   className="scan-secondary-btn"
                   onClick={() => navigate("/release-item")}
+                  disabled={isScanBusy()}
                 >
                   Release Item
                 </button>
@@ -487,6 +682,7 @@ function ScanQR() {
                   type="button"
                   className="scan-secondary-btn"
                   onClick={() => navigate("/return-confirmation")}
+                  disabled={isScanBusy()}
                 >
                   Return Item
                 </button>

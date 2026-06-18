@@ -9,8 +9,8 @@ function QRCodeGenerator({
   itemCode,
   qrValue,
   barcodeValue,
-  qrSize = 130,
-  barcodeHeight = 46,
+  qrSize = 150,
+  barcodeHeight = 80,
   compact = false,
 }) {
   const qrCanvasRef = useRef(null);
@@ -58,7 +58,7 @@ function QRCodeGenerator({
         if (qrCanvasRef.current) {
           await QRCode.toCanvas(qrCanvasRef.current, finalQrValue, {
             width: qrSize,
-            margin: 1,
+            margin: 2,
             errorCorrectionLevel: "H",
             color: {
               dark: "#1E293B",
@@ -68,18 +68,18 @@ function QRCodeGenerator({
         }
 
         if (barcodeCanvasRef.current) {
-          JsBarcode(barcodeCanvasRef.current, finalBarcodeValue, {
-            format: "CODE128",
-            width: compact ? 1.1 : 1.35,
-            height: barcodeHeight,
-            displayValue: !compact,
-            font: "monospace",
-            fontSize: 12,
-            textMargin: 4,
-            margin: 0,
-            lineColor: "#1E293B",
-            background: "#FFFFFF",
-          });
+            JsBarcode(barcodeCanvasRef.current, finalBarcodeValue, {
+              format: "CODE128",
+              width: compact ? 1.6 : 2.4,
+              height: compact ? Math.max(barcodeHeight, 64) : Math.max(barcodeHeight, 90),
+              displayValue: !compact,
+              font: "monospace",
+              fontSize: compact ? 12 : 18,
+              textMargin: compact ? 6 : 10,
+              margin: compact ? 14 : 28,
+              lineColor: "#000000",
+              background: "#FFFFFF",
+            });
         }
 
         setHasGenerated(true);
@@ -174,9 +174,11 @@ function QRCodeGenerator({
             }
 
             .barcode {
-              width: 280px;
+              width: 320px;
+              max-width: 100%;
               object-fit: contain;
               margin: 0 auto;
+              background: #ffffff;
             }
 
             .note {

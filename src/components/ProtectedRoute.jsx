@@ -71,11 +71,15 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
-    return <Navigate to="/dashboard" replace />;
-  }
+if (userData?.mustChangePassword && location.pathname !== "/force-password-change") {
+  return <Navigate to="/force-password-change" replace />;
+}
 
-  return children;
+if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
+  return <Navigate to="/dashboard" replace />;
+}
+
+return children;
 }
 
 export default ProtectedRoute;

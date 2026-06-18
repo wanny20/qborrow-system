@@ -86,6 +86,13 @@ function LandingPage() {
     <a href="#workflow">Workflow</a>
     <a href="#about">About</a>
   </div>
+  <button
+  type="button"
+  className="landing-nav-cta"
+  onClick={goToLogin}
+>
+  Log In
+</button>
 </nav>
 
 <section className="landing-shell qb-container" aria-label="QBorrow landing page">

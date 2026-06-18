@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -42,16 +42,52 @@ function EditItem() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isForbidden, setIsForbidden] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState(""); 
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateEditItemForm() {
+  const errors = {};
+
+  if (!itemName.trim()) {
+    errors.itemName = "Item name is required.";
+  }
+
+  if (!categoryId) {
+    errors.categoryId = "Category is required.";
+  }
+
+  if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+    errors.maxBorrowDays = "Max borrow days must be greater than 0.";
+  }
+
+  if (!condition) {
+    errors.condition = "Condition is required.";
+  }
+
+  if (!getFinalAvailability()) {
+    errors.availability = "Availability is required.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -190,9 +226,11 @@ function EditItem() {
     }
   }
 
-  function handleImageChange(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+function handleImageChange(event) {
+  if (submitting) return;
+
+  const file = event.target.files?.[0];
+  event.target.value = "";
 
     if (!file) return;
 
@@ -240,10 +278,28 @@ function EditItem() {
     return getDownloadURL(imageRef);
   }
 
-  async function handleUpdateItem(e) {
-    e.preventDefault();
-    showStatus("", "");
+async function handleUpdateItem(e) {
+  e.preventDefault();
 
+  if (submitLockRef.current || submitting) {
+    return;
+  }
+
+showStatus("", "");
+
+const isValid = validateEditItemForm();
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+submitLockRef.current = true;
+setSubmitting(true);
+
+let updatedSuccessfully = false;
+
+  try {
     if (!isSuperAdmin && !isCategoryAdmin) {
       showStatus("Only super admins and category admins can edit items.", "error");
       return;
@@ -284,49 +340,50 @@ function EditItem() {
       return;
     }
 
-    setSubmitting(true);
+    const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
+    const finalImageUrl = await uploadItemImage(finalItemCode);
+    const itemRef = doc(db, "items", itemId);
 
-    try {
-      const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
-      const finalImageUrl = await uploadItemImage(finalItemCode);
-      const itemRef = doc(db, "items", itemId);
+    await updateDoc(itemRef, {
+      itemCode: finalItemCode,
+      itemName: itemName.trim(),
+      imageUrl: finalImageUrl,
+      description: description.trim(),
 
-      await updateDoc(itemRef, {
-        itemCode: finalItemCode,
-        itemName: itemName.trim(),
-        imageUrl: finalImageUrl,
-        description: description.trim(),
+      categoryId: selectedCategory.id,
+      categoryName: selectedCategory.name,
+      category: selectedCategory.id,
 
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        category: selectedCategory.id,
+      condition,
+      availability: getFinalAvailability(),
+      maxBorrowDays: Number(maxBorrowDays),
 
-        condition,
-        availability: getFinalAvailability(),
-        maxBorrowDays: Number(maxBorrowDays),
+      qrValue:
+        originalItem?.qrValue ||
+        `${window.location.origin}/item/${itemId}`,
+      barcodeValue: originalItem?.barcodeValue || itemId,
 
-        qrValue:
-          originalItem?.qrValue ||
-          `${window.location.origin}/item/${itemId}`,
-        barcodeValue: originalItem?.barcodeValue || itemId,
+      updatedBy: userData?.uid || auth.currentUser?.uid || "",
+      updatedByEmail: userData?.email || auth.currentUser?.email || "",
+      updatedAt: serverTimestamp(),
+    });
 
-        updatedBy: userData?.uid || auth.currentUser?.uid || "",
-        updatedByEmail: userData?.email || auth.currentUser?.email || "",
-        updatedAt: serverTimestamp(),
-      });
+    updatedSuccessfully = true;
 
-      showStatus("Item updated successfully.", "success");
+    showStatus("Item updated successfully.", "success");
 
-      setTimeout(() => {
-        navigate("/items");
-      }, 700);
-    } catch (error) {
-      showStatus("Error updating item: " + error.message, "error");
-    } finally {
+    setTimeout(() => {
+      navigate("/items");
+    }, 700);
+  } catch (error) {
+    showStatus("Error updating item: " + error.message, "error");
+  } finally {
+    if (!updatedSuccessfully) {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }
-
+}
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const idFromUrl = params.get("id");
@@ -368,36 +425,38 @@ function EditItem() {
         />
       )}
 
-      <section className="edit-item-header">
-        <div>
-          <p className="qb-kicker">Inventory Update</p>
+<section className="edit-item-header edit-item-header-compact">
+  <div className="edit-item-header-content">
+    <div className="edit-item-header-text">
+      <span>{itemCode || itemId || "Edit Item"}</span>
 
-          <h1>Edit Item</h1>
+      <h2>Edit Item</h2>
 
-          <p>
-            Update item details, image, category, condition, availability, and
-            borrowing limits.
-          </p>
+      <p>
+        Update item details, image, category, condition, availability, and
+        borrowing limits.
+      </p>
 
-          {isCategoryAdmin && (
-            <div className="edit-item-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.map(getCategoryName).join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="edit-item-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.map(getCategoryName).join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="edit-item-secondary-btn"
-          onClick={() => navigate("/items")}
-        >
-          Back to Item List
-        </button>
-      </section>
+    <button
+      type="button"
+      className="edit-item-secondary-btn edit-item-header-back-btn"
+      onClick={() => navigate("/items")}
+    >
+      Back to Item List
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -437,19 +496,55 @@ function EditItem() {
               </p>
             </div>
 
-            <form onSubmit={handleUpdateItem}>
-              <div className="edit-item-field">
-                <label className="qb-label" htmlFor="item-name">
-                  Item Name
-                </label>
+            <form onSubmit={handleUpdateItem} noValidate>
+<div className="edit-item-field">
+  <label className="qb-label" htmlFor="category">
+    Category <span className="required-star">*</span>
+  </label>
 
-                <input
-                  id="item-name"
-                  type="text"
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                />
-              </div>
+  {isCategoryAdmin ? (
+    <div
+      className={`edit-item-fixed-category-card ${
+        fieldErrors.categoryId ? "input-error" : ""
+      }`}
+    >
+      <span>Fixed Assigned Category</span>
+
+      <strong>{selectedCategory?.name || "No assigned category"}</strong>
+
+      <p>
+        Category admins cannot manually change the item category. This item can
+        only stay within your assigned category.
+      </p>
+    </div>
+  ) : (
+    <select
+      id="category"
+      className={fieldErrors.categoryId ? "input-error" : ""}
+      value={categoryId}
+      onFocus={() => clearFieldError("categoryId")}
+      onChange={(e) => {
+        setCategoryId(e.target.value);
+        clearFieldError("categoryId");
+      }}
+      disabled={submitting || availableCategories.length === 0}
+    >
+      {availableCategories.length === 0 ? (
+        <option value="">No category available</option>
+      ) : (
+        availableCategories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))
+      )}
+    </select>
+  )}
+
+  {fieldErrors.categoryId && (
+    <p className="field-error-message">{fieldErrors.categoryId}</p>
+  )}
+</div>
 
               <div className="edit-item-field">
                 <label className="qb-label" htmlFor="item-code">
@@ -461,6 +556,7 @@ function EditItem() {
                   type="text"
                   value={itemCode}
                   onChange={(e) => setItemCode(e.target.value)}
+                  disabled={submitting}
                   placeholder="Example: IT-12345"
                 />
               </div>
@@ -474,46 +570,35 @@ function EditItem() {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  disabled={submitting}
                   placeholder="Describe the item..."
                 />
               </div>
 
               <div className="edit-item-grid">
-                <div className="edit-item-field">
-                  <label className="qb-label" htmlFor="category">
-                    Category
-                  </label>
-
-                  <select
-                    id="category"
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    disabled={availableCategories.length === 0}
-                  >
-                    {availableCategories.length === 0 ? (
-                      <option value="">No assigned category</option>
-                    ) : (
-                      availableCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
 
                 <div className="edit-item-field">
-                  <label className="qb-label" htmlFor="max-borrow-days">
-                    Max Borrow Days
-                  </label>
+<label className="qb-label" htmlFor="max-borrow-days">
+  Max Borrow Days <span className="required-star">*</span>
+</label>
 
-                  <input
-                    id="max-borrow-days"
-                    type="number"
-                    min="1"
-                    value={maxBorrowDays}
-                    onChange={(e) => setMaxBorrowDays(e.target.value)}
-                  />
+<input
+  id="max-borrow-days"
+  type="number"
+  min="1"
+  className={fieldErrors.maxBorrowDays ? "input-error" : ""}
+  value={maxBorrowDays}
+  onFocus={() => clearFieldError("maxBorrowDays")}
+  onChange={(e) => {
+    setMaxBorrowDays(e.target.value);
+    clearFieldError("maxBorrowDays");
+  }}
+  disabled={submitting}
+/>
+
+{fieldErrors.maxBorrowDays && (
+  <p className="field-error-message">{fieldErrors.maxBorrowDays}</p>
+)}
                 </div>
               </div>
 
@@ -527,6 +612,7 @@ function EditItem() {
                     id="condition"
                     value={condition}
                     onChange={(e) => setCondition(e.target.value)}
+                    disabled={submitting}
                   >
                     <option value="Good">Good</option>
                     <option value="Fair">Fair</option>
@@ -544,7 +630,7 @@ function EditItem() {
                     id="availability"
                     value={availability}
                     onChange={(e) => setAvailability(e.target.value)}
-                    disabled={condition === "Damaged" || condition === "Lost"}
+                    disabled={submitting || condition === "Damaged" || condition === "Lost"}
                   >
                     <option value="Available">Available</option>
                     <option value="Reserved">Reserved</option>
@@ -568,6 +654,7 @@ function EditItem() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
+                  disabled={submitting}
                 />
 
                 <p>

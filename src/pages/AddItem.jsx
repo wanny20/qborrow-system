@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
@@ -39,13 +39,50 @@ function AddItem() {
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
+  }
+
+  function clearFieldError(fieldName) {
+    setFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      [fieldName]: "",
+    }));
+  }
+
+  function validateAddItemForm() {
+    const errors = {};
+
+    if (!itemName.trim()) {
+      errors.itemName = "Item name is required.";
+    }
+
+    if (!categoryId) {
+      errors.categoryId = "Category is required.";
+    }
+
+    if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+      errors.maxBorrowDays = "Max borrow days must be greater than 0.";
+    }
+
+    if (!condition) {
+      errors.condition = "Condition is required.";
+    }
+
+    if (!getFinalAvailability()) {
+      errors.availability = "Availability is required.";
+    }
+
+    setFieldErrors(errors);
+
+    return Object.keys(errors).length === 0;
   }
 
   function normalizeText(value) {
@@ -160,6 +197,7 @@ function AddItem() {
     setImageFile(null);
     setImagePreview("");
     setCropSourceFile(null);
+    setFieldErrors({});
 
     if (availableCategories.length > 0) {
       setCategoryId(availableCategories[0].id);
@@ -167,6 +205,8 @@ function AddItem() {
   }
 
   function handleImageChange(event) {
+    if (submitting) return;
+
     const file = event.target.files?.[0];
     event.target.value = "";
 
@@ -216,49 +256,52 @@ function AddItem() {
 
   async function handleAddItem(e) {
     e.preventDefault();
+
+    if (submitLockRef.current || submitting) {
+      return;
+    }
+
     showStatus("", "");
 
-    if (!isSuperAdmin && !isCategoryAdmin) {
-      showStatus("Only super admins and category admins can add items.", "error");
+    const isValid = validateAddItemForm();
+
+    if (!isValid) {
+      showStatus("Please correct the highlighted fields.", "error");
       return;
     }
 
-    if (categories.length === 0) {
-      showStatus(
-        "No categories found. Go to User Management and seed or add categories first.",
-        "error"
-      );
-      return;
-    }
-
-    if (availableCategories.length === 0) {
-      showStatus(
-        "You do not have assigned categories yet. Ask the super admin to assign categories first.",
-        "error"
-      );
-      return;
-    }
-
-    if (!itemName.trim() || !categoryId) {
-      showStatus("Please fill in item name and category.", "error");
-      return;
-    }
-
-    if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
-      showStatus("Max borrow days must be greater than 0.", "error");
-      return;
-    }
-
-    const selectedCategory = getSelectedCategory();
-
-    if (!selectedCategory) {
-      showStatus("Selected category is invalid.", "error");
-      return;
-    }
-
+    submitLockRef.current = true;
     setSubmitting(true);
 
     try {
+      if (!isSuperAdmin && !isCategoryAdmin) {
+        showStatus("Only super admins and category admins can add items.", "error");
+        return;
+      }
+
+      if (categories.length === 0) {
+        showStatus(
+          "No categories found. Go to User Management and seed or add categories first.",
+          "error"
+        );
+        return;
+      }
+
+      if (availableCategories.length === 0) {
+        showStatus(
+          "You do not have assigned categories yet. Ask the super admin to assign categories first.",
+          "error"
+        );
+        return;
+      }
+
+      const selectedCategory = getSelectedCategory();
+
+      if (!selectedCategory) {
+        showStatus("Selected category is invalid.", "error");
+        return;
+      }
+
       const finalItemCode = itemCode.trim() || generateItemCode();
       const imageUrl = await uploadItemImage(finalItemCode);
 
@@ -300,6 +343,7 @@ function AddItem() {
     } catch (error) {
       showStatus("Error adding item: " + error.message, "error");
     } finally {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }
@@ -319,36 +363,34 @@ function AddItem() {
         />
       )}
 
-      <section className="add-item-header">
-        <div>
-          <p className="qb-kicker">Inventory Setup</p>
+<section className="add-item-header add-item-header-compact">
+  <div className="add-item-header-content">
+    <div className="add-item-header-text">
+      <p>
+        Create a borrowable item record with category, condition, availability,
+        image, QR value, and barcode value.
+      </p>
 
-          <h1>Add Item</h1>
-
-          <p>
-            Create a borrowable item record with category, condition,
-            availability, image, QR value, and barcode value.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="add-item-assigned-note">
-              Assigned categories:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.map(getCategoryName).join(", ")
-                : "No assigned categories yet"}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="add-item-assigned-note">
+          Assigned categories:{" "}
+          {Array.isArray(userData?.assignedCategories) &&
+          userData.assignedCategories.length > 0
+            ? userData.assignedCategories.join(", ")
+            : "No assigned categories yet"}
         </div>
+      )}
+    </div>
 
-        <button
-          type="button"
-          className="add-item-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="add-item-secondary-btn add-item-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -369,21 +411,33 @@ function AddItem() {
             </p>
           </div>
 
-          <form onSubmit={handleAddItem}>
+          <form onSubmit={handleAddItem} noValidate>
+            {/* Item Name */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-name">
-                Item Name
+                Item Name <span className="required-star">*</span>
               </label>
 
               <input
                 id="item-name"
                 type="text"
+                className={fieldErrors.itemName ? "input-error" : ""}
                 placeholder="Example: Projector"
                 value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
+                onFocus={() => clearFieldError("itemName")}
+                onChange={(e) => {
+                  setItemName(e.target.value);
+                  clearFieldError("itemName");
+                }}
+                disabled={submitting}
               />
+
+              {fieldErrors.itemName && (
+                <p className="field-error-message">{fieldErrors.itemName}</p>
+              )}
             </div>
 
+            {/* Item Code */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-code">
                 Item Code
@@ -395,11 +449,13 @@ function AddItem() {
                 placeholder="Leave blank to auto-generate"
                 value={itemCode}
                 onChange={(e) => setItemCode(e.target.value)}
+                disabled={submitting}
               />
 
               <p>Example: IT-12345. Leave this blank for automatic code.</p>
             </div>
 
+            {/* Description */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="description">
                 Description
@@ -410,82 +466,149 @@ function AddItem() {
                 placeholder="Describe the item, included accessories, or notes..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                disabled={submitting}
               />
             </div>
 
             <div className="add-item-grid">
-              <div className="add-item-field">
-                <label className="qb-label" htmlFor="category">
-                  Category
-                </label>
+ {/* Category */}
+<div className="add-item-field">
+  <label className="qb-label" htmlFor="category">
+    Category <span className="required-star">*</span>
+  </label>
 
-                <select
-                  id="category"
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={loadingCategories || availableCategories.length === 0}
-                >
-                  {loadingCategories ? (
-                    <option value="">Loading categories...</option>
-                  ) : availableCategories.length === 0 ? (
-                    <option value="">No assigned category</option>
-                  ) : (
-                    availableCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
+  {isCategoryAdmin ? (
+    <div
+      className={`add-item-fixed-category-card ${
+        fieldErrors.categoryId ? "input-error" : ""
+      }`}
+    >
+      <span>Fixed Assigned Category</span>
 
+      <strong>
+        {loadingCategories
+          ? "Loading category..."
+          : selectedCategory?.name || "No assigned category"}
+      </strong>
+
+      <p>
+        Category admins cannot manually select a category. Items will be saved
+        under the assigned category only.
+      </p>
+    </div>
+  ) : (
+    <select
+      id="category"
+      className={fieldErrors.categoryId ? "input-error" : ""}
+      value={categoryId}
+      onFocus={() => clearFieldError("categoryId")}
+      onChange={(e) => {
+        setCategoryId(e.target.value);
+        clearFieldError("categoryId");
+      }}
+      disabled={
+        submitting || loadingCategories || availableCategories.length === 0
+      }
+    >
+      {loadingCategories ? (
+        <option value="">Loading categories...</option>
+      ) : availableCategories.length === 0 ? (
+        <option value="">No category available</option>
+      ) : (
+        availableCategories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))
+      )}
+    </select>
+  )}
+
+  {fieldErrors.categoryId && (
+    <p className="field-error-message">{fieldErrors.categoryId}</p>
+  )}
+</div>
+
+              {/* Max Borrow Days */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="max-borrow-days">
-                  Max Borrow Days
+                  Max Borrow Days <span className="required-star">*</span>
                 </label>
 
                 <input
                   id="max-borrow-days"
                   type="number"
                   min="1"
+                  className={fieldErrors.maxBorrowDays ? "input-error" : ""}
                   value={maxBorrowDays}
-                  onChange={(e) => setMaxBorrowDays(e.target.value)}
+                  onFocus={() => clearFieldError("maxBorrowDays")}
+                  onChange={(e) => {
+                    setMaxBorrowDays(e.target.value);
+                    clearFieldError("maxBorrowDays");
+                  }}
+                  disabled={submitting}
                 />
+
+                {fieldErrors.maxBorrowDays && (
+                  <p className="field-error-message">{fieldErrors.maxBorrowDays}</p>
+                )}
               </div>
             </div>
 
             <div className="add-item-grid">
+              {/* Condition */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="condition">
-                  Condition
+                  Condition <span className="required-star">*</span>
                 </label>
 
                 <select
                   id="condition"
+                  className={fieldErrors.condition ? "input-error" : ""}
                   value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
+                  onFocus={() => clearFieldError("condition")}
+                  onChange={(e) => {
+                    setCondition(e.target.value);
+                    clearFieldError("condition");
+                    clearFieldError("availability");
+                  }}
+                  disabled={submitting}
                 >
                   <option value="Good">Good</option>
                   <option value="Fair">Fair</option>
                   <option value="Damaged">Damaged</option>
                   <option value="Lost">Lost</option>
                 </select>
+
+                {fieldErrors.condition && (
+                  <p className="field-error-message">{fieldErrors.condition}</p>
+                )}
               </div>
 
+              {/* Availability */}
               <div className="add-item-field">
                 <label className="qb-label" htmlFor="availability">
-                  Availability
+                  Availability <span className="required-star">*</span>
                 </label>
 
                 <select
                   id="availability"
+                  className={fieldErrors.availability ? "input-error" : ""}
                   value={availability}
-                  onChange={(e) => setAvailability(e.target.value)}
-                  disabled={condition === "Damaged" || condition === "Lost"}
+                  onFocus={() => clearFieldError("availability")}
+                  onChange={(e) => {
+                    setAvailability(e.target.value);
+                    clearFieldError("availability");
+                  }}
+                  disabled={submitting || condition === "Damaged" || condition === "Lost"}
                 >
                   <option value="Available">Available</option>
                   <option value="Unavailable">Unavailable</option>
                 </select>
+
+                {fieldErrors.availability && (
+                  <p className="field-error-message">{fieldErrors.availability}</p>
+                )}
 
                 {(condition === "Damaged" || condition === "Lost") && (
                   <p>Availability will automatically become {condition}.</p>
@@ -493,6 +616,7 @@ function AddItem() {
               </div>
             </div>
 
+            {/* Item Image */}
             <div className="add-item-field">
               <label className="qb-label" htmlFor="item-image">
                 Item Image
@@ -503,6 +627,7 @@ function AddItem() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                disabled={submitting}
               />
 
               <p>

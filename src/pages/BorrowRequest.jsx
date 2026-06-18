@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react"; 
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   doc,
@@ -7,6 +7,8 @@ import {
   addDoc,
   getDocs,
   serverTimestamp,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
@@ -49,14 +51,54 @@ function BorrowRequest() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const submitLockRef = useRef(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
 
+function validateBorrowRequestForm() {
+  const errors = {};
+
+  if (!purpose.trim()) {
+    errors.purpose = "Purpose of borrowing is required.";
+  }
+
+  if (!expectedReturnDate) {
+    errors.expectedReturnDate = "Expected return date is required.";
+  } else if (expectedReturnDate < today) {
+    errors.expectedReturnDate = "Expected return date cannot be in the past.";
+  } else if (expectedReturnDate < borrowDate) {
+    errors.expectedReturnDate =
+      "Expected return date cannot be earlier than the borrow date.";
+  }
+
+  const maxExpectedReturnDate = getMaxExpectedReturnDate();
+
+  if (
+    expectedReturnDate &&
+    maxExpectedReturnDate &&
+    expectedReturnDate > maxExpectedReturnDate
+  ) {
+    errors.expectedReturnDate = `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${maxExpectedReturnDate}.`;
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
   function getItemCode() {
     return item?.itemCode || item?.id || "No code";
   }
@@ -81,6 +123,54 @@ function BorrowRequest() {
       currentUser?.email ||
       "Borrower"
     );
+  }
+
+  function cleanDisplay(value, fallback = "Not set") {
+    const cleanedValue = String(value || "").trim();
+    return cleanedValue || fallback;
+  }
+
+  function getBorrowerUserType() {
+    return cleanDisplay(currentUserData?.userType, "Student");
+  }
+
+  function getBorrowerIdNumber() {
+    const borrowerType = getBorrowerUserType();
+
+    if (borrowerType === "Faculty" || borrowerType === "Staff") {
+      return cleanDisplay(currentUserData?.employeeId);
+    }
+
+    return cleanDisplay(currentUserData?.studentNumber);
+  }
+
+  function getBorrowerYearSection() {
+    const values = [
+      currentUserData?.yearLevel,
+      currentUserData?.section,
+    ].filter(Boolean);
+
+    return values.length > 0 ? values.join(" - ") : "Not set";
+  }
+
+  function getBorrowerDetailsSnapshot() {
+    const borrowerType = getBorrowerUserType();
+
+    return {
+      borrowerUserType: borrowerType,
+      borrowerStudentNumber:
+        borrowerType === "Student" ? String(currentUserData?.studentNumber || "").trim() : "",
+      borrowerEmployeeId:
+        borrowerType === "Faculty" || borrowerType === "Staff"
+          ? String(currentUserData?.employeeId || "").trim()
+          : "",
+      borrowerCourseDepartment: String(currentUserData?.courseDepartment || "").trim(),
+      borrowerYearLevel:
+        borrowerType === "Student" ? String(currentUserData?.yearLevel || "").trim() : "",
+      borrowerSection:
+        borrowerType === "Student" ? String(currentUserData?.section || "").trim() : "",
+      borrowerMobileNumber: String(currentUserData?.mobileNumber || "").trim(),
+    };
   }
 
   function getMaxBorrowDays() {
@@ -174,10 +264,17 @@ function BorrowRequest() {
       newExpectedReturnDate >= existingBorrowDate
     );
   }
+    async function checkRequestConflict() {
+    if (!item?.id) return null;
 
-  async function checkRequestConflict() {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
     const activeStatuses = ["Pending", "Approved", "Borrowed"];
+
+    const requestsQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("itemId", "==", item.id)
+    );
+
+    const requestsSnapshot = await getDocs(requestsQuery);
 
     const conflictingRequest = requestsSnapshot.docs
       .map((document) => ({
@@ -185,7 +282,6 @@ function BorrowRequest() {
         ...document.data(),
       }))
       .find((request) => {
-        if (request.itemId !== item.id) return false;
         if (!activeStatuses.includes(request.approvalStatus)) return false;
 
         return hasDateConflict(borrowDate, expectedReturnDate, request);
@@ -196,6 +292,8 @@ function BorrowRequest() {
 
   useEffect(() => {
     async function loadPageData(user) {
+      setLoading(true);
+
       try {
         const itemRef = doc(db, "items", itemId);
         const itemSnap = await getDoc(itemRef);
@@ -247,10 +345,28 @@ function BorrowRequest() {
     return () => unsubscribe();
   }, [itemId, navigate, outletContext?.userData]);
 
-  async function handleSubmitRequest(e) {
-    e.preventDefault();
-    showStatus("", "");
+async function handleSubmitRequest(e) {
+  e.preventDefault();
 
+  if (submitLockRef.current || submitting || requestSubmitted) {
+    return;
+  }
+
+showStatus("", "");
+
+const isValid = validateBorrowRequestForm();
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+submitLockRef.current = true;
+setSubmitting(true);
+
+let submittedSuccessfully = false;
+
+  try {
     if (currentUserData?.role && currentUserData.role !== "borrower") {
       showStatus("Only borrower accounts can submit borrow requests.", "error");
       return;
@@ -261,23 +377,9 @@ function BorrowRequest() {
       return;
     }
 
-    if (!purpose.trim()) {
-      showStatus("Please enter your purpose of borrowing.", "error");
-      return;
-    }
 
     if (borrowDate !== today) {
       showStatus("Borrow date must be today.", "error");
-      return;
-    }
-
-    if (expectedReturnDate < today) {
-      showStatus("Expected return date cannot be in the past.", "error");
-      return;
-    }
-
-    if (expectedReturnDate < borrowDate) {
-      showStatus("Expected return date cannot be earlier than the borrow date.", "error");
       return;
     }
 
@@ -291,96 +393,90 @@ function BorrowRequest() {
       return;
     }
 
-    const maxExpectedReturnDate = getMaxExpectedReturnDate();
 
-    if (maxExpectedReturnDate && expectedReturnDate > maxExpectedReturnDate) {
+    const conflictingRequest = await checkRequestConflict();
+
+    if (conflictingRequest) {
       showStatus(
-        `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${maxExpectedReturnDate}.`,
+        `This item already has an active request from ${conflictingRequest.borrowDate} to ${conflictingRequest.expectedReturnDate}. Please choose another item.`,
         "error"
       );
       return;
     }
 
-    setSubmitting(true);
+    await addDoc(collection(db, "borrowRequests"), {
+      itemId: item.id,
+      itemCode: getItemCode(),
+      itemName: item.itemName || "Untitled Item",
+      categoryId: getCategoryId(),
+      categoryName: getCategoryName(),
 
-    try {
-      const conflictingRequest = await checkRequestConflict();
+      borrowerId: currentUser.uid,
+      borrowerEmail: currentUser.email,
+      borrowerName: getBorrowerName(),
+      ...getBorrowerDetailsSnapshot(),
 
-      if (conflictingRequest) {
-        showStatus(
-          `This item already has an active request from ${conflictingRequest.borrowDate} to ${conflictingRequest.expectedReturnDate}. Please choose another item.`,
-          "error"
-        );
-        setSubmitting(false);
-        return;
-      }
+      purpose: purpose.trim(),
+      borrowDate,
+      expectedReturnDate,
+      actualReturnDate: "",
 
-      await addDoc(collection(db, "borrowRequests"), {
-        itemId: item.id,
-        itemCode: getItemCode(),
-        itemName: item.itemName || "Untitled Item",
-        categoryId: getCategoryId(),
-        categoryName: getCategoryName(),
+      approvalStatus: "Pending",
 
-        borrowerId: currentUser.uid,
-        borrowerEmail: currentUser.email,
-        borrowerName: getBorrowerName(),
+      assignedAdminId: "",
+      approvedBy: "",
+      releasedBy: "",
+      returnedBy: "",
 
-        purpose: purpose.trim(),
-        borrowDate,
-        expectedReturnDate,
-        actualReturnDate: "",
+      returnCondition: "",
+      damageLostReport: "",
 
-        approvalStatus: "Pending",
+      createdAt: serverTimestamp(),
+      approvedAt: "",
+      rejectedAt: "",
+      releasedAt: "",
+      returnedAt: "",
+    });
 
-        assignedAdminId: "",
-        approvedBy: "",
-        releasedBy: "",
-        returnedBy: "",
+    await addDoc(collection(db, "notifications"), {
+      userId: currentUser.uid,
+      targetRole: "borrower",
+      categoryId: getCategoryId(),
+      title: "Borrow Request Submitted",
+      message: `Your request for ${item.itemName} has been submitted and is waiting for admin approval.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/my-requests",
+    });
 
-        returnCondition: "",
-        damageLostReport: "",
+    await addDoc(collection(db, "notifications"), {
+      userId: "",
+      targetRole: "categoryAdmin",
+      categoryId: getCategoryId(),
+      title: "New Borrow Request",
+      message: `${getBorrowerName()} requested ${item.itemName}.`,
+      status: "Unread",
+      createdAt: serverTimestamp(),
+      link: "/manage-requests",
+    });
 
-        createdAt: serverTimestamp(),
-        approvedAt: "",
-        rejectedAt: "",
-        releasedAt: "",
-        returnedAt: "",
-      });
+    submittedSuccessfully = true;
+    setRequestSubmitted(true);
 
-      await addDoc(collection(db, "notifications"), {
-        userId: currentUser.uid,
-        targetRole: "borrower",
-        categoryId: getCategoryId(),
-        title: "Borrow Request Submitted",
-        message: `Your request for ${item.itemName} has been submitted and is waiting for admin approval.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/my-requests",
-      });
+    showStatus("Borrow request submitted successfully. Redirecting...", "success");
 
-      await addDoc(collection(db, "notifications"), {
-        userId: "",
-        targetRole: "categoryAdmin",
-        categoryId: getCategoryId(),
-        title: "New Borrow Request",
-        message: `${getBorrowerName()} requested ${item.itemName}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/manage-requests",
-      });
-
-      showStatus("Borrow request submitted successfully. Redirecting...", "success");
-
-      setTimeout(() => {
-        navigate("/my-requests");
-      }, 700);
-    } catch (error) {
-      showStatus("Error submitting request: " + error.message, "error");
-    } finally {
+    setTimeout(() => {
+      navigate("/my-requests");
+    }, 700);
+  } catch (error) {
+    showStatus("Error submitting request: " + error.message, "error");
+  } finally {
+    if (!submittedSuccessfully) {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }
+}
 
   const maxExpectedReturnDate = getMaxExpectedReturnDate();
 
@@ -398,26 +494,24 @@ function BorrowRequest() {
 
   return (
     <div className="borrow-request-page">
-      <section className="borrow-request-header">
-        <div>
-          <p className="qb-kicker">Borrow Request</p>
+<section className="borrow-request-header borrow-request-header-compact">
+  <div className="borrow-request-header-content">
+    <div className="borrow-request-header-text">
+      <p>
+        Submit a request for this item. The borrow date is automatically set to
+        today, and the item will only be reserved after admin approval.
+      </p>
+    </div>
 
-          <h1>Request Item</h1>
-
-          <p>
-            Submit a borrow request for this item. The borrow date is
-            automatically set to today and cannot be edited.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="borrow-request-secondary-btn"
-          onClick={() => navigate(`/item/${itemId}`)}
-        >
-          Back to Item
-        </button>
-      </section>
+    <button
+      type="button"
+      className="borrow-request-secondary-btn borrow-request-header-back-btn"
+      onClick={() => navigate(`/item/${itemId}`)}
+    >
+      Back to Item
+    </button>
+  </div>
+</section>
 
       <section className="borrow-request-layout">
         <aside className="borrow-request-item-card">
@@ -496,20 +590,62 @@ function BorrowRequest() {
             </div>
           )}
 
-          <form onSubmit={handleSubmitRequest}>
-            <div className="borrow-request-field">
-              <label className="qb-label" htmlFor="purpose">
-                Purpose of Borrowing
-              </label>
+          {currentUserData?.role === "borrower" && (
+            <div className="borrow-request-borrower-preview">
+              <span className="qb-kicker">Borrower Details</span>
 
-              <textarea
-                id="purpose"
-                placeholder="Example: For classroom presentation"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                required
-              />
+              <div className="borrow-request-meta-grid">
+                <div>
+                  <span>User Type</span>
+                  <strong>{getBorrowerUserType()}</strong>
+                </div>
+
+                <div>
+                  <span>ID Number</span>
+                  <strong>{getBorrowerIdNumber()}</strong>
+                </div>
+
+                <div>
+                  <span>Course / Department</span>
+                  <strong>{cleanDisplay(currentUserData?.courseDepartment)}</strong>
+                </div>
+
+                <div>
+                  <span>Year / Section</span>
+                  <strong>{getBorrowerYearSection()}</strong>
+                </div>
+
+                <div>
+                  <span>Mobile Number</span>
+                  <strong>{cleanDisplay(currentUserData?.mobileNumber)}</strong>
+                </div>
+              </div>
             </div>
+          )}
+
+          <form onSubmit={handleSubmitRequest} noValidate>
+<div className="borrow-request-field">
+  <label className="qb-label" htmlFor="purpose">
+    Purpose of Borrowing <span className="required-star">*</span>
+  </label>
+
+  <textarea
+    id="purpose"
+    className={fieldErrors.purpose ? "input-error" : ""}
+    placeholder="Example: For classroom presentation"
+    value={purpose}
+    onFocus={() => clearFieldError("purpose")}
+    onChange={(e) => {
+      setPurpose(e.target.value);
+      clearFieldError("purpose");
+    }}
+    disabled={submitting || requestSubmitted}
+  />
+
+  {fieldErrors.purpose && (
+    <p className="field-error-message">{fieldErrors.purpose}</p>
+  )}
+</div>
 
             <div className="borrow-request-date-grid">
               <div className="borrow-request-field">
@@ -528,44 +664,62 @@ function BorrowRequest() {
                 <p>Borrow date is automatically set to today.</p>
               </div>
 
-              <div className="borrow-request-field">
-                <label className="qb-label" htmlFor="expected-return-date">
-                  Expected Return Date
-                </label>
+<div className="borrow-request-field">
+  <label className="qb-label" htmlFor="expected-return-date">
+    Expected Return Date <span className="required-star">*</span>
+  </label>
 
-                <input
-                  id="expected-return-date"
-                  type="date"
-                  value={expectedReturnDate}
-                  min={today}
-                  max={maxExpectedReturnDate || undefined}
-                  onChange={(e) => setExpectedReturnDate(e.target.value)}
-                  required
-                />
+  <input
+    id="expected-return-date"
+    type="date"
+    className={fieldErrors.expectedReturnDate ? "input-error" : ""}
+    value={expectedReturnDate}
+    min={today}
+    max={maxExpectedReturnDate || undefined}
+    onFocus={() => clearFieldError("expectedReturnDate")}
+    onChange={(e) => {
+      setExpectedReturnDate(e.target.value);
+      clearFieldError("expectedReturnDate");
+    }}
+    disabled={submitting || requestSubmitted}
+  />
 
-                <p>
-                  {maxExpectedReturnDate
-                    ? `${getMaxBorrowDaysLabel()} Latest allowed return date: ${maxExpectedReturnDate}.`
-                    : "Select today or a future date only."}
-                </p>
-              </div>
+  {fieldErrors.expectedReturnDate && (
+    <p className="field-error-message">{fieldErrors.expectedReturnDate}</p>
+  )}
+
+  <p>
+    {maxExpectedReturnDate
+      ? `${getMaxBorrowDaysLabel()} Latest allowed return date: ${maxExpectedReturnDate}.`
+      : "Select today or a future date only."}
+  </p>
+</div>
             </div>
 
             <div className="borrow-request-actions">
-              <button
-                type="button"
-                className="borrow-request-secondary-btn"
-                onClick={() => navigate(`/item/${itemId}`)}
-              >
-                Cancel
-              </button>
+            <button
+              type="button"
+              className="borrow-request-secondary-btn"
+              onClick={() => navigate(`/item/${itemId}`)}
+              disabled={submitting || requestSubmitted}
+            >
+              Cancel
+            </button>
 
               <button
                 type="submit"
                 className="borrow-request-primary-btn"
-                disabled={submitting || item?.availability !== "Available"}
+                disabled={
+                  submitting ||
+                  requestSubmitted ||
+                  item?.availability !== "Available"
+                }
               >
-                {submitting ? "Submitting..." : "Submit Request"}
+                {requestSubmitted
+                  ? "Submitted"
+                  : submitting
+                  ? "Submitting..."
+                  : "Submit Request"}
               </button>
             </div>
           </form>

@@ -1,5 +1,7 @@
-const { setGlobalOptions } = require("firebase-functions");
+const { setGlobalOptions } = require("firebase-functions/v2");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -8,6 +10,10 @@ setGlobalOptions({ maxInstances: 10 });
 
 const db = admin.firestore();
 
+const BREVO_API_KEY = defineSecret("BREVO_API_KEY");
+const BREVO_SENDER_EMAIL = defineSecret("BREVO_SENDER_EMAIL");
+const BREVO_SENDER_NAME = defineSecret("BREVO_SENDER_NAME");
+
 const DEFAULT_CATEGORIES = [
   { id: "sports", name: "Sports Items" },
   { id: "laboratory", name: "Laboratory Items" },
@@ -15,8 +21,20 @@ const DEFAULT_CATEGORIES = [
   { id: "it", name: "IT Items" },
 ];
 
+const VALID_USER_TYPES = ["Student", "Faculty", "Staff"];
+
 function cleanText(value) {
   return String(value || "").trim();
+}
+
+function cleanUserType(value) {
+  const cleanedValue = cleanText(value);
+
+  if (VALID_USER_TYPES.includes(cleanedValue)) {
+    return cleanedValue;
+  }
+
+  return "Student";
 }
 
 function normalizeCategoryId(value) {
@@ -27,8 +45,49 @@ function normalizeCategoryId(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function getBorrowerDetailsPayload(borrower) {
+  const userType = cleanUserType(borrower.userType || borrower.borrowerType);
+
+  const studentNumber = cleanText(
+    borrower.studentNumber || borrower.studentId
+  );
+
+  const employeeId = cleanText(
+    borrower.employeeId || borrower.employeeNumber
+  );
+
+  const courseDepartment = cleanText(
+    borrower.courseDepartment ||
+      borrower.course ||
+      borrower.department ||
+      borrower.courseOrDepartment
+  );
+
+  const yearLevel = cleanText(borrower.yearLevel || borrower.year);
+  const section = cleanText(borrower.section);
+
+  const mobileNumber = cleanText(
+    borrower.mobileNumber ||
+      borrower.mobile ||
+      borrower.phone ||
+      borrower.phoneNumber ||
+      borrower.contactNumber
+  );
+
+  return {
+    userType,
+    studentNumber: userType === "Student" ? studentNumber : "",
+    employeeId:
+      userType === "Faculty" || userType === "Staff" ? employeeId : "",
+    courseDepartment,
+    yearLevel: userType === "Student" ? yearLevel : "",
+    section: userType === "Student" ? section : "",
+    mobileNumber,
+  };
+}
+
 async function requireSuperAdmin(request) {
-  if (!request.auth?.uid) {
+  if (!request.auth || !request.auth.uid) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
@@ -74,6 +133,167 @@ async function collectionHasArrayMatch(collectionName, fieldName, value) {
   return !snapshot.empty;
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getBorrowRequestEmailContent(request, previousStatus, nextStatus) {
+  const borrowerName = escapeHtml(
+    request.borrowerName || request.borrowerEmail || "Borrower"
+  );
+
+  const itemName = escapeHtml(request.itemName || "Requested item");
+  const itemCode = escapeHtml(request.itemCode || request.itemId || "N/A");
+  const borrowDate = escapeHtml(request.borrowDate || "Not set");
+  const expectedReturnDate = escapeHtml(
+    request.expectedReturnDate || "Not set"
+  );
+
+  // FIX: Removed erroneous ``` markers that ChatGPT inserted inside this object
+  const statusMessages = {
+    Approved: {
+      subject: `QBorrow: Borrow request approved for ${itemName}`,
+      title: "Borrow Request Approved",
+      message:
+        "Your borrow request has been approved. Please wait for the admin to release the item.",
+    },
+    Rejected: {
+      subject: `QBorrow: Borrow request rejected for ${itemName}`,
+      title: "Borrow Request Rejected",
+      message:
+        "Your borrow request was rejected. Please check your QBorrow account for updates.",
+    },
+    Borrowed: {
+      subject: `QBorrow: Item released - ${itemName}`,
+      title: "Item Released",
+      message:
+        "The item has been physically released to you. Please return it on or before the expected return date.",
+    },
+    Returned: {
+      subject: `QBorrow: Item returned - ${itemName}`,
+      title: "Item Returned",
+      message:
+        "Your borrowed item has been marked as returned. Thank you for using QBorrow.",
+    },
+    Cancelled: {
+      subject: `QBorrow: Borrow request cancelled for ${itemName}`,
+      title: "Borrow Request Cancelled",
+      message: "Your borrow request has been cancelled.",
+    },
+  };
+
+  const content = statusMessages[nextStatus];
+
+  if (!content) {
+    return null;
+  }
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; background: #f8fafc; padding: 24px;">
+      <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border: 2px solid #1e293b; border-radius: 18px; overflow: hidden;">
+        <div style="background: #8b5cf6; color: #ffffff; padding: 20px;">
+          <h1 style="margin: 0; font-size: 24px;">QBorrow</h1>
+          <p style="margin: 6px 0 0;">QR-Based Digital Borrowing System</p>
+        </div>
+
+        <div style="padding: 22px; color: #1e293b;">
+          <h2 style="margin-top: 0;">${content.title}</h2>
+
+          <p>Hello ${borrowerName},</p>
+
+          <p>${content.message}</p>
+
+          <div style="background: #fffdf5; border: 2px solid #1e293b; border-radius: 14px; padding: 16px; margin: 18px 0;">
+            <p><strong>Item:</strong> ${itemName}</p>
+            <p><strong>Item Code:</strong> ${itemCode}</p>
+            <p><strong>Previous Status:</strong> ${escapeHtml(previousStatus || "N/A")}</p>
+            <p><strong>Current Status:</strong> ${escapeHtml(nextStatus)}</p>
+            <p><strong>Borrow Date:</strong> ${borrowDate}</p>
+            <p><strong>Expected Return:</strong> ${expectedReturnDate}</p>
+          </div>
+
+          <p style="font-size: 13px; color: #64748b;">
+            This is an automated email from QBorrow. Please do not reply to this message.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const textContent = `
+QBorrow - ${content.title}
+
+Hello ${request.borrowerName || request.borrowerEmail || "Borrower"},
+
+${content.message}
+
+Item: ${request.itemName || "Requested item"}
+Item Code: ${request.itemCode || request.itemId || "N/A"}
+Previous Status: ${previousStatus || "N/A"}
+Current Status: ${nextStatus}
+Borrow Date: ${request.borrowDate || "Not set"}
+Expected Return: ${request.expectedReturnDate || "Not set"}
+
+This is an automated email from QBorrow.
+`;
+
+  return {
+    subject: content.subject,
+    htmlContent,
+    textContent,
+  };
+}
+
+async function sendBrevoEmail({
+  toEmail,
+  toName,
+  subject,
+  htmlContent,
+  textContent,
+}) {
+  if (!toEmail) {
+    console.log("Email skipped: missing recipient email.");
+    return null;
+  }
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": BREVO_API_KEY.value(),
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: {
+        name: BREVO_SENDER_NAME.value() || "QBorrow",
+        email: BREVO_SENDER_EMAIL.value(),
+      },
+      to: [
+        {
+          email: toEmail,
+          name: toName || toEmail,
+        },
+      ],
+      subject,
+      htmlContent,
+      textContent,
+      tags: ["qborrow", "borrow-request"],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo email failed: ${response.status} ${errorBody}`);
+  }
+
+  return response.json();
+}
+
 exports.seedDefaultCategories = onCall(async (request) => {
   const currentUser = await requireSuperAdmin(request);
 
@@ -109,8 +329,8 @@ exports.seedDefaultCategories = onCall(async (request) => {
 exports.addCategory = onCall(async (request) => {
   const currentUser = await requireSuperAdmin(request);
 
-  const name = cleanText(request.data?.name);
-  const customId = cleanText(request.data?.id);
+  const name = cleanText(request.data && request.data.name);
+  const customId = cleanText(request.data && request.data.id);
 
   if (!name) {
     throw new HttpsError("invalid-argument", "Category name is required.");
@@ -151,7 +371,9 @@ exports.addCategory = onCall(async (request) => {
 exports.deleteCategory = onCall(async (request) => {
   await requireSuperAdmin(request);
 
-  const categoryId = normalizeCategoryId(request.data?.categoryId);
+  const categoryId = normalizeCategoryId(
+    request.data && request.data.categoryId
+  );
 
   if (!categoryId) {
     throw new HttpsError("invalid-argument", "Category ID is required.");
@@ -218,7 +440,7 @@ exports.deleteCategory = onCall(async (request) => {
 exports.deleteUserCompletely = onCall(async (request) => {
   await requireSuperAdmin(request);
 
-  const targetUid = cleanText(request.data?.uid);
+  const targetUid = cleanText(request.data && request.data.uid);
 
   if (!targetUid) {
     throw new HttpsError("invalid-argument", "User UID is required.");
@@ -276,9 +498,10 @@ exports.deleteUserCompletely = onCall(async (request) => {
 exports.bulkCreateBorrowers = onCall(async (request) => {
   const currentUser = await requireSuperAdmin(request);
 
-  const borrowers = Array.isArray(request.data?.borrowers)
-    ? request.data.borrowers
-    : [];
+  const borrowers =
+    request.data && Array.isArray(request.data.borrowers)
+      ? request.data.borrowers
+      : [];
 
   if (borrowers.length === 0) {
     throw new HttpsError("invalid-argument", "Borrower list is empty.");
@@ -293,6 +516,7 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
 
   const results = [];
 
+  // FIX: Removed erroneous ``` markers that ChatGPT inserted around this block
   for (const borrower of borrowers) {
     const fullName = cleanText(borrower.fullName || borrower.name);
     const email = cleanText(borrower.email).toLowerCase();
@@ -324,21 +548,26 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
         disabled: false,
       });
 
-      await db.collection("users").doc(createdUser.uid).set({
-        fullName,
-        email,
-        role: "borrower",
-        assignedCategories: [],
+await db.collection("users").doc(createdUser.uid).set({
+  fullName,
+  email,
+  role: "borrower",
+  assignedCategories: [],
 
-        overdueCount: 0,
-        suspendedUntil: "",
-        suspensionReason: "",
-        canBorrow: true,
+  ...getBorrowerDetailsPayload(borrower),
 
-        createdBy: currentUser.uid,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+  overdueCount: 0,
+  suspendedUntil: "",
+  suspensionReason: "",
+  canBorrow: true,
+
+  mustChangePassword: true,
+  passwordChangedAt: "",
+
+  createdBy: currentUser.uid,
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+});
 
       results.push({
         email,
@@ -365,3 +594,67 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
     results,
   };
 });
+
+exports.sendBorrowRequestStatusEmail = onDocumentUpdated(
+  {
+    document: "borrowRequests/{requestId}",
+    secrets: [BREVO_API_KEY, BREVO_SENDER_EMAIL, BREVO_SENDER_NAME],
+  },
+  // FIX: Removed erroneous ``` markers that ChatGPT inserted around this block
+  async (event) => {
+    if (!event.data) {
+      return null;
+    }
+
+    const beforeData = event.data.before.data();
+    const afterData = event.data.after.data();
+
+    const previousStatus = beforeData.approvalStatus || "";
+    const nextStatus = afterData.approvalStatus || "";
+
+    if (!nextStatus || previousStatus === nextStatus) {
+      return null;
+    }
+
+    const allowedEmailStatuses = [
+      "Approved",
+      "Rejected",
+      "Borrowed",
+      "Returned",
+      "Cancelled",
+    ];
+
+    if (!allowedEmailStatuses.includes(nextStatus)) {
+      return null;
+    }
+
+    if (!afterData.borrowerEmail) {
+      console.log("Email skipped: borrowerEmail is missing.");
+      return null;
+    }
+
+    const emailContent = getBorrowRequestEmailContent(
+      afterData,
+      previousStatus,
+      nextStatus
+    );
+
+    if (!emailContent) {
+      return null;
+    }
+
+    await sendBrevoEmail({
+      toEmail: afterData.borrowerEmail,
+      toName: afterData.borrowerName || afterData.borrowerEmail,
+      subject: emailContent.subject,
+      htmlContent: emailContent.htmlContent,
+      textContent: emailContent.textContent,
+    });
+
+    console.log(
+      `Email sent to ${afterData.borrowerEmail} for status ${nextStatus}.`
+    );
+
+    return null;
+  }
+);

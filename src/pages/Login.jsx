@@ -16,51 +16,103 @@ function Login() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [fieldErrors, setFieldErrors] = useState({});
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    setIsLoading(true);
-    showStatus("", "");
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+}
 
-    try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      showStatus("Login successful. Redirecting to your dashboard...", "success");
+function validateLoginForm() {
+  const errors = {};
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 500);
-    } catch (error) {
-      console.error(error);
-      showStatus("Invalid email or password. Please check your assigned account.", "error");
-    } finally {
-      setIsLoading(false);
-    }
+  if (!email.trim()) {
+    errors.email = "Email address is required.";
+  } else if (!isValidEmail(email)) {
+    errors.email = "Please enter a valid email address.";
   }
 
-  async function handleForgotPassword() {
-    if (!email.trim()) {
-      showStatus("Please enter your email first before resetting your password.", "error");
-      return;
-    }
-
-    setIsLoading(true);
-    showStatus("", "");
-
-    try {
-      await sendPasswordResetEmail(auth, email.trim());
-      showStatus("Password reset email sent. Please check your inbox.", "success");
-    } catch (error) {
-      console.error(error);
-      showStatus("Failed to send password reset email. Please check your email address.", "error");
-    } finally {
-      setIsLoading(false);
-    }
+  if (!password.trim()) {
+    errors.password = "Password is required.";
   }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateForgotPassword() {
+  const errors = {};
+
+  if (!email.trim()) {
+    errors.email = "Email address is required before resetting your password.";
+  } else if (!isValidEmail(email)) {
+    errors.email = "Please enter a valid email address.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  showStatus("", "");
+
+  const isValid = validateLoginForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+    showStatus("Login successful. Redirecting to your dashboard...", "success");
+
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 500);
+  } catch (error) {
+    console.error(error);
+    showStatus("Invalid email or password. Please check your assigned account.", "error");
+  } finally {
+    setIsLoading(false);
+  }
+}
+async function handleForgotPassword() {
+  showStatus("", "");
+
+  const isValid = validateForgotPassword();
+
+  if (!isValid) {
+    showStatus("Please enter a valid email before resetting your password.", "error");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    showStatus("Password reset email sent. Please check your inbox.", "success");
+  } catch (error) {
+    console.error(error);
+    showStatus("Failed to send password reset email. Please check your email address.", "error");
+  } finally {
+    setIsLoading(false);
+  }
+}
 
   return (
     <main className="login-page qb-page">
@@ -128,39 +180,51 @@ function Login() {
               </div>
             )}
 
-            <form className="login-form" onSubmit={handleLogin}>
+            <form className="login-form" onSubmit={handleLogin} noValidate>
               <div className="login-field">
-                <label className="qb-label" htmlFor="email">
-                  Email Address
-                </label>
+<label className="qb-label" htmlFor="email">
+  Email Address <span className="required-star">*</span>
+</label>
 
-                <input
-                  id="email"
-                  type="email"
-                  className="qb-input"
-                  placeholder="example@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
+<input
+  id="email"
+  type="email"
+  className={`qb-input ${fieldErrors.email ? "input-error" : ""}`}
+  placeholder="example@email.com"
+  value={email}
+  onFocus={() => clearFieldError("email")}
+  onChange={(e) => {
+    setEmail(e.target.value);
+    clearFieldError("email");
+  }}
+  autoComplete="email"
+  disabled={isLoading}
+/>
+
+{fieldErrors.email && (
+  <p className="field-error-message">{fieldErrors.email}</p>
+)}
               </div>
 
               <div className="login-field">
-                <label className="qb-label" htmlFor="password">
-                  Password
-                </label>
+<label className="qb-label" htmlFor="password">
+  Password <span className="required-star">*</span>
+</label>
 
-                <div className="login-password-wrap">
+<div className={`login-password-wrap ${fieldErrors.password ? "input-error" : ""}`}>
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     className="qb-input login-password-input"
                     placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
+value={password}
+onFocus={() => clearFieldError("password")}
+onChange={(e) => {
+  setPassword(e.target.value);
+  clearFieldError("password");
+}}
+autoComplete="current-password"
+disabled={isLoading}
                   />
 
                   <button
@@ -172,6 +236,9 @@ function Login() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
+                {fieldErrors.password && (
+  <p className="field-error-message">{fieldErrors.password}</p>
+)}
               </div>
 
               <button

@@ -6,6 +6,8 @@ import {
   doc,
   getDoc,
   getDocs,
+  query as firestoreQuery,
+  where,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
@@ -144,18 +146,22 @@ function ItemDetails() {
     }
   }
 
-  async function hasActiveBorrowRequest() {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+async function hasActiveBorrowRequest() {
+  if (!item?.id) return false;
 
-    return requestsSnapshot.docs.some((document) => {
-      const request = document.data();
+  const requestsQuery = firestoreQuery(
+    collection(db, "borrowRequests"),
+    where("itemId", "==", item.id)
+  );
 
-      return (
-        request.itemId === item.id &&
-        activeRequestStatuses.includes(request.approvalStatus)
-      );
-    });
-  }
+  const requestsSnapshot = await getDocs(requestsQuery);
+
+  return requestsSnapshot.docs.some((document) => {
+    const request = document.data();
+
+    return activeRequestStatuses.includes(request.approvalStatus);
+  });
+}
 
   async function handleDeleteItem() {
     if (!item) return;
@@ -243,47 +249,51 @@ function ItemDetails() {
 
   return (
     <div className="item-details-page">
-      <section className="item-details-header">
-        <div>
-          <p className="qb-kicker">Item Details</p>
-          <h1>{item.itemName || "Untitled Item"}</h1>
-          <p>
-            Review item information, availability, condition, and scan codes in
-            one clean view.
-          </p>
-        </div>
+<section className="item-details-header item-details-header-compact">
+  <div className="item-details-header-content">
+    <div className="item-details-header-text">
+      <span>{getItemCode(item)}</span>
 
-        <div className="item-details-header-actions">
-          <button
-            type="button"
-            className="item-details-secondary-btn"
-            onClick={() => navigate("/items")}
-          >
-            Back to Items
-          </button>
+      <h2>{item.itemName || "Untitled Item"}</h2>
 
-          {canManageThisItem && (
-            <button
-              type="button"
-              className="item-details-primary-btn"
-              onClick={() => navigate(`/edit-item?id=${item.id}`)}
-            >
-              Edit Item
-            </button>
-          )}
+      <p>
+        Review item information, availability, condition, and scan codes in one
+        clean view.
+      </p>
+    </div>
 
-          {canDeleteThisItem && (
-            <button
-              type="button"
-              className="item-details-danger-btn"
-              onClick={handleDeleteItem}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete Item"}
-            </button>
-          )}
-        </div>
-      </section>
+    <div className="item-details-header-actions item-details-header-actions-compact">
+      <button
+        type="button"
+        className="item-details-secondary-btn"
+        onClick={() => navigate("/items")}
+      >
+        Back to Items
+      </button>
+
+      {canManageThisItem && (
+        <button
+          type="button"
+          className="item-details-primary-btn"
+          onClick={() => navigate(`/edit-item?id=${item.id}`)}
+        >
+          Edit Item
+        </button>
+      )}
+
+      {canDeleteThisItem && (
+        <button
+          type="button"
+          className="item-details-danger-btn"
+          onClick={handleDeleteItem}
+          disabled={deleting}
+        >
+          {deleting ? "Deleting..." : "Delete Item"}
+        </button>
+      )}
+    </div>
+  </div>
+</section>
 
       <section className="item-details-layout">
         <article className="item-details-main-card">

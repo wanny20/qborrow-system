@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   EmailAuthProvider,
   onAuthStateChanged,
@@ -21,6 +22,8 @@ import ImageCropModal from "../components/ImageCropModal";
 import "../styles/Settings.css";
 
 function Settings() {
+  const navigate = useNavigate();
+
   const [currentUser, setCurrentUser] = useState(null);
   const [userRecord, setUserRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,11 +47,66 @@ function Settings() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [profileFieldErrors, setProfileFieldErrors] = useState({});
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearProfileFieldError(fieldName) {
+  setProfileFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function clearPasswordFieldError(fieldName) {
+  setPasswordFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateProfileForm() {
+  const errors = {};
+
+  if (!fullName.trim()) {
+    errors.fullName = "Display name is required.";
+  }
+
+  if (!profilePassword) {
+    errors.profilePassword = "Current password is required to save changes.";
+  }
+
+  setProfileFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+function validatePasswordForm() {
+  const errors = {};
+
+  if (!passwordCurrent) {
+    errors.passwordCurrent = "Current password is required.";
+  }
+
+  if (!newPassword) {
+    errors.newPassword = "New password is required.";
+  } else if (newPassword.length < 6) {
+    errors.newPassword = "New password must be at least 6 characters.";
+  }
+
+  if (!confirmNewPassword) {
+    errors.confirmNewPassword = "Please confirm your new password.";
+  } else if (newPassword !== confirmNewPassword) {
+    errors.confirmNewPassword = "New passwords do not match.";
+  }
+
+  setPasswordFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
 
   function getRoleLabel(role) {
     if (role === "superAdmin") return "Super Admin";
@@ -95,11 +153,11 @@ function Settings() {
       setUserRecord(data);
       setFullName(data.fullName || "");
 
-      const savedTheme =
-        data.themeMode || localStorage.getItem("qborrowTheme") || "light";
+        const savedTheme =
+          localStorage.getItem("qborrowTheme") || data.themeMode || "light";
 
-      setThemeMode(savedTheme);
-      applyTheme(savedTheme);
+        setThemeMode(savedTheme);
+        applyTheme(savedTheme);
 
       if (data.photoURL) {
         setPhotoPreview(data.photoURL);
@@ -126,17 +184,26 @@ function Settings() {
 
     if (!file) return;
 
-    showStatus("", "");
+showStatus("", "");
+clearProfileFieldError("profilePhoto");
 
-    if (!file.type.startsWith("image/")) {
-      showStatus("Please upload an image file only.", "error");
-      return;
-    }
+if (!file.type.startsWith("image/")) {
+  setProfileFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    profilePhoto: "Please upload an image file only.",
+  }));
+  showStatus("Please upload an image file only.", "error");
+  return;
+}
 
-    if (file.size > 5 * 1024 * 1024) {
-      showStatus("Image is too large. Please upload an image below 5MB.", "error");
-      return;
-    }
+if (file.size > 5 * 1024 * 1024) {
+  setProfileFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    profilePhoto: "Image is too large. Please upload an image below 5MB.",
+  }));
+  showStatus("Image is too large. Please upload an image below 5MB.", "error");
+  return;
+}
 
     setCropSourceFile(file);
   }
@@ -165,20 +232,18 @@ function Settings() {
       return;
     }
 
-    const cleanedFullName = fullName.trim();
+showStatus("", "");
 
-    if (!cleanedFullName) {
-      showStatus("Please enter your display name.", "error");
-      return;
-    }
+const isValid = validateProfileForm();
 
-    if (!profilePassword) {
-      showStatus("Please enter your current password to save changes.", "error");
-      return;
-    }
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
 
-    setSavingProfile(true);
-    showStatus("", "");
+const cleanedFullName = fullName.trim();
+
+setSavingProfile(true);
 
     try {
       await reauthenticateUser(profilePassword);
@@ -224,6 +289,7 @@ function Settings() {
       setCroppedPhotoBlob(null);
       setCroppedPhotoSize(0);
       setProfilePassword("");
+      setProfileFieldErrors({});
 
       window.dispatchEvent(
         new CustomEvent("qborrow-user-updated", {
@@ -252,23 +318,16 @@ function Settings() {
       return;
     }
 
-    if (!passwordCurrent) {
-      showStatus("Please enter your current password.", "error");
-      return;
-    }
+ showStatus("", "");
 
-    if (newPassword.length < 6) {
-      showStatus("New password must be at least 6 characters.", "error");
-      return;
-    }
+const isValid = validatePasswordForm();
 
-    if (newPassword !== confirmNewPassword) {
-      showStatus("New passwords do not match.", "error");
-      return;
-    }
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
 
-    setChangingPassword(true);
-    showStatus("", "");
+setChangingPassword(true);
 
     try {
       await reauthenticateUser(passwordCurrent);
@@ -277,6 +336,7 @@ function Settings() {
       setPasswordCurrent("");
       setNewPassword("");
       setConfirmNewPassword("");
+      setPasswordFieldErrors({});
 
       showStatus("Password changed successfully.", "success");
     } catch (error) {
@@ -339,16 +399,24 @@ function Settings() {
         />
       )}
 
-      <section className="settings-header">
-        <div>
-          <p className="qb-kicker">Account Customization</p>
-          <h1>Settings</h1>
-          <p>
-            Customize your profile picture, display name, appearance, and account
-            security. Email changes are disabled for account safety.
-          </p>
-        </div>
-      </section>
+<section className="settings-header settings-header-compact">
+  <div className="settings-header-content">
+    <div className="settings-header-text">
+      <p>
+        Manage your display name, profile picture, interface theme, and account
+        password. Your email is kept fixed for account safety.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="settings-secondary-btn settings-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`settings-status settings-status-${statusType}`}>
@@ -357,10 +425,11 @@ function Settings() {
       )}
 
       <section className="settings-layout">
-        <form
-          className="settings-card settings-profile-card"
-          onSubmit={handleSaveProfile}
-        >
+<form
+  className="settings-card settings-profile-card"
+  onSubmit={handleSaveProfile}
+  noValidate
+>
           <div className="settings-section-heading">
             <h2>Profile & Appearance</h2>
             <p>
@@ -387,31 +456,48 @@ function Settings() {
             </div>
           </div>
 
-          <div className="settings-field">
-            <label className="qb-label" htmlFor="full-name">
-              Display Name
-            </label>
+<div className="settings-field">
+  <label className="qb-label" htmlFor="full-name">
+    Display Name <span className="required-star">*</span>
+  </label>
 
-            <input
-              id="full-name"
-              type="text"
-              placeholder="Enter your display name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-            />
-          </div>
+  <input
+    id="full-name"
+    type="text"
+    className={profileFieldErrors.fullName ? "input-error" : ""}
+    placeholder="Enter your display name"
+    value={fullName}
+    onFocus={() => clearProfileFieldError("fullName")}
+    onChange={(event) => {
+      setFullName(event.target.value);
+      clearProfileFieldError("fullName");
+    }}
+    disabled={savingProfile}
+  />
+
+  {profileFieldErrors.fullName && (
+    <p className="field-error-message">{profileFieldErrors.fullName}</p>
+  )}
+</div>
 
           <div className="settings-field">
             <label className="qb-label" htmlFor="profile-photo">
               Profile Picture
             </label>
 
-            <input
-              id="profile-photo"
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-            />
+<input
+  id="profile-photo"
+  type="file"
+  className={profileFieldErrors.profilePhoto ? "input-error" : ""}
+  accept="image/*"
+  onFocus={() => clearProfileFieldError("profilePhoto")}
+  onChange={handlePhotoChange}
+  disabled={savingProfile}
+/>
+
+{profileFieldErrors.profilePhoto && (
+  <p className="field-error-message">{profileFieldErrors.profilePhoto}</p>
+)}
 
             {croppedPhotoSize > 0 && (
               <small>
@@ -457,19 +543,31 @@ function Settings() {
             </button>
           </div>
 
-          <div className="settings-field">
-            <label className="qb-label" htmlFor="profile-password">
-              Current Password Required
-            </label>
+<div className="settings-field">
+  <label className="qb-label" htmlFor="profile-password">
+    Current Password Required <span className="required-star">*</span>
+  </label>
 
-            <input
-              id="profile-password"
-              type="password"
-              placeholder="Enter password to save changes"
-              value={profilePassword}
-              onChange={(event) => setProfilePassword(event.target.value)}
-            />
-          </div>
+  <input
+    id="profile-password"
+    type="password"
+    className={profileFieldErrors.profilePassword ? "input-error" : ""}
+    placeholder="Enter password to save changes"
+    value={profilePassword}
+    onFocus={() => clearProfileFieldError("profilePassword")}
+    onChange={(event) => {
+      setProfilePassword(event.target.value);
+      clearProfileFieldError("profilePassword");
+    }}
+    disabled={savingProfile}
+  />
+
+  {profileFieldErrors.profilePassword && (
+    <p className="field-error-message">
+      {profileFieldErrors.profilePassword}
+    </p>
+  )}
+</div>
 
           <button
             type="submit"
@@ -492,47 +590,82 @@ function Settings() {
             </p>
           </div>
 
-          <div className="settings-field">
-            <label className="qb-label" htmlFor="current-password">
-              Current Password
-            </label>
+<div className="settings-field">
+  <label className="qb-label" htmlFor="current-password">
+    Current Password <span className="required-star">*</span>
+  </label>
 
-            <input
-              id="current-password"
-              type="password"
-              placeholder="Current password"
-              value={passwordCurrent}
-              onChange={(event) => setPasswordCurrent(event.target.value)}
-            />
-          </div>
+  <input
+    id="current-password"
+    type="password"
+    className={passwordFieldErrors.passwordCurrent ? "input-error" : ""}
+    placeholder="Current password"
+    value={passwordCurrent}
+    onFocus={() => clearPasswordFieldError("passwordCurrent")}
+    onChange={(event) => {
+      setPasswordCurrent(event.target.value);
+      clearPasswordFieldError("passwordCurrent");
+    }}
+    disabled={changingPassword}
+  />
 
-          <div className="settings-field">
-            <label className="qb-label" htmlFor="new-password">
-              New Password
-            </label>
+  {passwordFieldErrors.passwordCurrent && (
+    <p className="field-error-message">
+      {passwordFieldErrors.passwordCurrent}
+    </p>
+  )}
+</div>
 
-            <input
-              id="new-password"
-              type="password"
-              placeholder="At least 6 characters"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-            />
-          </div>
+<div className="settings-field">
+  <label className="qb-label" htmlFor="new-password">
+    New Password <span className="required-star">*</span>
+  </label>
 
-          <div className="settings-field">
-            <label className="qb-label" htmlFor="confirm-new-password">
-              Confirm New Password
-            </label>
+  <input
+    id="new-password"
+    type="password"
+    className={passwordFieldErrors.newPassword ? "input-error" : ""}
+    placeholder="At least 6 characters"
+    value={newPassword}
+    onFocus={() => clearPasswordFieldError("newPassword")}
+    onChange={(event) => {
+      setNewPassword(event.target.value);
+      clearPasswordFieldError("newPassword");
+      clearPasswordFieldError("confirmNewPassword");
+    }}
+    disabled={changingPassword}
+  />
 
-            <input
-              id="confirm-new-password"
-              type="password"
-              placeholder="Repeat new password"
-              value={confirmNewPassword}
-              onChange={(event) => setConfirmNewPassword(event.target.value)}
-            />
-          </div>
+  {passwordFieldErrors.newPassword && (
+    <p className="field-error-message">{passwordFieldErrors.newPassword}</p>
+  )}
+</div>
+
+<div className="settings-field">
+  <label className="qb-label" htmlFor="confirm-new-password">
+    Confirm New Password <span className="required-star">*</span>
+  </label>
+
+  <input
+    id="confirm-new-password"
+    type="password"
+    className={passwordFieldErrors.confirmNewPassword ? "input-error" : ""}
+    placeholder="Repeat new password"
+    value={confirmNewPassword}
+    onFocus={() => clearPasswordFieldError("confirmNewPassword")}
+    onChange={(event) => {
+      setConfirmNewPassword(event.target.value);
+      clearPasswordFieldError("confirmNewPassword");
+    }}
+    disabled={changingPassword}
+  />
+
+  {passwordFieldErrors.confirmNewPassword && (
+    <p className="field-error-message">
+      {passwordFieldErrors.confirmNewPassword}
+    </p>
+  )}
+</div>
 
           <button
             type="submit"

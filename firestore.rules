@@ -1,0 +1,173 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasUserDoc() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function role() {
+      return hasUserDoc() ? userData().role : "";
+    }
+
+    function isSuperAdmin() {
+      return role() == "superAdmin";
+    }
+
+    function isCategoryAdmin() {
+      return role() == "categoryAdmin";
+    }
+
+    function isAdmin() {
+      return role() in ["superAdmin", "categoryAdmin"];
+    }
+
+    function assignedCategories() {
+      return userData().assignedCategories is list
+        ? userData().assignedCategories
+        : [];
+    }
+
+    function getCategoryId(data) {
+      return data.categoryId != null
+        ? data.categoryId
+        : data.category != null
+          ? data.category
+          : "";
+    }
+
+    function getCategoryName(data) {
+      return data.categoryName != null
+        ? data.categoryName
+        : data.category != null
+          ? data.category
+          : "";
+    }
+
+    function adminCanAccessCategory(data) {
+      return isSuperAdmin() ||
+        (
+          isCategoryAdmin() &&
+          (
+            getCategoryId(data) in assignedCategories() ||
+            getCategoryName(data) in assignedCategories()
+          )
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (
+        isOwner(userId) ||
+        isAdmin()
+      );
+
+      allow create: if isSuperAdmin();
+
+      allow update: if isSuperAdmin();
+
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "fullName",
+            "photoURL",
+            "photoPath",
+            "themeMode",
+            "updatedAt"
+          ]);
+
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "mustChangePassword",
+            "passwordChangedAt",
+            "updatedAt"
+          ]) &&
+        request.resource.data.mustChangePassword == false;
+
+      allow update: if isAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "overdueCount",
+            "suspendedUntil",
+            "suspensionReason",
+            "canBorrow",
+            "updatedAt"
+          ]);
+
+      allow delete: if isSuperAdmin();
+    }
+
+    match /items/{itemId} {
+      allow read: if signedIn();
+
+      allow create: if isAdmin() &&
+        adminCanAccessCategory(request.resource.data);
+
+      allow update: if isAdmin() &&
+        adminCanAccessCategory(resource.data);
+
+      allow delete: if isAdmin() &&
+        adminCanAccessCategory(resource.data);
+    }
+
+    match /borrowRequests/{requestId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn() &&
+        role() == "borrower" &&
+        request.resource.data.borrowerId == request.auth.uid &&
+        request.resource.data.approvalStatus == "Pending";
+
+      allow update: if isAdmin() &&
+        adminCanAccessCategory(resource.data);
+
+      allow update: if signedIn() &&
+        resource.data.borrowerId == request.auth.uid &&
+        resource.data.approvalStatus == "Pending" &&
+        request.resource.data.approvalStatus == "Cancelled" &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "approvalStatus",
+            "cancelledAt",
+            "cancelledBy"
+          ]);
+
+      allow delete: if isSuperAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+
+      allow delete: if signedIn() &&
+        (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+    }
+
+    match /categories/{categoryId} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

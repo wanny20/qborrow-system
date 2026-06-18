@@ -566,3 +566,428 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* =========================================================
+   FINAL DASHBOARD MOBILE RESPONSIVE FIX
+   Paste at the very bottom of Dashboard.css
+========================================================= */
+
+.dashboard-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.dashboard-page * {
+  box-sizing: border-box;
+}
+
+.dashboard-hero {
+  grid-template-columns: 1fr !important;
+}
+
+.dashboard-hero > div,
+.dashboard-role-row div,
+.dashboard-stat-card,
+.dashboard-panel {
+  max-width: 100%;
+}
+
+.dashboard-stat-card {
+  min-width: 0;
+}
+
+/* Tablet */
+@media (max-width: 1050px) {
+  .dashboard-hero,
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Phone landscape / big phones */
+@media (max-width: 720px) {
+  .dashboard-page {
+    min-height: auto !important;
+    display: grid;
+    gap: 14px;
+  }
+
+  .dashboard-hero {
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-hero > div {
+    padding: 16px !important;
+    border-radius: 20px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .dashboard-hero > div::after {
+    width: 38px !important;
+    height: 38px !important;
+    right: 14px !important;
+    top: 14px !important;
+  }
+
+  .dashboard-eyebrow {
+    max-width: calc(100% - 50px);
+    font-size: 0.58rem !important;
+    padding: 6px 9px !important;
+  }
+
+  .dashboard-hero h1 {
+    max-width: 100%;
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1.02 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-hero p {
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .dashboard-assigned-note {
+    width: 100% !important;
+    font-size: 0.7rem !important;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-role-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-role-row div {
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .dashboard-role-row span,
+  .dashboard-stat-card span {
+    font-size: 0.58rem !important;
+  }
+
+  .dashboard-role-row strong {
+    font-size: 0.78rem !important;
+  }
+
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-stat-card {
+    min-height: 92px !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+    box-shadow: 3px 3px 0 0 #e2e8f0 !important;
+  }
+
+  .dashboard-stat-card strong {
+    font-size: 1.65rem !important;
+  }
+
+  .dashboard-stat-card::after {
+    width: 42px !important;
+    height: 42px !important;
+    right: -16px !important;
+    bottom: -16px !important;
+  }
+
+  .dashboard-stat-hint {
+    display: none !important;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .dashboard-panel {
+    padding: 14px !important;
+    border-radius: 18px !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .dashboard-panel-heading {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .dashboard-panel-heading h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .dashboard-panel-heading p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .dashboard-search-heading button {
+    width: 100% !important;
+  }
+
+  .dashboard-action-list,
+  .dashboard-attention-list,
+  .dashboard-item-preview-list {
+    gap: 9px !important;
+  }
+
+  .dashboard-action-list button,
+  .dashboard-attention-list button,
+  .dashboard-item-preview-list article {
+    border-radius: 15px !important;
+    padding: 11px !important;
+  }
+
+  .dashboard-action-list strong,
+  .dashboard-attention-list span,
+  .dashboard-item-preview-list strong {
+    font-size: 0.8rem !important;
+  }
+
+  .dashboard-action-list span,
+  .dashboard-item-preview-list span {
+    font-size: 0.68rem !important;
+  }
+
+  .dashboard-attention-list strong {
+    min-width: 38px !important;
+    height: 34px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .dashboard-search-input {
+    min-height: 42px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .dashboard-item-preview-list article {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-item-preview-list article button {
+    width: 100% !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-stat-card {
+    min-height: 86px !important;
+    padding: 10px !important;
+  }
+
+  .dashboard-stat-card strong {
+    font-size: 1.45rem !important;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 340px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   BORROWER DUE TODAY PRIORITY POPUP
+========================================================= */
+
+.dashboard-due-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+  padding: 18px;
+}
+
+.dashboard-due-card {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 14px;
+  border: 2px solid var(--qb-border);
+  border-radius: 26px;
+  background: #ffffff;
+  box-shadow: 8px 8px 0 0 var(--qb-border);
+  padding: 22px;
+  color: var(--qb-foreground);
+}
+
+.dashboard-due-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: var(--qb-secondary);
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  font-family: var(--qb-heading-font);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.dashboard-due-card h2 {
+  margin: 8px 0 6px;
+  font-family: var(--qb-heading-font);
+  font-size: clamp(1.45rem, 6vw, 2.15rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.dashboard-due-card p {
+  margin: 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.dashboard-due-item,
+.dashboard-due-grid div {
+  min-width: 0;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 10px 12px;
+}
+
+.dashboard-due-item span,
+.dashboard-due-grid span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dashboard-due-item strong,
+.dashboard-due-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-due-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-due-actions {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+}
+
+.dashboard-due-primary,
+.dashboard-due-secondary {
+  min-height: 42px;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  padding: 0 14px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dashboard-due-primary {
+  background: var(--qb-accent);
+  color: #ffffff;
+}
+
+.dashboard-due-secondary {
+  background: #ffffff;
+  color: var(--qb-foreground);
+}
+
+@media (max-width: 520px) {
+  .dashboard-due-card {
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .dashboard-due-grid,
+  .dashboard-due-actions {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================================================
+   DASHBOARD BOSS FEEDBACK CLEANUP
+   Remove redundant labels/cards and reduce header height
+========================================================= */
+
+.dashboard-hero {
+  grid-template-columns: 1fr !important;
+  margin-bottom: 14px !important;
+}
+
+.dashboard-hero > div {
+  min-height: 112px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  padding: 18px 24px !important;
+}
+
+.dashboard-eyebrow {
+  display: none !important;
+}
+
+.dashboard-hero h1 {
+  margin: 0 !important;
+  font-size: clamp(1.75rem, 3.4vw, 2.55rem) !important;
+}
+
+.dashboard-hero p {
+  margin-top: 8px !important;
+  max-width: 820px !important;
+  line-height: 1.45 !important;
+}
+
+.dashboard-role-row {
+  display: none !important;
+}
+
+.dashboard-stats-grid {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .dashboard-hero > div {
+    min-height: auto !important;
+    padding: 16px !important;
+  }
+
+  .dashboard-hero h1 {
+    font-size: clamp(1.45rem, 7vw, 2rem) !important;
+  }
+
+  .dashboard-hero p {
+    font-size: 0.78rem !important;
+  }
+}

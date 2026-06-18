@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
@@ -8,22 +8,41 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  orderBy,
+  limit,
+  startAfter,
+  getCountFromServer,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/MyRequests.css";
+const REQUESTS_PAGE_SIZE = 10;
 
 function MyRequests() {
   const navigate = useNavigate();
 
-  const [requests, setRequests] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+const [requests, setRequests] = useState([]);
+const [lastRequestDoc, setLastRequestDoc] = useState(null);
+const [hasMoreRequests, setHasMoreRequests] = useState(false);
+const [loadingMoreRequests, setLoadingMoreRequests] = useState(false);
+
+const [currentUser, setCurrentUser] = useState(null);
+
+const [requestStats, setRequestStats] = useState({
+  total: 0,
+  pending: 0,
+  approved: 0,
+  borrowed: 0,
+  returned: 0,
+  closed: 0,
+});
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusType, setStatusType] = useState("");
+const [statusMessage, setStatusMessage] = useState("");
+const [statusType, setStatusType] = useState("");
+const [selectedRequest, setSelectedRequest] = useState(null);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -93,32 +112,146 @@ function MyRequests() {
 
     return "neutral";
   }
+  async function fetchMyRequestStats(userId) {
+  const requestsRef = collection(db, "borrowRequests");
 
-  async function fetchMyRequests(userId) {
+  const [
+    totalSnapshot,
+    pendingSnapshot,
+    approvedSnapshot,
+    borrowedSnapshot,
+    returnedSnapshot,
+    rejectedSnapshot,
+    cancelledSnapshot,
+  ] = await Promise.all([
+    getCountFromServer(query(requestsRef, where("borrowerId", "==", userId))),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Pending")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Approved")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Borrowed")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Returned")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Rejected")
+      )
+    ),
+    getCountFromServer(
+      query(
+        requestsRef,
+        where("borrowerId", "==", userId),
+        where("approvalStatus", "==", "Cancelled")
+      )
+    ),
+  ]);
+
+  setRequestStats({
+    total: totalSnapshot.data().count || 0,
+    pending: pendingSnapshot.data().count || 0,
+    approved: approvedSnapshot.data().count || 0,
+    borrowed: borrowedSnapshot.data().count || 0,
+    returned: returnedSnapshot.data().count || 0,
+    closed:
+      (rejectedSnapshot.data().count || 0) +
+      (cancelledSnapshot.data().count || 0),
+  });
+}
+
+async function fetchMyRequests(userId, mode = "reset") {
+  if (mode === "reset") {
     setLoading(true);
+  }
 
-    try {
-      const requestsQuery = query(
-        collection(db, "borrowRequests"),
-        where("borrowerId", "==", userId)
-      );
+  try {
+    const requestsQuery =
+      mode === "more" && lastRequestDoc
+        ? query(
+            collection(db, "borrowRequests"),
+            where("borrowerId", "==", userId),
+            orderBy("createdAt", "desc"),
+            startAfter(lastRequestDoc),
+            limit(REQUESTS_PAGE_SIZE + 1)
+          )
+        : query(
+            collection(db, "borrowRequests"),
+            where("borrowerId", "==", userId),
+            orderBy("createdAt", "desc"),
+            limit(REQUESTS_PAGE_SIZE + 1)
+          );
 
-      const querySnapshot = await getDocs(requestsQuery);
+    const querySnapshot = await getDocs(requestsQuery);
+    const docs = querySnapshot.docs;
+    const visibleDocs = docs.slice(0, REQUESTS_PAGE_SIZE);
 
-      const requestData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
+    const requestData = visibleDocs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
 
-      setRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading your requests: " + error.message, "error");
-    } finally {
+    setHasMoreRequests(docs.length > REQUESTS_PAGE_SIZE);
+    setLastRequestDoc(visibleDocs[visibleDocs.length - 1] || null);
+
+    if (mode === "more") {
+      setRequests((previousRequests) => {
+        const existingIds = new Set(previousRequests.map((request) => request.id));
+        const newRequests = requestData.filter(
+          (request) => !existingIds.has(request.id)
+        );
+
+        return [...previousRequests, ...newRequests];
+      });
+
+      return;
+    }
+
+    setRequests(requestData);
+    await fetchMyRequestStats(userId);
+  } catch (error) {
+    showStatus("Error loading your requests: " + error.message, "error");
+  } finally {
+    if (mode === "reset") {
       setLoading(false);
     }
   }
+}
+async function handleLoadMoreRequests() {
+  if (!currentUser?.uid || !hasMoreRequests || loadingMoreRequests) return;
+
+  setLoadingMoreRequests(true);
+  showStatus("", "");
+
+  try {
+    await fetchMyRequests(currentUser.uid, "more");
+  } catch (error) {
+    showStatus("Error loading more requests: " + error.message, "error");
+  } finally {
+    setLoadingMoreRequests(false);
+  }
+}
 
   async function handleCancelRequest(request) {
     if (request.approvalStatus !== "Pending") {
@@ -144,11 +277,12 @@ function MyRequests() {
         cancelledBy: currentUser?.uid || "",
       });
 
-      showStatus("Request cancelled successfully.", "success");
+showStatus("Request cancelled successfully.", "success");
+setSelectedRequest(null);
 
-      if (currentUser?.uid) {
-        fetchMyRequests(currentUser.uid);
-      }
+if (currentUser?.uid) {
+  fetchMyRequests(currentUser.uid, "reset");
+}
     } catch (error) {
       showStatus("Error cancelling request: " + error.message, "error");
     } finally {
@@ -188,29 +322,6 @@ function MyRequests() {
     return matchesSearch && matchesStatus;
   });
 
-  const requestStats = useMemo(
-    () => ({
-      total: requests.length,
-      pending: requests.filter(
-        (request) => request.approvalStatus === "Pending"
-      ).length,
-      approved: requests.filter(
-        (request) => request.approvalStatus === "Approved"
-      ).length,
-      borrowed: requests.filter(
-        (request) => request.approvalStatus === "Borrowed"
-      ).length,
-      returned: requests.filter(
-        (request) => request.approvalStatus === "Returned"
-      ).length,
-      closed: requests.filter(
-        (request) =>
-          request.approvalStatus === "Rejected" ||
-          request.approvalStatus === "Cancelled"
-      ).length,
-    }),
-    [requests]
-  );
 
   if (loading) {
     return (
@@ -226,26 +337,22 @@ function MyRequests() {
 
   return (
     <div className="my-requests-page">
-<section className="my-requests-header">
-  <div>
-    <div className="my-requests-header-topline">
-      <p className="qb-kicker">Borrower Tracker</p>
-
-      <button
-        type="button"
-        className="my-requests-secondary-btn"
-        onClick={() => navigate("/dashboard")}
-      >
-        Back to Dashboard
-      </button>
+<section className="my-requests-header my-requests-header-compact">
+  <div className="my-requests-header-content">
+    <div className="my-requests-header-text">
+      <p>
+        Track your borrow requests, approvals, borrowed items, return status,
+        and completed transactions in one place.
+      </p>
     </div>
 
-    <h1>My Requests</h1>
-
-    <p>
-      Track your borrow requests from pending approval, reserved items,
-      released borrowed items, and completed returns.
-    </p>
+    <button
+      type="button"
+      className="my-requests-secondary-btn my-requests-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
   </div>
 </section>
 
@@ -257,6 +364,116 @@ function MyRequests() {
           {statusMessage}
         </div>
       )}
+      {selectedRequest && (
+  <div
+    className="my-requests-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setSelectedRequest(null)}
+  >
+    <section
+      className="my-requests-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="my-requests-modal-close"
+        onClick={() => setSelectedRequest(null)}
+        aria-label="Close request details"
+      >
+        ×
+      </button>
+
+      <div className="my-requests-modal-heading">
+        <span>{selectedRequest.itemCode || selectedRequest.itemId}</span>
+
+        <h2>{selectedRequest.itemName || "Untitled Item"}</h2>
+
+        <strong
+          className={`my-request-status-pill status-${String(
+            selectedRequest.approvalStatus || "Unknown"
+          ).toLowerCase()}`}
+        >
+          {selectedRequest.approvalStatus || "Unknown"}
+        </strong>
+      </div>
+
+      <p className="my-requests-modal-purpose">
+        <strong>Purpose:</strong>{" "}
+        {selectedRequest.purpose || "No purpose provided."}
+      </p>
+
+      <div className="my-requests-modal-grid">
+        <div>
+          <span>Category</span>
+          <strong>{getCategoryName(selectedRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Borrow Date</span>
+          <strong>{selectedRequest.borrowDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Expected Return</span>
+          <strong>{selectedRequest.expectedReturnDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Actual Return</span>
+          <strong>{selectedRequest.actualReturnDate || "Not returned yet"}</strong>
+        </div>
+
+        <div>
+          <span>Timing Status</span>
+          <strong
+            className={`my-request-timing-pill ${getTimingClass(
+              selectedRequest
+            )}`}
+          >
+            {getRequestTimingStatus(selectedRequest)}
+          </strong>
+        </div>
+
+        <div>
+          <span>Return Condition</span>
+          <strong>
+            {selectedRequest.returnCondition || "No return condition yet"}
+          </strong>
+        </div>
+      </div>
+
+      <div className="my-requests-modal-actions">
+        <button
+          type="button"
+          className="my-requests-primary-btn"
+          onClick={() => navigate(`/item/${selectedRequest.itemId}`)}
+        >
+          View Item
+        </button>
+
+        {selectedRequest.approvalStatus === "Pending" && (
+          <button
+            type="button"
+            className="my-requests-danger-btn"
+            onClick={() => handleCancelRequest(selectedRequest)}
+            disabled={actionLoadingId === selectedRequest.id}
+          >
+            {actionLoadingId === selectedRequest.id ? "Cancelling..." : "Cancel Request"}
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="my-requests-secondary-btn"
+          onClick={() => setSelectedRequest(null)}
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
 
       <section className="my-requests-summary-grid">
         <div>
@@ -334,7 +551,7 @@ function MyRequests() {
         <button
           type="button"
           className="my-requests-refresh-btn"
-          onClick={() => currentUser?.uid && fetchMyRequests(currentUser.uid)}
+          onClick={() => currentUser?.uid && fetchMyRequests(currentUser.uid, "reset")}
         >
           Refresh
         </button>
@@ -345,8 +562,9 @@ function MyRequests() {
           <div>
             <h2>Request History</h2>
             <p>
-              Showing {filteredRequests.length} of {requests.length} request
-              {requests.length === 1 ? "" : "s"}.
+              Showing {filteredRequests.length} of {requests.length} loaded request
+{requests.length === 1 ? "" : "s"}.
+{hasMoreRequests ? " Load more to view older requests." : ""}
             </p>
           </div>
         </div>
@@ -368,87 +586,76 @@ function MyRequests() {
         ) : (
 <div className="my-requests-list">
   {filteredRequests.map((request) => (
-    <article className="my-request-row" key={request.id}>
-      <div className="my-request-main">
-        <div className="my-request-topline">
-          <span>{request.itemCode || request.itemId}</span>
+<article className="my-request-row my-request-row-compact" key={request.id}>
+  <div className="my-request-main">
+    <div className="my-request-topline">
+      <span>{request.itemCode || request.itemId}</span>
 
-          <strong
-            className={`my-request-status-pill status-${String(
-              request.approvalStatus || "Unknown"
-            ).toLowerCase()}`}
-          >
-            {request.approvalStatus || "Unknown"}
-          </strong>
-        </div>
+      <strong
+        className={`my-request-status-pill status-${String(
+          request.approvalStatus || "Unknown"
+        ).toLowerCase()}`}
+      >
+        {request.approvalStatus || "Unknown"}
+      </strong>
+    </div>
 
-        <h3>{request.itemName || "Untitled Item"}</h3>
+    <h3>{request.itemName || "Untitled Item"}</h3>
 
-        <p>
-          <strong>Purpose:</strong>{" "}
-          {request.purpose || "No purpose provided."}
-        </p>
+    <p>
+      <strong>Purpose:</strong> {request.purpose || "No purpose provided."}
+    </p>
 
-        <div className="my-request-footer">
-          <span
-            className={`my-request-timing-pill ${getTimingClass(request)}`}
-          >
-            {getRequestTimingStatus(request)}
-          </span>
+    <div className="my-request-footer">
+      <span className={`my-request-timing-pill ${getTimingClass(request)}`}>
+        {getRequestTimingStatus(request)}
+      </span>
 
-          <span className="my-request-condition-pill">
-            {request.returnCondition || "No return condition yet"}
-          </span>
-        </div>
-      </div>
+      <span className="my-request-condition-pill">
+        {request.returnCondition || "No return condition yet"}
+      </span>
+    </div>
+  </div>
 
-      <div className="my-request-details">
-        <div>
-          <span>Category</span>
-          <strong>{getCategoryName(request)}</strong>
-        </div>
+  <div className="my-request-compact-meta">
+    <div>
+      <span>Category</span>
+      <strong>{getCategoryName(request)}</strong>
+    </div>
 
-        <div>
-          <span>Borrow Date</span>
-          <strong>{request.borrowDate || "Not set"}</strong>
-        </div>
+    <div>
+      <span>Expected Return</span>
+      <strong>{request.expectedReturnDate || "Not set"}</strong>
+    </div>
+  </div>
 
-        <div>
-          <span>Expected Return</span>
-          <strong>{request.expectedReturnDate || "Not set"}</strong>
-        </div>
-
-        <div>
-          <span>Actual Return</span>
-          <strong>{request.actualReturnDate || "Not returned yet"}</strong>
-        </div>
-      </div>
-
-      <div className="my-request-actions">
-        <button
-          type="button"
-          className="my-requests-secondary-btn"
-          onClick={() => navigate(`/item/${request.itemId}`)}
-        >
-          View Item
-        </button>
-
-        {request.approvalStatus === "Pending" && (
-          <button
-            type="button"
-            className="my-requests-danger-btn"
-            onClick={() => handleCancelRequest(request)}
-            disabled={actionLoadingId === request.id}
-          >
-            {actionLoadingId === request.id ? "Cancelling..." : "Cancel"}
-          </button>
-        )}
-      </div>
-    </article>
+  <div className="my-request-actions">
+    <button
+      type="button"
+      className="my-requests-primary-btn"
+      onClick={() => setSelectedRequest(request)}
+    >
+      Details
+    </button>
+  </div>
+</article>
   ))}
 </div>
+
         )}
       </section>
+      {hasMoreRequests && (
+  <div className="my-requests-load-more-row">
+    <button
+      type="button"
+      className="my-requests-secondary-btn"
+      onClick={handleLoadMoreRequests}
+      disabled={loadingMoreRequests}
+    >
+      {loadingMoreRequests ? "Loading..." : "Load More Requests"}
+    </button>
+  </div>
+)}
     </div>
   );
 }

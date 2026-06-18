@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   getDocs,
   deleteDoc,
   doc,
   getDoc,
+  query as firestoreQuery,
+  orderBy,
+  limit,
+  startAfter,
+  documentId,
+  where,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
@@ -12,11 +18,16 @@ import { db, auth } from "../firebase/firebaseConfig";
 import "../styles/ItemList.css";
 
 const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
+const ITEMS_PAGE_SIZE = 12;
 
 function ItemList() {
   const [searchParams] = useSearchParams();
 
   const [items, setItems] = useState([]);
+  const [lastItemDoc, setLastItemDoc] = useState(null);
+  const [hasMoreItems, setHasMoreItems] = useState(false);
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+
   const [categories, setCategories] = useState([]);
   const [localUserData, setLocalUserData] = useState(null);
 
@@ -31,10 +42,32 @@ function ItemList() {
   const outletContext = useOutletContext() || {};
   const userData = outletContext?.userData || localUserData;
 
+  const deleteLockRef = useRef("");
+
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
   const isAdmin = isSuperAdmin || isCategoryAdmin;
+
+  function startDeleteAction(itemId) {
+  if (deleteLockRef.current || deletingId) {
+    return false;
+  }
+
+  deleteLockRef.current = itemId;
+  setDeletingId(itemId);
+
+  return true;
+}
+
+function finishDeleteAction() {
+  deleteLockRef.current = "";
+  setDeletingId("");
+}
+
+function isDeleteBusy() {
+  return Boolean(deleteLockRef.current || deletingId);
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -86,81 +119,162 @@ function ItemList() {
     );
   }
 
-  async function fetchItemsAndCategories() {
-    try {
-      const [itemSnapshot, categorySnapshot] = await Promise.all([
-        getDocs(collection(db, "items")),
-        getDocs(collection(db, "categories")),
-      ]);
+async function fetchCategories() {
+  const categorySnapshot = await getDocs(collection(db, "categories"));
 
-      const itemData = itemSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+  const categoryData = categorySnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((category) => category.isActive !== false)
+    .sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || ""))
+    );
 
-      const categoryData = categorySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((category) => category.isActive !== false)
-        .sort((a, b) =>
-          String(a.name || "").localeCompare(String(b.name || ""))
+  setCategories(categoryData);
+}
+
+async function fetchItemsPage(mode = "reset") {
+  const itemQuery =
+    mode === "more" && lastItemDoc
+      ? firestoreQuery(
+          collection(db, "items"),
+          orderBy(documentId()),
+          startAfter(lastItemDoc),
+          limit(ITEMS_PAGE_SIZE + 1)
+        )
+      : firestoreQuery(
+          collection(db, "items"),
+          orderBy(documentId()),
+          limit(ITEMS_PAGE_SIZE + 1)
         );
 
-      setItems(itemData);
-      setCategories(categoryData);
-    } catch (error) {
-      alert("Error loading items: " + error.message);
-    }
-  }
+  const itemSnapshot = await getDocs(itemQuery);
+  const docs = itemSnapshot.docs;
+  const visibleDocs = docs.slice(0, ITEMS_PAGE_SIZE);
 
-  async function hasActiveBorrowRequest(itemId) {
-    const requestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+  const itemData = visibleDocs.map((document) => ({
+    id: document.id,
+    ...document.data(),
+  }));
 
-    return requestsSnapshot.docs.some((document) => {
-      const request = document.data();
+  setHasMoreItems(docs.length > ITEMS_PAGE_SIZE);
+  setLastItemDoc(visibleDocs[visibleDocs.length - 1] || null);
 
-      return (
-        request.itemId === itemId &&
-        activeRequestStatuses.includes(request.approvalStatus)
-      );
+  if (mode === "more") {
+    setItems((previousItems) => {
+      const existingIds = new Set(previousItems.map((item) => item.id));
+      const newItems = itemData.filter((item) => !existingIds.has(item.id));
+
+      return [...previousItems, ...newItems];
     });
+
+    return;
   }
 
-  async function handleDeleteItem(item) {
-    if (!isAdmin) return;
+  setItems(itemData);
+}
 
-    if (["Reserved", "Borrowed"].includes(item.availability)) {
-      alert("This item cannot be deleted because it is reserved or borrowed.");
+async function fetchItemsAndCategories() {
+  try {
+    await Promise.all([
+      fetchCategories(),
+      fetchItemsPage("reset"),
+    ]);
+  } catch (error) {
+    alert("Error loading items: " + error.message);
+  }
+}
+
+async function handleLoadMoreItems() {
+  if (!hasMoreItems || loadingMoreItems) return;
+
+  setLoadingMoreItems(true);
+
+  try {
+    await fetchItemsPage("more");
+  } catch (error) {
+    alert("Error loading more items: " + error.message);
+  } finally {
+    setLoadingMoreItems(false);
+  }
+}
+
+async function hasActiveBorrowRequest(itemId) {
+  const requestsQuery = firestoreQuery(
+    collection(db, "borrowRequests"),
+    where("itemId", "==", itemId)
+  );
+
+  const requestsSnapshot = await getDocs(requestsQuery);
+
+  return requestsSnapshot.docs.some((document) => {
+    const request = document.data();
+
+    return activeRequestStatuses.includes(request.approvalStatus);
+  });
+}
+
+async function handleDeleteItem(item) {
+  if (!isAdmin) return;
+
+  if (isDeleteBusy()) return;
+
+  if (["Reserved", "Borrowed"].includes(item.availability)) {
+    alert("This item cannot be deleted because it is reserved or borrowed.");
+    return;
+  }
+
+  const confirmDelete = window.confirm(
+    `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
+  );
+
+  if (!confirmDelete) return;
+
+  const started = startDeleteAction(item.id);
+
+  if (!started) return;
+
+  try {
+    const itemRef = doc(db, "items", item.id);
+    const latestItemSnap = await getDoc(itemRef);
+
+    if (!latestItemSnap.exists()) {
+      alert("This item no longer exists.");
+      await fetchItemsAndCategories();
       return;
     }
 
-    const confirmDelete = window.confirm(
-      `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
-    );
+    const latestItem = {
+      id: latestItemSnap.id,
+      ...latestItemSnap.data(),
+    };
 
-    if (!confirmDelete) return;
-
-    setDeletingId(item.id);
-
-    try {
-      const hasActiveRequest = await hasActiveBorrowRequest(item.id);
-
-      if (hasActiveRequest) {
-        alert("This item cannot be deleted because it has an active borrow request.");
-        return;
-      }
-
-      await deleteDoc(doc(db, "items", item.id));
-      alert("Item deleted successfully.");
+    if (["Reserved", "Borrowed"].includes(latestItem.availability)) {
+      alert("This item cannot be deleted because it is now reserved or borrowed.");
       await fetchItemsAndCategories();
-    } catch (error) {
-      alert("Error deleting item: " + error.message);
-    } finally {
-      setDeletingId("");
+      return;
     }
+
+    const hasActiveRequest = await hasActiveBorrowRequest(item.id);
+
+    if (hasActiveRequest) {
+      alert("This item cannot be deleted because it has an active borrow request.");
+      await fetchItemsAndCategories();
+      return;
+    }
+
+    await deleteDoc(itemRef);
+
+    alert("Item deleted successfully.");
+    await fetchItemsAndCategories();
+  } catch (error) {
+    alert("Error deleting item: " + error.message);
+  } finally {
+    finishDeleteAction();
   }
+}
 
   useEffect(() => {
     const availabilityFromUrl = searchParams.get("availability");
@@ -169,6 +283,12 @@ function ItemList() {
       setAvailabilityFilter(availabilityFromUrl);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+  if (isCategoryAdmin) {
+    setCategoryFilter("All");
+  }
+}, [isCategoryAdmin, userData?.assignedCategories?.join("|")]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -345,37 +465,43 @@ function ItemList() {
 
   return (
     <div className="inventory-page">
-      <section className={`inventory-header-row ${isAdmin ? "has-actions" : ""}`}>
-        <div className="inventory-title-area">
-          <p className="qb-kicker">Item Inventory</p>
+<section className="inventory-header-row inventory-header-compact">
+  <div className="inventory-title-area inventory-title-area-compact">
+    <div className="inventory-header-text">
+      <p>
+        {isBorrower
+          ? "Browse available items and submit borrow requests."
+          : "View and manage inventory records based on your assigned permissions."}
+      </p>
 
-          <h1>{isBorrower ? "Available Items" : "Manage Items"}</h1>
-
-          <p>
-            {isBorrower
-              ? "Browse available items and submit borrow requests."
-              : "View and manage inventory records based on your assigned permissions."}
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="inventory-assigned-note">
-              Assigned categories: {getAssignedCategoryNames()}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="inventory-assigned-note">
+          Assigned categories: {getAssignedCategoryNames()}
         </div>
+      )}
+    </div>
 
-        {isAdmin && (
-          <div className="inventory-header-actions">
-            <button
-              type="button"
-              className="inventory-add-btn"
-              onClick={() => navigate("/add-item")}
-            >
-              + Add Item
-            </button>
-          </div>
-        )}
-      </section>
+    <div className="inventory-header-actions inventory-header-actions-compact">
+      {isAdmin && (
+        <button
+          type="button"
+          className="inventory-add-btn inventory-header-action-btn"
+          onClick={() => navigate("/add-item")}
+        >
+          + Add Item
+        </button>
+      )}
+
+      <button
+        type="button"
+        className="inventory-refresh-btn inventory-header-action-btn"
+        onClick={() => navigate("/dashboard")}
+      >
+        Back to Dashboard
+      </button>
+    </div>
+  </div>
+</section>
 
       <section className="inventory-tools">
         <div className="inventory-search">
@@ -413,24 +539,35 @@ function ItemList() {
           </select>
         </div>
 
-        <div className="inventory-filter">
-          <label className="qb-label" htmlFor="category-filter">
-            Category
-          </label>
+  {isCategoryAdmin ? (
+  <div className="inventory-filter">
+    <label className="qb-label">Category</label>
 
-          <select
-            id="category-filter"
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-          >
-            <option value="All">All Categories</option>
-            {availableCategories.map((category) => (
-              <option key={category.value} value={category.value}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="inventory-fixed-category-card">
+      <span>Fixed Assigned Category</span>
+      <strong>{getAssignedCategoryNames()}</strong>
+    </div>
+  </div>
+) : (
+  <div className="inventory-filter">
+    <label className="qb-label" htmlFor="category-filter">
+      Category
+    </label>
+
+    <select
+      id="category-filter"
+      value={categoryFilter}
+      onChange={(event) => setCategoryFilter(event.target.value)}
+    >
+      <option value="All">All Categories</option>
+      {availableCategories.map((category) => (
+        <option key={category.value} value={category.value}>
+          {category.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
       </section>
 
       <section className="inventory-summary">
@@ -464,8 +601,9 @@ function ItemList() {
           <div>
             <h2>Items</h2>
             <p>
-              Showing {filteredItems.length} of {roleVisibleItems.length} item
+              Showing {filteredItems.length} of {roleVisibleItems.length} loaded item
               {roleVisibleItems.length === 1 ? "" : "s"}.
+              {hasMoreItems && " Load more items to continue browsing."}
             </p>
           </div>
 
@@ -473,6 +611,7 @@ function ItemList() {
             type="button"
             className="inventory-refresh-btn"
             onClick={fetchItemsAndCategories}
+            disabled={isDeleteBusy() || loadingMoreItems}
           >
             Refresh
           </button>
@@ -523,30 +662,32 @@ function ItemList() {
                 </div>
 
                 <div className="inventory-admin-actions">
-                  <button
-                    type="button"
-                    className="view-btn"
-                    onClick={() => navigate(`/item/${item.id}`)}
-                  >
-                    View
-                  </button>
+<button
+  type="button"
+  className="view-btn"
+  onClick={() => navigate(`/item/${item.id}`)}
+  disabled={isDeleteBusy()}
+>
+  View
+</button>
 
-                  <button
-                    type="button"
-                    className="edit-btn"
-                    onClick={() => navigate(`/edit-item?id=${item.id}`)}
-                  >
-                    Edit
-                  </button>
+<button
+  type="button"
+  className="edit-btn"
+  onClick={() => navigate(`/edit-item?id=${item.id}`)}
+  disabled={isDeleteBusy()}
+>
+  Edit
+</button>
 
-                  <button
-                    type="button"
-                    className="delete-btn"
-                    onClick={() => handleDeleteItem(item)}
-                    disabled={deletingId === item.id}
-                  >
-                    {deletingId === item.id ? "Deleting..." : "Delete"}
-                  </button>
+<button
+  type="button"
+  className="delete-btn"
+  onClick={() => handleDeleteItem(item)}
+  disabled={isDeleteBusy()}
+>
+  {deletingId === item.id ? "Deleting..." : "Delete"}
+</button>
                 </div>
               </article>
             ))}
@@ -618,6 +759,18 @@ function ItemList() {
             ))}
           </div>
         )}
+        {hasMoreItems && (
+  <div className="inventory-load-more-row">
+    <button
+      type="button"
+      className="inventory-refresh-btn"
+      onClick={handleLoadMoreItems}
+      disabled={loadingMoreItems || isDeleteBusy()}
+    >
+      {loadingMoreItems ? "Loading..." : "Load More Items"}
+    </button>
+  </div>
+)}
       </section>
     </div>
   );
