@@ -936,3 +936,58 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================================
+   DASHBOARD BOSS FEEDBACK CLEANUP
+   Remove redundant labels/cards and reduce header height
+========================================================= */
+
+.dashboard-hero {
+  grid-template-columns: 1fr !important;
+  margin-bottom: 14px !important;
+}
+
+.dashboard-hero > div {
+  min-height: 112px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  padding: 18px 24px !important;
+}
+
+.dashboard-eyebrow {
+  display: none !important;
+}
+
+.dashboard-hero h1 {
+  margin: 0 !important;
+  font-size: clamp(1.75rem, 3.4vw, 2.55rem) !important;
+}
+
+.dashboard-hero p {
+  margin-top: 8px !important;
+  max-width: 820px !important;
+  line-height: 1.45 !important;
+}
+
+.dashboard-role-row {
+  display: none !important;
+}
+
+.dashboard-stats-grid {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .dashboard-hero > div {
+    min-height: auto !important;
+    padding: 16px !important;
+  }
+
+  .dashboard-hero h1 {
+    font-size: clamp(1.45rem, 7vw, 2rem) !important;
+  }
+
+  .dashboard-hero p {
+    font-size: 0.78rem !important;
+  }
+}

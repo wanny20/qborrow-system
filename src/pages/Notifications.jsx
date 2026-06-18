@@ -32,9 +32,10 @@ function Notifications() {
   const [visibleNotificationCount, setVisibleNotificationCount] = useState(
     NOTIFICATIONS_PAGE_SIZE
   );
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusType, setStatusType] = useState("");
-  const notificationActionLockRef = useRef("");
+const [statusMessage, setStatusMessage] = useState("");
+const [statusType, setStatusType] = useState("");
+const [selectedNotification, setSelectedNotification] = useState(null);
+const notificationActionLockRef = useRef("");
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -279,6 +280,94 @@ async function handleMarkAsRead(notification) {
   }
 }
 
+async function handleOpenNotification(notification) {
+  if (!currentUser) return;
+
+  setSelectedNotification(notification);
+
+  if (isNotificationRead(notification)) {
+    return;
+  }
+
+  const actionId = `open-${notification.id}`;
+  const started = startNotificationAction(actionId);
+
+  if (!started) return;
+
+  showStatus("", "");
+
+  try {
+    const notificationRef = doc(db, "notifications", notification.id);
+    const latestNotificationSnap = await getDoc(notificationRef);
+
+    if (!latestNotificationSnap.exists()) {
+      setSelectedNotification(null);
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.filter((item) => item.id !== notification.id)
+      );
+
+      showStatus("This notification no longer exists.", "error");
+      return;
+    }
+
+    if (notification.userId === currentUser.uid) {
+      await updateDoc(notificationRef, {
+        status: "Read",
+        readAt: serverTimestamp(),
+      });
+
+      const updatedNotification = {
+        ...notification,
+        status: "Read",
+      };
+
+      setSelectedNotification(updatedNotification);
+
+      setNotifications((previousNotifications) =>
+        previousNotifications.map((item) =>
+          item.id === notification.id ? { ...item, status: "Read" } : item
+        )
+      );
+
+      return;
+    }
+
+    await updateDoc(notificationRef, {
+      readBy: arrayUnion(currentUser.uid),
+      lastReadAt: serverTimestamp(),
+    });
+
+    const updatedReadBy = Array.isArray(notification.readBy)
+      ? [...new Set([...notification.readBy, currentUser.uid])]
+      : [currentUser.uid];
+
+    const updatedNotification = {
+      ...notification,
+      readBy: updatedReadBy,
+    };
+
+    setSelectedNotification(updatedNotification);
+
+    setNotifications((previousNotifications) =>
+      previousNotifications.map((item) =>
+        item.id === notification.id
+          ? {
+              ...item,
+              readBy: Array.isArray(item.readBy)
+                ? [...new Set([...item.readBy, currentUser.uid])]
+                : [currentUser.uid],
+            }
+          : item
+      )
+    );
+  } catch (error) {
+    showStatus("Error opening notification: " + error.message, "error");
+  } finally {
+    finishNotificationAction();
+  }
+}
+
 async function handleMarkAllAsRead() {
   if (!currentUser) return;
 
@@ -511,26 +600,24 @@ function handleLoadMoreNotifications() {
 
   return (
     <div className="notifications-page">
-      <section className="notifications-header">
-        <div>
-          <p className="qb-kicker">QBorrow Updates</p>
+<section className="notifications-header notifications-header-compact">
+  <div className="notifications-header-content">
+    <div className="notifications-header-text">
+      <p>
+        Track borrow request updates, approval results, release confirmations,
+        return confirmations, and admin alerts in one place.
+      </p>
+    </div>
 
-          <h1>Notifications</h1>
-
-          <p>
-            View request updates, approval results, release confirmations, return
-            confirmations, and admin alerts.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="notifications-secondary-btn"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
-      </section>
+    <button
+      type="button"
+      className="notifications-secondary-btn notifications-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -540,7 +627,94 @@ function handleLoadMoreNotifications() {
           {statusMessage}
         </div>
       )}
+{selectedNotification && (
+  <div
+    className="notifications-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setSelectedNotification(null)}
+  >
+    <section
+      className="notifications-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="notifications-modal-close"
+        onClick={() => setSelectedNotification(null)}
+        aria-label="Close notification details"
+      >
+        ×
+      </button>
 
+      <div className="notifications-modal-heading">
+        <span>{formatDate(selectedNotification)}</span>
+
+        <h2>{selectedNotification.title || "Untitled Notification"}</h2>
+
+        <strong
+          className={
+            isNotificationRead(selectedNotification) ? "read" : "unread"
+          }
+        >
+          {isNotificationRead(selectedNotification) ? "Read" : "Unread"}
+        </strong>
+      </div>
+
+      <p className="notifications-modal-message">
+        {selectedNotification.message || "No message provided."}
+      </p>
+
+      <div className="notifications-modal-grid">
+        <div>
+          <span>Target Role</span>
+          <strong>{selectedNotification.targetRole || "Not specified"}</strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>
+            {selectedNotification.categoryName ||
+              selectedNotification.categoryId ||
+              "Not specified"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Status</span>
+          <strong>
+            {isNotificationRead(selectedNotification) ? "Read" : "Unread"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Date Created</span>
+          <strong>{formatDate(selectedNotification)}</strong>
+        </div>
+      </div>
+
+      <div className="notifications-modal-actions">
+        {selectedNotification.link && (
+          <button
+            type="button"
+            className="notifications-primary-btn"
+            onClick={() => navigate(selectedNotification.link)}
+          >
+            Go to Related Page
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="notifications-secondary-btn"
+          onClick={() => setSelectedNotification(null)}
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
       <section className="notifications-summary-grid">
         <div>
           <span>Σ</span>
@@ -686,27 +860,14 @@ function handleLoadMoreNotifications() {
         </div>
 
         <div className="notification-actions">
-          {notification.link && (
 <button
   type="button"
-  className="notifications-secondary-btn"
-  onClick={() => navigate(notification.link)}
+  className="notifications-primary-btn"
+  onClick={() => handleOpenNotification(notification)}
   disabled={isNotificationActionBusy()}
 >
-  Open
+  {actionLoadingId === `open-${notification.id}` ? "Opening..." : "Open"}
 </button>
-          )}
-
-          {!read && (
-            <button
-              type="button"
-              className="notifications-primary-btn"
-              onClick={() => handleMarkAsRead(notification)}
-              disabled={isNotificationActionBusy()}
-            >
-              {actionLoadingId === notification.id ? "Marking..." : "Mark Read"}
-            </button>
-          )}
         </div>
       </article>
     );

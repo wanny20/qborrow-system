@@ -20,6 +20,8 @@ function Reports() {
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(
     REPORTS_HISTORY_PAGE_SIZE
   );
+  const [viewingHistoryRequest, setViewingHistoryRequest] = useState(null);
+  const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
@@ -468,32 +470,200 @@ return Object.values(categoryMap)
 
   return (
     <div className="reports-page">
-      <section className="reports-header">
+      {viewingHistoryRequest && (
+  <div
+    className="reports-history-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setViewingHistoryRequest(null)}
+  >
+    <section
+      className="reports-history-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="reports-history-modal-close"
+        onClick={() => setViewingHistoryRequest(null)}
+        aria-label="Close borrowing history details"
+      >
+        ×
+      </button>
+
+      <div className="reports-history-modal-heading">
+        <span>{viewingHistoryRequest.itemCode || viewingHistoryRequest.itemId || "No code"}</span>
+
+        <strong
+          className={`reports-status-pill status-${String(
+            getRequestStatusLabel(viewingHistoryRequest)
+          ).toLowerCase()}`}
+        >
+          {getRequestStatusLabel(viewingHistoryRequest)}
+        </strong>
+
+        <h2>{viewingHistoryRequest.itemName || "Untitled Item"}</h2>
+        <p>Complete borrowing record details.</p>
+      </div>
+
+      <div className="reports-history-modal-grid">
         <div>
-          <p className="qb-kicker">Admin Analytics</p>
-
-          <h1>Reports</h1>
-
-          <p>
-            Monitor inventory status, borrowing activity, overdue records,
-            damaged/lost items, and category-based performance.
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="reports-assigned-note">
-              Assigned categories: {getAssignedCategoryNames()}
-            </div>
-          )}
+          <span>Borrower</span>
+          <strong>{viewingHistoryRequest.borrowerName || "Unnamed Borrower"}</strong>
+          <p>{viewingHistoryRequest.borrowerEmail || "No email"}</p>
         </div>
 
+        <div>
+          <span>User Type</span>
+          <strong>{getBorrowerUserType(viewingHistoryRequest)}</strong>
+        </div>
+
+        <div>
+          <span>ID Number</span>
+          <strong>{getBorrowerIdNumber(viewingHistoryRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Course / Department</span>
+          <strong>{cleanDisplay(viewingHistoryRequest.borrowerCourseDepartment)}</strong>
+        </div>
+
+        <div>
+          <span>Year / Section</span>
+          <strong>{getBorrowerYearSection(viewingHistoryRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Mobile Number</span>
+          <strong>{cleanDisplay(viewingHistoryRequest.borrowerMobileNumber)}</strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>{getRequestCategoryName(viewingHistoryRequest)}</strong>
+        </div>
+
+        <div>
+          <span>Borrow Date</span>
+          <strong>{viewingHistoryRequest.borrowDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Expected Return</span>
+          <strong>{viewingHistoryRequest.expectedReturnDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Actual Return</span>
+          <strong>{viewingHistoryRequest.actualReturnDate || "Not returned"}</strong>
+        </div>
+
+        <div>
+          <span>Return Condition</span>
+          <strong>{viewingHistoryRequest.returnCondition || "N/A"}</strong>
+        </div>
+      </div>
+
+      <div className="reports-history-modal-purpose">
+        <span>Purpose</span>
+        <p>{viewingHistoryRequest.purpose || "No purpose provided."}</p>
+      </div>
+
+      <div className="reports-history-modal-actions">
         <button
           type="button"
           className="reports-secondary-btn"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => setViewingHistoryRequest(null)}
         >
-          Back to Dashboard
+          Close
         </button>
-      </section>
+      </div>
+    </section>
+  </div>
+)}
+{viewingDamagedItem && (
+  <div
+    className="reports-damaged-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setViewingDamagedItem(null)}
+  >
+    <section
+      className="reports-damaged-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="reports-damaged-modal-close"
+        onClick={() => setViewingDamagedItem(null)}
+        aria-label="Close damaged item details"
+      >
+        ×
+      </button>
+
+      <div className="reports-damaged-modal-heading">
+        <span>{viewingDamagedItem.itemCode || viewingDamagedItem.id}</span>
+        <h2>{viewingDamagedItem.itemName || "Untitled Item"}</h2>
+        <p>Complete damaged or lost item information.</p>
+      </div>
+
+      <div className="reports-damaged-modal-grid">
+        <div>
+          <span>Category</span>
+          <strong>{getItemCategoryName(viewingDamagedItem)}</strong>
+        </div>
+
+        <div>
+          <span>Availability</span>
+          <strong>{viewingDamagedItem.availability || "N/A"}</strong>
+        </div>
+
+        <div>
+          <span>Condition</span>
+          <strong>{viewingDamagedItem.condition || viewingDamagedItem.availability || "N/A"}</strong>
+        </div>
+
+        <div>
+          <span>Item ID</span>
+          <strong>{viewingDamagedItem.id}</strong>
+        </div>
+      </div>
+
+      <div className="reports-damaged-modal-actions">
+        <button
+          type="button"
+          className="reports-secondary-btn"
+          onClick={() => setViewingDamagedItem(null)}
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
+ <section className="reports-header reports-header-compact">
+  <div className="reports-header-content">
+    <div className="reports-header-text">
+      <p>
+        Monitor inventory status, borrowing activity, overdue records,
+        damaged/lost items, and category-based performance.
+      </p>
+
+      {isCategoryAdmin && (
+        <div className="reports-assigned-note">
+          Assigned categories: {getAssignedCategoryNames()}
+        </div>
+      )}
+    </div>
+
+    <button
+      type="button"
+      className="reports-secondary-btn reports-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       <section className="reports-summary-grid">
         <div>
@@ -750,69 +920,66 @@ return Object.values(categoryMap)
         ) : (
 
           <>
-            <div className="reports-history-list">
-              {displayedHistory.map((request) => (
-              <article className="reports-history-row" key={request.id}>
-                <div className="reports-history-main">
-                  <div className="reports-history-titleline">
-                    <div>
-                      <span className="reports-row-code">
-                        {request.itemCode || request.itemId || "No code"}
-                      </span>
+<div className="reports-history-table-header">
+  <span>Item</span>
+  <span>Borrower</span>
+  <span>Category</span>
+  <span>Borrow</span>
+  <span>Expected</span>
+  <span>Status</span>
+  <span>Action</span>
+</div>
 
-                      <h3>{request.itemName || "Untitled Item"}</h3>
-                    </div>
+<div className="reports-history-table-grid">
+  {displayedHistory.map((request) => (
+    <article className="reports-history-table-row" key={request.id}>
+      <div className="reports-history-table-cell reports-history-item-cell">
+        <span>{request.itemCode || request.itemId || "No code"}</span>
+        <strong>{request.itemName || "Untitled Item"}</strong>
+      </div>
 
-                    <strong
-                      className={`reports-status-pill status-${String(
-                        getRequestStatusLabel(request)
-                      ).toLowerCase()}`}
-                    >
-                      {getRequestStatusLabel(request)}
-                    </strong>
-                  </div>
+      <div className="reports-history-table-cell reports-history-borrower-cell">
+        <span>{request.borrowerEmail || "No email"}</span>
+        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+      </div>
 
-                  <div className="reports-history-subline">
-                    <span>{request.borrowerName || "Unnamed Borrower"}</span>
-                    <span>{request.borrowerEmail || "No email"}</span>
-                    <span>{getBorrowerUserType(request)}</span>
-                    <span>{getBorrowerIdNumber(request)}</span>
-                    <span>{cleanDisplay(request.borrowerCourseDepartment)}</span>
-                    <span>{getBorrowerYearSection(request)}</span>
-                    <span>{cleanDisplay(request.borrowerMobileNumber)}</span>
-                    <span>{getRequestCategoryName(request)}</span>
-                  </div>
-                </div>
+      <div className="reports-history-table-cell">
+        <span>Category</span>
+        <strong>{getRequestCategoryName(request)}</strong>
+      </div>
 
-                <div className="reports-history-date-list">
-                  <div>
-                    <span>Borrow</span>
-                    <strong>{request.borrowDate || "Not set"}</strong>
-                  </div>
+      <div className="reports-history-table-cell">
+        <span>Borrow</span>
+        <strong>{request.borrowDate || "Not set"}</strong>
+      </div>
 
-                  <div>
-                    <span>Expected</span>
-                    <strong>{request.expectedReturnDate || "Not set"}</strong>
-                  </div>
+      <div className="reports-history-table-cell">
+        <span>Expected</span>
+        <strong>{request.expectedReturnDate || "Not set"}</strong>
+      </div>
 
-                  <div>
-                    <span>Actual</span>
-                    <strong>{request.actualReturnDate || "Not returned"}</strong>
-                  </div>
+      <div className="reports-history-table-status">
+        <strong
+          className={`reports-status-pill status-${String(
+            getRequestStatusLabel(request)
+          ).toLowerCase()}`}
+        >
+          {getRequestStatusLabel(request)}
+        </strong>
+      </div>
 
-                  <div>
-                    <span>Condition</span>
-                    <strong>{request.returnCondition || "N/A"}</strong>
-                  </div>
-                </div>
-
-                <div className="reports-history-purpose-list">
-                  <span>Purpose</span>
-                  <p>{request.purpose || "No purpose provided."}</p>
-                </div>
-              </article>
-            ))}
-            </div>
+      <div className="reports-history-table-actions">
+        <button
+          type="button"
+          className="reports-secondary-btn"
+          onClick={() => setViewingHistoryRequest(request)}
+        >
+          Details
+        </button>
+      </div>
+    </article>
+  ))}
+</div>
 
             {hasMoreHistory && (
               <div className="reports-load-more-row">
@@ -843,37 +1010,54 @@ return Object.values(categoryMap)
             <h2>No damaged or lost items</h2>
             <p>Your visible inventory has no damaged or lost records.</p>
           </div>
-        ) : (
-          <div className="reports-damaged-list">
-            {damagedLostItems.map((item) => (
-              <article className="reports-damaged-row" key={item.id}>
-                <div className="reports-damaged-main">
-                  <span className="reports-row-code">
-                    {item.itemCode || item.id}
-                  </span>
+) : (
+  <>
+    <div className="reports-damaged-table-header">
+      <span>Item</span>
+      <span>Category</span>
+      <span>Availability</span>
+      <span>Condition</span>
+      <span>Action</span>
+    </div>
 
-                  <h3>{item.itemName || "Untitled Item"}</h3>
-
-                  <p>{getItemCategoryName(item)}</p>
-                </div>
-
-                <div className="reports-damaged-meta">
-                  <div>
-                    <span>Availability</span>
-                    <strong>{item.availability || "N/A"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Condition</span>
-                    <strong className="reports-damage-pill">
-                      {item.condition || item.availability || "N/A"}
-                    </strong>
-                  </div>
-                </div>
-              </article>
-            ))}
+    <div className="reports-damaged-table-grid">
+      {damagedLostItems.map((item) => (
+        <article className="reports-damaged-table-row" key={item.id}>
+          <div className="reports-damaged-table-cell reports-damaged-item-cell">
+            <span>{item.itemCode || item.id}</span>
+            <strong>{item.itemName || "Untitled Item"}</strong>
           </div>
-        )}
+
+          <div className="reports-damaged-table-cell">
+            <span>Category</span>
+            <strong>{getItemCategoryName(item)}</strong>
+          </div>
+
+          <div className="reports-damaged-table-cell">
+            <span>Availability</span>
+            <strong>{item.availability || "N/A"}</strong>
+          </div>
+
+          <div className="reports-damaged-table-status">
+            <strong className="reports-damage-pill">
+              {item.condition || item.availability || "N/A"}
+            </strong>
+          </div>
+
+          <div className="reports-damaged-table-actions">
+            <button
+              type="button"
+              className="reports-secondary-btn"
+              onClick={() => setViewingDamagedItem(item)}
+            >
+              Details
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+  </>
+)}
       </section>
     </div>
   );

@@ -285,6 +285,12 @@ async function handleDeleteItem(item) {
   }, [searchParams]);
 
   useEffect(() => {
+  if (isCategoryAdmin) {
+    setCategoryFilter("All");
+  }
+}, [isCategoryAdmin, userData?.assignedCategories?.join("|")]);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         navigate("/login");
@@ -459,37 +465,43 @@ async function handleDeleteItem(item) {
 
   return (
     <div className="inventory-page">
-      <section className={`inventory-header-row ${isAdmin ? "has-actions" : ""}`}>
-        <div className="inventory-title-area">
-          <p className="qb-kicker">Item Inventory</p>
+<section className="inventory-header-row inventory-header-compact">
+  <div className="inventory-title-area inventory-title-area-compact">
+    <div className="inventory-header-text">
+      <p>
+        {isBorrower
+          ? "Browse available items and submit borrow requests."
+          : "View and manage inventory records based on your assigned permissions."}
+      </p>
 
-          <h1>{isBorrower ? "Available Items" : "Manage Items"}</h1>
-
-          <p>
-            {isBorrower
-              ? "Browse available items and submit borrow requests."
-              : "View and manage inventory records based on your assigned permissions."}
-          </p>
-
-          {isCategoryAdmin && (
-            <div className="inventory-assigned-note">
-              Assigned categories: {getAssignedCategoryNames()}
-            </div>
-          )}
+      {isCategoryAdmin && (
+        <div className="inventory-assigned-note">
+          Assigned categories: {getAssignedCategoryNames()}
         </div>
+      )}
+    </div>
 
-        {isAdmin && (
-          <div className="inventory-header-actions">
-            <button
-              type="button"
-              className="inventory-add-btn"
-              onClick={() => navigate("/add-item")}
-            >
-              + Add Item
-            </button>
-          </div>
-        )}
-      </section>
+    <div className="inventory-header-actions inventory-header-actions-compact">
+      {isAdmin && (
+        <button
+          type="button"
+          className="inventory-add-btn inventory-header-action-btn"
+          onClick={() => navigate("/add-item")}
+        >
+          + Add Item
+        </button>
+      )}
+
+      <button
+        type="button"
+        className="inventory-refresh-btn inventory-header-action-btn"
+        onClick={() => navigate("/dashboard")}
+      >
+        Back to Dashboard
+      </button>
+    </div>
+  </div>
+</section>
 
       <section className="inventory-tools">
         <div className="inventory-search">
@@ -527,24 +539,35 @@ async function handleDeleteItem(item) {
           </select>
         </div>
 
-        <div className="inventory-filter">
-          <label className="qb-label" htmlFor="category-filter">
-            Category
-          </label>
+  {isCategoryAdmin ? (
+  <div className="inventory-filter">
+    <label className="qb-label">Category</label>
 
-          <select
-            id="category-filter"
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-          >
-            <option value="All">All Categories</option>
-            {availableCategories.map((category) => (
-              <option key={category.value} value={category.value}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="inventory-fixed-category-card">
+      <span>Fixed Assigned Category</span>
+      <strong>{getAssignedCategoryNames()}</strong>
+    </div>
+  </div>
+) : (
+  <div className="inventory-filter">
+    <label className="qb-label" htmlFor="category-filter">
+      Category
+    </label>
+
+    <select
+      id="category-filter"
+      value={categoryFilter}
+      onChange={(event) => setCategoryFilter(event.target.value)}
+    >
+      <option value="All">All Categories</option>
+      {availableCategories.map((category) => (
+        <option key={category.value} value={category.value}>
+          {category.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
       </section>
 
       <section className="inventory-summary">

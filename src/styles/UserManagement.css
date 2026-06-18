@@ -2254,3 +2254,1773 @@
     grid-template-columns: 1fr !important;
   }
 }
+/* =========================
+   USER MANAGEMENT FIELD VALIDATION
+========================= */
+
+.required-star {
+  color: #dc2626;
+  margin-left: 4px;
+  font-weight: 900;
+}
+
+.field-error-message {
+  margin: 7px 0 0;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.user-field input.input-error,
+.user-field select.input-error,
+.user-field textarea.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 3px 3px 0 0 rgba(239, 68, 68, 0.25) !important;
+}
+
+.user-field input:disabled,
+.user-field select:disabled,
+.user-field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+} 
+/* =========================================================
+   USER MANAGEMENT SUB-MODULE MODAL REDESIGN
+   Boss feedback: Add User, Categories, Import as modal tools
+========================================================= */
+
+.user-module-launcher {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.user-module-card {
+  min-height: 96px;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 4px 4px 0 0 var(--qb-border);
+  color: var(--qb-foreground);
+  padding: 14px;
+  text-align: left;
+  transition:
+    transform 180ms var(--qb-ease-bounce),
+    box-shadow 180ms var(--qb-ease-bounce),
+    background 180ms ease;
+}
+
+.user-module-card:hover {
+  background: var(--qb-bg);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 var(--qb-border);
+}
+
+.user-module-card-primary {
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(251, 191, 36, 0.16)),
+    #ffffff;
+}
+
+.user-module-card > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: var(--qb-tertiary);
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  font-family: var(--qb-heading-font);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.user-module-card strong {
+  display: block;
+  font-family: var(--qb-heading-font);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.user-module-card p {
+  margin: 4px 0 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.user-management-layout {
+  display: block !important;
+}
+
+.user-left-stack {
+  display: contents !important;
+}
+
+/* Hide the old always-visible tool cards */
+.user-tool-modal-card {
+  display: none !important;
+}
+
+/* Modal overlay using the active card itself */
+.user-tool-modal-card.user-tool-active {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 200 !important;
+  display: block !important;
+  width: min(980px, calc(100vw - 32px)) !important;
+  max-height: calc(100dvh - 36px) !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 0 0 9999px rgba(15, 23, 42, 0.42),
+    8px 8px 0 0 var(--qb-border) !important;
+  padding: 22px !important;
+}
+
+.user-modal-close-btn {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  float: right;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: var(--qb-secondary);
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.user-modal-close-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--qb-border);
+}
+
+.user-tool-modal-card .user-section-heading {
+  padding-right: 48px;
+}
+
+/* Make modal forms more spacious but still compact */
+.user-tool-active form {
+  max-width: 100%;
+}
+
+.user-tool-active .user-field input,
+.user-tool-active .user-field select {
+  min-height: 42px !important;
+}
+
+/* Import instruction card */
+.user-import-instructions {
+  border: 2px dashed var(--qb-border);
+  border-radius: 18px;
+  background: var(--qb-bg);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.user-import-instructions strong {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.user-import-instructions ol {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.user-csv-template {
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.user-csv-template strong {
+  display: block;
+  margin-bottom: 5px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.user-csv-template span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+/* Keep list below launcher full width */
+.user-list-card {
+  margin-top: 0 !important;
+}
+
+/* Mobile */
+@media (max-width: 860px) {
+  .user-module-launcher {
+    grid-template-columns: 1fr;
+  }
+
+  .user-tool-modal-card.user-tool-active {
+    width: calc(100vw - 18px) !important;
+    max-height: calc(100dvh - 18px) !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT TABLE MODE + VIEW DETAILS MODAL
+   Boss feedback: compact existing users, full details on View
+========================================================= */
+
+.user-table-header {
+  display: grid !important;
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(180px, 1.25fr)
+    minmax(110px, 0.8fr)
+    minmax(140px, 0.9fr)
+    minmax(100px, 0.75fr)
+    minmax(90px, 0.7fr)
+    minmax(240px, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 18px 18px 10px 10px;
+  background: var(--qb-bg);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
+.user-table-header span {
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-table-grid {
+  gap: 8px !important;
+}
+
+.user-table-grid .user-card {
+  display: grid !important;
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(180px, 1.25fr)
+    minmax(110px, 0.8fr)
+    minmax(140px, 0.9fr)
+    minmax(100px, 0.75fr)
+    minmax(90px, 0.7fr)
+    minmax(240px, 1fr) !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 10px !important;
+  align-items: center !important;
+  min-height: 74px !important;
+  padding: 10px 14px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 3px 3px 0 0 rgba(30, 41, 59, 0.12) !important;
+}
+
+.user-table-grid .user-card::after {
+  display: none !important;
+}
+
+.user-table-grid .user-card h3 {
+  grid-area: name !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  line-height: 1.15 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.user-table-grid .user-card-topline {
+  grid-area: identity !important;
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+.user-table-grid .user-card-topline > span {
+  max-width: 100% !important;
+  font-size: 0.6rem !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-table-grid .user-card-topline strong {
+  width: fit-content !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 0.52rem !important;
+}
+
+/* Hide full details from table row */
+.user-table-grid .user-info-grid,
+.user-table-grid .user-suspension-note {
+  display: none !important;
+}
+
+.user-table-cells {
+  display: contents !important;
+}
+
+.user-table-cell {
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.user-table-contact {
+  grid-area: contact !important;
+}
+
+.user-table-category {
+  grid-area: category !important;
+}
+
+.user-table-created {
+  grid-area: created !important;
+}
+
+.user-table-status {
+  grid-area: status !important;
+}
+
+.user-table-cell span {
+  display: none !important;
+}
+
+.user-table-cell strong {
+  display: block !important;
+  max-width: 100% !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.76rem !important;
+  font-weight: 850 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-table-grid .user-actions {
+  grid-area: actions !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  align-self: center !important;
+}
+
+.user-table-grid .user-actions button {
+  min-height: 30px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  font-size: 0.5rem !important;
+  line-height: 1.05 !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.user-view-btn {
+  min-height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: var(--qb-accent) !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  color: #ffffff !important;
+  padding: 0 8px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.user-card-editing {
+  grid-template-areas:
+    "name identity contact category created status actions"
+    "edit edit edit edit edit edit edit" !important;
+}
+
+.user-card-editing .user-edit-panel {
+  grid-area: edit !important;
+  display: block !important;
+  margin-top: 10px !important;
+}
+
+/* View Details Modal */
+
+.user-view-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 18px;
+}
+
+.user-view-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  border: 2px solid var(--qb-border);
+  border-radius: 26px;
+  background: #ffffff;
+  box-shadow: 8px 8px 0 0 var(--qb-border);
+  padding: 22px;
+}
+
+.user-view-role-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.user-view-role-row strong,
+.user-view-role-row span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  padding: 0 12px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.user-view-role-row span {
+  background: var(--qb-bg);
+}
+
+.user-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.user-view-grid div,
+.user-view-note {
+  min-width: 0;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 10px 12px;
+}
+
+.user-view-grid span,
+.user-view-note span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.user-view-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.86rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.user-view-note {
+  margin-top: 10px;
+  background: rgba(244, 114, 182, 0.12);
+}
+
+.user-view-note p {
+  margin: 5px 0 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.user-view-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* Responsive table */
+@media (max-width: 1250px) {
+  .user-table-header {
+    display: none !important;
+  }
+
+  .user-table-grid .user-card,
+  .user-card-editing {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "name"
+      "identity"
+      "contact"
+      "category"
+      "created"
+      "status"
+      "actions"
+      "edit" !important;
+  }
+
+  .user-table-cell {
+    display: grid !important;
+    grid-template-columns: 110px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    align-items: center !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    padding: 8px 10px !important;
+  }
+
+  .user-table-cell span {
+    display: block !important;
+    color: var(--qb-muted-foreground) !important;
+    font-family: var(--qb-heading-font) !important;
+    font-size: 0.56rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+  }
+
+  .user-table-cell strong {
+    white-space: normal !important;
+  }
+
+  .user-table-grid .user-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .user-view-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-view-modal {
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .user-table-grid .user-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   HIDE OLD USER TOOL CARDS FROM MAIN SCREEN
+   Only show Create User / Categories / Import as modals
+========================================================= */
+
+.user-left-stack {
+  display: contents !important;
+}
+
+/* Hide Create User, Categories, and Import Borrowers cards by default */
+.user-left-stack .user-tool-modal-card {
+  display: none !important;
+}
+
+/* Show only the selected tool as modal */
+.user-left-stack .user-tool-modal-card.user-tool-active {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 300 !important;
+  display: block !important;
+  width: min(980px, calc(100vw - 32px)) !important;
+  max-height: calc(100dvh - 36px) !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 26px !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 0 0 9999px rgba(15, 23, 42, 0.42),
+    8px 8px 0 0 var(--qb-border) !important;
+  padding: 22px !important;
+}
+
+/* Keep existing users visible normally */
+.user-list-card {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Mobile modal size */
+@media (max-width: 860px) {
+  .user-left-stack .user-tool-modal-card.user-tool-active {
+    width: calc(100vw - 18px) !important;
+    max-height: calc(100dvh - 18px) !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT EXTRA COMPACT TABLE FIX
+   Make existing users fit better on screen
+========================================================= */
+
+.user-list-card {
+  padding: 16px !important;
+  overflow-x: hidden !important;
+}
+
+.user-tools {
+  grid-template-columns: minmax(0, 1fr) 210px 120px !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.user-tools input,
+.user-tools select {
+  min-height: 40px !important;
+  font-size: 0.78rem !important;
+}
+
+.user-table-header {
+  grid-template-columns:
+    minmax(130px, 1fr)
+    minmax(170px, 1.15fr)
+    80px
+    minmax(100px, 0.8fr)
+    82px
+    70px
+    170px !important;
+  gap: 8px !important;
+  padding: 9px 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 14px !important;
+}
+
+.user-table-header span {
+  font-size: 0.56rem !important;
+}
+
+.user-table-grid {
+  gap: 7px !important;
+}
+
+.user-table-grid .user-card {
+  grid-template-columns:
+    minmax(130px, 1fr)
+    minmax(170px, 1.15fr)
+    80px
+    minmax(100px, 0.8fr)
+    82px
+    70px
+    170px !important;
+  gap: 8px !important;
+  min-height: 58px !important;
+  padding: 8px 12px !important;
+  border-radius: 13px !important;
+}
+
+.user-table-grid .user-card h3 {
+  font-size: 0.78rem !important;
+  line-height: 1.1 !important;
+}
+
+.user-table-grid .user-card-topline {
+  gap: 3px !important;
+}
+
+.user-table-grid .user-card-topline > span {
+  font-size: 0.55rem !important;
+}
+
+.user-table-grid .user-card-topline strong {
+  min-height: 19px !important;
+  padding: 0 7px !important;
+  font-size: 0.46rem !important;
+}
+
+.user-table-cell strong {
+  font-size: 0.68rem !important;
+  line-height: 1.1 !important;
+}
+
+.user-table-grid .user-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+}
+
+.user-table-grid .user-actions button,
+.user-table-grid .user-view-btn {
+  min-height: 24px !important;
+  height: 24px !important;
+  padding: 0 5px !important;
+  border-width: 2px !important;
+  border-radius: 999px !important;
+  box-shadow: 1.5px 1.5px 0 0 var(--qb-border) !important;
+  font-size: 0.42rem !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  overflow: hidden !important;
+}
+
+/* Make edit panel still readable when opened */
+.user-card-editing {
+  min-height: auto !important;
+  align-items: start !important;
+}
+
+.user-card-editing .user-edit-panel {
+  margin-top: 8px !important;
+  padding: 10px !important;
+}
+
+/* Medium screens: allow horizontal scroll only inside the user list */
+@media (max-width: 1350px) {
+  .user-list-card {
+    overflow-x: auto !important;
+  }
+
+  .user-table-header,
+  .user-table-grid .user-card {
+    min-width: 980px !important;
+  }
+}
+
+/* Smaller screens: stack again */
+@media (max-width: 900px) {
+  .user-list-card {
+    overflow-x: hidden !important;
+  }
+
+  .user-table-header {
+    display: none !important;
+  }
+
+  .user-table-grid .user-card {
+    min-width: 0 !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "name"
+      "identity"
+      "contact"
+      "category"
+      "created"
+      "status"
+      "actions"
+      "edit" !important;
+    min-height: auto !important;
+    padding: 12px !important;
+  }
+
+  .user-table-grid .user-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+/* =========================================================
+   FINAL USER TABLE ACTION FIT FIX
+   Prevent action buttons from being cut off
+========================================================= */
+
+.user-list-card {
+  overflow-x: hidden !important;
+}
+
+.user-table-header {
+  grid-template-columns:
+    minmax(120px, 1fr)
+    minmax(160px, 1.1fr)
+    70px
+    minmax(90px, 0.75fr)
+    80px
+    68px
+    150px !important;
+}
+
+.user-table-grid .user-card {
+  grid-template-columns:
+    minmax(120px, 1fr)
+    minmax(160px, 1.1fr)
+    70px
+    minmax(90px, 0.75fr)
+    80px
+    68px
+    150px !important;
+  min-height: 54px !important;
+  padding: 7px 10px !important;
+}
+
+.user-table-grid .user-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 3px !important;
+  width: 150px !important;
+  max-width: 150px !important;
+  overflow: hidden !important;
+}
+
+.user-table-grid .user-actions button,
+.user-table-grid .user-view-btn {
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  padding: 0 4px !important;
+  border-radius: 999px !important;
+  font-size: 0.39rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+
+.user-table-grid .user-card h3 {
+  font-size: 0.74rem !important;
+}
+
+.user-table-grid .user-card-topline > span {
+  font-size: 0.52rem !important;
+}
+
+.user-table-grid .user-card-topline strong {
+  font-size: 0.43rem !important;
+}
+
+.user-table-cell strong {
+  font-size: 0.64rem !important;
+}
+
+/* Hide disabled delete button visual bulk for super admin/self account */
+.user-table-grid .user-delete-btn:disabled {
+  opacity: 0.45 !important;
+}
+
+/* On smaller laptop widths, allow clean horizontal scroll inside table only */
+@media (max-width: 1280px) {
+  .user-list-card {
+    overflow-x: auto !important;
+  }
+
+  .user-table-header,
+  .user-table-grid .user-card {
+    min-width: 920px !important;
+  }
+}
+/* =========================================================
+   USER EDIT MODAL FIX
+   Edit existing account should open as popup, not row expansion
+========================================================= */
+
+.user-edit-modal {
+  width: min(820px, 100%) !important;
+}
+
+.user-edit-panel-modal {
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.user-edit-panel-modal .user-borrower-details-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.user-edit-modal-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.user-edit-modal-actions button {
+  min-width: 150px !important;
+}
+
+@media (max-width: 680px) {
+  .user-edit-panel-modal .user-borrower-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-edit-modal-actions {
+    flex-direction: column-reverse !important;
+  }
+
+  .user-edit-modal-actions button {
+    width: 100% !important;
+  }
+}
+/* =========================================================
+   CATEGORY MODAL TABLE DESIGN
+   Boss feedback: category list should be table form
+========================================================= */
+
+.user-category-table-wrap {
+  width: 100% !important;
+  max-height: 340px !important;
+  overflow: auto !important;
+  margin-top: 12px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+}
+
+.user-category-table {
+  width: 100% !important;
+  min-width: 760px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.user-category-table thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  background: var(--qb-bg) !important;
+}
+
+.user-category-table th {
+  padding: 12px 14px !important;
+  border-bottom: 2px solid var(--qb-border) !important;
+  color: var(--qb-muted-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-align: left !important;
+  text-transform: uppercase !important;
+}
+
+.user-category-table td {
+  padding: 11px 14px !important;
+  border-bottom: 1.5px solid rgba(30, 41, 59, 0.14) !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.8rem !important;
+  font-weight: 850 !important;
+  vertical-align: middle !important;
+}
+
+.user-category-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.user-category-table tbody tr:hover {
+  background: rgba(251, 191, 36, 0.08) !important;
+}
+
+.user-category-table td:first-child strong {
+  display: block !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.9rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.user-category-table td:first-child span {
+  display: block !important;
+  margin-top: 3px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  word-break: break-word !important;
+}
+
+.user-category-status {
+  min-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  padding: 0 10px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.54rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.user-category-status.deletable {
+  background: #d1fae5 !important;
+}
+
+.user-category-status.locked {
+  background: #fef3c7 !important;
+}
+
+.user-category-table td:last-child {
+  width: 120px !important;
+}
+
+.user-category-table td:last-child button {
+  width: 100% !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 0.56rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+/* Hide old category card layout if old CSS still tries to style it */
+.user-category-list,
+.user-category-row,
+.user-category-row-main,
+.user-category-counts {
+  all: unset;
+}
+
+/* Mobile: allow table to scroll horizontally inside modal */
+@media (max-width: 860px) {
+  .user-category-table-wrap {
+    max-height: 300px !important;
+  }
+
+  .user-category-table {
+    min-width: 700px !important;
+  }
+
+  .user-category-table th,
+  .user-category-table td {
+    padding: 10px !important;
+  }
+}
+/* =========================================================
+   FORCE FIX CATEGORY TABLE INSIDE MODAL
+   Fix broken spacing/unstyled table caused by old CSS overrides
+========================================================= */
+
+.user-tool-active .user-category-table-wrap {
+  display: block !important;
+  width: 100% !important;
+  max-height: 340px !important;
+  overflow: auto !important;
+  margin-top: 12px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+}
+
+.user-tool-active .user-category-table {
+  width: 100% !important;
+  min-width: 820px !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: #ffffff !important;
+}
+
+.user-tool-active .user-category-table thead {
+  background: var(--qb-bg) !important;
+}
+
+.user-tool-active .user-category-table th,
+.user-tool-active .user-category-table td {
+  border: 0 !important;
+  border-bottom: 2px solid rgba(30, 41, 59, 0.14) !important;
+  padding: 11px 12px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  white-space: normal !important;
+}
+
+.user-tool-active .user-category-table th {
+  color: var(--qb-muted-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.user-tool-active .user-category-table td {
+  color: var(--qb-foreground) !important;
+  font-size: 0.82rem !important;
+  font-weight: 850 !important;
+}
+
+.user-tool-active .user-category-table th:nth-child(1),
+.user-tool-active .user-category-table td:nth-child(1) {
+  width: 34% !important;
+}
+
+.user-tool-active .user-category-table th:nth-child(2),
+.user-tool-active .user-category-table td:nth-child(2),
+.user-tool-active .user-category-table th:nth-child(3),
+.user-tool-active .user-category-table td:nth-child(3),
+.user-tool-active .user-category-table th:nth-child(4),
+.user-tool-active .user-category-table td:nth-child(4) {
+  width: 10% !important;
+  text-align: center !important;
+}
+
+.user-tool-active .user-category-table th:nth-child(5),
+.user-tool-active .user-category-table td:nth-child(5) {
+  width: 16% !important;
+  text-align: center !important;
+}
+
+.user-tool-active .user-category-table th:nth-child(6),
+.user-tool-active .user-category-table td:nth-child(6) {
+  width: 20% !important;
+  text-align: center !important;
+}
+
+.user-tool-active .user-category-table td:first-child strong {
+  display: block !important;
+  margin: 0 !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.9rem !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+}
+
+.user-tool-active .user-category-table td:first-child span {
+  display: block !important;
+  margin-top: 4px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.62rem !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  word-break: break-word !important;
+}
+
+.user-tool-active .user-category-status {
+  min-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  padding: 0 10px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.54rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.user-tool-active .user-category-status.deletable {
+  background: #d1fae5 !important;
+}
+
+.user-tool-active .user-category-status.locked {
+  background: #fef3c7 !important;
+}
+
+.user-tool-active .user-category-table td:last-child button {
+  width: 100% !important;
+  max-width: 110px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 0.56rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.user-tool-active .user-category-table tbody tr:hover {
+  background: rgba(251, 191, 36, 0.08) !important;
+}
+
+.user-tool-active .user-category-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+/* =========================================================
+   USER TOOL MODAL CLICK BLOCKER FIX
+   Prevent clicking logout/topbar/sidebar while modal is open
+========================================================= */
+
+.user-management-page:has(.user-tool-active)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(4px);
+  pointer-events: auto;
+}
+
+/* Put the active modal above the blocker */
+.user-left-stack .user-tool-modal-card.user-tool-active {
+  z-index: 9999 !important;
+  box-shadow: 8px 8px 0 0 var(--qb-border) !important;
+}
+
+/* Make sure modal contents are clickable */
+.user-left-stack .user-tool-modal-card.user-tool-active * {
+  pointer-events: auto;
+}
+/* =========================================================
+   IMPORT BORROWERS MODAL POLISH
+   Cleaner instructions, header guide, and upload area
+========================================================= */
+
+.user-import-polish-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+}
+
+.user-import-guide-card {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 18px !important;
+  background: var(--qb-bg) !important;
+  padding: 12px !important;
+}
+
+.user-import-guide-card:first-child {
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(251, 191, 36, 0.14)),
+    #ffffff !important;
+}
+
+.user-import-guide-icon {
+  width: 36px !important;
+  height: 36px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: var(--qb-tertiary) !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+}
+
+.user-import-guide-card strong {
+  display: block !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.92rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.user-import-guide-card p {
+  margin: 4px 0 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750 !important;
+  line-height: 1.4 !important;
+}
+
+.user-import-guide-card .user-secondary-btn {
+  min-height: 36px !important;
+  align-self: center !important;
+  white-space: nowrap !important;
+}
+
+.user-csv-format-panel,
+.user-upload-panel {
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 20px !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 0 rgba(30, 41, 59, 0.12) !important;
+  padding: 14px !important;
+  margin-bottom: 14px !important;
+}
+
+.user-csv-format-panel > div:first-child strong,
+.user-upload-panel-heading strong,
+.user-import-notes strong {
+  display: block !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.92rem !important;
+  font-weight: 900 !important;
+}
+
+.user-csv-format-panel > div:first-child p,
+.user-upload-panel-heading p {
+  margin: 4px 0 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.74rem !important;
+  font-weight: 750 !important;
+}
+
+.user-csv-header-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  margin-top: 12px !important;
+}
+
+.user-csv-header-grid span {
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: var(--qb-bg) !important;
+  padding: 0 10px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.58rem !important;
+  font-weight: 900 !important;
+}
+
+.user-import-notes {
+  margin-top: 12px !important;
+  border: 2px dashed var(--qb-border) !important;
+  border-radius: 16px !important;
+  background: rgba(251, 191, 36, 0.1) !important;
+  padding: 10px 12px !important;
+}
+
+.user-import-notes ul {
+  margin: 8px 0 0 !important;
+  padding-left: 18px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.74rem !important;
+  font-weight: 750 !important;
+  line-height: 1.5 !important;
+}
+
+.user-upload-panel-heading {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.user-upload-panel-heading > span {
+  min-height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: #d1fae5 !important;
+  padding: 0 10px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.58rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.user-upload-panel .user-field {
+  margin-bottom: 10px !important;
+}
+
+.user-upload-panel input[type="file"] {
+  min-height: 46px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 13px !important;
+}
+
+.user-upload-panel .user-csv-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 120px !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+@media (max-width: 1080px) {
+  .user-import-polish-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-import-guide-card:first-child {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .user-import-guide-card .user-secondary-btn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .user-upload-panel-heading {
+    flex-direction: column !important;
+  }
+
+  .user-upload-panel .user-csv-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   IMPORT BORROWERS CARD LAYOUT FIX
+   Prevent first instruction card from squeezing text
+========================================================= */
+
+.user-import-polish-grid {
+  align-items: stretch !important;
+}
+
+.user-import-guide-card {
+  min-height: 150px !important;
+  align-content: start !important;
+}
+
+.user-import-guide-card:first-child {
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+}
+
+.user-import-guide-card:first-child .user-secondary-btn {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+}
+
+.user-import-guide-card p {
+  max-width: none !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.user-import-guide-card strong {
+  line-height: 1.15 !important;
+}
+
+@media (min-width: 1081px) {
+  .user-import-guide-card:first-child .user-secondary-btn {
+    justify-self: stretch !important;
+  }
+}
+/* =========================================================
+   FINAL USER MANAGEMENT COMPACT PAGE FIX
+   Header + summary + module cards cleanup
+========================================================= */
+
+.user-management-page {
+  gap: 14px !important;
+}
+
+/* Compact header */
+
+.user-management-header-compact {
+  display: block !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+}
+
+.user-management-header-compact > div,
+.user-management-header-compact > .user-management-header-content {
+  min-height: 108px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 20px 24px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.16)),
+    #ffffff !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.user-management-header-compact > div::after,
+.user-management-header-compact > .user-management-header-content::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 78px !important;
+  height: 78px !important;
+  right: 24px !important;
+  bottom: -30px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: var(--qb-tertiary) !important;
+  opacity: 0.85 !important;
+}
+
+.user-management-header-text {
+  position: relative !important;
+  z-index: 1 !important;
+  min-width: 0 !important;
+}
+
+.user-management-header-text h2 {
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.45rem, 2.6vw, 2rem) !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.user-management-header-text p {
+  max-width: 880px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.86rem !important;
+  font-weight: 750 !important;
+  line-height: 1.45 !important;
+}
+
+.user-management-header-back-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  width: auto !important;
+  min-width: 180px !important;
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.user-management-header-back-btn:hover {
+  background: var(--qb-tertiary) !important;
+}
+
+/* Summary cards compact */
+
+.user-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.user-summary-grid div {
+  min-height: 74px !important;
+  border-radius: 16px !important;
+  padding: 10px !important;
+  background: #ffffff !important;
+}
+
+.user-summary-grid span {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 0.7rem !important;
+}
+
+.user-summary-grid h3 {
+  margin-top: 6px !important;
+  font-size: 1.28rem !important;
+}
+
+.user-summary-grid p {
+  margin-top: 4px !important;
+  font-size: 0.52rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Module launcher cards compact */
+
+.user-module-launcher {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.user-module-card {
+  min-height: 78px !important;
+  grid-template-columns: 44px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  border-radius: 18px !important;
+  padding: 12px !important;
+  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+}
+
+.user-module-card > span {
+  width: 38px !important;
+  height: 38px !important;
+  font-size: 0.66rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.user-module-card strong {
+  font-size: 0.88rem !important;
+}
+
+.user-module-card p {
+  margin-top: 3px !important;
+  font-size: 0.68rem !important;
+  line-height: 1.3 !important;
+}
+
+/* Existing users card + tools compact */
+
+.user-list-card {
+  border-radius: 22px !important;
+  padding: 16px !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+.user-section-heading {
+  margin-bottom: 10px !important;
+}
+
+.user-section-heading h2 {
+  font-size: 1.28rem !important;
+  line-height: 1.05 !important;
+}
+
+.user-section-heading p {
+  font-size: 0.76rem !important;
+  line-height: 1.35 !important;
+}
+
+.user-tools {
+  grid-template-columns: minmax(0, 1fr) 190px 110px !important;
+  gap: 8px !important;
+  border-radius: 16px !important;
+  padding: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.user-tools input,
+.user-tools select {
+  min-height: 38px !important;
+  border-radius: 13px !important;
+  font-size: 0.76rem !important;
+}
+
+.user-refresh-btn,
+.user-primary-btn,
+.user-secondary-btn,
+.user-warning-btn,
+.user-danger-btn,
+.user-delete-btn {
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  font-size: 0.56rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+/* Keep modals above everything */
+
+.user-management-page:has(.user-tool-active)::before {
+  z-index: 9998 !important;
+}
+
+.user-left-stack .user-tool-modal-card.user-tool-active {
+  z-index: 9999 !important;
+}
+
+/* Responsive */
+
+@media (max-width: 1180px) {
+  .user-management-header-compact > div,
+  .user-management-header-compact > .user-management-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-management-header-back-btn {
+    width: 100% !important;
+  }
+
+  .user-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .user-module-launcher {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-tools {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-refresh-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-management-header-compact > div,
+  .user-management-header-compact > .user-management-header-content {
+    min-height: auto !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .user-management-header-text h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .user-management-header-text p {
+    font-size: 0.76rem !important;
+  }
+
+  .user-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .user-list-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT HEADER TEXT-ONLY FIX
+========================================================= */
+
+.user-management-header-compact .user-management-header-text h2 {
+  display: none !important;
+}
+
+.user-management-header-compact .user-management-header-content {
+  min-height: 96px !important;
+}
+
+.user-management-header-compact .user-management-header-text p {
+  max-width: 920px !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.user-module-card strong {
+  line-height: 1.05 !important;
+}
+
+.user-module-card p {
+  max-width: 360px !important;
+}

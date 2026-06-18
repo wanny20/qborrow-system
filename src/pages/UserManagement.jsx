@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signOut,
@@ -27,8 +27,9 @@ const USER_TYPES = ["Student", "Faculty", "Staff"];
 const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
 
 function UserManagement() {
-  const outletContext = useOutletContext() || {};
-  const { userData: currentAdmin } = outletContext;
+const navigate = useNavigate();
+const outletContext = useOutletContext() || {};
+const { userData: currentAdmin } = outletContext;
 
   const [users, setUsers] = useState([]);
   const [lastUserDoc, setLastUserDoc] = useState(null);
@@ -69,12 +70,14 @@ function UserManagement() {
 
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCategoryList, setShowCategoryList] = useState(false);
+  const [activeUserTool, setActiveUserTool] = useState("");
 
   const [csvFileName, setCsvFileName] = useState("");
   const [csvBorrowers, setCsvBorrowers] = useState([]);
   const [importResults, setImportResults] = useState([]);
 
   const [editingUserId, setEditingUserId] = useState("");
+  const [viewingUser, setViewingUser] = useState(null);
   const [editRole, setEditRole] = useState("borrower");
   const [editAssignedCategories, setEditAssignedCategories] = useState([]);
 
@@ -90,12 +93,130 @@ function UserManagement() {
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [createFieldErrors, setCreateFieldErrors] = useState({});
+  const [categoryFieldErrors, setCategoryFieldErrors] = useState({});
+  const [csvFieldErrors, setCsvFieldErrors] = useState({});
+  const [editFieldErrors, setEditFieldErrors] = useState({});
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function closeUserToolModal() {
+  setActiveUserTool("");
+}
 
+  function clearCreateFieldError(fieldName) {
+  setCreateFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function clearCategoryFieldError(fieldName) {
+  setCategoryFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function clearCsvFieldError(fieldName) {
+  setCsvFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+function clearEditFieldError(fieldName) {
+  setEditFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateEditUserForm() {
+  const errors = {};
+
+  if (!editRole) {
+    errors.editRole = "Role is required.";
+  }
+
+  if (editRole === "categoryAdmin" && categories.length === 0) {
+    errors.editAssignedCategories = "Please add or seed categories first.";
+  }
+
+  if (editRole === "categoryAdmin" && editAssignedCategories.length === 0) {
+    errors.editAssignedCategories =
+      "Category admin must have at least one assigned category.";
+  }
+
+  setEditFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+}
+
+function validateCreateUserForm() {
+  const errors = {};
+
+  if (!fullName.trim()) {
+    errors.fullName = "Full name is required.";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Email is required.";
+  } else if (!isValidEmail(email)) {
+    errors.email = "Please enter a valid email address.";
+  }
+
+  if (!temporaryPassword.trim()) {
+    errors.temporaryPassword = "Temporary password is required.";
+  } else if (temporaryPassword.length < 6) {
+    errors.temporaryPassword = "Temporary password must be at least 6 characters.";
+  }
+
+  if (!role) {
+    errors.role = "Role is required.";
+  }
+
+  if (role === "categoryAdmin" && categories.length === 0) {
+    errors.assignedCategories = "Please add or seed categories first.";
+  }
+
+  if (role === "categoryAdmin" && assignedCategories.length === 0) {
+    errors.assignedCategories =
+      "Please assign at least one category for category admin.";
+  }
+
+  setCreateFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateAddCategoryForm() {
+  const errors = {};
+
+  if (!newCategoryName.trim()) {
+    errors.newCategoryName = "Category name is required.";
+  }
+
+  setCategoryFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+function validateCsvImportForm() {
+  const errors = {};
+
+  if (csvBorrowers.length === 0) {
+    errors.borrowerCsv = "Please select a valid CSV file first.";
+  }
+
+  setCsvFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
   function cleanInput(value) {
     return String(value || "").trim();
   }
@@ -109,6 +230,19 @@ function UserManagement() {
 
     return USER_TYPES.includes(cleanedValue) ? cleanedValue : "Student";
   }
+  function formatCreatedAt(value) {
+  if (!value) return "Not set";
+
+  if (typeof value?.toDate === "function") {
+    return value.toDate().toLocaleDateString();
+  }
+
+  if (typeof value === "string") {
+    return value || "Not set";
+  }
+
+  return "Not set";
+}
 
   function formatSuspendedUntil(value) {
     if (!value) return "Not suspended";
@@ -453,40 +587,28 @@ function UserManagement() {
     setMobileNumber("");
   }
 
-  function resetCreateForm() {
-    setFullName("");
-    setEmail("");
-    setTemporaryPassword("");
-    setRole("borrower");
-    setAssignedCategories([]);
-    resetBorrowerDetails();
+function resetCreateForm() {
+  setFullName("");
+  setEmail("");
+  setTemporaryPassword("");
+  setRole("borrower");
+  setAssignedCategories([]);
+  setCreateFieldErrors({});
+  resetBorrowerDetails();
+}
+
+async function handleCreateUser(e) {
+  e.preventDefault();
+  showStatus("", "");
+
+  const isValid = validateCreateUserForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
   }
 
-  async function handleCreateUser(e) {
-    e.preventDefault();
-    showStatus("", "");
-
-    if (!fullName.trim() || !email.trim() || !temporaryPassword.trim() || !role) {
-      showStatus("Please fill in name, email, password, and role.", "error");
-      return;
-    }
-
-    if (temporaryPassword.length < 6) {
-      showStatus("Temporary password must be at least 6 characters.", "error");
-      return;
-    }
-
-    if (role === "categoryAdmin" && categories.length === 0) {
-      showStatus("Please add or seed categories first.", "error");
-      return;
-    }
-
-    if (role === "categoryAdmin" && assignedCategories.length === 0) {
-      showStatus("Please assign at least one category for category admin.", "error");
-      return;
-    }
-
-    setCreating(true);
+  setCreating(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -552,16 +674,18 @@ function UserManagement() {
     }
   }
 
-  async function handleAddCategory(event) {
-    event.preventDefault();
-    showStatus("", "");
+async function handleAddCategory(event) {
+  event.preventDefault();
+  showStatus("", "");
 
-    if (!newCategoryName.trim()) {
-      showStatus("Please enter a category name.", "error");
-      return;
-    }
+  const isValid = validateAddCategoryForm();
 
-    setCategoryAction("add");
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
+
+  setCategoryAction("add");
 
     try {
       const addCategory = httpsCallable(functions, "addCategory");
@@ -617,6 +741,7 @@ function UserManagement() {
   }
 
   function startEditingUser(user) {
+    setEditFieldErrors({});
     setEditingUserId(user.id);
     setEditRole(user.role || "borrower");
     setEditAssignedCategories(
@@ -633,6 +758,7 @@ function UserManagement() {
   }
 
   function cancelEditingUser() {
+    setEditFieldErrors({});
     setEditingUserId("");
     setEditRole("borrower");
     setEditAssignedCategories([]);
@@ -646,19 +772,16 @@ function UserManagement() {
     setEditMobileNumber("");
   }
 
-  async function handleSaveUserChanges(user) {
-    if (editRole === "categoryAdmin" && categories.length === 0) {
-      showStatus("Please add or seed categories first.", "error");
-      return;
-    }
+async function handleSaveUserChanges(user) {
+  showStatus("", "");
 
-    if (editRole === "categoryAdmin" && editAssignedCategories.length === 0) {
-      showStatus("Category admin must have at least one assigned category.", "error");
-      return;
-    }
+  const isValid = validateEditUserForm();
 
-    setUpdatingId(user.id);
-    showStatus("", "");
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
+setUpdatingId(user.id);
 
     try {
       const userRef = doc(db, "users", user.id);
@@ -997,12 +1120,89 @@ function UserManagement() {
     setCsvBorrowers([]);
     setImportResults([]);
   }
+ function downloadBorrowerSampleCsv() {
+  const csvRows = [
+    [
+      "Name",
+      "Email",
+      "Password",
+      "User Type",
+      "Student Number",
+      "Employee ID",
+      "Course Department",
+      "Year Level",
+      "Section",
+      "Mobile Number",
+    ],
+    [
+      "Juan Dela Cruz",
+      "juan.delacruz@example.com",
+      "TempPass123",
+      "Student",
+      "2026-0001",
+      "",
+      "BSCS",
+      "1st Year",
+      "A",
+      "09123456789",
+    ],
+    [
+      "Maria Santos",
+      "maria.santos@example.com",
+      "TempPass123",
+      "Faculty",
+      "",
+      "EMP-001",
+      "Computer Science",
+      "",
+      "",
+      "09987654321",
+    ],
+    [
+      "Pedro Reyes",
+      "pedro.reyes@example.com",
+      "TempPass123",
+      "Staff",
+      "",
+      "EMP-002",
+      "Library",
+      "",
+      "",
+      "09112223344",
+    ],
+  ];
 
-  async function handleBulkImportBorrowers() {
-    if (csvBorrowers.length === 0) {
-      showStatus("Please select a CSV file first.", "error");
-      return;
-    }
+  const csvText = csvRows
+    .map((row) =>
+      row
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(",")
+    )
+    .join("\n");
+
+  const blob = new Blob([csvText], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "qborrow-borrowers-sample.csv";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+async function handleBulkImportBorrowers() {
+  showStatus("", "");
+
+  const isValid = validateCsvImportForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
+    return;
+  }
 
     const confirmImport = window.confirm(
       `Import ${csvBorrowers.length} borrower account${csvBorrowers.length === 1 ? "" : "s"}?`
@@ -1084,6 +1284,8 @@ function UserManagement() {
     fetchData();
   }, []);
 
+  const editingUser = users.find((user) => user.id === editingUserId) || null;
+
   const filteredUsers = users.filter((user) => {
     const searchableText = `
       ${user.fullName || ""}
@@ -1120,26 +1322,24 @@ function UserManagement() {
 
   return (
     <div className="user-management-page">
-      <section className="user-management-header">
-        <div>
-          <p className="qb-kicker">Super Admin Control</p>
+<section className="user-management-header user-management-header-compact">
+  <div className="user-management-header-content">
+    <div className="user-management-header-text">
+      <p>
+        Manage QBorrow accounts, borrower imports, item categories, and category
+        admin permissions from one Super Admin workspace.
+      </p>
+    </div>
 
-          <h1>User Management</h1>
-
-          <p>
-            Create assigned accounts, manage dynamic categories, import borrower
-            CSV files, and delete borrower/category admin accounts properly.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="user-secondary-btn"
-          onClick={() => window.history.back()}
-        >
-          Back
-        </button>
-      </section>
+    <button
+      type="button"
+      className="user-secondary-btn user-management-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div
@@ -1182,9 +1382,65 @@ function UserManagement() {
         </div>
       </section>
 
-      <section className="user-management-layout">
-        <div className="user-left-stack">
-          <section className="user-create-card">
+<section className="user-module-launcher">
+  <button
+    type="button"
+    className="user-module-card user-module-card-primary"
+    onClick={() => setActiveUserTool("create")}
+  >
+    <span>+</span>
+    <div>
+<strong>Add New User</strong>
+<p>Create borrower accounts, category admins, and super admin accounts.</p>
+    </div>
+  </button>
+
+<button
+  type="button"
+  className="user-module-card"
+  onClick={() => {
+    setShowCategoryList(true);
+    setActiveUserTool("categories");
+  }}
+>
+  <span>C</span>
+  <div>
+    <strong>Manage Item Categories</strong>
+    <p>
+      Create inventory categories used for item grouping and category admin
+      assignment.
+    </p>
+  </div>
+</button>
+
+  <button
+    type="button"
+    className="user-module-card"
+    onClick={() => setActiveUserTool("import")}
+  >
+    <span>CSV</span>
+    <div>
+      <strong>Import Borrowers</strong>
+      <p>Upload CSV files using the required borrower format.</p>
+    </div>
+  </button>
+</section>
+
+<section className="user-management-layout">
+  <div className={`user-left-stack ${activeUserTool ? "user-modal-open" : ""}`}>
+          <section
+  className={`user-create-card user-tool-modal-card ${
+    activeUserTool === "create" ? "user-tool-active" : ""
+  }`}
+>
+  <button
+    type="button"
+    className="user-modal-close-btn"
+    onClick={closeUserToolModal}
+    aria-label="Close Add User modal"
+  >
+    ×
+  </button>
             <div className="user-section-heading">
               <h2>Create User</h2>
               <p>
@@ -1193,74 +1449,115 @@ function UserManagement() {
               </p>
             </div>
 
-            <form onSubmit={handleCreateUser}>
-              <div className="user-field">
-                <label className="qb-label" htmlFor="full-name">
-                  Full Name
-                </label>
+            <form onSubmit={handleCreateUser} noValidate>
+<div className="user-field">
+  <label className="qb-label" htmlFor="full-name">
+    Full Name <span className="required-star">*</span>
+  </label>
 
-                <input
-                  id="full-name"
-                  type="text"
-                  placeholder="Example: Juan Dela Cruz"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
+  <input
+    id="full-name"
+    type="text"
+    className={createFieldErrors.fullName ? "input-error" : ""}
+    placeholder="Example: Juan Dela Cruz"
+    value={fullName}
+    onFocus={() => clearCreateFieldError("fullName")}
+    onChange={(e) => {
+      setFullName(e.target.value);
+      clearCreateFieldError("fullName");
+    }}
+    disabled={creating}
+  />
 
-              <div className="user-field">
-                <label className="qb-label" htmlFor="email">
-                  Email
-                </label>
+  {createFieldErrors.fullName && (
+    <p className="field-error-message">{createFieldErrors.fullName}</p>
+  )}
+</div>
 
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="example@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+<div className="user-field">
+  <label className="qb-label" htmlFor="email">
+    Email <span className="required-star">*</span>
+  </label>
 
-              <div className="user-field">
-                <label className="qb-label" htmlFor="temporary-password">
-                  Temporary Password
-                </label>
+  <input
+    id="email"
+    type="email"
+    className={createFieldErrors.email ? "input-error" : ""}
+    placeholder="example@email.com"
+    value={email}
+    onFocus={() => clearCreateFieldError("email")}
+    onChange={(e) => {
+      setEmail(e.target.value);
+      clearCreateFieldError("email");
+    }}
+    disabled={creating}
+  />
 
-                <input
-                  id="temporary-password"
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={temporaryPassword}
-                  onChange={(e) => setTemporaryPassword(e.target.value)}
-                />
-              </div>
+  {createFieldErrors.email && (
+    <p className="field-error-message">{createFieldErrors.email}</p>
+  )}
+</div>
 
-              <div className="user-field">
-                <label className="qb-label" htmlFor="role">
-                  Role
-                </label>
+<div className="user-field">
+  <label className="qb-label" htmlFor="temporary-password">
+    Temporary Password <span className="required-star">*</span>
+  </label>
 
-                <select
-                  id="role"
-                  value={role}
-                  onChange={(e) => {
-                    setRole(e.target.value);
+  <input
+    id="temporary-password"
+    type="password"
+    className={createFieldErrors.temporaryPassword ? "input-error" : ""}
+    placeholder="At least 6 characters"
+    value={temporaryPassword}
+    onFocus={() => clearCreateFieldError("temporaryPassword")}
+    onChange={(e) => {
+      setTemporaryPassword(e.target.value);
+      clearCreateFieldError("temporaryPassword");
+    }}
+    disabled={creating}
+  />
 
-                    if (e.target.value !== "categoryAdmin") {
-                      setAssignedCategories([]);
-                    }
+  {createFieldErrors.temporaryPassword && (
+    <p className="field-error-message">
+      {createFieldErrors.temporaryPassword}
+    </p>
+  )}
+</div>
 
-                    if (e.target.value !== "borrower") {
-                      resetBorrowerDetails();
-                    }
-                  }}
-                >
-                  <option value="borrower">Borrower</option>
-                  <option value="categoryAdmin">Category Admin / Mini Admin</option>
-                  <option value="superAdmin">Super Admin</option>
-                </select>
-              </div>
+<div className="user-field">
+  <label className="qb-label" htmlFor="role">
+    Role <span className="required-star">*</span>
+  </label>
+
+  <select
+    id="role"
+    className={createFieldErrors.role ? "input-error" : ""}
+    value={role}
+    onFocus={() => clearCreateFieldError("role")}
+    onChange={(e) => {
+      setRole(e.target.value);
+      clearCreateFieldError("role");
+      clearCreateFieldError("assignedCategories");
+
+      if (e.target.value !== "categoryAdmin") {
+        setAssignedCategories([]);
+      }
+
+      if (e.target.value !== "borrower") {
+        resetBorrowerDetails();
+      }
+    }}
+    disabled={creating}
+  >
+    <option value="borrower">Borrower</option>
+    <option value="categoryAdmin">Category Admin / Mini Admin</option>
+    <option value="superAdmin">Super Admin</option>
+  </select>
+
+  {createFieldErrors.role && (
+    <p className="field-error-message">{createFieldErrors.role}</p>
+  )}
+</div>
 
               {role === "borrower" && (
                 <div className="user-borrower-details-box">
@@ -1391,7 +1688,9 @@ function UserManagement() {
 
               {role === "categoryAdmin" && (
                 <div className="user-category-box">
-                  <span>Assigned Categories</span>
+                  <span>
+  Assigned Categories <span className="required-star">*</span>
+</span>
 
                   {categories.length === 0 ? (
                     <p className="user-small-note">
@@ -1404,13 +1703,21 @@ function UserManagement() {
                           <input
                             type="checkbox"
                             checked={assignedCategories.includes(category.id)}
-                            onChange={() => handleCategoryToggle(category.id)}
+                            onChange={() => {
+  handleCategoryToggle(category.id);
+  clearCreateFieldError("assignedCategories");
+}}
                           />
                           <span>{category.name}</span>
                         </label>
                       ))}
                     </div>
                   )}
+                  {createFieldErrors.assignedCategories && (
+  <p className="field-error-message">
+    {createFieldErrors.assignedCategories}
+  </p>
+)}
                 </div>
               )}
 
@@ -1424,40 +1731,67 @@ function UserManagement() {
             </form>
           </section>
 
-          <section className="user-admin-card">
-            <div className="user-section-heading">
-              <h2>Categories</h2>
-              <p>
-                Add flexible categories. Delete is allowed only when unused by
-                items, admins, and borrow requests.
-              </p>
-            </div>
+<section
+  className={`user-admin-card user-tool-modal-card ${
+    activeUserTool === "categories" ? "user-tool-active" : ""
+  }`}
+>
+  <button
+    type="button"
+    className="user-modal-close-btn"
+    onClick={closeUserToolModal}
+    aria-label="Close Categories modal"
+  >
+    ×
+  </button>
 
-            <button
-              type="button"
-              className="user-secondary-btn user-full-btn"
-              onClick={handleSeedCategories}
-              disabled={categoryAction === "seed"}
-            >
-              {categoryAction === "seed"
-                ? "Seeding..."
-                : "Seed Default Categories"}
-            </button>
+<div className="user-section-heading">
+  <h2>Manage Item Categories</h2>
+  <p>
+    Categories organize inventory items and define what category admins are
+    allowed to manage. Delete is allowed only when a category is unused.
+  </p>
+</div>
 
-            <form className="user-category-add-form" onSubmit={handleAddCategory}>
-              <div className="user-field">
-                <label className="qb-label" htmlFor="new-category">
-                  New Category
-                </label>
+{categories.length === 0 && (
+  <button
+    type="button"
+    className="user-secondary-btn user-full-btn"
+    onClick={handleSeedCategories}
+    disabled={categoryAction === "seed"}
+  >
+    {categoryAction === "seed"
+      ? "Adding Defaults..."
+      : "Add Default Categories"}
+  </button>
+)}
 
-                <input
-                  id="new-category"
-                  type="text"
-                  placeholder="Example: Audio Visual Items"
-                  value={newCategoryName}
-                  onChange={(event) => setNewCategoryName(event.target.value)}
-                />
-              </div>
+            <form className="user-category-add-form" onSubmit={handleAddCategory} noValidate>
+<div className="user-field">
+  <label className="qb-label" htmlFor="new-category">
+    New Category <span className="required-star">*</span>
+  </label>
+
+  <input
+    id="new-category"
+    type="text"
+    className={categoryFieldErrors.newCategoryName ? "input-error" : ""}
+    placeholder="Example: Audio Visual Items"
+    value={newCategoryName}
+    onFocus={() => clearCategoryFieldError("newCategoryName")}
+    onChange={(event) => {
+      setNewCategoryName(event.target.value);
+      clearCategoryFieldError("newCategoryName");
+    }}
+    disabled={categoryAction === "add"}
+  />
+
+  {categoryFieldErrors.newCategoryName && (
+    <p className="field-error-message">
+      {categoryFieldErrors.newCategoryName}
+    </p>
+  )}
+</div>
 
               <button
                 type="submit"
@@ -1481,129 +1815,258 @@ function UserManagement() {
               </button>
             </div>
 
-            {showCategoryList && (
-              <div className="user-category-list">
-                {categories.length === 0 ? (
-                  <div className="user-category-empty">No categories yet.</div>
-                ) : (
-                  categories.map((category) => {
-                    const usage = getCategoryUsage(category.id);
+{showCategoryList && (
+  <div className="user-category-table-wrap">
+    {categories.length === 0 ? (
+      <div className="user-category-empty">No categories yet.</div>
+    ) : (
+      <table className="user-category-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Items</th>
+            <th>Admins</th>
+            <th>Requests</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
 
-                    return (
-                      <article className="user-category-row" key={category.id}>
-                        <div className="user-category-row-main">
-                          <div>
-                            <strong>{category.name}</strong>
-                            <span>{category.id}</span>
-                          </div>
+        <tbody>
+          {categories.map((category) => {
+            const usage = getCategoryUsage(category.id);
 
-                          <button
-                            type="button"
-                            className={
-                              usage.canDelete
-                                ? "user-danger-btn"
-                                : "user-secondary-btn"
-                            }
-                            onClick={() => handleDeleteCategory(category)}
-                            disabled={
-                              !usage.canDelete ||
-                              categoryAction === category.id
-                            }
-                          >
-                            {categoryAction === category.id
-                              ? "Deleting..."
-                              : "Delete"}
-                          </button>
-                        </div>
+            return (
+              <tr key={category.id}>
+                <td>
+                  <strong>{category.name}</strong>
+                  <span>{category.id}</span>
+                </td>
 
-                        <div className="user-category-counts">
-                          <span>{usage.itemCount} item</span>
-                          <span>{usage.adminCount} admin</span>
-                          <span>{usage.requestCount} request</span>
-                        </div>
-                      </article>
-                    );
-                  })
-                )}
-              </div>
-            )}
+                <td>{usage.itemCount}</td>
+                <td>{usage.adminCount}</td>
+                <td>{usage.requestCount}</td>
+
+                <td>
+                  <span
+                    className={
+                      usage.canDelete
+                        ? "user-category-status deletable"
+                        : "user-category-status locked"
+                    }
+                  >
+                    {usage.canDelete ? "Unused" : "In Use"}
+                  </span>
+                </td>
+
+                <td>
+                  <button
+                    type="button"
+                    className={
+                      usage.canDelete
+                        ? "user-danger-btn"
+                        : "user-secondary-btn"
+                    }
+                    onClick={() => handleDeleteCategory(category)}
+                    disabled={
+                      !usage.canDelete ||
+                      categoryAction === category.id
+                    }
+                  >
+                    {categoryAction === category.id ? "Deleting..." : "Delete"}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    )}
+  </div>
+)}
           </section>
 
-          <section className="user-admin-card">
-            <div className="user-section-heading">
-              <h2>Import Borrowers</h2>
-              <p>
-                Required CSV headers: Name, Email, Password. Optional headers:
-                User Type, Student Number, Employee ID, Course Department, Year
-                Level, Section, Mobile Number.
-              </p>
-            </div>
+<section
+  className={`user-admin-card user-tool-modal-card ${
+    activeUserTool === "import" ? "user-tool-active" : ""
+  }`}
+>
+  <button
+    type="button"
+    className="user-modal-close-btn"
+    onClick={closeUserToolModal}
+    aria-label="Close Import Borrowers modal"
+  >
+    ×
+  </button>
 
-            <div className="user-csv-template">
-              <strong>CSV Format</strong>
-              <span>
-                Name, Email, Password, User Type, Student Number, Employee ID,
-                Course Department, Year Level, Section, Mobile Number
-              </span>
-            </div>
+  <div className="user-section-heading">
+    <h2>Import Borrowers</h2>
+    <p>
+      Required CSV headers: Name, Email, Password. Optional headers:
+      User Type, Student Number, Employee ID, Course Department, Year
+      Level, Section, Mobile Number.
+    </p>
+  </div>
+        <div className="user-import-polish-grid">
+    <div className="user-import-guide-card">
+      <div className="user-import-guide-icon">1</div>
 
-            <div className="user-field">
-              <label className="qb-label" htmlFor="borrower-csv">
-                Borrower CSV
-              </label>
+      <div>
+        <strong>Download the sample CSV</strong>
+        <p>
+          Use the provided file so the column headers stay correct and aligned.
+        </p>
+      </div>
 
-              <input
-                id="borrower-csv"
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleCsvChange}
-              />
-            </div>
+      <button
+        type="button"
+        className="user-secondary-btn"
+        onClick={downloadBorrowerSampleCsv}
+      >
+        Download Sample CSV
+      </button>
+    </div>
 
-            {csvFileName && (
-              <div className="user-csv-preview">
-                <strong>{csvFileName}</strong>
-                <span>{csvBorrowers.length} borrower rows ready</span>
-              </div>
-            )}
+    <div className="user-import-guide-card">
+      <div className="user-import-guide-icon">2</div>
 
-            <div className="user-csv-actions">
-              <button
-                type="button"
-                className="user-primary-btn"
-                onClick={handleBulkImportBorrowers}
-                disabled={importingCsv || csvBorrowers.length === 0}
-              >
-                {importingCsv ? "Importing..." : "Import CSV"}
-              </button>
+      <div>
+        <strong>Fill in borrower accounts</strong>
+        <p>
+          Name, Email, and Password are required. Other fields are optional but
+          recommended for student, faculty, and staff records.
+        </p>
+      </div>
+    </div>
 
-              <button
-                type="button"
-                className="user-secondary-btn"
-                onClick={clearCsvImport}
-                disabled={importingCsv}
-              >
-                Clear
-              </button>
-            </div>
+    <div className="user-import-guide-card">
+      <div className="user-import-guide-icon">3</div>
 
-            {importResults.length > 0 && (
-              <div className="user-import-results">
-                {importResults.slice(0, 8).map((result, index) => (
-                  <div
-                    key={`${result.email}-${index}`}
-                    className={result.success ? "success" : "failed"}
-                  >
-                    <strong>{result.email || "No email"}</strong>
-                    <span>{result.message}</span>
-                  </div>
-                ))}
+      <div>
+        <strong>Upload and import</strong>
+        <p>
+          Upload the completed CSV file, review the loaded row count, then click
+          Import CSV.
+        </p>
+      </div>
+    </div>
+  </div>
 
-                {importResults.length > 8 && (
-                  <p>Showing first 8 results only.</p>
-                )}
-              </div>
-            )}
+  <div className="user-csv-format-panel">
+    <div>
+      <strong>Column Headers</strong>
+      <p>Do not rename, remove, or rearrange these headers.</p>
+    </div>
+
+    <div className="user-csv-header-grid">
+      {[
+        "Name",
+        "Email",
+        "Password",
+        "User Type",
+        "Student Number",
+        "Employee ID",
+        "Course Department",
+        "Year Level",
+        "Section",
+        "Mobile Number",
+      ].map((header) => (
+        <span key={header}>{header}</span>
+      ))}
+    </div>
+
+    <div className="user-import-notes">
+      <strong>Important Notes</strong>
+
+      <ul>
+        <li>Required columns: Name, Email, Password.</li>
+        <li>User Type can be Student, Faculty, or Staff.</li>
+        <li>Student Number is for students only.</li>
+        <li>Employee ID is for faculty and staff.</li>
+        <li>Maximum import limit is 100 borrowers per CSV.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div className="user-upload-panel">
+    <div className="user-upload-panel-heading">
+      <div>
+        <strong>Upload Borrower CSV</strong>
+        <p>Select the completed CSV file from your computer.</p>
+      </div>
+
+      {csvFileName && (
+        <span>{csvBorrowers.length} row{csvBorrowers.length === 1 ? "" : "s"}</span>
+      )}
+    </div>
+
+    <div className="user-field">
+      <label className="qb-label" htmlFor="borrower-csv">
+        Borrower CSV <span className="required-star">*</span>
+      </label>
+
+      <input
+        id="borrower-csv"
+        type="file"
+        className={csvFieldErrors.borrowerCsv ? "input-error" : ""}
+        accept=".csv,text/csv"
+        onFocus={() => clearCsvFieldError("borrowerCsv")}
+        onChange={(event) => {
+          clearCsvFieldError("borrowerCsv");
+          handleCsvChange(event);
+        }}
+        disabled={importingCsv}
+      />
+
+      {csvFieldErrors.borrowerCsv && (
+        <p className="field-error-message">{csvFieldErrors.borrowerCsv}</p>
+      )}
+    </div>
+
+    {csvFileName && (
+      <div className="user-csv-preview">
+        <strong>{csvFileName}</strong>
+        <span>{csvBorrowers.length} borrower rows ready for import</span>
+      </div>
+    )}
+
+    <div className="user-csv-actions">
+      <button
+        type="button"
+        className="user-primary-btn"
+        onClick={handleBulkImportBorrowers}
+        disabled={importingCsv || csvBorrowers.length === 0}
+      >
+        {importingCsv ? "Importing..." : "Import CSV"}
+      </button>
+
+      <button
+        type="button"
+        className="user-secondary-btn"
+        onClick={clearCsvImport}
+        disabled={importingCsv}
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+
+  {importResults.length > 0 && (
+    <div className="user-import-results">
+      {importResults.slice(0, 8).map((result, index) => (
+        <div
+          key={`${result.email}-${index}`}
+          className={result.success ? "success" : "failed"}
+        >
+          <strong>{result.email || "No email"}</strong>
+          <span>{result.message}</span>
+        </div>
+      ))}
+
+      {importResults.length > 8 && <p>Showing first 8 results only.</p>}
+    </div>
+  )}
           </section>
         </div>
 
@@ -1668,12 +2131,25 @@ function UserManagement() {
             </div>
           ) : (
             <>
-              <div className="user-grid">
+             <div className="user-table-header">
+  <span>Name</span>
+  <span>Email / Role</span>
+  <span>Contact</span>
+  <span>Category</span>
+  <span>Created</span>
+  <span>Status</span>
+  <span>Actions</span>
+</div>
+
+<div className="user-grid user-table-grid">
                 {filteredUsers.map((user) => {
                   const isEditing = editingUserId === user.id;
 
                   return (
-                    <article className="user-card" key={user.id}>
+                    <article
+  className={`user-card ${isEditing ? "user-card-editing" : ""}`}
+  key={user.id}
+>
                       <div className="user-card-topline">
                         <span>{user.email}</span>
 
@@ -1682,9 +2158,39 @@ function UserManagement() {
                         </strong>
                       </div>
 
-                      <h3>{user.fullName || "No name"}</h3>
+<h3>{user.fullName || "No name"}</h3>
 
-                      <div className="user-info-grid">
+<div className="user-table-cells">
+  <div className="user-table-cell user-table-contact">
+    <span>Contact</span>
+    <strong>
+      {user.role === "borrower" ? user.mobileNumber || "-" : "-"}
+    </strong>
+  </div>
+
+  <div className="user-table-cell user-table-category">
+    <span>Category</span>
+    <strong>{formatAssignedCategories(user.assignedCategories)}</strong>
+  </div>
+
+  <div className="user-table-cell user-table-created">
+    <span>Created</span>
+    <strong>{formatCreatedAt(user.createdAt)}</strong>
+  </div>
+
+  <div className="user-table-cell user-table-status">
+    <span>Status</span>
+    <strong>
+      {user.canBorrow === false
+        ? "Disabled"
+        : isUserSuspended(user)
+        ? "Suspended"
+        : "Active"}
+    </strong>
+  </div>
+</div>
+
+<div className="user-info-grid">
                         <div>
                           <span>User Type</span>
                           <strong>{getUserTypeLabel(user)}</strong>
@@ -1752,222 +2258,25 @@ function UserManagement() {
                         </div>
                       )}
 
-                      {isEditing && (
-                        <div className="user-edit-panel">
-                          <div className="user-field">
-                            <label className="qb-label">Edit Role</label>
 
-                            <select
-                              value={editRole}
-                              onChange={(e) => {
-                                setEditRole(e.target.value);
 
-                                if (e.target.value !== "categoryAdmin") {
-                                  setEditAssignedCategories([]);
-                                }
+<div className="user-actions">
+  <>
+    <button
+      type="button"
+      className="user-view-btn"
+      onClick={() => setViewingUser(user)}
+    >
+      View
+    </button>
 
-                                if (e.target.value !== "borrower") {
-                                  setEditUserType("Student");
-                                  setEditStudentNumber("");
-                                  setEditEmployeeId("");
-                                  setEditCourseDepartment("");
-                                  setEditYearLevel("");
-                                  setEditSection("");
-                                  setEditMobileNumber("");
-                                }
-                              }}
-                            >
-                              <option value="borrower">Borrower</option>
-                              <option value="categoryAdmin">
-                                Category Admin / Mini Admin
-                              </option>
-                              <option value="superAdmin">Super Admin</option>
-                            </select>
-                          </div>
-
-                          {editRole === "borrower" && (
-                            <div className="user-borrower-details-box compact">
-                              <span>Edit Borrower Details</span>
-
-                              <div className="user-borrower-details-grid">
-                                <div className="user-field">
-                                  <label className="qb-label">User Type</label>
-
-                                  <select
-                                    value={editUserType}
-                                    onChange={(e) => {
-                                      setEditUserType(e.target.value);
-                                      setEditStudentNumber("");
-                                      setEditEmployeeId("");
-                                      setEditYearLevel("");
-                                      setEditSection("");
-                                    }}
-                                  >
-                                    {USER_TYPES.map((type) => (
-                                      <option key={type} value={type}>
-                                        {type}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                {editUserType === "Student" ? (
-                                  <div className="user-field">
-                                    <label className="qb-label">
-                                      Student Number
-                                    </label>
-
-                                    <input
-                                      type="text"
-                                      value={editStudentNumber}
-                                      onChange={(e) =>
-                                        setEditStudentNumber(e.target.value)
-                                      }
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="user-field">
-                                    <label className="qb-label">
-                                      Employee ID
-                                    </label>
-
-                                    <input
-                                      type="text"
-                                      value={editEmployeeId}
-                                      onChange={(e) =>
-                                        setEditEmployeeId(e.target.value)
-                                      }
-                                    />
-                                  </div>
-                                )}
-
-                                <div className="user-field">
-                                  <label className="qb-label">
-                                    Course / Department
-                                  </label>
-
-                                  <input
-                                    type="text"
-                                    value={editCourseDepartment}
-                                    onChange={(e) =>
-                                      setEditCourseDepartment(e.target.value)
-                                    }
-                                  />
-                                </div>
-
-                                {editUserType === "Student" && (
-                                  <>
-                                    <div className="user-field">
-                                      <label className="qb-label">
-                                        Year Level
-                                      </label>
-
-                                      <select
-                                        value={editYearLevel}
-                                        onChange={(e) =>
-                                          setEditYearLevel(e.target.value)
-                                        }
-                                      >
-                                        <option value="">Select Year Level</option>
-                                        {YEAR_LEVELS.map((year) => (
-                                          <option key={year} value={year}>
-                                            {year}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </div>
-
-                                    <div className="user-field">
-                                      <label className="qb-label">Section</label>
-
-                                      <input
-                                        type="text"
-                                        value={editSection}
-                                        onChange={(e) =>
-                                          setEditSection(e.target.value)
-                                        }
-                                      />
-                                    </div>
-                                  </>
-                                )}
-
-                                <div className="user-field">
-                                  <label className="qb-label">
-                                    Mobile Number
-                                  </label>
-
-                                  <input
-                                    type="text"
-                                    value={editMobileNumber}
-                                    onChange={(e) =>
-                                      setEditMobileNumber(e.target.value)
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {editRole === "categoryAdmin" && (
-                            <div className="user-category-box compact">
-                              <span>Edit Assigned Categories</span>
-
-                              {categories.length === 0 ? (
-                                <p className="user-small-note">
-                                  No categories available.
-                                </p>
-                              ) : (
-                                <div className="user-category-grid">
-                                  {categories.map((category) => (
-                                    <label key={category.id}>
-                                      <input
-                                        type="checkbox"
-                                        checked={editAssignedCategories.includes(
-                                          category.id
-                                        )}
-                                        onChange={() =>
-                                          handleEditCategoryToggle(category.id)
-                                        }
-                                      />
-                                      <span>{category.name}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="user-actions">
-                        {isEditing ? (
-                          <>
-                            <button
-                              type="button"
-                              className="user-primary-btn"
-                              onClick={() => handleSaveUserChanges(user)}
-                              disabled={updatingId === user.id}
-                            >
-                              {updatingId === user.id ? "Saving..." : "Save"}
-                            </button>
-
-                            <button
-                              type="button"
-                              className="user-secondary-btn"
-                              onClick={cancelEditingUser}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="user-secondary-btn"
-                              onClick={() => startEditingUser(user)}
-                            >
-                              Edit
-                            </button>
+    <button
+      type="button"
+      className="user-secondary-btn"
+      onClick={() => startEditingUser(user)}
+    >
+      Edit
+    </button>
 
                             <button
                               type="button"
@@ -1979,9 +2288,7 @@ function UserManagement() {
                               onClick={() => handleToggleBorrowing(user)}
                               disabled={updatingId === user.id}
                             >
-                              {user.canBorrow === false
-                                ? "Enable Borrowing"
-                                : "Disable Borrowing"}
+                              {user.canBorrow === false ? "Enable" : "Disable"}
                             </button>
 
                             <button
@@ -1990,7 +2297,7 @@ function UserManagement() {
                               onClick={() => handleResetSuspension(user)}
                               disabled={updatingId === user.id}
                             >
-                              Reset Suspension
+                              Reset
                             </button>
 
                             <button
@@ -2003,13 +2310,10 @@ function UserManagement() {
                                 currentAdmin?.uid === user.id
                               }
                             >
-                              {updatingId === user.id
-                                ? "Deleting..."
-                                : "Delete User"}
+                              {updatingId === user.id ? "Deleting..." : "Delete"}
                             </button>
-                          </>
-                        )}
-                      </div>
+  </>
+</div>
                     </article>
                   );
                 })}
@@ -2030,6 +2334,370 @@ function UserManagement() {
             </>
           )}
         </section>
+                {editingUser && (
+          <div
+            className="user-view-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit user"
+          >
+            <section className="user-view-modal user-edit-modal">
+              <button
+                type="button"
+                className="user-modal-close-btn"
+                onClick={cancelEditingUser}
+                aria-label="Close edit user"
+              >
+                ×
+              </button>
+
+              <div className="user-section-heading">
+                <h2>Edit User</h2>
+                <p>
+                  Update role, assigned categories, and borrower details for{" "}
+                  <strong>{editingUser.fullName || editingUser.email}</strong>.
+                </p>
+              </div>
+
+              <div className="user-view-role-row">
+                <strong className={`role-${editingUser.role || "borrower"}`}>
+                  {getRoleLabel(editingUser.role)}
+                </strong>
+
+                <span>{editingUser.email || "No email"}</span>
+              </div>
+
+              <div className="user-edit-panel user-edit-panel-modal">
+                <div className="user-field">
+                  <label className="qb-label">
+                    Edit Role <span className="required-star">*</span>
+                  </label>
+
+                  <select
+                    className={editFieldErrors.editRole ? "input-error" : ""}
+                    value={editRole}
+                    onFocus={() => clearEditFieldError("editRole")}
+                    onChange={(e) => {
+                      setEditRole(e.target.value);
+                      clearEditFieldError("editRole");
+                      clearEditFieldError("editAssignedCategories");
+
+                      if (e.target.value !== "categoryAdmin") {
+                        setEditAssignedCategories([]);
+                      }
+
+                      if (e.target.value !== "borrower") {
+                        setEditUserType("Student");
+                        setEditStudentNumber("");
+                        setEditEmployeeId("");
+                        setEditCourseDepartment("");
+                        setEditYearLevel("");
+                        setEditSection("");
+                        setEditMobileNumber("");
+                      }
+                    }}
+                    disabled={updatingId === editingUser.id}
+                  >
+                    <option value="borrower">Borrower</option>
+                    <option value="categoryAdmin">Category Admin / Mini Admin</option>
+                    <option value="superAdmin">Super Admin</option>
+                  </select>
+
+                  {editFieldErrors.editRole && (
+                    <p className="field-error-message">
+                      {editFieldErrors.editRole}
+                    </p>
+                  )}
+                </div>
+
+                {editRole === "borrower" && (
+                  <div className="user-borrower-details-box compact">
+                    <span>Edit Borrower Details</span>
+
+                    <div className="user-borrower-details-grid">
+                      <div className="user-field">
+                        <label className="qb-label">User Type</label>
+
+                        <select
+                          value={editUserType}
+                          onChange={(e) => {
+                            setEditUserType(e.target.value);
+                            setEditStudentNumber("");
+                            setEditEmployeeId("");
+                            setEditYearLevel("");
+                            setEditSection("");
+                          }}
+                          disabled={updatingId === editingUser.id}
+                        >
+                          {USER_TYPES.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {editUserType === "Student" ? (
+                        <div className="user-field">
+                          <label className="qb-label">Student Number</label>
+
+                          <input
+                            type="text"
+                            value={editStudentNumber}
+                            onChange={(e) => setEditStudentNumber(e.target.value)}
+                            disabled={updatingId === editingUser.id}
+                          />
+                        </div>
+                      ) : (
+                        <div className="user-field">
+                          <label className="qb-label">Employee ID</label>
+
+                          <input
+                            type="text"
+                            value={editEmployeeId}
+                            onChange={(e) => setEditEmployeeId(e.target.value)}
+                            disabled={updatingId === editingUser.id}
+                          />
+                        </div>
+                      )}
+
+                      <div className="user-field">
+                        <label className="qb-label">Course / Department</label>
+
+                        <input
+                          type="text"
+                          value={editCourseDepartment}
+                          onChange={(e) => setEditCourseDepartment(e.target.value)}
+                          disabled={updatingId === editingUser.id}
+                        />
+                      </div>
+
+                      {editUserType === "Student" && (
+                        <>
+                          <div className="user-field">
+                            <label className="qb-label">Year Level</label>
+
+                            <select
+                              value={editYearLevel}
+                              onChange={(e) => setEditYearLevel(e.target.value)}
+                              disabled={updatingId === editingUser.id}
+                            >
+                              <option value="">Select Year Level</option>
+                              {YEAR_LEVELS.map((year) => (
+                                <option key={year} value={year}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="user-field">
+                            <label className="qb-label">Section</label>
+
+                            <input
+                              type="text"
+                              value={editSection}
+                              onChange={(e) => setEditSection(e.target.value)}
+                              disabled={updatingId === editingUser.id}
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div className="user-field">
+                        <label className="qb-label">Mobile Number</label>
+
+                        <input
+                          type="text"
+                          value={editMobileNumber}
+                          onChange={(e) => setEditMobileNumber(e.target.value)}
+                          disabled={updatingId === editingUser.id}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {editRole === "categoryAdmin" && (
+                  <div className="user-category-box compact">
+                    <span>
+                      Edit Assigned Categories{" "}
+                      <span className="required-star">*</span>
+                    </span>
+
+                    {categories.length === 0 ? (
+                      <p className="user-small-note">No categories available.</p>
+                    ) : (
+                      <div className="user-category-grid">
+                        {categories.map((category) => (
+                          <label key={category.id}>
+                            <input
+                              type="checkbox"
+                              checked={editAssignedCategories.includes(
+                                category.id
+                              )}
+                              onChange={() => {
+                                handleEditCategoryToggle(category.id);
+                                clearEditFieldError("editAssignedCategories");
+                              }}
+                              disabled={updatingId === editingUser.id}
+                            />
+
+                            <span>{category.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {editFieldErrors.editAssignedCategories && (
+                      <p className="field-error-message">
+                        {editFieldErrors.editAssignedCategories}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="user-view-actions user-edit-modal-actions">
+                <button
+                  type="button"
+                  className="user-secondary-btn"
+                  onClick={cancelEditingUser}
+                  disabled={updatingId === editingUser.id}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="user-primary-btn"
+                  onClick={() => handleSaveUserChanges(editingUser)}
+                  disabled={updatingId === editingUser.id}
+                >
+                  {updatingId === editingUser.id ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {viewingUser && (
+          <div
+            className="user-view-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="User details"
+          >
+            <section className="user-view-modal">
+              <button
+                type="button"
+                className="user-modal-close-btn"
+                onClick={() => setViewingUser(null)}
+                aria-label="Close user details"
+              >
+                ×
+              </button>
+
+              <div className="user-section-heading">
+                <h2>{viewingUser.fullName || "No name"}</h2>
+                <p>{viewingUser.email || "No email"}</p>
+              </div>
+
+              <div className="user-view-role-row">
+                <strong className={`role-${viewingUser.role || "borrower"}`}>
+                  {getRoleLabel(viewingUser.role)}
+                </strong>
+
+                <span>
+                  {viewingUser.canBorrow === false
+                    ? "Borrowing Disabled"
+                    : isUserSuspended(viewingUser)
+                    ? "Suspended"
+                    : "Active"}
+                </span>
+              </div>
+
+              <div className="user-view-grid">
+                <div>
+                  <span>User Type</span>
+                  <strong>{getUserTypeLabel(viewingUser)}</strong>
+                </div>
+
+                <div>
+                  <span>ID Number</span>
+                  <strong>{getIdNumberLabel(viewingUser)}</strong>
+                </div>
+
+                <div>
+                  <span>Course / Department</span>
+                  <strong>
+                    {viewingUser.role === "borrower"
+                      ? viewingUser.courseDepartment || "Not set"
+                      : "N/A"}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Year / Section</span>
+                  <strong>{getYearSectionLabel(viewingUser)}</strong>
+                </div>
+
+                <div>
+                  <span>Mobile Number</span>
+                  <strong>
+                    {viewingUser.role === "borrower"
+                      ? viewingUser.mobileNumber || "Not set"
+                      : "N/A"}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Assigned Categories</span>
+                  <strong>
+                    {formatAssignedCategories(viewingUser.assignedCategories)}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Overdue Count</span>
+                  <strong>{viewingUser.overdueCount || 0}</strong>
+                </div>
+
+                <div>
+                  <span>Can Borrow</span>
+                  <strong>{viewingUser.canBorrow === false ? "No" : "Yes"}</strong>
+                </div>
+
+                <div>
+                  <span>Suspended Until</span>
+                  <strong>{formatSuspendedUntil(viewingUser.suspendedUntil)}</strong>
+                </div>
+
+                <div>
+                  <span>Created</span>
+                  <strong>{formatCreatedAt(viewingUser.createdAt)}</strong>
+                </div>
+              </div>
+
+              {viewingUser.suspensionReason && (
+                <div className="user-view-note">
+                  <span>Suspension Reason</span>
+                  <p>{viewingUser.suspensionReason}</p>
+                </div>
+              )}
+
+              <div className="user-view-actions">
+                <button
+                  type="button"
+                  className="user-secondary-btn"
+                  onClick={() => setViewingUser(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
       </section>
     </div>
   );

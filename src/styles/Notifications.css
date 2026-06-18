@@ -914,3 +914,430 @@
 .notifications-load-more-row .notifications-refresh-btn {
   min-width: 210px;
 }
+/* =========================================================
+   NOTIFICATIONS COMPACT HEADER + CLEANER LAYOUT
+   Removes repeated page title because topbar already shows it
+========================================================= */
+
+.notifications-page {
+  gap: 14px !important;
+}
+
+/* Compact header */
+
+.notifications-header-compact {
+  display: block !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+}
+
+.notifications-header-compact > div,
+.notifications-header-compact > .notifications-header-content {
+  min-height: 96px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding: 20px 24px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.16)),
+    #ffffff !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.notifications-header-compact > div::after,
+.notifications-header-compact > .notifications-header-content::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 78px !important;
+  height: 78px !important;
+  right: 24px !important;
+  bottom: -30px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: var(--qb-tertiary) !important;
+  opacity: 0.85 !important;
+}
+
+.notifications-header-text {
+  position: relative !important;
+  z-index: 1 !important;
+  min-width: 0 !important;
+}
+
+.notifications-header-text p {
+  max-width: 900px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.notifications-header-back-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  width: auto !important;
+  min-width: 180px !important;
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+.notifications-header-back-btn:hover {
+  background: var(--qb-tertiary) !important;
+}
+
+/* Compact summary cards */
+
+.notifications-summary-grid {
+  gap: 10px !important;
+}
+
+.notifications-summary-grid div {
+  min-height: 74px !important;
+  border-radius: 16px !important;
+  padding: 10px !important;
+  background: #ffffff !important;
+}
+
+.notifications-summary-grid span {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 0.7rem !important;
+}
+
+.notifications-summary-grid h3 {
+  margin-top: 6px !important;
+  font-size: 1.28rem !important;
+}
+
+.notifications-summary-grid p {
+  margin-top: 4px !important;
+  font-size: 0.52rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Compact tools and panel */
+
+.notifications-tools,
+.notifications-panel {
+  border-radius: 22px !important;
+  padding: 16px !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+
+.notifications-tools {
+  gap: 8px !important;
+  grid-template-columns: minmax(0, 1fr) 210px 110px !important;
+}
+
+.notifications-tools input,
+.notifications-tools select {
+  min-height: 38px !important;
+  border-radius: 13px !important;
+  font-size: 0.76rem !important;
+}
+
+.notifications-section-heading {
+  margin-bottom: 12px !important;
+}
+
+.notifications-section-heading h2 {
+  font-size: 1.28rem !important;
+  line-height: 1.05 !important;
+}
+
+.notifications-section-heading p {
+  font-size: 0.76rem !important;
+  line-height: 1.35 !important;
+}
+
+.notifications-primary-btn,
+.notifications-secondary-btn,
+.notifications-refresh-btn,
+.notifications-danger-btn {
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  font-size: 0.56rem !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+}
+
+/* Compact notification rows */
+
+.notification-row {
+  border-radius: 16px !important;
+  padding: 11px !important;
+  gap: 10px !important;
+}
+
+.notification-date {
+  font-size: 0.54rem !important;
+}
+
+.notification-row h3 {
+  font-size: 0.98rem !important;
+}
+
+.notification-row p {
+  font-size: 0.74rem !important;
+  line-height: 1.35 !important;
+}
+
+.notification-row-titleline strong {
+  min-height: 25px !important;
+  padding: 0 8px !important;
+  font-size: 0.52rem !important;
+}
+
+/* Responsive */
+
+@media (max-width: 1180px) {
+  .notifications-header-compact > div,
+  .notifications-header-compact > .notifications-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .notifications-header-back-btn {
+    width: 100% !important;
+  }
+
+  .notifications-tools {
+    grid-template-columns: 1fr !important;
+  }
+
+  .notifications-refresh-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .notifications-header-compact > div,
+  .notifications-header-compact > .notifications-header-content {
+    min-height: auto !important;
+    padding: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .notifications-header-text p {
+    font-size: 0.76rem !important;
+  }
+
+  .notifications-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .notifications-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   NOTIFICATIONS COMPACT LIST + MODAL DETAILS
+========================================================= */
+
+.notification-row {
+  grid-template-columns: minmax(0, 1fr) 120px !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+}
+
+.notification-row-titleline {
+  align-items: center !important;
+}
+
+.notification-row p {
+  display: -webkit-box !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+.notification-actions {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.notification-actions button {
+  width: 100% !important;
+}
+
+/* Modal */
+
+.notifications-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.46);
+  padding: 20px;
+}
+
+.notifications-modal-card {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  overflow-y: auto;
+  border: 2px solid var(--qb-border);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 7px 7px 0 0 var(--qb-border);
+  padding: 20px;
+}
+
+.notifications-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: var(--qb-secondary);
+  box-shadow: 2px 2px 0 0 var(--qb-border);
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 1.15rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.notifications-modal-heading {
+  padding-right: 48px;
+}
+
+.notifications-modal-heading > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.notifications-modal-heading h2 {
+  margin: 0;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.notifications-modal-heading strong {
+  width: fit-content;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  padding: 0 10px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.notifications-modal-heading strong.read {
+  background: #d1fae5;
+}
+
+.notifications-modal-heading strong.unread {
+  background: var(--qb-tertiary);
+}
+
+.notifications-modal-message {
+  margin: 14px 0 0;
+  border: 2px dashed var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 12px;
+  color: var(--qb-foreground);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.notifications-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.notifications-modal-grid > div {
+  min-width: 0;
+  border: 2px solid var(--qb-border);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.notifications-modal-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.notifications-modal-grid strong {
+  display: block;
+  color: var(--qb-foreground);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.notifications-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+  .notification-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .notifications-modal-card {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .notifications-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-modal-actions button {
+    width: 100% !important;
+  }
+}

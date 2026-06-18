@@ -27,6 +27,7 @@ function ScanQR() {
   const [manualCode, setManualCode] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const [scannerPaused, setScannerPaused] = useState(false);
@@ -42,6 +43,24 @@ function ScanQR() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateManualSearchForm() {
+  const errors = {};
+
+  if (!manualCode.trim()) {
+    errors.manualCode = "Item ID, item code, or barcode is required.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
   function startScanAction() {
   if (scanActionLockRef.current || isSearching) {
     return false;
@@ -64,6 +83,60 @@ function isScanBusy() {
 
 function canUseAsDocumentId(value) {
   return Boolean(value && !String(value).includes("/"));
+}
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(imageUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl);
+      reject(new Error("Unable to read the uploaded image."));
+    };
+
+    image.src = imageUrl;
+  });
+}
+
+async function createScannerFriendlyImageFile(file) {
+  const image = await loadImageFromFile(file);
+
+  const minimumWidth = 1200;
+  const scale = image.width < minimumWidth ? minimumWidth / image.width : 1;
+
+  const scaledWidth = Math.round(image.width * scale);
+  const scaledHeight = Math.round(image.height * scale);
+
+  const padding = Math.max(120, Math.round(scaledWidth * 0.12));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = scaledWidth + padding * 2;
+  canvas.height = scaledHeight + padding * 2;
+
+  const context = canvas.getContext("2d");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.imageSmoothingEnabled = false;
+  context.drawImage(image, padding, padding, scaledWidth, scaledHeight);
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(resolve, "image/png", 1);
+  });
+
+  if (!blob) {
+    return file;
+  }
+
+  return new File([blob], `scanner-friendly-${file.name}`, {
+    type: "image/png",
+  });
 }
   function extractItemIdentifier(scannedText) {
     const text = String(scannedText || "").trim();
@@ -263,6 +336,7 @@ async function handleDetectedValue(value) {
     await stopScanner(true);
 
     showStatus(`Found item: ${item.itemName || item.id}`, "success");
+    setFieldErrors({});
 
     setTimeout(() => {
       navigate(`/item/${item.id}`);
@@ -280,10 +354,16 @@ async function handleManualSearch(e) {
 
   if (isScanBusy()) return;
 
-  if (!manualCode.trim()) {
-    showStatus("Please enter an item ID, item code, or barcode value.", "error");
+  showStatus("", "");
+
+  const isValid = validateManualSearchForm();
+
+  if (!isValid) {
+    showStatus("Please correct the highlighted fields.", "error");
     return;
   }
+
+  clearFieldError("manualCode");
 
   hasScannedRef.current = false;
   await handleDetectedValue(manualCode.trim());
@@ -292,9 +372,23 @@ async function handleManualSearch(e) {
 async function handleUploadedImageScan(event) {
   if (isScanBusy()) return;
 
-  const file = event.target.files?.[0];
+const file = event.target.files?.[0];
 
-  if (!file) return;
+if (!file) {
+  return;
+}
+
+clearFieldError("uploadImage");
+
+if (!file.type.startsWith("image/")) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    uploadImage: "Please upload an image file only.",
+  }));
+  showStatus("Please upload an image file only.", "error");
+  event.target.value = "";
+  return;
+}
 
   const started = startScanAction();
 
@@ -314,17 +408,24 @@ async function handleUploadedImageScan(event) {
       ],
     });
 
-    let decodedText = "";
+let decodedText = "";
 
-    try {
-      decodedText = await fileScanner.scanFile(file, false);
-    } finally {
-      try {
-        await fileScanner.clear();
-      } catch (error) {
-        console.log("File scanner clear error:", error);
-      }
-    }
+try {
+  try {
+    decodedText = await fileScanner.scanFile(file, false);
+  } catch (firstScanError) {
+    console.log("Original upload scan failed. Retrying with padded image:", firstScanError);
+
+    const scannerFriendlyFile = await createScannerFriendlyImageFile(file);
+    decodedText = await fileScanner.scanFile(scannerFriendlyFile, false);
+  }
+} finally {
+  try {
+    await fileScanner.clear();
+  } catch (error) {
+    console.log("File scanner clear error:", error);
+  }
+}
 
     if (!decodedText) {
       throw new Error("No QR or barcode detected in the uploaded image.");
@@ -334,14 +435,19 @@ async function handleUploadedImageScan(event) {
 
     const item = await findItemByScannedValue(decodedText);
 
-    showStatus(`Found item: ${item.itemName || item.id}`, "success");
+showStatus(`Found item: ${item.itemName || item.id}`, "success");
+setFieldErrors({});
 
     setTimeout(() => {
       navigate(`/item/${item.id}`);
     }, 600);
   } catch (error) {
     hasScannedRef.current = false;
-    showStatus("Upload scan failed: " + error.message, "error");
+    setFieldErrors((previousErrors) => ({
+  ...previousErrors,
+  uploadImage: "Upload scan failed: " + error.message,
+}));
+showStatus("Upload scan failed: " + error.message, "error");
   } finally {
     finishScanAction();
     event.target.value = "";
@@ -368,28 +474,24 @@ async function restartScanner() {
 
   return (
     <div className="scan-page">
-      <section className="scan-header">
-        <div>
-          <div className="scan-header-topline">
-            <p className="qb-kicker">QR / Barcode Scanner</p>
+<section className="scan-header scan-header-compact">
+  <div className="scan-header-content">
+    <div className="scan-header-text">
+      <p>
+        Scan an item QR code or barcode to open its item details. Admins can
+        continue to release and return workflows from this page.
+      </p>
+    </div>
 
-            <button
-              type="button"
-              className="scan-secondary-btn"
-              onClick={() => navigate("/dashboard")}
-            >
-              Back to Dashboard
-            </button>
-          </div>
-
-          <h1>Scan Item</h1>
-
-          <p>
-            Scan the QR code or barcode attached to an item. Borrowers can open
-            item details, while admins can use release and return shortcuts.
-          </p>
-        </div>
-      </section>
+    <button
+      type="button"
+      className="scan-secondary-btn scan-header-back-btn"
+      onClick={() => navigate("/dashboard")}
+    >
+      Back to Dashboard
+    </button>
+  </div>
+</section>
 
       {statusMessage && (
         <div className={`scan-status scan-status-${statusType}`} role="status">
@@ -486,19 +588,28 @@ async function restartScanner() {
             </p>
           </div>
 
-          <form onSubmit={handleManualSearch} className="scan-manual-form">
-            <label className="qb-label" htmlFor="manual-code">
-              Item ID / Item Code / Barcode
-            </label>
+          <form onSubmit={handleManualSearch} className="scan-manual-form" noValidate>
+<label className="qb-label" htmlFor="manual-code">
+  Item ID / Item Code / Barcode <span className="required-star">*</span>
+</label>
 
-            <input
-              id="manual-code"
-              type="text"
-              placeholder="Paste or type scanned value"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-              disabled={isScanBusy()}
-            />
+<input
+  id="manual-code"
+  type="text"
+  className={fieldErrors.manualCode ? "input-error" : ""}
+  placeholder="Paste or type scanned value"
+  value={manualCode}
+  onFocus={() => clearFieldError("manualCode")}
+  onChange={(e) => {
+    setManualCode(e.target.value);
+    clearFieldError("manualCode");
+  }}
+  disabled={isScanBusy()}
+/>
+
+{fieldErrors.manualCode && (
+  <p className="field-error-message">{fieldErrors.manualCode}</p>
+)}
 
             <button
               type="submit"
@@ -535,6 +646,9 @@ async function restartScanner() {
   {uploadedFileName && (
     <span className="scan-upload-name">{uploadedFileName}</span>
   )}
+  {fieldErrors.uploadImage && (
+  <p className="field-error-message">{fieldErrors.uploadImage}</p>
+)}
 </div>
 
 <div id="qr-file-reader" className="scan-file-reader-hidden"></div>

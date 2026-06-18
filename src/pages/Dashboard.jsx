@@ -476,12 +476,6 @@ function Dashboard() {
     })
     .slice(0, 4);
 
-  const roleLabel = isSuperAdmin
-    ? "Super Admin"
-    : isCategoryAdmin
-    ? "Category Admin"
-    : "Borrower";
-
   function handleDismissDueTodayAlert() {
     if (dueTodaySessionKey) {
       sessionStorage.setItem(dueTodaySessionKey, "true");
@@ -575,10 +569,9 @@ function Dashboard() {
         </div>
       )}
 
-      <section className="dashboard-hero">
-        <div>
-          <p className="dashboard-eyebrow">QBorrow Dashboard</p>
-          <h1>Welcome, {userData?.fullName || "User"}</h1>
+<section className="dashboard-hero">
+  <div>
+    <h1>Welcome, {userData?.fullName || "User"}</h1>
           <p>
             {isAdmin
               ? "Here is a quick overview of inventory, requests, and items that need attention."
@@ -596,19 +589,7 @@ function Dashboard() {
           )}
         </div>
       </section>
-
-      <section className="dashboard-role-row">
-        <div>
-          <span>Current Role</span>
-          <strong>{roleLabel}</strong>
-        </div>
-
-        <div>
-          <span>Email</span>
-          <strong>{userData?.email || auth.currentUser?.email || "No email"}</strong>
-        </div>
-      </section>
-
+      
       <section className="dashboard-stats-grid">
         {(isAdmin ? adminStats : borrowerStats).map((stat) => (
           <button

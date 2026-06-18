@@ -54,6 +54,7 @@ function BorrowRequest() {
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const submitLockRef = useRef(false);
 
@@ -61,7 +62,43 @@ function BorrowRequest() {
     setStatusMessage(message);
     setStatusType(type);
   }
+function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
 
+function validateBorrowRequestForm() {
+  const errors = {};
+
+  if (!purpose.trim()) {
+    errors.purpose = "Purpose of borrowing is required.";
+  }
+
+  if (!expectedReturnDate) {
+    errors.expectedReturnDate = "Expected return date is required.";
+  } else if (expectedReturnDate < today) {
+    errors.expectedReturnDate = "Expected return date cannot be in the past.";
+  } else if (expectedReturnDate < borrowDate) {
+    errors.expectedReturnDate =
+      "Expected return date cannot be earlier than the borrow date.";
+  }
+
+  const maxExpectedReturnDate = getMaxExpectedReturnDate();
+
+  if (
+    expectedReturnDate &&
+    maxExpectedReturnDate &&
+    expectedReturnDate > maxExpectedReturnDate
+  ) {
+    errors.expectedReturnDate = `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${maxExpectedReturnDate}.`;
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
   function getItemCode() {
     return item?.itemCode || item?.id || "No code";
   }
@@ -315,11 +352,19 @@ async function handleSubmitRequest(e) {
     return;
   }
 
-  submitLockRef.current = true;
-  setSubmitting(true);
-  showStatus("", "");
+showStatus("", "");
 
-  let submittedSuccessfully = false;
+const isValid = validateBorrowRequestForm();
+
+if (!isValid) {
+  showStatus("Please correct the highlighted fields.", "error");
+  return;
+}
+
+submitLockRef.current = true;
+setSubmitting(true);
+
+let submittedSuccessfully = false;
 
   try {
     if (currentUserData?.role && currentUserData.role !== "borrower") {
@@ -332,23 +377,9 @@ async function handleSubmitRequest(e) {
       return;
     }
 
-    if (!purpose.trim()) {
-      showStatus("Please enter your purpose of borrowing.", "error");
-      return;
-    }
 
     if (borrowDate !== today) {
       showStatus("Borrow date must be today.", "error");
-      return;
-    }
-
-    if (expectedReturnDate < today) {
-      showStatus("Expected return date cannot be in the past.", "error");
-      return;
-    }
-
-    if (expectedReturnDate < borrowDate) {
-      showStatus("Expected return date cannot be earlier than the borrow date.", "error");
       return;
     }
 
@@ -362,15 +393,6 @@ async function handleSubmitRequest(e) {
       return;
     }
 
-    const maxExpectedReturnDate = getMaxExpectedReturnDate();
-
-    if (maxExpectedReturnDate && expectedReturnDate > maxExpectedReturnDate) {
-      showStatus(
-        `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${maxExpectedReturnDate}.`,
-        "error"
-      );
-      return;
-    }
 
     const conflictingRequest = await checkRequestConflict();
 
@@ -472,26 +494,24 @@ async function handleSubmitRequest(e) {
 
   return (
     <div className="borrow-request-page">
-      <section className="borrow-request-header">
-        <div>
-          <p className="qb-kicker">Borrow Request</p>
+<section className="borrow-request-header borrow-request-header-compact">
+  <div className="borrow-request-header-content">
+    <div className="borrow-request-header-text">
+      <p>
+        Submit a request for this item. The borrow date is automatically set to
+        today, and the item will only be reserved after admin approval.
+      </p>
+    </div>
 
-          <h1>Request Item</h1>
-
-          <p>
-            Submit a borrow request for this item. The borrow date is
-            automatically set to today and cannot be edited.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="borrow-request-secondary-btn"
-          onClick={() => navigate(`/item/${itemId}`)}
-        >
-          Back to Item
-        </button>
-      </section>
+    <button
+      type="button"
+      className="borrow-request-secondary-btn borrow-request-header-back-btn"
+      onClick={() => navigate(`/item/${itemId}`)}
+    >
+      Back to Item
+    </button>
+  </div>
+</section>
 
       <section className="borrow-request-layout">
         <aside className="borrow-request-item-card">
@@ -603,21 +623,29 @@ async function handleSubmitRequest(e) {
             </div>
           )}
 
-          <form onSubmit={handleSubmitRequest}>
-            <div className="borrow-request-field">
-              <label className="qb-label" htmlFor="purpose">
-                Purpose of Borrowing
-              </label>
+          <form onSubmit={handleSubmitRequest} noValidate>
+<div className="borrow-request-field">
+  <label className="qb-label" htmlFor="purpose">
+    Purpose of Borrowing <span className="required-star">*</span>
+  </label>
 
-              <textarea
-                id="purpose"
-                placeholder="Example: For classroom presentation"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                disabled={submitting || requestSubmitted}
-                required
-              />
-            </div>
+  <textarea
+    id="purpose"
+    className={fieldErrors.purpose ? "input-error" : ""}
+    placeholder="Example: For classroom presentation"
+    value={purpose}
+    onFocus={() => clearFieldError("purpose")}
+    onChange={(e) => {
+      setPurpose(e.target.value);
+      clearFieldError("purpose");
+    }}
+    disabled={submitting || requestSubmitted}
+  />
+
+  {fieldErrors.purpose && (
+    <p className="field-error-message">{fieldErrors.purpose}</p>
+  )}
+</div>
 
             <div className="borrow-request-date-grid">
               <div className="borrow-request-field">
@@ -636,28 +664,36 @@ async function handleSubmitRequest(e) {
                 <p>Borrow date is automatically set to today.</p>
               </div>
 
-              <div className="borrow-request-field">
-                <label className="qb-label" htmlFor="expected-return-date">
-                  Expected Return Date
-                </label>
+<div className="borrow-request-field">
+  <label className="qb-label" htmlFor="expected-return-date">
+    Expected Return Date <span className="required-star">*</span>
+  </label>
 
-                <input
-                  id="expected-return-date"
-                  type="date"
-                  value={expectedReturnDate}
-                  min={today}
-                  max={maxExpectedReturnDate || undefined}
-                  onChange={(e) => setExpectedReturnDate(e.target.value)}
-                  disabled={submitting || requestSubmitted}
-                  required
-                />
+  <input
+    id="expected-return-date"
+    type="date"
+    className={fieldErrors.expectedReturnDate ? "input-error" : ""}
+    value={expectedReturnDate}
+    min={today}
+    max={maxExpectedReturnDate || undefined}
+    onFocus={() => clearFieldError("expectedReturnDate")}
+    onChange={(e) => {
+      setExpectedReturnDate(e.target.value);
+      clearFieldError("expectedReturnDate");
+    }}
+    disabled={submitting || requestSubmitted}
+  />
 
-                <p>
-                  {maxExpectedReturnDate
-                    ? `${getMaxBorrowDaysLabel()} Latest allowed return date: ${maxExpectedReturnDate}.`
-                    : "Select today or a future date only."}
-                </p>
-              </div>
+  {fieldErrors.expectedReturnDate && (
+    <p className="field-error-message">{fieldErrors.expectedReturnDate}</p>
+  )}
+
+  <p>
+    {maxExpectedReturnDate
+      ? `${getMaxBorrowDaysLabel()} Latest allowed return date: ${maxExpectedReturnDate}.`
+      : "Select today or a future date only."}
+  </p>
+</div>
             </div>
 
             <div className="borrow-request-actions">
