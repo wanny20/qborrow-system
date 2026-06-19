@@ -145,7 +145,7 @@ async function stopReleaseScanner(showMessage = false) {
     setScannerOpen(false);
 
     if (showMessage) {
-      showStatus("Scanner closed.", "success");
+      showToast("Scanner closed.", "success");
     }
   }
 }
@@ -180,7 +180,7 @@ async function startReleaseScanner() {
   if (startingScanner || releasing) return;
 
   setStartingScanner(true);
-  showStatus("Starting scanner...", "success");
+  showToast("Starting scanner...", "success");
 
   try {
     await stopReleaseScanner(false);
@@ -234,7 +234,7 @@ await scanner.start(
         () => {}
       );
 
-    showStatus("Scanner opened. Point the camera at the QR code or barcode.", "success");
+    showToast("Scanner opened. Point the camera at the QR code or barcode.", "success");
   } catch (error) {
     await stopReleaseScanner(false);
     showStatus("Scanner could not start: " + error.message, "error");
@@ -244,7 +244,7 @@ await scanner.start(
 }
 
 async function restartReleaseScanner() {
-  showStatus("Restarting scanner...", "success");
+  showToast("Restarting scanner...", "success");
   await startReleaseScanner();
 }
 
@@ -383,7 +383,7 @@ clearFieldError("manualItemId");
 setSelectedRequest(matchingRequest);
 setManualItemId(itemId);
 setFieldErrors({});
-showStatus("Approved request found. Review details before release.", "success");
+showToast("Approved request found. Review details before release.", "success");
   } catch (error) {
     showStatus("Error finding approved request: " + error.message, "error");
   }
@@ -817,7 +817,7 @@ useEffect(() => {
               setSelectedRequest(request);
               setManualItemId(request.itemId);
               setFieldErrors({});
-              showStatus("Approved request selected.", "success");
+              showToast("Approved request selected.", "success");
             }}
             disabled={releasing || selectedRequest?.id === request.id}
           >

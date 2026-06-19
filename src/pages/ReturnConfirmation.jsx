@@ -284,7 +284,7 @@ async function fetchBorrowedRequests() {
   setDamageLostReport("");
   setFieldErrors({});
   setViewingBorrowedRequest(null);
-  showStatus("Borrowed request selected.", "success");
+  showToast("Borrowed request selected.", "success");
 }
 
 async function findBorrowedRequestByItemId(rawItemId) {
@@ -357,7 +357,7 @@ clearFieldError("manualItemId");
     setReturnCondition("Good");
     setDamageLostReport("");
     setFieldErrors({});
-    showStatus("Borrowed request found. Review details before confirming return.", "success");
+    showToast("Borrowed request found. Review details before confirming return.", "success");
   } catch (error) {
     showStatus("Error finding borrowed request: " + error.message, "error");
   }

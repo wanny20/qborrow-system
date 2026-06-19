@@ -6,9 +6,12 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import "../styles/Login.css";
+import { useToast } from "../components/ToastProvider.jsx";
 
 function Login() {
   const navigate = useNavigate();
+
+  const { showToast } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -78,7 +81,7 @@ if (!isValid) {
 
   try {
     await signInWithEmailAndPassword(auth, email.trim(), password);
-    showStatus("Login successful. Redirecting to your dashboard...", "success");
+    showToast("Login successful. Redirecting to your dashboard...", "success");
 
     setTimeout(() => {
       navigate("/dashboard");
@@ -102,7 +105,7 @@ if (!isValid) {
 
   try {
     await sendPasswordResetEmail(auth, email.trim());
-    showStatus("Password reset email sent. Please check your inbox.", "success");
+    showToast("Password reset email sent. Please check your inbox.", "success");
   } catch (error) {
     console.error(error);
     showStatus("Failed to send password reset email. Please check your email address.", "error");
