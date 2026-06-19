@@ -4,6 +4,7 @@ import { updatePassword, signOut } from "firebase/auth";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/ForcePasswordChange.css";
+import { useToast } from "../components/ToastProvider.jsx";
 
 function ForcePasswordChange() {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ function ForcePasswordChange() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const { showToast } = useToast();
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -79,7 +82,7 @@ function ForcePasswordChange() {
         updatedAt: serverTimestamp(),
       });
 
-showStatus("Password updated successfully. Please log in again.", "success");
+showToast("Password updated successfully. Please log in again.", "success");
 
 setTimeout(async () => {
   await signOut(auth);

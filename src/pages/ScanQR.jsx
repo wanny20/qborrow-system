@@ -12,12 +12,15 @@ import {
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/ScanQR.css";
+import { useToast } from "../components/ToastProvider.jsx";
 
 function ScanQR() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
+  const { showToast } = useToast();
+  
   const scannerRef = useRef(null);
   const hasScannedRef = useRef(false);
   const scanActionLockRef = useRef(false);
@@ -237,7 +240,7 @@ async function createScannerFriendlyImageFile(file) {
         () => {}
       );
 
-      showStatus("Scanner started. Point the camera at the QR or barcode.", "success");
+      showToast("Scanner started. Point the camera at the QR or barcode.", "success");
     } catch (error) {
       setScannerActive(false);
       setScannerPaused(false);
@@ -328,14 +331,14 @@ async function handleDetectedValue(value) {
 
   hasScannedRef.current = true;
   setScanResult(value);
-  showStatus("Scanning item record...", "success");
+  showToast("Scanning item record...", "success");
 
   try {
     const item = await findItemByScannedValue(value);
 
     await stopScanner(true);
 
-    showStatus(`Found item: ${item.itemName || item.id}`, "success");
+    showToast(`Found item: ${item.itemName || item.id}`, "success");
     setFieldErrors({});
 
     setTimeout(() => {
@@ -358,10 +361,9 @@ async function handleManualSearch(e) {
 
   const isValid = validateManualSearchForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+ if (!isValid) {
+  return;
+}
 
   clearFieldError("manualCode");
 
@@ -396,7 +398,7 @@ if (!file.type.startsWith("image/")) {
 
   hasScannedRef.current = true;
   setUploadedFileName(file.name);
-  showStatus("Reading uploaded QR/barcode image...", "success");
+  showToast("Reading uploaded QR/barcode image...", "success");
 
   try {
     await stopScanner(false);
