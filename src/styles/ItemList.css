@@ -1475,3 +1475,66 @@
     grid-template-columns: 1fr !important;
   }
 }
+/* =========================================================
+   VIEW ITEMS HEADER TITLE INSIDE CARD
+========================================================= */
+
+.inventory-title-area-compact {
+  min-height: 108px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.inventory-title-area-compact .inventory-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.inventory-title-area-compact .inventory-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.inventory-header-actions-compact {
+  grid-template-columns: max-content !important;
+}
+
+.inventory-header-actions-compact .inventory-header-action-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+}
+
+@media (max-width: 1180px) {
+  .inventory-title-area-compact {
+    grid-template-columns: 1fr !important;
+  }
+
+  .inventory-header-actions-compact {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .inventory-header-actions-compact .inventory-header-action-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .inventory-title-area-compact .inventory-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .inventory-title-area-compact .inventory-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

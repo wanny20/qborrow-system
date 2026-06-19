@@ -1708,3 +1708,131 @@
     font-size: 0.58rem !important;
   }
 }
+/* =========================================================
+   FACULTY PRIORITY BADGE FOR MANAGE REQUESTS
+========================================================= */
+
+.manage-priority-row {
+  background:
+    linear-gradient(90deg, rgba(251, 191, 36, 0.2), #ffffff 32%) !important;
+  box-shadow: 3px 3px 0 0 rgba(251, 191, 36, 0.65) !important;
+}
+
+.manage-priority-row::before {
+  content: "";
+  width: 6px;
+  height: calc(100% + 4px);
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  border-radius: 16px 0 0 16px;
+  background: var(--qb-tertiary);
+}
+
+.manage-request-row {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.manage-priority-pill {
+  width: fit-content !important;
+  min-height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: #fef3c7 !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  color: #92400e !important;
+  padding: 0 8px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.46rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.manage-priority-pill-full {
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  font-size: 0.62rem !important;
+}
+
+.manage-request-status-cell {
+  align-items: center !important;
+}
+
+/* Mobile stacked mode */
+
+@media (max-width: 920px) {
+  .manage-priority-row::before {
+    width: calc(100% + 4px);
+    height: 6px;
+    left: -2px;
+    top: -2px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .manage-priority-pill {
+    width: fit-content !important;
+    min-height: 26px !important;
+    font-size: 0.52rem !important;
+  }
+}
+/* =========================================================
+   MANAGE REQUESTS TITLE INSIDE HEADER CARD
+========================================================= */
+
+.manage-requests-header-content {
+  min-height: 108px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.manage-requests-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.manage-requests-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.manage-header-back-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+}
+
+@media (max-width: 1100px) {
+  .manage-requests-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .manage-header-back-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .manage-requests-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .manage-requests-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

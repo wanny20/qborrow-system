@@ -12,12 +12,15 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/Notifications.css";
+
 const NOTIFICATIONS_PAGE_SIZE = 10;
 
 function Notifications() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
+  const { showToast } = useToast();
 
   const [notifications, setNotifications] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -217,69 +220,6 @@ const notificationActionLockRef = useRef("");
     }
   }
 
-async function handleMarkAsRead(notification) {
-  if (!currentUser) return;
-
-  if (isNotificationRead(notification)) return;
-
-  const started = startNotificationAction(notification.id);
-
-  if (!started) return;
-
-  showStatus("", "");
-
-  try {
-    const notificationRef = doc(db, "notifications", notification.id);
-    const latestNotificationSnap = await getDoc(notificationRef);
-
-    if (!latestNotificationSnap.exists()) {
-      setNotifications((previousNotifications) =>
-        previousNotifications.filter((item) => item.id !== notification.id)
-      );
-
-      showStatus("This notification no longer exists.", "error");
-      return;
-    }
-
-    if (notification.userId === currentUser.uid) {
-      await updateDoc(notificationRef, {
-        status: "Read",
-        readAt: serverTimestamp(),
-      });
-
-      setNotifications((previousNotifications) =>
-        previousNotifications.map((item) =>
-          item.id === notification.id ? { ...item, status: "Read" } : item
-        )
-      );
-    } else {
-      await updateDoc(notificationRef, {
-        readBy: arrayUnion(currentUser.uid),
-        lastReadAt: serverTimestamp(),
-      });
-
-      setNotifications((previousNotifications) =>
-        previousNotifications.map((item) =>
-          item.id === notification.id
-            ? {
-                ...item,
-                readBy: Array.isArray(item.readBy)
-                  ? [...new Set([...item.readBy, currentUser.uid])]
-                  : [currentUser.uid],
-              }
-            : item
-        )
-      );
-    }
-
-    showStatus("Notification marked as read.", "success");
-  } catch (error) {
-    showStatus("Error updating notification: " + error.message, "error");
-  } finally {
-    finishNotificationAction();
-  }
-}
-
 async function handleOpenNotification(notification) {
   if (!currentUser) return;
 
@@ -378,8 +318,8 @@ async function handleMarkAllAsRead() {
   );
 
   if (unreadNotifications.length === 0) {
-    showStatus("No unread notifications to mark.", "success");
-    return;
+    showToast("No Unread Notifications", "success");
+return;
   }
 
   const started = startNotificationAction("all");
@@ -437,7 +377,7 @@ async function handleMarkAllAsRead() {
       })
     );
 
-    showStatus("All visible notifications marked as read.", "success");
+    showToast("Notifications Marked as Read", "success");
   } catch (error) {
     showStatus("Error marking notifications as read: " + error.message, "error");
   } finally {
@@ -451,8 +391,8 @@ async function handleDeleteAllNotifications() {
   if (isNotificationActionBusy()) return;
 
   if (filteredNotifications.length === 0) {
-    showStatus("No notifications to delete.", "success");
-    return;
+showToast("No Notifications to Delete", "success");
+return;
   }
 
   const started = startNotificationAction("delete-all");
@@ -492,7 +432,7 @@ async function handleDeleteAllNotifications() {
       )
     );
 
-    showStatus("Visible notifications deleted successfully.", "success");
+    showToast("Notifications Deleted", "success");
   } catch (error) {
     showStatus("Error deleting notifications: " + error.message, "error");
   } finally {
@@ -602,12 +542,14 @@ function handleLoadMoreNotifications() {
     <div className="notifications-page">
 <section className="notifications-header notifications-header-compact">
   <div className="notifications-header-content">
-    <div className="notifications-header-text">
-      <p>
-        Track borrow request updates, approval results, release confirmations,
-        return confirmations, and admin alerts in one place.
-      </p>
-    </div>
+<div className="notifications-header-text">
+  <h1>Notifications</h1>
+
+  <p>
+    Track borrow request updates, approval results, release confirmations,
+    return confirmations, and admin alerts in one place.
+  </p>
+</div>
 
     <button
       type="button"

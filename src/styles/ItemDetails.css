@@ -847,3 +847,28 @@
     font-size: clamp(1.25rem, 7.5vw, 1.7rem) !important;
   }
 }
+/* =========================================================
+   CLEAN QR / BARCODE SECTION - NO OUTER DOTTED BOX
+========================================================= */
+
+.item-details-qr-box {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+.item-details-side-card {
+  align-self: start !important;
+}
+
+.item-details-scan-values {
+  margin-top: 18px !important;
+}
+
+.item-details-admin-shortcuts {
+  display: none !important;
+}

@@ -259,8 +259,20 @@ function QRCodeGenerator({
           <button type="button" onClick={handleDownloadBarcode}>
             Download Barcode
           </button>
-        </div>
+         </div>
       </div>
+
+      {compact && (
+        <div className="code-generator-compact-actions">
+          <button
+            type="button"
+            className="code-generator-print-label-btn"
+            onClick={handlePrintLabel}
+          >
+            Print Label
+          </button>
+        </div>
+      )}
 
       <div className="code-generator-footer">
         {!compact && (

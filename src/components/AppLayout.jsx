@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/AppLayout.css";
 
@@ -18,38 +28,20 @@ function AppLayout() {
 
   const [loading, setLoading] = useState(true);
   const [notificationCount, setNotificationCount] = useState(0);
-const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const [rejectedRequestAlerts, setRejectedRequestAlerts] = useState([]);
+  const [acknowledgingRejectedAlerts, setAcknowledgingRejectedAlerts] =
+  useState(false);
+
+  const [adminBorrowRequestAlerts, setAdminBorrowRequestAlerts] = useState([]);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const pageTitles = {
-    "/dashboard": "Dashboard",
-    "/items": "Item Inventory",
-    "/add-item": "Add Item",
-    "/manage-requests": "Manage Requests",
-    "/release-item": "Release Item",
-    "/return-confirmation": "Return Confirmation",
-    "/reports": "Reports",
-    "/scan-qr": "Scan QR Code",
-    "/my-requests": "My Borrow Requests",
-    "/notifications": "Notifications",
-    "/user-management": "User Management",
-    "/settings": "Settings",
-  };
-
 const currentPath = location.pathname;
-
-const currentPageTitle =
-  pageTitles[currentPath] ||
-  (currentPath.startsWith("/dashboard-list") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/dashboard-items") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/dashboard-requests") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/item/") ? "Item Details" : "") ||
-  (currentPath.startsWith("/edit-item") ? "Edit Item" : "") ||
-  (currentPath.startsWith("/borrow-request") ? "Borrow Request" : "") ||
-  "QBorrow";
 
 const activeSidebarPath = (() => {
   if (
@@ -119,6 +111,182 @@ const activeSidebarPath = (() => {
 
   return currentPath;
 })();
+function getRequestTime(request) {
+  if (request.rejectedAt?.toMillis) return request.rejectedAt.toMillis();
+  if (request.rejectedAt?.seconds) return request.rejectedAt.seconds * 1000;
+
+  if (request.createdAt?.toMillis) return request.createdAt.toMillis();
+  if (request.createdAt?.seconds) return request.createdAt.seconds * 1000;
+
+  return 0;
+}
+
+function getRejectedRequestReason(request) {
+  if (request.rejectReason) return request.rejectReason;
+
+  if (request.autoRejected) {
+    return "Automatically rejected because no admin action was made within 24 hours. You may submit a new request.";
+  }
+
+  return "Your borrow request was rejected. You may submit a new request if needed.";
+}
+
+async function checkRejectedRequestAlerts(userId) {
+  try {
+    const requestQuery = query(
+      collection(db, "borrowRequests"),
+      where("borrowerId", "==", userId)
+    );
+
+    const snapshot = await getDocs(requestQuery);
+
+    const unacknowledgedRejectedRequests = snapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .filter((request) => {
+        return (
+          request.approvalStatus === "Rejected" &&
+          !request.borrowerAcknowledgedAt
+        );
+      })
+      .sort((a, b) => getRequestTime(b) - getRequestTime(a));
+
+    setRejectedRequestAlerts(unacknowledgedRejectedRequests);
+  } catch (error) {
+    console.error("Error checking rejected request alerts:", error);
+  }
+}
+
+async function handleAcknowledgeRejectedRequests() {
+  if (acknowledgingRejectedAlerts || rejectedRequestAlerts.length === 0) return;
+
+  setAcknowledgingRejectedAlerts(true);
+
+  try {
+    await Promise.all(
+      rejectedRequestAlerts.map((request) =>
+        updateDoc(doc(db, "borrowRequests", request.id), {
+          borrowerAcknowledgedAt: serverTimestamp(),
+          borrowerAcknowledgedBy: auth.currentUser?.uid || "",
+        })
+      )
+    );
+
+    setRejectedRequestAlerts([]);
+  } catch (error) {
+    alert("Error closing rejected request alert: " + error.message);
+  } finally {
+    setAcknowledgingRejectedAlerts(false);
+  }
+}
+function getRequestCategoryId(request) {
+  return request.categoryId || request.category || "";
+}
+
+function getRequestCategoryName(request) {
+  return (
+    request.categoryName ||
+    request.category ||
+    request.categoryId ||
+    "Uncategorized"
+  );
+}
+
+function getBorrowRequestCreatedTime(request) {
+  if (request.createdAt?.toMillis) return request.createdAt.toMillis();
+  if (request.createdAt?.seconds) return request.createdAt.seconds * 1000;
+
+  return 0;
+}
+
+function isFacultyBorrowRequest(request) {
+  return (
+    request.priority === "High" ||
+    String(request.borrowerUserType || "").toLowerCase() === "faculty"
+  );
+}
+
+function getAdminBorrowAlertStorageKey() {
+  const adminId = userData?.uid || auth.currentUser?.uid || "unknown-admin";
+
+  return `qborrowSeenBorrowRequestAlerts-${adminId}`;
+}
+
+function getSeenAdminBorrowAlertIds() {
+  if (typeof window === "undefined") return new Set();
+
+  try {
+    const savedIds = JSON.parse(
+      localStorage.getItem(getAdminBorrowAlertStorageKey()) || "[]"
+    );
+
+    return new Set(Array.isArray(savedIds) ? savedIds : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markAdminBorrowAlertAsSeen(requestId) {
+  if (typeof window === "undefined" || !requestId) return;
+
+  const seenIds = getSeenAdminBorrowAlertIds();
+  seenIds.add(requestId);
+
+  localStorage.setItem(
+    getAdminBorrowAlertStorageKey(),
+    JSON.stringify([...seenIds])
+  );
+}
+
+function canSeeBorrowRequestAlert(request) {
+  if (!isAdmin || !userData?.uid) return false;
+
+  if (isSuperAdmin) return true;
+
+  if (isCategoryAdmin) {
+    const assignedCategories = Array.isArray(userData?.assignedCategories)
+      ? userData.assignedCategories.map(normalizeText)
+      : [];
+
+    const requestCategoryId = normalizeText(getRequestCategoryId(request));
+    const requestCategoryName = normalizeText(getRequestCategoryName(request));
+
+    return (
+      assignedCategories.includes(requestCategoryId) ||
+      assignedCategories.includes(requestCategoryName)
+    );
+  }
+
+  return false;
+}
+
+function handleDismissAdminBorrowRequestAlert() {
+  const currentAlert = adminBorrowRequestAlerts[0];
+
+  if (!currentAlert) return;
+
+  markAdminBorrowAlertAsSeen(currentAlert.id);
+
+  setAdminBorrowRequestAlerts((previousAlerts) =>
+    previousAlerts.filter((request) => request.id !== currentAlert.id)
+  );
+}
+
+function handleViewAdminBorrowRequestAlert() {
+  const currentAlert = adminBorrowRequestAlerts[0];
+
+  if (!currentAlert) return;
+
+  markAdminBorrowAlertAsSeen(currentAlert.id);
+
+  setAdminBorrowRequestAlerts((previousAlerts) =>
+    previousAlerts.filter((request) => request.id !== currentAlert.id)
+  );
+
+  navigate("/manage-requests?status=Pending");
+}
 
   const isBorrower = userData?.role === "borrower";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -283,8 +451,78 @@ const activeSidebarPath = (() => {
     return () => unsubscribe();
   }, [userData]);
 
+  useEffect(() => {
+  if (!isAdmin || !userData?.uid) {
+    setAdminBorrowRequestAlerts([]);
+    return;
+  }
+
+  const unsubscribe = onSnapshot(
+    collection(db, "borrowRequests"),
+    (snapshot) => {
+      const seenIds = getSeenAdminBorrowAlertIds();
+
+      const newPendingAlerts = snapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((request) => {
+          return (
+            request.approvalStatus === "Pending" &&
+            canSeeBorrowRequestAlert(request) &&
+            !seenIds.has(request.id)
+          );
+        })
+        .sort((a, b) => {
+          const aPriority = isFacultyBorrowRequest(a) ? 0 : 1;
+          const bPriority = isFacultyBorrowRequest(b) ? 0 : 1;
+
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority;
+          }
+
+          return getBorrowRequestCreatedTime(b) - getBorrowRequestCreatedTime(a);
+        });
+
+      setAdminBorrowRequestAlerts(newPendingAlerts);
+    },
+    (error) => {
+      console.error("Borrow request alert sync error:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, [
+  isAdmin,
+  isSuperAdmin,
+  isCategoryAdmin,
+  userData?.uid,
+  userData?.role,
+  userData?.assignedCategories,
+]);
+
+useEffect(() => {
+  if (userData?.role !== "borrower") {
+    setRejectedRequestAlerts([]);
+    return;
+  }
+
+  const userId = auth.currentUser?.uid || userData?.uid;
+
+  if (!userId) return;
+
+  checkRejectedRequestAlerts(userId);
+}, [userData?.role, userData?.uid]);
+
+useEffect(() => {
+  setProfileDropdownOpen(false);
+}, [location.pathname]);
+
 function handleLogout() {
   if (loggingOut) return;
+
+  setProfileDropdownOpen(false);
 
   if (typeof window !== "undefined" && window.innerWidth <= 820) {
     setSidebarOpen(false);
@@ -377,14 +615,34 @@ async function confirmLogout() {
     },
   ];
 
-  const superAdminLinks = [
+  const userManagementSubLinks = [
     {
-      label: "User Management",
-      icon: "/icons/manage.png",
-      fallbackIcon: "◎",
-      path: "/user-management",
+      label: "Add New User",
+      fallbackIcon: "+",
+      tool: "create",
+    },
+    {
+      label: "Manage Item Categories",
+      fallbackIcon: "C",
+      tool: "categories",
+    },
+    {
+      label: "Import Borrowers",
+      fallbackIcon: "CSV",
+      tool: "import",
     },
   ];
+
+  const activeUserManagementTool =
+    new URLSearchParams(location.search).get("tool") || "";
+
+  function openUserManagementTool(tool) {
+    navigate(`/user-management?tool=${tool}`);
+
+    if (window.innerWidth <= 820) {
+      setSidebarOpen(false);
+    }
+  }
 
 function renderNavLink(link) {
   const isActive = activeSidebarPath === link.path;
@@ -419,6 +677,59 @@ function renderNavLink(link) {
     </NavLink>
   );
 }
+function renderUserManagementMenu() {
+  const isActive = activeSidebarPath === "/user-management";
+
+  return (
+    <div className={`app-nav-group ${isActive ? "active" : ""}`}>
+      <NavLink
+        to="/user-management"
+        className={
+          isActive
+            ? "app-nav-link app-nav-parent-link active"
+            : "app-nav-link app-nav-parent-link"
+        }
+        aria-expanded={isActive}
+      >
+        <span className="app-nav-icon">
+          <img
+            src="/icons/manage.png"
+            alt=""
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+              event.currentTarget.nextElementSibling.style.display = "grid";
+            }}
+          />
+
+          <span className="app-nav-fallback-icon">◎</span>
+        </span>
+
+        <span className="app-nav-text">User Management</span>
+        <span className="app-nav-chevron">{isActive ? "▲" : "▼"}</span>
+      </NavLink>
+
+      {isActive && (
+        <div className="app-nav-submenu">
+          {userManagementSubLinks.map((toolLink) => (
+            <button
+              type="button"
+              key={toolLink.tool}
+              className={
+                activeUserManagementTool === toolLink.tool
+                  ? "app-nav-subitem active"
+                  : "app-nav-subitem"
+              }
+              onClick={() => openUserManagementTool(toolLink.tool)}
+            >
+              <span>{toolLink.fallbackIcon}</span>
+              <strong>{toolLink.label}</strong>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
   if (loading) {
     return (
@@ -448,10 +759,9 @@ function renderNavLink(link) {
               <img src="/qborrow-logo.png" alt="" />
             </span>
 
-            <span className="app-sidebar-brand-text">
-              <strong>QBorrow</strong>
-              <small>Scan • Borrow • Return</small>
-            </span>
+<span className="app-sidebar-brand-text">
+  <strong>QBorrow</strong>
+</span>
           </button>
 
           <button
@@ -487,7 +797,7 @@ function renderNavLink(link) {
           {isSuperAdmin && (
             <>
               <p className="app-nav-label">Super Admin</p>
-              {superAdminLinks.map(renderNavLink)}
+              {renderUserManagementMenu()}
             </>
           )}
         </nav>
@@ -556,6 +866,144 @@ function renderNavLink(link) {
     </section>
   </div>
 )}
+{rejectedRequestAlerts.length > 0 && (
+  <div
+    className="app-rejected-alert-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="rejected-request-alert-title"
+  >
+    <section className="app-rejected-alert-card">
+      <div className="app-rejected-alert-icon">!</div>
+
+      <div className="app-rejected-alert-content">
+        <p>Borrow Request Update</p>
+
+        <h2 id="rejected-request-alert-title">
+          Your borrow request has been rejected
+        </h2>
+
+        <span>
+          Please review the rejected request below before continuing to use the
+          system.
+        </span>
+      </div>
+
+      <div className="app-rejected-alert-list">
+        {rejectedRequestAlerts.map((request) => (
+          <div className="app-rejected-alert-item" key={request.id}>
+            <strong>{request.itemName || "Untitled Item"}</strong>
+            <p>{getRejectedRequestReason(request)}</p>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className="app-rejected-alert-ok"
+        onClick={handleAcknowledgeRejectedRequests}
+        disabled={acknowledgingRejectedAlerts}
+      >
+        {acknowledgingRejectedAlerts ? "Closing..." : "OK, I Understand"}
+      </button>
+    </section>
+  </div>
+)}
+{adminBorrowRequestAlerts.length > 0 && (
+  <div
+    className="app-admin-request-alert-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="admin-request-alert-title"
+  >
+    <section className="app-admin-request-alert-card">
+      <div className="app-admin-request-alert-icon">
+        {isFacultyBorrowRequest(adminBorrowRequestAlerts[0]) ? "★" : "!"}
+      </div>
+
+      <div className="app-admin-request-alert-content">
+        <p>
+          {isFacultyBorrowRequest(adminBorrowRequestAlerts[0])
+            ? "Priority Faculty Request"
+            : "New Borrow Request"}
+        </p>
+
+        <h2 id="admin-request-alert-title">
+          Someone sent a borrow request
+        </h2>
+
+        <span>
+          Review this request before continuing with other admin tasks.
+        </span>
+      </div>
+
+      <div className="app-admin-request-alert-item">
+        <span>Item</span>
+        <strong>
+          {adminBorrowRequestAlerts[0].itemName || "Untitled Item"}
+        </strong>
+
+        <p>
+          {adminBorrowRequestAlerts[0].borrowerName ||
+            adminBorrowRequestAlerts[0].borrowerEmail ||
+            "Borrower"}{" "}
+          requested this item.
+        </p>
+      </div>
+
+      <div className="app-admin-request-alert-grid">
+        <div>
+          <span>Borrower Type</span>
+          <strong>
+            {adminBorrowRequestAlerts[0].borrowerUserType || "Student"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>{getRequestCategoryName(adminBorrowRequestAlerts[0])}</strong>
+        </div>
+
+        <div>
+          <span>Borrow Date</span>
+          <strong>{adminBorrowRequestAlerts[0].borrowDate || "Not set"}</strong>
+        </div>
+
+        <div>
+          <span>Expected Return</span>
+          <strong>
+            {adminBorrowRequestAlerts[0].expectedReturnDate || "Not set"}
+          </strong>
+        </div>
+      </div>
+
+      {adminBorrowRequestAlerts.length > 1 && (
+        <div className="app-admin-request-alert-more">
+          +{adminBorrowRequestAlerts.length - 1} more new request
+          {adminBorrowRequestAlerts.length - 1 === 1 ? "" : "s"} waiting.
+        </div>
+      )}
+
+      <div className="app-admin-request-alert-actions">
+        <button
+          type="button"
+          className="app-admin-request-alert-secondary"
+          onClick={handleDismissAdminBorrowRequestAlert}
+        >
+          OK
+        </button>
+
+        <button
+          type="button"
+          className="app-admin-request-alert-primary"
+          onClick={handleViewAdminBorrowRequestAlert}
+        >
+          View Request
+        </button>
+      </div>
+    </section>
+  </div>
+)}
 
 <main className="app-main-content">
         <header className="app-topbar">
@@ -573,59 +1021,100 @@ function renderNavLink(link) {
               </button>
             )}
 
-<div className="app-topbar-title" aria-label="Current page">
-  <strong>{currentPageTitle}</strong>
+<div className="app-topbar-title" aria-label="System name">
+  <h3>QR-Based Digital Borrowing System</h3>
 </div>
           </div>
 
-          <div className="app-topbar-right">
-            <button
-              type="button"
-              className="app-topbar-notification"
-              onClick={() => navigate("/notifications")}
-              aria-label="Open notifications"
-            >
-              <span className="app-topbar-notification-icon">!</span>
-              <span>Notifications</span>
+<div className="app-topbar-right">
+  <button
+    type="button"
+    className="app-topbar-notification"
+    onClick={() => navigate("/notifications")}
+    aria-label="Open notifications"
+  >
+    <span className="app-topbar-notification-icon">!</span>
+    <span>Notifications</span>
 
-              {notificationCount > 0 && (
-                <strong>{notificationCount > 99 ? "99+" : notificationCount}</strong>
-              )}
-            </button>
+    {notificationCount > 0 && (
+      <strong>{notificationCount > 99 ? "99+" : notificationCount}</strong>
+    )}
+  </button>
 
-              <button
-                type="button"
-                className="app-topbar-profile"
-                onClick={() => navigate("/settings")}
-                aria-label="Open profile settings"
-                title="Open Settings"
-              >
-                <div className="app-topbar-avatar">
-                  {userData?.photoURL ? (
-                    <img
-                      src={userData.photoURL}
-                      alt={userData.fullName || "Profile"}
-                    />
-                  ) : (
-                    <span>{getInitials(userData?.fullName, userData?.email)}</span>
-                  )}
-                </div>
+  <div className="app-profile-menu-wrap">
+    <button
+      type="button"
+      className={`app-profile-pill ${
+        profileDropdownOpen ? "profile-open" : ""
+      }`}
+      onClick={() => setProfileDropdownOpen((current) => !current)}
+      aria-haspopup="menu"
+      aria-expanded={profileDropdownOpen}
+    >
+      <div className="app-profile-pill-avatar">
+        {userData?.photoURL ? (
+          <img src={userData.photoURL} alt={userData.fullName || "Profile"} />
+        ) : (
+          <span>{getInitials(userData?.fullName, userData?.email)}</span>
+        )}
+      </div>
 
-                <div>
-                  <strong>{userData?.fullName || "QBorrow User"}</strong>
-                  <span>{roleLabel}</span>
-                </div>
-              </button>
-              <button
-  type="button"
-  className="app-topbar-logout"
-  onClick={handleLogout}
-  aria-label="Logout"
->
-  <span className="app-topbar-logout-icon">↪</span>
-  <span>Logout</span>
-</button>
+      <div className="app-profile-pill-text">
+        <strong>{userData?.fullName || "QBorrow User"}</strong>
+        <span>
+          <i></i>
+          {roleLabel}
+        </span>
+      </div>
+
+      <span className="app-profile-pill-arrow">
+        {profileDropdownOpen ? "⌃" : "⌄"}
+      </span>
+    </button>
+
+    {profileDropdownOpen && (
+      <>
+        <button
+          type="button"
+          className="app-profile-menu-backdrop"
+          onClick={() => setProfileDropdownOpen(false)}
+          aria-label="Close profile menu"
+        />
+
+        <div className="app-profile-menu" role="menu">
+          <div className="app-profile-menu-header">
+            <strong>{userData?.fullName || "QBorrow User"}</strong>
+            <span>{userData?.email || "No email"}</span>
+            <p>{roleLabel}</p>
           </div>
+
+          <button
+            type="button"
+            className="app-profile-menu-item"
+            onClick={() => {
+              setProfileDropdownOpen(false);
+              navigate("/settings");
+            }}
+            role="menuitem"
+          >
+            <span>♙</span>
+            <strong>My Profile</strong>
+          </button>
+
+          <button
+            type="button"
+            className="app-profile-menu-item logout"
+            onClick={handleLogout}
+            role="menuitem"
+          >
+            <span>↪</span>
+            <strong>Logout</strong>
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+</div>
         </header>
 
         <div className="app-page-content">
