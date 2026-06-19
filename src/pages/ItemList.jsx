@@ -15,6 +15,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { db, auth } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ItemList.css";
 
 const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
@@ -22,6 +23,7 @@ const ITEMS_PAGE_SIZE = 12;
 
 function ItemList() {
   const [searchParams] = useSearchParams();
+  const { showToast } = useToast();
 
   const [items, setItems] = useState([]);
   const [lastItemDoc, setLastItemDoc] = useState(null);
@@ -265,10 +267,11 @@ async function handleDeleteItem(item) {
       return;
     }
 
-    await deleteDoc(itemRef);
+await deleteDoc(itemRef);
 
-    alert("Item deleted successfully.");
-    await fetchItemsAndCategories();
+showToast("Successfully Deleted", "success");
+await fetchItemsAndCategories();
+
   } catch (error) {
     alert("Error deleting item: " + error.message);
   } finally {
@@ -468,6 +471,8 @@ async function handleDeleteItem(item) {
 <section className="inventory-header-row inventory-header-compact">
   <div className="inventory-title-area inventory-title-area-compact">
     <div className="inventory-header-text">
+      <h1>{isBorrower ? "Available Items" : "View Items"}</h1>
+
       <p>
         {isBorrower
           ? "Browse available items and submit borrow requests."
@@ -482,16 +487,6 @@ async function handleDeleteItem(item) {
     </div>
 
     <div className="inventory-header-actions inventory-header-actions-compact">
-      {isAdmin && (
-        <button
-          type="button"
-          className="inventory-add-btn inventory-header-action-btn"
-          onClick={() => navigate("/add-item")}
-        >
-          + Add Item
-        </button>
-      )}
-
       <button
         type="button"
         className="inventory-refresh-btn inventory-header-action-btn"

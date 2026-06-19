@@ -19,6 +19,8 @@ const emptyDashboardCounts = {
   overdueRequests: 0,
   damagedLostItems: 0,
 };
+const AUTO_REJECT_MS = 24 * 60 * 60 * 1000;
+const NEAR_AUTO_REJECT_MS = 3 * 60 * 60 * 1000;
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -99,6 +101,55 @@ function Dashboard() {
 
     return request.expectedReturnDate === getTodayDateKey();
   }
+  function getRequestCreatedTime(request) {
+  if (request.createdAt?.toMillis) {
+    return request.createdAt.toMillis();
+  }
+
+  if (request.createdAt?.seconds) {
+    return request.createdAt.seconds * 1000;
+  }
+
+  return 0;
+}
+
+function getAutoRejectRemainingMs(request) {
+  if (request.approvalStatus !== "Pending") return null;
+
+  const createdTime = getRequestCreatedTime(request);
+
+  if (!createdTime) return null;
+
+  return AUTO_REJECT_MS - (Date.now() - createdTime);
+}
+
+function formatAutoRejectRemaining(request) {
+  const remainingMs = getAutoRejectRemainingMs(request);
+
+  if (remainingMs === null) return "No timer";
+  if (remainingMs <= 0) return "Ready to auto-reject";
+
+  const totalMinutes = Math.ceil(remainingMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours <= 0) return `${minutes}m left`;
+
+  return `${hours}h ${minutes}m left`;
+}
+
+function isNearAutoReject(request) {
+  const remainingMs = getAutoRejectRemainingMs(request);
+
+  return remainingMs !== null && remainingMs <= NEAR_AUTO_REJECT_MS;
+}
+
+function isFacultyPriorityRequest(request) {
+  return (
+    request.priority === "High" ||
+    String(request.borrowerUserType || "").toLowerCase() === "faculty"
+  );
+}
 
   function mapSnapshot(snapshot) {
     return snapshot.docs.map((document) => ({
@@ -117,17 +168,19 @@ function Dashboard() {
     const requestsRef = collection(db, "borrowRequests");
     const todayKey = getTodayDateKey();
 
-    const [
-      totalItemsCount,
-      availableItemsCount,
-      borrowedRequestsCount,
-      pendingRequestsCount,
-      overdueSnapshot,
-      conditionDamagedSnapshot,
-      conditionLostSnapshot,
-      availabilityDamagedSnapshot,
-      availabilityLostSnapshot,
-    ] = await Promise.all([
+const [
+  totalItemsCount,
+  availableItemsCount,
+  borrowedRequestsCount,
+  pendingRequestsCount,
+  overdueSnapshot,
+  conditionDamagedSnapshot,
+  conditionLostSnapshot,
+  availabilityDamagedSnapshot,
+  availabilityLostSnapshot,
+  allRequestsSnapshot,
+] = await Promise.all([
+
       getServerCount(itemsRef),
       getServerCount(query(itemsRef, where("availability", "==", "Available"))),
       getServerCount(query(requestsRef, where("approvalStatus", "==", "Borrowed"))),
@@ -136,7 +189,8 @@ function Dashboard() {
       getDocs(query(itemsRef, where("condition", "==", "Damaged"))),
       getDocs(query(itemsRef, where("condition", "==", "Lost"))),
       getDocs(query(itemsRef, where("availability", "==", "Damaged"))),
-      getDocs(query(itemsRef, where("availability", "==", "Lost"))),
+     getDocs(query(itemsRef, where("availability", "==", "Lost"))),
+getDocs(requestsRef),
     ]);
 
     const overdueCount = overdueSnapshot.docs.filter((document) =>
@@ -156,8 +210,8 @@ function Dashboard() {
       });
     });
 
-    setItems([]);
-    setRequests([]);
+setItems([]);
+setRequests(mapSnapshot(allRequestsSnapshot));
 
     setDashboardCounts({
       totalItems: totalItemsCount,
@@ -278,6 +332,41 @@ function Dashboard() {
   );
 
   const overdueRequests = visibleRequests.filter((request) => isOverdue(request));
+
+  const facultyPendingRequests = pendingRequests.filter((request) =>
+  isFacultyPriorityRequest(request)
+);
+
+const nearAutoRejectRequests = pendingRequests.filter((request) =>
+  isNearAutoReject(request)
+);
+
+const adminUrgentAlerts = [
+  {
+    title: "Priority Faculty Requests",
+    count: facultyPendingRequests.length,
+    description: "Faculty requests waiting for admin action.",
+    tone: "yellow",
+    path: "/manage-requests?status=Pending",
+    items: facultyPendingRequests.slice(0, 3),
+  },
+  {
+    title: "Near Auto-Reject",
+    count: nearAutoRejectRequests.length,
+    description: "Pending requests close to the 24-hour auto-reject limit.",
+    tone: "pink",
+    path: "/manage-requests?status=Pending",
+    items: nearAutoRejectRequests.slice(0, 3),
+  },
+  {
+    title: "Overdue Borrowed Items",
+    count: overdueRequests.length,
+    description: "Borrowed or approved items past expected return date.",
+    tone: "red",
+    path: "/manage-requests?status=Overdue",
+    items: overdueRequests.slice(0, 3),
+  },
+];
 
   const damagedLostItems = visibleItems.filter(
     (item) =>
@@ -605,6 +694,62 @@ function Dashboard() {
           </button>
         ))}
       </section>
+
+      {isAdmin && (
+  <section className="dashboard-urgent-alerts">
+    <div className="dashboard-urgent-heading">
+      <div>
+        <p className="qb-kicker">Admin Priority Center</p>
+        <h2>Urgent Alerts</h2>
+        <span>
+          Requests and records that need attention before normal tasks.
+        </span>
+      </div>
+
+      <button type="button" onClick={() => navigate("/manage-requests")}>
+        View Requests
+      </button>
+    </div>
+
+    <div className="dashboard-urgent-grid">
+      {adminUrgentAlerts.map((alert) => (
+        <button
+          type="button"
+          className={`dashboard-urgent-card dashboard-urgent-${alert.tone}`}
+          key={alert.title}
+          onClick={() => navigate(alert.path)}
+        >
+          <div className="dashboard-urgent-card-top">
+            <span>{alert.title}</span>
+            <strong>{alert.count}</strong>
+          </div>
+
+          <p>{alert.description}</p>
+
+          {alert.items.length > 0 ? (
+            <div className="dashboard-urgent-preview-list">
+              {alert.items.map((request) => (
+                <div key={request.id}>
+                  <strong>{request.itemName || "Untitled Item"}</strong>
+                  <span>
+                    {request.borrowerName || request.borrowerEmail || "Borrower"}
+                    {request.approvalStatus === "Pending"
+                      ? ` • ${formatAutoRejectRemaining(request)}`
+                      : request.expectedReturnDate
+                        ? ` • Due ${request.expectedReturnDate}`
+                        : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="dashboard-urgent-empty">No urgent records</div>
+          )}
+        </button>
+      ))}
+    </div>
+  </section>
+)}
 
       {isAdmin ? (
         <section className="dashboard-main-grid">

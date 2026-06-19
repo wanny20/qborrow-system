@@ -16,12 +16,14 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ReleaseItem.css";
 
 function ReleaseItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
 
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -333,7 +335,6 @@ showStatus("", "");
 const isValid = validateManualFindForm(itemId);
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
 
@@ -404,10 +405,9 @@ async function handleConfirmRelease() {
 
   const isValid = validateReleaseForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 
   if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
     showStatus("You are not allowed to release this category item.", "error");
@@ -503,10 +503,11 @@ async function handleConfirmRelease() {
       link: "/my-requests",
     });
 
-    showStatus("Item released successfully. Request is now Borrowed.", "success");
-    setSelectedRequest(null);
-    setManualItemId("");
-    await fetchApprovedRequests();
+      showToast("Item Released", "success");
+      setSelectedRequest(null);
+      setManualItemId("");
+      await fetchApprovedRequests();
+
   } catch (error) {
     showStatus("Error releasing item: " + error.message, "error");
   } finally {
@@ -545,11 +546,13 @@ useEffect(() => {
     <div className="release-page">
 <section className="release-header release-header-compact">
   <div className="release-header-content">
-    <div className="release-header-text">
-      <p>
-        Scan the item QR code or barcode before giving it to the borrower.
-        This confirms the approved item is physically released.
-      </p>
+<div className="release-header-text">
+  <h1>Release Item</h1>
+
+  <p>
+    Scan the item QR code or barcode before giving it to the borrower.
+    This confirms the approved item is physically released.
+  </p>
 
       {isCategoryAdmin && (
         <div className="release-assigned-note">

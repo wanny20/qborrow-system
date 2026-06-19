@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signOut,
@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, secondaryAuth, functions } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/UserManagement.css";
 
 const USERS_PAGE_SIZE = 5;
@@ -30,6 +31,9 @@ function UserManagement() {
 const navigate = useNavigate();
 const outletContext = useOutletContext() || {};
 const { userData: currentAdmin } = outletContext;
+const { showToast } = useToast();
+const [searchParams, setSearchParams] = useSearchParams();
+
 
   const [users, setUsers] = useState([]);
   const [lastUserDoc, setLastUserDoc] = useState(null);
@@ -102,8 +106,10 @@ const { userData: currentAdmin } = outletContext;
     setStatusMessage(message);
     setStatusType(type);
   }
-  function closeUserToolModal() {
+
+function closeUserToolModal() {
   setActiveUserTool("");
+  setSearchParams({});
 }
 
   function clearCreateFieldError(fieldName) {
@@ -603,10 +609,9 @@ async function handleCreateUser(e) {
 
   const isValid = validateCreateUserForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 
   setCreating(true);
 
@@ -637,9 +642,10 @@ async function handleCreateUser(e) {
 
       await signOut(secondaryAuth);
 
-      showStatus("User account created successfully.", "success");
-      resetCreateForm();
-      fetchData();
+        showToast("Successfully Created", "success");
+        resetCreateForm();
+        fetchData();
+
     } catch (error) {
       showStatus("Error creating user: " + error.message, "error");
     } finally {
@@ -665,8 +671,9 @@ async function handleCreateUser(e) {
 
       await seedDefaultCategories();
 
-      showStatus("Default categories are ready.", "success");
+      showToast("Default Categories Ready", "success");
       fetchData();
+
     } catch (error) {
       showStatus("Error seeding categories: " + error.message, "error");
     } finally {
@@ -680,11 +687,9 @@ async function handleAddCategory(event) {
 
   const isValid = validateAddCategoryForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
-
+ if (!isValid) {
+  return;
+}
   setCategoryAction("add");
 
     try {
@@ -694,9 +699,10 @@ async function handleAddCategory(event) {
         name: newCategoryName.trim(),
       });
 
-      showStatus("Category added successfully.", "success");
+      showToast("Successfully Created", "success");
       setNewCategoryName("");
       fetchData();
+
     } catch (error) {
       showStatus("Error adding category: " + error.message, "error");
     } finally {
@@ -731,8 +737,9 @@ async function handleAddCategory(event) {
         categoryId: category.id,
       });
 
-      showStatus("Category deleted successfully.", "success");
-      fetchData();
+        showToast("Successfully Deleted", "success");
+        fetchData();
+
     } catch (error) {
       showStatus("Error deleting category: " + error.message, "error");
     } finally {
@@ -777,10 +784,9 @@ async function handleSaveUserChanges(user) {
 
   const isValid = validateEditUserForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 setUpdatingId(user.id);
 
     try {
@@ -794,9 +800,10 @@ setUpdatingId(user.id);
         updatedAt: serverTimestamp(),
       });
 
-      showStatus("User details updated successfully.", "success");
+      showToast("Successfully Updated", "success");
       cancelEditingUser();
       fetchData();
+
     } catch (error) {
       showStatus("Error updating user: " + error.message, "error");
     } finally {
@@ -826,8 +833,8 @@ setUpdatingId(user.id);
         updatedAt: serverTimestamp(),
       });
 
-      showStatus(
-        nextValue ? "Borrowing enabled." : "Borrowing disabled.",
+      showToast(
+        nextValue ? "Borrowing Enabled" : "Borrowing Disabled",
         "success"
       );
 
@@ -860,7 +867,7 @@ setUpdatingId(user.id);
         updatedAt: serverTimestamp(),
       });
 
-      showStatus("Suspension record reset successfully.", "success");
+      showToast("Suspension Reset", "success");
       fetchData();
     } catch (error) {
       showStatus("Error resetting suspension: " + error.message, "error");
@@ -899,8 +906,9 @@ setUpdatingId(user.id);
         uid: user.id,
       });
 
-      showStatus("User deleted completely.", "success");
+      showToast("Successfully Deleted", "success");
       fetchData();
+
     } catch (error) {
       showStatus("Error deleting user: " + error.message, "error");
     } finally {
@@ -1199,10 +1207,9 @@ async function handleBulkImportBorrowers() {
 
   const isValid = validateCsvImportForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 
     const confirmImport = window.confirm(
       `Import ${csvBorrowers.length} borrower account${csvBorrowers.length === 1 ? "" : "s"}?`
@@ -1283,6 +1290,25 @@ async function handleBulkImportBorrowers() {
   useEffect(() => {
     fetchData();
   }, []);
+useEffect(() => {
+  const selectedTool = searchParams.get("tool");
+  const validTools = ["create", "categories", "import"];
+
+  if (!selectedTool) {
+    setActiveUserTool("");
+    return;
+  }
+
+  if (!validTools.includes(selectedTool)) {
+    return;
+  }
+
+  if (selectedTool === "categories") {
+    setShowCategoryList(true);
+  }
+
+  setActiveUserTool(selectedTool);
+}, [searchParams]);
 
   const editingUser = users.find((user) => user.id === editingUserId) || null;
 
@@ -1324,12 +1350,14 @@ async function handleBulkImportBorrowers() {
     <div className="user-management-page">
 <section className="user-management-header user-management-header-compact">
   <div className="user-management-header-content">
-    <div className="user-management-header-text">
-      <p>
-        Manage QBorrow accounts, borrower imports, item categories, and category
-        admin permissions from one Super Admin workspace.
-      </p>
-    </div>
+<div className="user-management-header-text">
+  <h1>User Management</h1>
+
+  <p>
+    Manage QBorrow accounts, borrower imports, item categories, and category
+    admin permissions from one Super Admin workspace.
+  </p>
+</div>
 
     <button
       type="button"
@@ -1382,50 +1410,6 @@ async function handleBulkImportBorrowers() {
         </div>
       </section>
 
-<section className="user-module-launcher">
-  <button
-    type="button"
-    className="user-module-card user-module-card-primary"
-    onClick={() => setActiveUserTool("create")}
-  >
-    <span>+</span>
-    <div>
-<strong>Add New User</strong>
-<p>Create borrower accounts, category admins, and super admin accounts.</p>
-    </div>
-  </button>
-
-<button
-  type="button"
-  className="user-module-card"
-  onClick={() => {
-    setShowCategoryList(true);
-    setActiveUserTool("categories");
-  }}
->
-  <span>C</span>
-  <div>
-    <strong>Manage Item Categories</strong>
-    <p>
-      Create inventory categories used for item grouping and category admin
-      assignment.
-    </p>
-  </div>
-</button>
-
-  <button
-    type="button"
-    className="user-module-card"
-    onClick={() => setActiveUserTool("import")}
-  >
-    <span>CSV</span>
-    <div>
-      <strong>Import Borrowers</strong>
-      <p>Upload CSV files using the required borrower format.</p>
-    </div>
-  </button>
-</section>
-
 <section className="user-management-layout">
   <div className={`user-left-stack ${activeUserTool ? "user-modal-open" : ""}`}>
           <section
@@ -1439,15 +1423,17 @@ async function handleBulkImportBorrowers() {
     onClick={closeUserToolModal}
     aria-label="Close Add User modal"
   >
-    ×
+    Close
   </button>
-            <div className="user-section-heading">
-              <h2>Create User</h2>
-              <p>
-                Use a temporary password. Borrower details are optional but
-                recommended for students, faculty, and staff.
-              </p>
-            </div>
+<div className="user-modal-hero">
+  <div className="user-modal-hero-text">
+    <h2>Create User</h2>
+    <p>
+      Use a temporary password. Borrower details are optional but
+      recommended for students, faculty, and staff.
+    </p>
+  </div>
+</div>
 
             <form onSubmit={handleCreateUser} noValidate>
 <div className="user-field">
@@ -1742,15 +1728,17 @@ async function handleBulkImportBorrowers() {
     onClick={closeUserToolModal}
     aria-label="Close Categories modal"
   >
-    ×
+    Close
   </button>
 
-<div className="user-section-heading">
-  <h2>Manage Item Categories</h2>
-  <p>
-    Categories organize inventory items and define what category admins are
-    allowed to manage. Delete is allowed only when a category is unused.
-  </p>
+<div className="user-modal-hero">
+  <div className="user-modal-hero-text">
+    <h2>Manage Item Categories</h2>
+    <p>
+      Categories organize inventory items and define what category admins are
+      allowed to manage. Delete is allowed only when a category is unused.
+    </p>
+  </div>
 </div>
 
 {categories.length === 0 && (
@@ -1897,10 +1885,11 @@ async function handleBulkImportBorrowers() {
     onClick={closeUserToolModal}
     aria-label="Close Import Borrowers modal"
   >
-    ×
+    Close
   </button>
 
-  <div className="user-section-heading">
+<div className="user-modal-hero">
+  <div className="user-modal-hero-text">
     <h2>Import Borrowers</h2>
     <p>
       Required CSV headers: Name, Email, Password. Optional headers:
@@ -1908,6 +1897,7 @@ async function handleBulkImportBorrowers() {
       Level, Section, Mobile Number.
     </p>
   </div>
+</div>
         <div className="user-import-polish-grid">
     <div className="user-import-guide-card">
       <div className="user-import-guide-icon">1</div>
@@ -2348,7 +2338,7 @@ async function handleBulkImportBorrowers() {
                 onClick={cancelEditingUser}
                 aria-label="Close edit user"
               >
-                ×
+                Close
               </button>
 
               <div className="user-section-heading">
@@ -2595,7 +2585,7 @@ async function handleBulkImportBorrowers() {
                 onClick={() => setViewingUser(null)}
                 aria-label="Close user details"
               >
-                ×
+                Close
               </button>
 
               <div className="user-section-heading">

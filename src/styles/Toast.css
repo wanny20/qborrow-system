@@ -1,0 +1,100 @@
+/* =========================================================
+   GLOBAL TOAST NOTIFICATIONS
+========================================================= */
+
+.qb-toast-container {
+  position: fixed;
+  top: 86px;
+  right: 22px;
+  z-index: 100000;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.qb-toast {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--qb-border);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 5px 5px 0 0 var(--qb-border);
+  padding: 10px;
+  animation: qbToastIn 260ms ease both;
+}
+
+.qb-toast-success {
+  background:
+    linear-gradient(135deg, rgba(52, 211, 153, 0.2), #ffffff 55%);
+}
+
+.qb-toast-error {
+  background:
+    linear-gradient(135deg, rgba(248, 113, 113, 0.2), #ffffff 55%);
+}
+
+.qb-toast > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: var(--qb-quaternary);
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-weight: 900;
+}
+
+.qb-toast-error > span {
+  background: var(--qb-secondary);
+}
+
+.qb-toast p {
+  margin: 0;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.qb-toast button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+@keyframes qbToastIn {
+  from {
+    opacity: 0;
+    transform: translate(14px, -6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .qb-toast-container {
+    top: 76px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}

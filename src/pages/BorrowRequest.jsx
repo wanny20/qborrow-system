@@ -12,12 +12,14 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/BorrowRequest.css";
 
 function BorrowRequest() {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
+  const { showToast } = useToast();
 
   function getTodayDate() {
     const date = new Date();
@@ -357,7 +359,6 @@ showStatus("", "");
 const isValid = validateBorrowRequestForm();
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
 
@@ -397,11 +398,11 @@ let submittedSuccessfully = false;
     const conflictingRequest = await checkRequestConflict();
 
     if (conflictingRequest) {
-      showStatus(
-        `This item already has an active request from ${conflictingRequest.borrowDate} to ${conflictingRequest.expectedReturnDate}. Please choose another item.`,
-        "error"
-      );
-      return;
+showStatus(
+  "This item already has an active request. Please wait until the current request is approved, rejected, cancelled, or auto-rejected.",
+  "error"
+);
+return; 
     }
 
     await addDoc(collection(db, "borrowRequests"), {
@@ -449,25 +450,35 @@ let submittedSuccessfully = false;
       link: "/my-requests",
     });
 
-    await addDoc(collection(db, "notifications"), {
-      userId: "",
-      targetRole: "categoryAdmin",
-      categoryId: getCategoryId(),
-      title: "New Borrow Request",
-      message: `${getBorrowerName()} requested ${item.itemName}.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/manage-requests",
-    });
+await addDoc(collection(db, "notifications"), {
+  userId: "",
+  targetRole: "categoryAdmin",
+  categoryId: getCategoryId(),
+  categoryName: getCategoryName(),
+  title:
+    getBorrowerUserType() === "Faculty"
+      ? "Priority Faculty Borrow Request"
+      : "New Borrow Request",
+  message:
+    getBorrowerUserType() === "Faculty"
+      ? `PRIORITY: Faculty ${getBorrowerName()} requested ${item.itemName}.`
+      : `${getBorrowerName()} requested ${item.itemName}.`,
+  priority: getBorrowerUserType() === "Faculty" ? "High" : "Normal",
+  borrowerUserType: getBorrowerUserType(),
+  status: "Unread",
+  createdAt: serverTimestamp(),
+  link: "/manage-requests",
+});
 
     submittedSuccessfully = true;
     setRequestSubmitted(true);
 
-    showStatus("Borrow request submitted successfully. Redirecting...", "success");
+showToast("Borrow Request Submitted", "success");
 
-    setTimeout(() => {
-      navigate("/my-requests");
-    }, 700);
+setTimeout(() => {
+  navigate("/my-requests");
+}, 700);
+
   } catch (error) {
     showStatus("Error submitting request: " + error.message, "error");
   } finally {
@@ -497,6 +508,8 @@ let submittedSuccessfully = false;
 <section className="borrow-request-header borrow-request-header-compact">
   <div className="borrow-request-header-content">
     <div className="borrow-request-header-text">
+      <h1>Borrow Request</h1>
+
       <p>
         Submit a request for this item. The borrow date is automatically set to
         today, and the item will only be reserved after admin approval.

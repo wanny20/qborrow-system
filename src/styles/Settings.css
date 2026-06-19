@@ -946,3 +946,57 @@
     justify-content: center !important;
   }
 }
+/* =========================================================
+   SETTINGS TITLE INSIDE HEADER CARD
+========================================================= */
+
+.settings-header-content {
+  min-height: 108px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.settings-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.settings-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.settings-header-back-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+}
+
+@media (max-width: 1020px) {
+  .settings-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .settings-header-back-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .settings-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .settings-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

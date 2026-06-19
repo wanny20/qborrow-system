@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ItemDetails.css";
 
 const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
@@ -18,6 +19,8 @@ const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
 function ItemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
@@ -192,10 +195,11 @@ async function hasActiveBorrowRequest() {
         return;
       }
 
-      await deleteDoc(doc(db, "items", item.id));
+await deleteDoc(doc(db, "items", item.id));
 
-      alert("Item deleted successfully.");
-      navigate("/items");
+showToast("Successfully Deleted", "success");
+navigate("/items");
+
     } catch (error) {
       alert("Error deleting item: " + error.message);
     } finally {
@@ -262,36 +266,15 @@ async function hasActiveBorrowRequest() {
       </p>
     </div>
 
-    <div className="item-details-header-actions item-details-header-actions-compact">
-      <button
-        type="button"
-        className="item-details-secondary-btn"
-        onClick={() => navigate("/items")}
-      >
-        Back to Items
-      </button>
-
-      {canManageThisItem && (
-        <button
-          type="button"
-          className="item-details-primary-btn"
-          onClick={() => navigate(`/edit-item?id=${item.id}`)}
-        >
-          Edit Item
-        </button>
-      )}
-
-      {canDeleteThisItem && (
-        <button
-          type="button"
-          className="item-details-danger-btn"
-          onClick={handleDeleteItem}
-          disabled={deleting}
-        >
-          {deleting ? "Deleting..." : "Delete Item"}
-        </button>
-      )}
-    </div>
+<div className="item-details-header-actions item-details-header-actions-compact">
+  <button
+    type="button"
+    className="item-details-secondary-btn"
+    onClick={() => navigate("/items")}
+  >
+    Back to Items
+  </button>
+</div>
   </div>
 </section>
 
@@ -374,11 +357,11 @@ async function hasActiveBorrowRequest() {
                 </div>
               ) : (
                 <div className="item-details-warning">
-                  <strong>Admin View</strong>
-                  <p>
-                    Admins can manage this item using edit, release, return, and
-                    delete workflows.
-                  </p>
+<strong>Admin View</strong>
+<p>
+  Admins can review item information and use release or return workflows
+  from the scan shortcuts.
+</p>
                 </div>
               )}
             </div>
@@ -392,13 +375,16 @@ async function hasActiveBorrowRequest() {
           </div>
 
           <div className="item-details-qr-box">
-            <QRCodeGenerator
-              itemId={item.id}
-              itemName={item.itemName}
-              itemCode={getItemCode(item)}
-              qrValue={item.qrValue}
-              barcodeValue={item.barcodeValue}
-            />
+              <QRCodeGenerator
+                itemId={item.id}
+                itemName={item.itemName}
+                itemCode={getItemCode(item)}
+                qrValue={item.qrValue}
+                barcodeValue={item.barcodeValue}
+                qrSize={120}
+                barcodeHeight={54}
+                compact
+              />
           </div>
 
           <div className="item-details-scan-values">
@@ -413,20 +399,7 @@ async function hasActiveBorrowRequest() {
             </div>
           </div>
 
-          {canManageThisItem && (
-            <div className="item-details-admin-shortcuts">
-              <button type="button" onClick={() => navigate("/release-item")}>
-                Release Scan
-              </button>
 
-              <button
-                type="button"
-                onClick={() => navigate("/return-confirmation")}
-              >
-                Return Scan
-              </button>
-            </div>
-          )}
         </aside>
       </section>
     </div>

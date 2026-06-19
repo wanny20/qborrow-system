@@ -2238,3 +2238,57 @@
     width: 100% !important;
   }
 }
+/* =========================================================
+   REPORTS TITLE INSIDE HEADER CARD
+========================================================= */
+
+.reports-header-compact .reports-header-content {
+  min-height: 108px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.reports-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.reports-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.reports-header-back-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+}
+
+@media (max-width: 1180px) {
+  .reports-header-compact .reports-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-header-back-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .reports-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

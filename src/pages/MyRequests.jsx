@@ -15,11 +15,13 @@ import {
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/MyRequests.css";
 const REQUESTS_PAGE_SIZE = 10;
 
 function MyRequests() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
 const [requests, setRequests] = useState([]);
 const [lastRequestDoc, setLastRequestDoc] = useState(null);
@@ -75,6 +77,27 @@ const [selectedRequest, setSelectedRequest] = useState(null);
       "Uncategorized"
     );
   }
+  function getRequestClosedReason(request) {
+  if (request.approvalStatus === "Rejected") {
+    if (request.rejectReason) return request.rejectReason;
+
+    if (request.autoRejected) {
+      return "Automatically rejected because no admin action was made within 24 hours. You may submit a new request.";
+    }
+
+    return "Your borrow request was rejected by the admin.";
+  }
+
+  if (request.approvalStatus === "Cancelled") {
+    return "You cancelled this borrow request.";
+  }
+
+  return "";
+}
+
+function shouldShowClosedReason(request) {
+  return ["Rejected", "Cancelled"].includes(request.approvalStatus);
+}
 
   function getRequestTimingStatus(request) {
     if (!request.expectedReturnDate) return "N/A";
@@ -277,12 +300,13 @@ async function handleLoadMoreRequests() {
         cancelledBy: currentUser?.uid || "",
       });
 
-showStatus("Request cancelled successfully.", "success");
+showToast("Request Cancelled", "success");
 setSelectedRequest(null);
 
 if (currentUser?.uid) {
   fetchMyRequests(currentUser.uid, "reset");
 }
+
     } catch (error) {
       showStatus("Error cancelling request: " + error.message, "error");
     } finally {
@@ -312,6 +336,8 @@ if (currentUser?.uid) {
       ${getCategoryName(request)}
       ${request.approvalStatus || ""}
       ${request.returnCondition || ""}
+      ${request.rejectReason || ""}
+      ${request.autoRejected ? "auto rejected automatic rejection" : ""}
     `.toLowerCase();
 
     const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
@@ -339,12 +365,14 @@ if (currentUser?.uid) {
     <div className="my-requests-page">
 <section className="my-requests-header my-requests-header-compact">
   <div className="my-requests-header-content">
-    <div className="my-requests-header-text">
-      <p>
-        Track your borrow requests, approvals, borrowed items, return status,
-        and completed transactions in one place.
-      </p>
-    </div>
+<div className="my-requests-header-text">
+  <h1>My Borrow Requests</h1>
+
+  <p>
+    Track your borrow requests, approvals, borrowed items, return status,
+    and completed transactions in one place.
+  </p>
+</div>
 
     <button
       type="button"
@@ -402,7 +430,14 @@ if (currentUser?.uid) {
         <strong>Purpose:</strong>{" "}
         {selectedRequest.purpose || "No purpose provided."}
       </p>
-
+{shouldShowClosedReason(selectedRequest) && (
+  <div className="my-requests-closed-reason">
+    <span>
+      {selectedRequest.autoRejected ? "Auto-Rejected Reason" : "Request Status Reason"}
+    </span>
+    <p>{getRequestClosedReason(selectedRequest)}</p>
+  </div>
+)}
       <div className="my-requests-modal-grid">
         <div>
           <span>Category</span>
@@ -605,7 +640,14 @@ if (currentUser?.uid) {
     <p>
       <strong>Purpose:</strong> {request.purpose || "No purpose provided."}
     </p>
-
+{shouldShowClosedReason(request) && (
+  <div className="my-request-row-reason">
+    <strong>
+      {request.autoRejected ? "Auto-Rejected:" : "Reason:"}
+    </strong>{" "}
+    {getRequestClosedReason(request)}
+  </div>
+)}
     <div className="my-request-footer">
       <span className={`my-request-timing-pill ${getTimingClass(request)}`}>
         {getRequestTimingStatus(request)}

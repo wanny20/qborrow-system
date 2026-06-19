@@ -16,12 +16,14 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ReturnConfirmation.css";
 
 function ReturnConfirmation() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
 
   function getTodayDate() {
     const date = new Date();
@@ -294,7 +296,6 @@ showStatus("", "");
 const isValid = validateManualFindForm(itemId);
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
 
@@ -398,10 +399,9 @@ async function handleReturn() {
 
   const isValid = validateReturnForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 
   if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
     showStatus("You are not allowed to confirm returns for this category.", "error");
@@ -504,11 +504,12 @@ async function handleReturn() {
       });
     }
 
-    showStatus("Item return confirmed successfully.", "success");
+showToast("Return Confirmed", "success");
 
-    setSelectedRequest(null);
-    setManualItemId("");
-    setReturnCondition("Good");
+setSelectedRequest(null);
+setManualItemId("");
+setReturnCondition("Good");
+
     setDamageLostReport("");
     await fetchBorrowedRequests();
   } catch (error) {
@@ -701,11 +702,13 @@ scanner.render(
 )}
 <section className="return-header return-header-compact">
   <div className="return-header-content">
-    <div className="return-header-text">
-      <p>
-        Scan the returned item QR code or barcode, verify the borrowed
-        request, then confirm the actual return date and item condition.
-      </p>
+<div className="return-header-text">
+  <h1>Return Confirmation</h1>
+
+  <p>
+    Scan the returned item QR code or barcode, verify the borrowed
+    request, then confirm the actual return date and item condition.
+  </p>
 
       {isCategoryAdmin && (
         <div className="return-assigned-note">

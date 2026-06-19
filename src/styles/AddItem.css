@@ -827,3 +827,57 @@
     width: 100% !important;
   }
 }
+/* =========================================================
+   ADD ITEM TITLE INSIDE HEADER CARD
+========================================================= */
+
+.add-item-header-compact .add-item-header-content {
+  min-height: 108px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+}
+
+.add-item-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.add-item-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.add-item-header-back-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+}
+
+@media (max-width: 1180px) {
+  .add-item-header-compact .add-item-header-content {
+    grid-template-columns: 1fr !important;
+  }
+
+  .add-item-header-back-btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .add-item-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .add-item-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

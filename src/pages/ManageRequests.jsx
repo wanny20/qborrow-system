@@ -10,12 +10,37 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ManageRequests.css";
+
+function getRequestPriority(request) {
+  if (request.priority === "High") return "High";
+  if (request.borrowerUserType === "Faculty") return "High";
+
+  return "Normal";
+}
+
+function isFacultyPriorityRequest(request) {
+  return getRequestPriority(request) === "High";
+}
+
+function getRequestCreatedTime(request) {
+  if (request.createdAt?.toMillis) {
+    return request.createdAt.toMillis();
+  }
+
+  if (request.createdAt?.seconds) {
+    return request.createdAt.seconds * 1000;
+  }
+
+  return 0;
+}
 
 function ManageRequests() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [requests, setRequests] = useState([]);
@@ -170,7 +195,51 @@ function isRequestActionLoading(requestId, actionType) {
       assignedCategories.includes(requestCategoryName)
     );
   }
+async function autoRejectExpiredPendingRequests() {
+  const snapshot = await getDocs(collection(db, "borrowRequests"));
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
 
+  const expiredRequests = snapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((request) => {
+      if (request.approvalStatus !== "Pending") return false;
+
+      const createdTime =
+        request.createdAt?.toMillis?.() ||
+        (request.createdAt?.seconds ? request.createdAt.seconds * 1000 : 0);
+
+      return createdTime && now - createdTime >= oneDayMs;
+    });
+
+  await Promise.all(
+    expiredRequests.map(async (request) => {
+      await updateDoc(doc(db, "borrowRequests", request.id), {
+        approvalStatus: "Rejected",
+        rejectReason:
+          "Automatically rejected because no admin action was made within 24 hours.",
+        rejectedAt: serverTimestamp(),
+        autoRejected: true,
+        updatedAt: serverTimestamp(),
+      });
+
+      await addDoc(collection(db, "notifications"), {
+        userId: request.borrowerId,
+        targetRole: "borrower",
+        categoryId: request.categoryId || "",
+        categoryName: request.categoryName || "",
+        title: "Borrow Request Auto-Rejected",
+        message: `Your request for ${request.itemName} was automatically rejected because it was not approved within 24 hours. You may submit a new request.`,
+        status: "Unread",
+        createdAt: serverTimestamp(),
+        link: "/my-requests",
+      });
+    })
+  );
+}
   async function fetchRequests() {
     setLoading(true);
 
@@ -275,8 +344,8 @@ if (itemData.availability !== "Available") {
       link: "/my-requests",
     });
 
-    showStatus("Request approved successfully. Item is now reserved.", "success");
-    await fetchRequests();
+  showToast("Request Approved", "success");
+  await fetchRequests();
   } catch (error) {
     showStatus("Error approving request: " + error.message, "error");
   } finally {
@@ -368,8 +437,8 @@ if (itemData.availability !== "Reserved") {
       link: "/my-requests",
     });
 
-    showStatus("Item released successfully. Request is now marked as borrowed.", "success");
-    await fetchRequests();
+showToast("Item Released", "success");
+await fetchRequests();
   } catch (error) {
     showStatus("Error releasing item: " + error.message, "error");
   } finally {
@@ -437,8 +506,9 @@ async function handleRejectRequest(request) {
       link: "/my-requests",
     });
 
-    showStatus("Request rejected successfully.", "success");
-    await fetchRequests();
+showToast("Request Rejected", "success");
+await fetchRequests();
+
   } catch (error) {
     showStatus("Error rejecting request: " + error.message, "error");
   } finally {
@@ -446,9 +516,14 @@ async function handleRejectRequest(request) {
   }
 }
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+useEffect(() => {
+  async function loadRequests() {
+    await autoRejectExpiredPendingRequests();
+    await fetchRequests();
+  }
+
+  loadRequests();
+}, []);
 
   useEffect(() => {
     const statusFromUrl = searchParams.get("status");
@@ -466,7 +541,8 @@ async function handleRejectRequest(request) {
     return requests;
   }, [requests, userData]);
 
-  const filteredRequests = visibleRequests.filter((request) => {
+const filteredRequests = visibleRequests
+  .filter((request) => {
     const searchableText = `
       ${request.itemName || ""}
       ${request.itemCode || ""}
@@ -483,6 +559,7 @@ async function handleRejectRequest(request) {
       ${getRequestCategoryId(request)}
       ${getRequestCategoryName(request)}
       ${request.approvalStatus || ""}
+      ${getRequestPriority(request)}
     `.toLowerCase();
 
     const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
@@ -493,6 +570,16 @@ async function handleRejectRequest(request) {
       (statusFilter === "Overdue" && isRequestOverdue(request));
 
     return matchesSearch && matchesStatus;
+  })
+  .sort((a, b) => {
+    const aPriority = isFacultyPriorityRequest(a) ? 0 : 1;
+    const bPriority = isFacultyPriorityRequest(b) ? 0 : 1;
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    return getRequestCreatedTime(b) - getRequestCreatedTime(a);
   });
 
   const requestStats = {
@@ -531,11 +618,13 @@ async function handleRejectRequest(request) {
     <div className="manage-requests-page">
 <section className="manage-requests-header manage-requests-header-compact">
   <div className="manage-requests-header-content">
-    <div className="manage-requests-header-text">
-      <p>
-        Review borrower requests, approve available items, release approved
-        items to borrowers, or reject requests that cannot proceed.
-      </p>
+<div className="manage-requests-header-text">
+  <h1>Manage Requests</h1>
+
+  <p>
+    Review borrower requests, approve available items, release approved
+    items to borrowers, or reject requests that cannot proceed.
+  </p>
 
       {isCategoryAdmin && (
         <div className="manage-assigned-note">
@@ -685,7 +774,12 @@ async function handleRejectRequest(request) {
 
     <div className="manage-request-grid manage-request-table-grid">
       {filteredRequests.map((request) => (
-        <article className="manage-request-row" key={request.id}>
+        <article
+  className={`manage-request-row ${
+    isFacultyPriorityRequest(request) ? "manage-priority-row" : ""
+  }`}
+  key={request.id}
+>
           <div className="manage-request-cell manage-request-item-cell">
             <span>{request.itemCode || request.itemId}</span>
             <strong>{request.itemName || "Untitled Item"}</strong>
@@ -711,19 +805,23 @@ async function handleRejectRequest(request) {
             <strong>{request.expectedReturnDate || "Not set"}</strong>
           </div>
 
-          <div className="manage-request-status-cell">
-            <span
-              className={`manage-status-pill status-${String(
-                request.approvalStatus || "Unknown"
-              ).toLowerCase()}`}
-            >
-              {request.approvalStatus || "Unknown"}
-            </span>
+<div className="manage-request-status-cell">
+  {isFacultyPriorityRequest(request) && (
+    <span className="manage-priority-pill">Faculty</span>
+  )}
 
-            {isRequestOverdue(request) && (
-              <span className="manage-status-pill status-overdue">Overdue</span>
-            )}
-          </div>
+  <span
+    className={`manage-status-pill status-${String(
+      request.approvalStatus || "Unknown"
+    ).toLowerCase()}`}
+  >
+    {request.approvalStatus || "Unknown"}
+  </span>
+
+  {isRequestOverdue(request) && (
+    <span className="manage-status-pill status-overdue">Overdue</span>
+  )}
+</div>
 
           <div className="manage-request-row-actions">
             <button
@@ -815,22 +913,27 @@ async function handleRejectRequest(request) {
                 <p>{viewingRequest.itemCode || viewingRequest.itemId}</p>
               </div>
             </div>
+<div className="manage-request-view-status">
+  {isFacultyPriorityRequest(viewingRequest) && (
+    <span className="manage-priority-pill manage-priority-pill-full">
+      Priority Faculty
+    </span>
+  )}
 
-            <div className="manage-request-view-status">
-              <span
-                className={`manage-status-pill status-${String(
-                  viewingRequest.approvalStatus || "Unknown"
-                ).toLowerCase()}`}
-              >
-                {viewingRequest.approvalStatus || "Unknown"}
-              </span>
+  <span
+    className={`manage-status-pill status-${String(
+      viewingRequest.approvalStatus || "Unknown"
+    ).toLowerCase()}`}
+  >
+    {viewingRequest.approvalStatus || "Unknown"}
+  </span>
 
-              {isRequestOverdue(viewingRequest) && (
-                <span className="manage-status-pill status-overdue">
-                  Overdue
-                </span>
-              )}
-            </div>
+  {isRequestOverdue(viewingRequest) && (
+    <span className="manage-status-pill status-overdue">
+      Overdue
+    </span>
+  )}
+</div>
 
             <div className="manage-request-view-grid">
               <div>

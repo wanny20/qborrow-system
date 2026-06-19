@@ -70,10 +70,9 @@ async function handleLogin(e) {
 
   const isValid = validateLoginForm();
 
-  if (!isValid) {
-    showStatus("Please correct the highlighted fields.", "error");
-    return;
-  }
+if (!isValid) {
+  return;
+}
 
   setIsLoading(true);
 
@@ -96,11 +95,9 @@ async function handleForgotPassword() {
 
   const isValid = validateForgotPassword();
 
-  if (!isValid) {
-    showStatus("Please enter a valid email before resetting your password.", "error");
-    return;
-  }
-
+if (!isValid) {
+  return;
+}
   setIsLoading(true);
 
   try {

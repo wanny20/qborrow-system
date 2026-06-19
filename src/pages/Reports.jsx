@@ -642,12 +642,13 @@ return Object.values(categoryMap)
 )}
  <section className="reports-header reports-header-compact">
   <div className="reports-header-content">
-    <div className="reports-header-text">
-      <p>
-        Monitor inventory status, borrowing activity, overdue records,
-        damaged/lost items, and category-based performance.
-      </p>
+<div className="reports-header-text">
+  <h1>Reports</h1>
 
+  <p>
+    Monitor inventory status, borrowing activity, overdue records,
+    damaged/lost items, and category-based performance.
+  </p>
       {isCategoryAdmin && (
         <div className="reports-assigned-note">
           Assigned categories: {getAssignedCategoryNames()}
