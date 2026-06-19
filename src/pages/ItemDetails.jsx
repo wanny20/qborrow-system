@@ -2,41 +2,27 @@ import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
-  query as firestoreQuery,
-  where,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
-import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ItemDetails.css";
 
-const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
 
 function ItemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
 
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
-  const isSuperAdmin = userData?.role === "superAdmin";
-  const isCategoryAdmin = userData?.role === "categoryAdmin";
-  const isBorrower = userData?.role === "borrower";
-  const isAdmin = isSuperAdmin || isCategoryAdmin;
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLowerCase();
-  }
+const isBorrower = userData?.role === "borrower";
 
   function getCategoryName(targetItem = item) {
     return (
@@ -47,30 +33,8 @@ function ItemDetails() {
     );
   }
 
-  function getCategoryId(targetItem = item) {
-    return targetItem?.categoryId || targetItem?.category || "";
-  }
-
   function getItemCode(targetItem = item) {
     return targetItem?.itemCode || targetItem?.id || "No code";
-  }
-
-  function canAdminManageItem(targetItem = item) {
-    if (!targetItem) return false;
-    if (isSuperAdmin) return true;
-    if (!isCategoryAdmin) return false;
-
-    const assignedCategories = Array.isArray(userData?.assignedCategories)
-      ? userData.assignedCategories.map(normalizeText)
-      : [];
-
-    const itemCategoryId = normalizeText(getCategoryId(targetItem));
-    const itemCategoryName = normalizeText(getCategoryName(targetItem));
-
-    return (
-      assignedCategories.includes(itemCategoryId) ||
-      assignedCategories.includes(itemCategoryName)
-    );
   }
 
   function getAvailabilityClass(availability) {
@@ -149,63 +113,6 @@ function ItemDetails() {
     }
   }
 
-async function hasActiveBorrowRequest() {
-  if (!item?.id) return false;
-
-  const requestsQuery = firestoreQuery(
-    collection(db, "borrowRequests"),
-    where("itemId", "==", item.id)
-  );
-
-  const requestsSnapshot = await getDocs(requestsQuery);
-
-  return requestsSnapshot.docs.some((document) => {
-    const request = document.data();
-
-    return activeRequestStatuses.includes(request.approvalStatus);
-  });
-}
-
-  async function handleDeleteItem() {
-    if (!item) return;
-
-    if (!canAdminManageItem(item)) {
-      alert("You do not have permission to delete this item.");
-      return;
-    }
-
-    if (["Reserved", "Borrowed"].includes(item.availability)) {
-      alert("This item cannot be deleted because it is currently reserved or borrowed.");
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
-    );
-
-    if (!confirmDelete) return;
-
-    setDeleting(true);
-
-    try {
-      const hasActiveRequest = await hasActiveBorrowRequest();
-
-      if (hasActiveRequest) {
-        alert("This item cannot be deleted because it has an active borrow request.");
-        return;
-      }
-
-await deleteDoc(doc(db, "items", item.id));
-
-showToast("Successfully Deleted", "success");
-navigate("/items");
-
-    } catch (error) {
-      alert("Error deleting item: " + error.message);
-    } finally {
-      setDeleting(false);
-    }
-  }
 
   useEffect(() => {
     fetchItem();
@@ -246,10 +153,7 @@ navigate("/items");
     );
   }
 
-  const canBorrow = isBorrower && item.availability === "Available";
-  const canManageThisItem = isAdmin && canAdminManageItem(item);
-  const canDeleteThisItem =
-    canManageThisItem && !["Reserved", "Borrowed"].includes(item.availability);
+const canBorrow = isBorrower && item.availability === "Available";
 
   return (
     <div className="item-details-page">

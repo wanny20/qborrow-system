@@ -220,69 +220,6 @@ const notificationActionLockRef = useRef("");
     }
   }
 
-async function handleMarkAsRead(notification) {
-  if (!currentUser) return;
-
-  if (isNotificationRead(notification)) return;
-
-  const started = startNotificationAction(notification.id);
-
-  if (!started) return;
-
-  showStatus("", "");
-
-  try {
-    const notificationRef = doc(db, "notifications", notification.id);
-    const latestNotificationSnap = await getDoc(notificationRef);
-
-    if (!latestNotificationSnap.exists()) {
-      setNotifications((previousNotifications) =>
-        previousNotifications.filter((item) => item.id !== notification.id)
-      );
-
-      showStatus("This notification no longer exists.", "error");
-      return;
-    }
-
-    if (notification.userId === currentUser.uid) {
-      await updateDoc(notificationRef, {
-        status: "Read",
-        readAt: serverTimestamp(),
-      });
-
-      setNotifications((previousNotifications) =>
-        previousNotifications.map((item) =>
-          item.id === notification.id ? { ...item, status: "Read" } : item
-        )
-      );
-    } else {
-      await updateDoc(notificationRef, {
-        readBy: arrayUnion(currentUser.uid),
-        lastReadAt: serverTimestamp(),
-      });
-
-      setNotifications((previousNotifications) =>
-        previousNotifications.map((item) =>
-          item.id === notification.id
-            ? {
-                ...item,
-                readBy: Array.isArray(item.readBy)
-                  ? [...new Set([...item.readBy, currentUser.uid])]
-                  : [currentUser.uid],
-              }
-            : item
-        )
-      );
-    }
-
-    showToast("Notification Marked as Read", "success");
-  } catch (error) {
-    showStatus("Error updating notification: " + error.message, "error");
-  } finally {
-    finishNotificationAction();
-  }
-}
-
 async function handleOpenNotification(notification) {
   if (!currentUser) return;
 

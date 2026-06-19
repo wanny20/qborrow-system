@@ -43,7 +43,6 @@ function ReleaseItem() {
   const [statusType, setStatusType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
   function showStatus(message, type) {
@@ -248,17 +247,7 @@ async function restartReleaseScanner() {
   showStatus("Restarting scanner...", "success");
   await startReleaseScanner();
 }
-  function openScannerFresh() {
-  setScannerKey((current) => current + 1);
-  setScannerOpen(true);
-  showStatus("Scanner ready. Point the camera at the QR code or barcode.", "success");
-    }
 
-    function restartScanner() {
-      setScannerKey((current) => current + 1);
-      setScannerOpen(true);
-      showStatus("Scanner restarted. Try scanning again.", "success");
-    }
   function getRequestCategoryId(request) {
     return request.categoryId || request.category || "";
   }

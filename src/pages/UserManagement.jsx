@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -264,23 +264,20 @@ function validateCsvImportForm() {
     return "Not suspended";
   }
 
-  function isUserSuspended(user) {
-    if (!user.suspendedUntil) return false;
+ function isUserSuspended(user) {
+  if (!user?.suspendedUntil) return false;
 
-    let suspendedDate = null;
+  const suspendedDate =
+    typeof user.suspendedUntil?.toDate === "function"
+      ? user.suspendedUntil.toDate()
+      : new Date(user.suspendedUntil);
 
-    if (typeof user.suspendedUntil?.toDate === "function") {
-      suspendedDate = user.suspendedUntil.toDate();
-    } else {
-      suspendedDate = new Date(user.suspendedUntil);
-    }
-
-    if (!suspendedDate || Number.isNaN(suspendedDate.getTime())) {
-      return false;
-    }
-
-    return suspendedDate > new Date();
+  if (!suspendedDate || Number.isNaN(suspendedDate.getTime())) {
+    return false;
   }
+
+  return suspendedDate > new Date();
+}
 
   function getRoleLabel(userRole) {
     if (userRole === "superAdmin") return "Super Admin";

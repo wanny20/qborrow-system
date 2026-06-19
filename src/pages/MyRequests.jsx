@@ -57,18 +57,6 @@ const [selectedRequest, setSelectedRequest] = useState(null);
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
   }
 
-  function getCreatedTime(request) {
-    if (request.createdAt?.toMillis) {
-      return request.createdAt.toMillis();
-    }
-
-    if (request.createdAt?.seconds) {
-      return request.createdAt.seconds * 1000;
-    }
-
-    return 0;
-  }
-
   function getCategoryName(request) {
     return (
       request.categoryName ||

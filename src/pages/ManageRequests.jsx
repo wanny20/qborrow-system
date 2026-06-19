@@ -137,15 +137,6 @@ function isRequestActionLoading(requestId, actionType) {
     return userData?.uid || auth.currentUser?.uid || "";
   }
 
-  function getAdminName() {
-    return (
-      userData?.fullName ||
-      userData?.email ||
-      auth.currentUser?.email ||
-      "Admin"
-    );
-  }
-
   function isRequestOverdue(request) {
     if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
       return false;

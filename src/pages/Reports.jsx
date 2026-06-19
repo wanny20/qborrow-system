@@ -57,12 +57,6 @@ function findActiveCategory(value) {
   });
 }
 
-function getCategoryNameById(categoryId) {
-  const category = findActiveCategory(categoryId);
-
-  return category?.name || UNCATEGORIZED_CATEGORY_NAME;
-}
-
 function getCategoryInfo(record) {
   const possibleValues = [
     record.categoryId,

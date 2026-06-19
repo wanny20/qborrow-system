@@ -96,15 +96,7 @@ function AddItem() {
       URL.revokeObjectURL(url);
     }
   }
-
-  function getCategoryName(categoryIdValue) {
-    const category = categories.find(
-      (item) => normalizeText(item.id) === normalizeText(categoryIdValue)
-    );
-
-    return category?.name || categoryIdValue || "Unknown";
-  }
-
+  
   async function fetchCategories() {
     setLoadingCategories(true);
 

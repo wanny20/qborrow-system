@@ -41,32 +41,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const pageTitles = {
-    "/dashboard": "Dashboard",
-    "/items": "Item Inventory",
-    "/add-item": "Add Item",
-    "/manage-requests": "Manage Requests",
-    "/release-item": "Release Item",
-    "/return-confirmation": "Return Confirmation",
-    "/reports": "Reports",
-    "/scan-qr": "Scan QR Code",
-    "/my-requests": "My Borrow Requests",
-    "/notifications": "Notifications",
-    "/user-management": "User Management",
-    "/settings": "Settings",
-  };
-
 const currentPath = location.pathname;
-
-const currentPageTitle =
-  pageTitles[currentPath] ||
-  (currentPath.startsWith("/dashboard-list") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/dashboard-items") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/dashboard-requests") ? "Dashboard" : "") ||
-  (currentPath.startsWith("/item/") ? "Item Details" : "") ||
-  (currentPath.startsWith("/edit-item") ? "Edit Item" : "") ||
-  (currentPath.startsWith("/borrow-request") ? "Borrow Request" : "") ||
-  "QBorrow";
 
 const activeSidebarPath = (() => {
   if (

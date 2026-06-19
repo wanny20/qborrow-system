@@ -573,10 +573,6 @@ const adminUrgentAlerts = [
     setDismissedDueTodayAlert(true);
   }
 
-  const notificationCount = isAdmin
-    ? pendingRequestsValue + overdueRequestsValue + damagedLostItemsValue
-    : myPendingRequests.length + myApprovedRequests.length + myBorrowedRequests.length;
-
   if (loading) {
     return (
       <div className="dashboard-loading">
