@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  browserLocalPersistence,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  setPersistence,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
@@ -133,6 +135,8 @@ if (!isValid) {
   setIsLoading(true);
 
   try {
+await setPersistence(auth, browserLocalPersistence);
+
 const userCredential = await signInWithEmailAndPassword(
   auth,
   email.trim(),
