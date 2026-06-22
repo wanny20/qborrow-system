@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  signInWithEmailAndPassword,
+  onAuthStateChanged,
   sendPasswordResetEmail,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -21,6 +22,57 @@ function Login() {
   const [statusType, setStatusType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [checkingSession, setCheckingSession] = useState(true);
+
+useEffect(() => {
+  let isMounted = true;
+
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      if (isMounted) {
+        setCheckingSession(false);
+      }
+
+      return;
+    }
+
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!isMounted) return;
+
+      if (!userSnap.exists()) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      if (
+        userData.termsAccepted !== true ||
+        userData.mustChangePassword === true
+      ) {
+        navigate("/force-password-change", { replace: true });
+        return;
+      }
+
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error("Session check error:", error);
+
+      if (isMounted) {
+        setCheckingSession(false);
+      }
+    }
+  });
+
+  return () => {
+    isMounted = false;
+    unsubscribe();
+  };
+}, [navigate]);
+
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
@@ -143,7 +195,23 @@ if (!isValid) {
     setIsLoading(false);
   }
 }
-
+if (checkingSession) {
+  return (
+    <main className="login-page qb-page">
+      <section className="login-shell qb-container" aria-label="Checking session">
+        <div className="login-form-panel">
+          <div className="login-card qb-card">
+            <div className="login-card-header">
+              <p className="qb-kicker">QBorrow</p>
+              <h2 className="qb-heading">Checking session...</h2>
+              <p>Please wait while we verify your account.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
   return (
     <main className="login-page qb-page">
       <div className="login-shape login-shape-one" aria-hidden="true"></div>
@@ -231,7 +299,6 @@ if (!isValid) {
 autoCorrect="off"
 spellCheck={false}
 inputMode="email"
-autoComplete="username"
   autoComplete="email"
   disabled={isLoading}
 />

@@ -159,6 +159,63 @@ function validateEditUserForm() {
 
   return Object.keys(errors).length === 0;
 }
+async function getCreateDuplicateError() {
+  const usersRef = collection(db, "users");
+  const cleanedEmail = email.trim().toLowerCase();
+
+  if (cleanedEmail) {
+    const emailSnapshot = await getDocs(
+      firestoreQuery(usersRef, where("email", "==", cleanedEmail), limit(1))
+    );
+
+    if (!emailSnapshot.empty) {
+      return "This email is already registered. Please use a different email address.";
+    }
+  }
+
+  if (role === "borrower") {
+    const safeUserType = getSafeUserType(userType);
+
+    if (safeUserType === "Student") {
+      const cleanedStudentNumber = cleanInput(studentNumber);
+
+      if (cleanedStudentNumber) {
+        const studentNumberSnapshot = await getDocs(
+          firestoreQuery(
+            usersRef,
+            where("studentNumber", "==", cleanedStudentNumber),
+            limit(1)
+          )
+        );
+
+        if (!studentNumberSnapshot.empty) {
+          return "This student number is already registered. Students with the same name are allowed, but student numbers must be unique.";
+        }
+      }
+    }
+
+    if (safeUserType === "Faculty" || safeUserType === "Staff") {
+      const cleanedEmployeeId = cleanInput(employeeId);
+
+      if (cleanedEmployeeId) {
+        const employeeIdSnapshot = await getDocs(
+          firestoreQuery(
+            usersRef,
+            where("employeeId", "==", cleanedEmployeeId),
+            limit(1)
+          )
+        );
+
+        if (!employeeIdSnapshot.empty) {
+          return "This employee ID is already registered. Faculty/staff names may repeat, but employee IDs must be unique.";
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
 }
@@ -644,13 +701,20 @@ async function handleCreateUser(e) {
   e.preventDefault();
   showStatus("", "");
 
-  const isValid = validateCreateUserForm();
+const isValid = validateCreateUserForm();
 
 if (!isValid) {
   return;
 }
 
-  setCreating(true);
+const duplicateError = await getCreateDuplicateError();
+
+if (duplicateError) {
+  showStatus(duplicateError, "error");
+  return;
+}
+
+setCreating(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -687,7 +751,21 @@ updatedAt: serverTimestamp(),
         fetchData();
 
     } catch (error) {
-      showStatus("Error creating user: " + error.message, "error");
+      if (error.code === "auth/email-already-in-use") {
+  showStatus(
+    "This email is already registered. Please use a different email address.",
+    "error"
+  );
+
+  setCreateFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    email: "This email is already registered.",
+  }));
+
+  return;
+}
+
+showStatus("Error creating user: " + error.message, "error");
     } finally {
       setCreating(false);
     }

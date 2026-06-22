@@ -85,6 +85,53 @@ function getBorrowerDetailsPayload(borrower) {
     mobileNumber,
   };
 }
+function normalizeUniqueKey(value) {
+  return cleanText(value).toLowerCase();
+}
+
+async function authEmailExists(email) {
+  try {
+    await admin.auth().getUserByEmail(email);
+    return true;
+  } catch (error) {
+    if (error.code === "auth/user-not-found") {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+async function userFieldExists(fieldName, value) {
+  if (!value) return false;
+
+  const snapshot = await db
+    .collection("users")
+    .where(fieldName, "==", value)
+    .limit(1)
+    .get();
+
+  return !snapshot.empty;
+}
+
+function getAuthCreateErrorMessage(error) {
+  if (
+    error.code === "auth/email-already-exists" ||
+    error.code === "auth/email-already-in-use"
+  ) {
+    return "This email is already registered.";
+  }
+
+  if (error.code === "auth/invalid-email") {
+    return "Invalid email address.";
+  }
+
+  if (error.code === "auth/weak-password") {
+    return "Password is too weak.";
+  }
+
+  return error.message || "Unable to create borrower.";
+} 
 
 async function requireSuperAdmin(request) {
   if (!request.auth || !request.auth.uid) {
@@ -515,12 +562,18 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
   }
 
   const results = [];
+  const seenEmails = new Set();
+  const seenStudentNumbers = new Set();
+  const seenEmployeeIds = new Set();
 
-  // FIX: Removed erroneous ``` markers that ChatGPT inserted around this block
   for (const borrower of borrowers) {
     const fullName = cleanText(borrower.fullName || borrower.name);
     const email = cleanText(borrower.email).toLowerCase();
     const password = String(borrower.password || "");
+    const borrowerDetails = getBorrowerDetailsPayload(borrower);
+
+    const studentNumberKey = normalizeUniqueKey(borrowerDetails.studentNumber);
+    const employeeIdKey = normalizeUniqueKey(borrowerDetails.employeeId);
 
     if (!fullName || !email || !password) {
       results.push({
@@ -540,50 +593,198 @@ exports.bulkCreateBorrowers = onCall(async (request) => {
       continue;
     }
 
-    try {
-      const createdUser = await admin.auth().createUser({
-        email,
-        password,
-        displayName: fullName,
-        disabled: false,
-      });
-
-await db.collection("users").doc(createdUser.uid).set({
-  fullName,
-  email,
-  role: "borrower",
-  assignedCategories: [],
-
-  ...getBorrowerDetailsPayload(borrower),
-
-  overdueCount: 0,
-  suspendedUntil: "",
-  suspensionReason: "",
-  canBorrow: true,
-
-  termsAccepted: false,
-  termsAcceptedAt: "",
-  termsVersion: "1.0",
-
-  mustChangePassword: true,
-  passwordChangedAt: "",
-
-  createdBy: currentUser.uid,
-  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-});
-
+    if (seenEmails.has(email)) {
       results.push({
         email,
-        uid: createdUser.uid,
-        success: true,
-        message: "Borrower created.",
+        success: false,
+        message: "Duplicate email found inside the CSV file.",
       });
+      continue;
+    }
+
+    if (borrowerDetails.userType === "Student" && !studentNumberKey) {
+      results.push({
+        email,
+        success: false,
+        message: "Student number is required for student borrowers.",
+      });
+      continue;
+    }
+
+    if (
+      borrowerDetails.userType === "Student" &&
+      seenStudentNumbers.has(studentNumberKey)
+    ) {
+      results.push({
+        email,
+        success: false,
+        message: "Duplicate student number found inside the CSV file.",
+      });
+      continue;
+    }
+
+    if (
+      (borrowerDetails.userType === "Faculty" ||
+        borrowerDetails.userType === "Staff") &&
+      !employeeIdKey
+    ) {
+      results.push({
+        email,
+        success: false,
+        message: "Employee ID is required for faculty/staff borrowers.",
+      });
+      continue;
+    }
+
+    if (
+      (borrowerDetails.userType === "Faculty" ||
+        borrowerDetails.userType === "Staff") &&
+      seenEmployeeIds.has(employeeIdKey)
+    ) {
+      results.push({
+        email,
+        success: false,
+        message: "Duplicate employee ID found inside the CSV file.",
+      });
+      continue;
+    }
+
+    try {
+      const emailAlreadyUsed =
+        (await authEmailExists(email)) ||
+        (await userFieldExists("email", email)) ||
+        (await userFieldExists("emailLower", email));
+
+      if (emailAlreadyUsed) {
+        results.push({
+          email,
+          success: false,
+          message: "This email is already registered.",
+        });
+        continue;
+      }
+
+      if (borrowerDetails.userType === "Student") {
+        const studentNumberAlreadyUsed =
+          (await userFieldExists("studentNumber", borrowerDetails.studentNumber)) ||
+          (await userFieldExists("studentNumberKey", studentNumberKey));
+
+        if (studentNumberAlreadyUsed) {
+          results.push({
+            email,
+            success: false,
+            message:
+              "This student number is already registered. Same names are allowed, but student numbers must be unique.",
+          });
+          continue;
+        }
+      }
+
+      if (
+        borrowerDetails.userType === "Faculty" ||
+        borrowerDetails.userType === "Staff"
+      ) {
+        const employeeIdAlreadyUsed =
+          (await userFieldExists("employeeId", borrowerDetails.employeeId)) ||
+          (await userFieldExists("employeeIdKey", employeeIdKey));
+
+        if (employeeIdAlreadyUsed) {
+          results.push({
+            email,
+            success: false,
+            message:
+              "This employee ID is already registered. Same names are allowed, but employee IDs must be unique.",
+          });
+          continue;
+        }
+      }
+
+      seenEmails.add(email);
+
+      if (borrowerDetails.userType === "Student") {
+        seenStudentNumbers.add(studentNumberKey);
+      }
+
+      if (
+        borrowerDetails.userType === "Faculty" ||
+        borrowerDetails.userType === "Staff"
+      ) {
+        seenEmployeeIds.add(employeeIdKey);
+      }
+
+      let createdUser = null;
+
+      try {
+        createdUser = await admin.auth().createUser({
+          email,
+          password,
+          displayName: fullName,
+          disabled: false,
+        });
+
+        await db.collection("users").doc(createdUser.uid).set({
+          fullName,
+          email,
+          emailLower: email,
+          role: "borrower",
+          assignedCategories: [],
+
+          ...borrowerDetails,
+
+          studentNumberKey:
+            borrowerDetails.userType === "Student" ? studentNumberKey : "",
+          employeeIdKey:
+            borrowerDetails.userType === "Faculty" ||
+            borrowerDetails.userType === "Staff"
+              ? employeeIdKey
+              : "",
+
+          overdueCount: 0,
+          suspendedUntil: "",
+          suspensionReason: "",
+          canBorrow: true,
+
+          termsAccepted: false,
+          termsAcceptedAt: "",
+          termsVersion: "1.0",
+
+          mustChangePassword: true,
+          passwordChangedAt: "",
+
+          createdBy: currentUser.uid,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        results.push({
+          email,
+          uid: createdUser.uid,
+          success: true,
+          message: "Borrower created.",
+        });
+      } catch (error) {
+        if (createdUser && createdUser.uid) {
+          try {
+            await admin.auth().deleteUser(createdUser.uid);
+          } catch (deleteError) {
+            console.warn(
+              "Warning: failed to clean up Auth user after Firestore error:",
+              deleteError.message
+            );
+          }
+        }
+
+        results.push({
+          email,
+          success: false,
+          message: getAuthCreateErrorMessage(error),
+        });
+      }
     } catch (error) {
       results.push({
         email,
         success: false,
-        message: error.message,
+        message: error.message || "Unable to validate borrower.",
       });
     }
   }
@@ -598,7 +799,6 @@ await db.collection("users").doc(createdUser.uid).set({
     results,
   };
 });
-
 exports.sendBorrowRequestStatusEmail = onDocumentUpdated(
   {
     document: "borrowRequests/{requestId}",
