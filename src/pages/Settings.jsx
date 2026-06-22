@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   EmailAuthProvider,
   onAuthStateChanged,
@@ -25,6 +25,9 @@ import "../styles/Settings.css";
 function Settings() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+
+  const outletContext = useOutletContext() || {};
+const { setUnsavedChanges, guardedNavigate } = outletContext;
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userRecord, setUserRecord] = useState(null);
@@ -52,10 +55,21 @@ function Settings() {
   const [profileFieldErrors, setProfileFieldErrors] = useState({});
   const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
 
+  const [profileTouched, setProfileTouched] = useState(false);
+const [passwordTouched, setPasswordTouched] = useState(false);
+
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function markProfileChanged() {
+  setProfileTouched(true);
+}
+
+function markPasswordChanged() {
+  setPasswordTouched(true);
+}
+
   function clearProfileFieldError(fieldName) {
   setProfileFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -69,12 +83,118 @@ function clearPasswordFieldError(fieldName) {
     [fieldName]: "",
   }));
 }
+function isValidPersonName(value) {
+  const cleanedValue = String(value || "").trim();
+
+  if (cleanedValue.length < 2) return false;
+  if (cleanedValue.length > 80) return false;
+
+  return /^[\p{L}][\p{L}\s.'-]*[\p{L}.]$/u.test(cleanedValue);
+}
+
+function getPersonNameError(value) {
+  const cleanedValue = String(value || "").trim();
+
+  if (!cleanedValue) {
+    return "Display name is required.";
+  }
+
+  if (cleanedValue.length < 2) {
+    return "Display name must be at least 2 characters.";
+  }
+
+  if (cleanedValue.length > 80) {
+    return "Display name must not exceed 80 characters.";
+  }
+
+  if (!isValidPersonName(cleanedValue)) {
+    return "Display name can only contain letters, spaces, dot, hyphen, and apostrophe.";
+  }
+
+  return "";
+}
+
+function sanitizePersonNameInput(value) {
+  return String(value || "").replace(/[^\p{L}\s.'-]/gu, "");
+}
+
+function validateProfileField(fieldName) {
+  setProfileFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "fullName") {
+      const fullNameError = getPersonNameError(fullName);
+
+      if (fullNameError) {
+        nextErrors.fullName = fullNameError;
+      } else {
+        delete nextErrors.fullName;
+      }
+    }
+
+    if (fieldName === "profilePassword") {
+      if (!profilePassword) {
+        nextErrors.profilePassword =
+          "Current password is required to save changes.";
+      } else {
+        delete nextErrors.profilePassword;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
+function validatePasswordField(fieldName) {
+  setPasswordFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "passwordCurrent") {
+      if (!passwordCurrent) {
+        nextErrors.passwordCurrent = "Current password is required.";
+      } else {
+        delete nextErrors.passwordCurrent;
+      }
+    }
+
+    if (fieldName === "newPassword") {
+      if (!newPassword) {
+        nextErrors.newPassword = "New password is required.";
+      } else if (newPassword.length < 6) {
+        nextErrors.newPassword =
+          "New password must be at least 6 characters.";
+      } else {
+        delete nextErrors.newPassword;
+      }
+
+      if (confirmNewPassword && newPassword !== confirmNewPassword) {
+        nextErrors.confirmNewPassword = "New passwords do not match.";
+      } else if (confirmNewPassword) {
+        delete nextErrors.confirmNewPassword;
+      }
+    }
+
+    if (fieldName === "confirmNewPassword") {
+      if (!confirmNewPassword) {
+        nextErrors.confirmNewPassword = "Please confirm your new password.";
+      } else if (newPassword !== confirmNewPassword) {
+        nextErrors.confirmNewPassword = "New passwords do not match.";
+      } else {
+        delete nextErrors.confirmNewPassword;
+      }
+    }
+
+    return nextErrors;
+  });
+}
 
 function validateProfileForm() {
   const errors = {};
 
-  if (!fullName.trim()) {
-    errors.fullName = "Display name is required.";
+  const fullNameError = getPersonNameError(fullName);
+
+  if (fullNameError) {
+    errors.fullName = fullNameError;
   }
 
   if (!profilePassword) {
@@ -217,6 +337,7 @@ if (file.size > 5 * 1024 * 1024) {
     setCroppedPhotoSize(blob.size);
     setPhotoPreview(previewUrl);
     setCropSourceFile(null);
+    setProfileTouched(true);
 
     showStatus(
       `Profile picture cropped and compressed to ${(blob.size / 1024).toFixed(
@@ -291,6 +412,7 @@ setSavingProfile(true);
       setCroppedPhotoSize(0);
       setProfilePassword("");
       setProfileFieldErrors({});
+      setProfileTouched(false);
 
       window.dispatchEvent(
         new CustomEvent("qborrow-user-updated", {
@@ -336,6 +458,7 @@ setChangingPassword(true);
       setNewPassword("");
       setConfirmNewPassword("");
       setPasswordFieldErrors({});
+      setPasswordTouched(false);
 
       showToast("Password Changed", "success");
     } catch (error) {
@@ -368,6 +491,24 @@ setChangingPassword(true);
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+  setUnsavedChanges?.(
+    (profileTouched || passwordTouched) && !savingProfile && !changingPassword,
+    "You have unsaved settings changes. Leaving this page will discard your progress."
+  );
+
+  return () => {
+    setUnsavedChanges?.(false);
+  };
+}, [
+  profileTouched,
+  passwordTouched,
+  savingProfile,
+  changingPassword,
+  setUnsavedChanges,
+]);
+
 
 useEffect(() => {
   applyTheme(themeMode);
@@ -416,7 +557,14 @@ if (loading) {
     <button
       type="button"
       className="settings-secondary-btn settings-header-back-btn"
-      onClick={() => navigate("/dashboard")}
+      onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate("/dashboard");
+    return;
+  }
+
+  navigate("/dashboard");
+}}
     >
       Back to Dashboard
     </button>
@@ -466,19 +614,31 @@ if (loading) {
     Display Name <span className="required-star">*</span>
   </label>
 
-  <input
-    id="full-name"
-    type="text"
-    className={profileFieldErrors.fullName ? "input-error" : ""}
-    placeholder="Enter your display name"
-    value={fullName}
-    onFocus={() => clearProfileFieldError("fullName")}
-    onChange={(event) => {
-      setFullName(event.target.value);
-      clearProfileFieldError("fullName");
-    }}
-    disabled={savingProfile}
-  />
+<input
+  id="full-name"
+  type="text"
+  className={profileFieldErrors.fullName ? "input-error" : ""}
+  placeholder="Enter your display name"
+  value={fullName}
+  onFocus={() => clearProfileFieldError("fullName")}
+  onBlur={() => validateProfileField("fullName")}
+  onChange={(event) => {
+    const sanitizedName = sanitizePersonNameInput(event.target.value);
+
+    markProfileChanged();
+    setFullName(sanitizedName);
+    clearProfileFieldError("fullName");
+
+    if (sanitizedName !== event.target.value) {
+      setProfileFieldErrors((previousErrors) => ({
+        ...previousErrors,
+        fullName:
+          "Display name can only contain letters, spaces, dot, hyphen, and apostrophe.",
+      }));
+    }
+  }}
+  disabled={savingProfile}
+/>
 
   {profileFieldErrors.fullName && (
     <p className="field-error-message">{profileFieldErrors.fullName}</p>
@@ -537,11 +697,13 @@ if (loading) {
               className={`settings-theme-toggle ${
                 themeMode === "dark" ? "active" : ""
               }`}
-              onClick={() =>
-                setThemeMode((current) =>
-                  current === "dark" ? "light" : "dark"
-                )
-              }
+onClick={() => {
+  markProfileChanged();
+
+  setThemeMode((current) =>
+    current === "dark" ? "light" : "dark"
+  );
+}}
             >
               <span></span>
               {themeMode === "dark" ? "Dark" : "Light"}
@@ -560,7 +722,9 @@ if (loading) {
     placeholder="Enter password to save changes"
     value={profilePassword}
     onFocus={() => clearProfileFieldError("profilePassword")}
+    onBlur={() => validateProfileField("profilePassword")}
     onChange={(event) => {
+       markProfileChanged();
       setProfilePassword(event.target.value);
       clearProfileFieldError("profilePassword");
     }}
@@ -586,6 +750,7 @@ if (loading) {
         <form
           className="settings-card settings-password-card"
           onSubmit={handleChangePassword}
+          noValidate
         >
           <div className="settings-section-heading">
             <h2>Change Password</h2>
@@ -607,7 +772,9 @@ if (loading) {
     placeholder="Current password"
     value={passwordCurrent}
     onFocus={() => clearPasswordFieldError("passwordCurrent")}
+    onBlur={() => validatePasswordField("passwordCurrent")}
     onChange={(event) => {
+       markPasswordChanged();
       setPasswordCurrent(event.target.value);
       clearPasswordFieldError("passwordCurrent");
     }}
@@ -633,7 +800,9 @@ if (loading) {
     placeholder="At least 6 characters"
     value={newPassword}
     onFocus={() => clearPasswordFieldError("newPassword")}
+    onBlur={() => validatePasswordField("newPassword")}
     onChange={(event) => {
+       markPasswordChanged();
       setNewPassword(event.target.value);
       clearPasswordFieldError("newPassword");
       clearPasswordFieldError("confirmNewPassword");
@@ -658,7 +827,9 @@ if (loading) {
     placeholder="Repeat new password"
     value={confirmNewPassword}
     onFocus={() => clearPasswordFieldError("confirmNewPassword")}
+    onBlur={() => validatePasswordField("confirmNewPassword")}
     onChange={(event) => {
+       markPasswordChanged();
       setConfirmNewPassword(event.target.value);
       clearPasswordFieldError("confirmNewPassword");
     }}

@@ -30,7 +30,11 @@ const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
 function UserManagement() {
 const navigate = useNavigate();
 const outletContext = useOutletContext() || {};
-const { userData: currentAdmin } = outletContext;
+const {
+  userData: currentAdmin,
+  setUnsavedChanges,
+  guardedNavigate,
+} = outletContext;
 const { showToast } = useToast();
 const [searchParams, setSearchParams] = useSearchParams();
 
@@ -102,12 +106,76 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [csvFieldErrors, setCsvFieldErrors] = useState({});
   const [editFieldErrors, setEditFieldErrors] = useState({});
 
+  const [createTouched, setCreateTouched] = useState(false);
+const [categoryTouched, setCategoryTouched] = useState(false);
+const [csvTouched, setCsvTouched] = useState(false);
+const [editTouched, setEditTouched] = useState(false);
+const [showToolCloseConfirm, setShowToolCloseConfirm] = useState(false);
+
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
 
+function markCreateChanged() {
+  setCreateTouched(true);
+}
+
+function markCategoryChanged() {
+  setCategoryTouched(true);
+}
+
+function markCsvChanged() {
+  setCsvTouched(true);
+}
+
+function markEditChanged() {
+  setEditTouched(true);
+}
+
+function hasUnsavedUserToolChanges() {
+  if (activeUserTool === "create") return createTouched;
+  if (activeUserTool === "categories") return categoryTouched;
+  if (activeUserTool === "import") return csvTouched;
+
+  return false;
+}
+
+function resetCurrentUserToolChanges() {
+  if (activeUserTool === "create") {
+    resetCreateForm();
+  }
+
+  if (activeUserTool === "categories") {
+    setNewCategoryName("");
+    setCategoryFieldErrors({});
+    setCategoryTouched(false);
+  }
+
+  if (activeUserTool === "import") {
+    clearCsvImport();
+    setCsvFieldErrors({});
+    setCsvTouched(false);
+  }
+}
+
 function closeUserToolModal() {
+  if (hasUnsavedUserToolChanges()) {
+    setShowToolCloseConfirm(true);
+    return;
+  }
+
+  setActiveUserTool("");
+  setSearchParams({});
+}
+
+function cancelCloseUserToolModal() {
+  setShowToolCloseConfirm(false);
+}
+
+function confirmCloseUserToolModal() {
+  resetCurrentUserToolChanges();
+  setShowToolCloseConfirm(false);
   setActiveUserTool("");
   setSearchParams({});
 }
@@ -119,11 +187,85 @@ function closeUserToolModal() {
   }));
 }
 
+function validateCreateField(fieldName) {
+  setCreateFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "fullName") {
+      const fullNameError = getPersonNameError(fullName);
+
+      if (fullNameError) {
+        nextErrors.fullName = fullNameError;
+      } else {
+        delete nextErrors.fullName;
+      }
+    }
+
+    if (fieldName === "email") {
+      if (!email.trim()) {
+        nextErrors.email = "Email is required.";
+      } else if (!isValidEmail(email)) {
+        nextErrors.email = "Please enter a valid email address.";
+      } else {
+        delete nextErrors.email;
+      }
+    }
+
+    if (fieldName === "temporaryPassword") {
+      if (!temporaryPassword.trim()) {
+        nextErrors.temporaryPassword = "Temporary password is required.";
+      } else if (temporaryPassword.length < 6) {
+        nextErrors.temporaryPassword =
+          "Temporary password must be at least 6 characters.";
+      } else {
+        delete nextErrors.temporaryPassword;
+      }
+    }
+
+    if (fieldName === "role") {
+      if (!role) {
+        nextErrors.role = "Role is required.";
+      } else {
+        delete nextErrors.role;
+      }
+    }
+
+    if (fieldName === "assignedCategories") {
+      if (role === "categoryAdmin" && categories.length === 0) {
+        nextErrors.assignedCategories = "Please add or seed categories first.";
+      } else if (role === "categoryAdmin" && assignedCategories.length === 0) {
+        nextErrors.assignedCategories =
+          "Please assign at least one category for category admin.";
+      } else {
+        delete nextErrors.assignedCategories;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
 function clearCategoryFieldError(fieldName) {
   setCategoryFieldErrors((previousErrors) => ({
     ...previousErrors,
     [fieldName]: "",
   }));
+}
+
+function validateCategoryField(fieldName) {
+  setCategoryFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "newCategoryName") {
+      if (!newCategoryName.trim()) {
+        nextErrors.newCategoryName = "Category name is required.";
+      } else {
+        delete nextErrors.newCategoryName;
+      }
+    }
+
+    return nextErrors;
+  });
 }
 
 function clearCsvFieldError(fieldName) {
@@ -132,11 +274,55 @@ function clearCsvFieldError(fieldName) {
     [fieldName]: "",
   }));
 }
+function validateCsvField(fieldName) {
+  setCsvFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "borrowerCsv") {
+      if (csvBorrowers.length === 0) {
+        nextErrors.borrowerCsv = "Please select a valid CSV file first.";
+      } else {
+        delete nextErrors.borrowerCsv;
+      }
+    }
+
+    return nextErrors;
+  });
+}
 function clearEditFieldError(fieldName) {
   setEditFieldErrors((previousErrors) => ({
     ...previousErrors,
     [fieldName]: "",
   }));
+}
+function validateEditUserField(fieldName) {
+  setEditFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "editRole") {
+      if (!editRole) {
+        nextErrors.editRole = "Role is required.";
+      } else {
+        delete nextErrors.editRole;
+      }
+    }
+
+    if (fieldName === "editAssignedCategories") {
+      if (editRole === "categoryAdmin" && categories.length === 0) {
+        nextErrors.editAssignedCategories = "Please add or seed categories first.";
+      } else if (
+        editRole === "categoryAdmin" &&
+        editAssignedCategories.length === 0
+      ) {
+        nextErrors.editAssignedCategories =
+          "Category admin must have at least one assigned category.";
+      } else {
+        delete nextErrors.editAssignedCategories;
+      }
+    }
+
+    return nextErrors;
+  });
 }
 
 function validateEditUserForm() {
@@ -223,9 +409,11 @@ function isValidEmail(value) {
 function validateCreateUserForm() {
   const errors = {};
 
-  if (!fullName.trim()) {
-    errors.fullName = "Full name is required.";
-  }
+const fullNameError = getPersonNameError(fullName);
+
+if (fullNameError) {
+  errors.fullName = fullNameError;
+}
 
   if (!email.trim()) {
     errors.email = "Email is required.";
@@ -256,6 +444,9 @@ function validateCreateUserForm() {
 
   return Object.keys(errors).length === 0;
 }
+
+
+
 
 function validateAddCategoryForm() {
   const errors = {};
@@ -686,6 +877,39 @@ async function handleUserSearchChange(event) {
     setSection("");
     setMobileNumber("");
   }
+  function isValidPersonName(value) {
+  const cleanedValue = String(value || "").trim();
+
+  if (cleanedValue.length < 2) return false;
+  if (cleanedValue.length > 80) return false;
+
+  return /^[\p{L}][\p{L}\s.'-]*[\p{L}.]$/u.test(cleanedValue);
+}
+
+function getPersonNameError(value) {
+  const cleanedValue = String(value || "").trim();
+
+  if (!cleanedValue) {
+    return "Full name is required.";
+  }
+
+  if (cleanedValue.length < 2) {
+    return "Full name must be at least 2 characters.";
+  }
+
+  if (cleanedValue.length > 80) {
+    return "Full name must not exceed 80 characters.";
+  }
+
+  if (!isValidPersonName(cleanedValue)) {
+    return "Full name can only contain letters, spaces, dot, hyphen, and apostrophe.";
+  }
+
+  return "";
+}
+function sanitizePersonNameInput(value) {
+  return String(value || "").replace(/[^\p{L}\s.'-]/gu, "");
+}
 
 function resetCreateForm() {
   setFullName("");
@@ -694,6 +918,7 @@ function resetCreateForm() {
   setRole("borrower");
   setAssignedCategories([]);
   setCreateFieldErrors({});
+  setCreateTouched(false);
   resetBorrowerDetails();
 }
 
@@ -819,6 +1044,7 @@ async function handleAddCategory(event) {
 
       showToast("Successfully Created", "success");
       setNewCategoryName("");
+      setCategoryTouched(false);
       fetchData();
 
     } catch (error) {
@@ -866,6 +1092,7 @@ async function handleAddCategory(event) {
   }
 
   function startEditingUser(user) {
+    setEditTouched(false);
     setEditFieldErrors({});
     setEditingUserId(user.id);
     setEditRole(user.role || "borrower");
@@ -895,6 +1122,7 @@ async function handleAddCategory(event) {
     setEditYearLevel("");
     setEditSection("");
     setEditMobileNumber("");
+    setEditTouched(false);
   }
 
 async function handleSaveUserChanges(user) {
@@ -919,6 +1147,7 @@ setUpdatingId(user.id);
       });
 
       showToast("Successfully Updated", "success");
+      setEditTouched(false);
       cancelEditingUser();
       fetchData();
 
@@ -1105,6 +1334,7 @@ setUpdatingId(user.id);
     setCsvBorrowers([]);
     setImportResults([]);
     setCsvFileName("");
+    
 
     if (!file) return;
 
@@ -1231,6 +1461,7 @@ setUpdatingId(user.id);
 
       setCsvFileName(file.name);
       setCsvBorrowers(borrowers);
+      markCsvChanged();
 
       showStatus(
         `CSV loaded: ${borrowers.length} borrower${borrowers.length === 1 ? "" : "s"} ready for import.`,
@@ -1245,6 +1476,7 @@ setUpdatingId(user.id);
     setCsvFileName("");
     setCsvBorrowers([]);
     setImportResults([]);
+    setCsvTouched(false);
   }
  function downloadBorrowerSampleCsv() {
   const csvRows = [
@@ -1356,6 +1588,7 @@ if (!isValid) {
         : [];
 
       setImportResults(results);
+      setCsvTouched(false);
 
 showStatus(
   `CSV import finished. Created: ${created}. Failed: ${failed}.`,
@@ -1419,6 +1652,34 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+  const hasUserManagementChanges =
+    createTouched || categoryTouched || csvTouched || editTouched;
+
+  setUnsavedChanges?.(
+    hasUserManagementChanges &&
+      !creating &&
+      !categoryAction &&
+      !importingCsv &&
+      !updatingId,
+    "You have unsaved user management changes. Leaving this page will discard your progress."
+  );
+
+  return () => {
+    setUnsavedChanges?.(false);
+  };
+}, [
+  createTouched,
+  categoryTouched,
+  csvTouched,
+  editTouched,
+  creating,
+  categoryAction,
+  importingCsv,
+  updatingId,
+  setUnsavedChanges,
+]);
+
+useEffect(() => {
   const selectedTool = searchParams.get("tool");
   const validTools = ["create", "categories", "import"];
 
@@ -1476,6 +1737,50 @@ useEffect(() => {
 
   return (
     <div className="user-management-page">
+      {showToolCloseConfirm && (
+  <div
+    className="user-unsaved-confirm-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="user-unsaved-confirm-title"
+    onClick={cancelCloseUserToolModal}
+  >
+    <section
+      className="user-unsaved-confirm-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="user-unsaved-confirm-icon">!</div>
+
+      <div className="user-unsaved-confirm-pill">Unsaved Changes</div>
+
+      <h2 id="user-unsaved-confirm-title">
+        You have unsaved changes.
+      </h2>
+
+      <p>
+        Closing this window will discard your progress.
+      </p>
+
+      <div className="user-unsaved-confirm-actions">
+        <button
+          type="button"
+          className="user-unsaved-confirm-cancel"
+          onClick={cancelCloseUserToolModal}
+        >
+          No, Stay Here
+        </button>
+
+        <button
+          type="button"
+          className="user-unsaved-confirm-yes"
+          onClick={confirmCloseUserToolModal}
+        >
+          Yes, Close Window
+        </button>
+      </div>
+    </section>
+  </div>
+)}
 <section className="user-management-header user-management-header-compact">
   <div className="user-management-header-content">
 <div className="user-management-header-text">
@@ -1490,7 +1795,14 @@ useEffect(() => {
     <button
       type="button"
       className="user-secondary-btn user-management-header-back-btn"
-      onClick={() => navigate("/dashboard")}
+      onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate("/dashboard");
+    return;
+  }
+
+  navigate("/dashboard");
+}}
     >
       Back to Dashboard
     </button>
@@ -1563,7 +1875,7 @@ useEffect(() => {
   </div>
 </div>
 
-            <form onSubmit={handleCreateUser} noValidate>
+            <form onSubmit={handleCreateUser} onChange={markCreateChanged} noValidate>
 <div className="user-field">
   <label className="qb-label" htmlFor="full-name">
     Full Name <span className="required-star">*</span>
@@ -1576,10 +1888,21 @@ useEffect(() => {
     placeholder="Example: Juan Dela Cruz"
     value={fullName}
     onFocus={() => clearCreateFieldError("fullName")}
-    onChange={(e) => {
-      setFullName(e.target.value);
-      clearCreateFieldError("fullName");
-    }}
+    onBlur={() => validateCreateField("fullName")}
+onChange={(e) => {
+  const sanitizedName = sanitizePersonNameInput(e.target.value);
+
+  setFullName(sanitizedName);
+  clearCreateFieldError("fullName");
+
+  if (sanitizedName !== e.target.value) {
+    setCreateFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      fullName:
+        "Full name can only contain letters, spaces, dot, hyphen, and apostrophe.",
+    }));
+  }
+}}
     disabled={creating}
   />
 
@@ -1600,6 +1923,7 @@ useEffect(() => {
     placeholder="example@email.com"
     value={email}
     onFocus={() => clearCreateFieldError("email")}
+    onBlur={() => validateCreateField("email")}
     onChange={(e) => {
       setEmail(e.target.value);
       clearCreateFieldError("email");
@@ -1624,6 +1948,7 @@ useEffect(() => {
     placeholder="At least 6 characters"
     value={temporaryPassword}
     onFocus={() => clearCreateFieldError("temporaryPassword")}
+    onBlur={() => validateCreateField("temporaryPassword")}
     onChange={(e) => {
       setTemporaryPassword(e.target.value);
       clearCreateFieldError("temporaryPassword");
@@ -1648,6 +1973,7 @@ useEffect(() => {
     className={createFieldErrors.role ? "input-error" : ""}
     value={role}
     onFocus={() => clearCreateFieldError("role")}
+    onBlur={() => validateCreateField("role")}
     onChange={(e) => {
       setRole(e.target.value);
       clearCreateFieldError("role");
@@ -1801,7 +2127,14 @@ useEffect(() => {
               )}
 
               {role === "categoryAdmin" && (
-                <div className="user-category-box">
+                <div
+  className="user-category-box"
+  onBlur={(event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      validateCreateField("assignedCategories");
+    }
+  }}
+>
                   <span>
   Assigned Categories <span className="required-star">*</span>
 </span>
@@ -1882,7 +2215,12 @@ useEffect(() => {
   </button>
 )}
 
-            <form className="user-category-add-form" onSubmit={handleAddCategory} noValidate>
+            <form
+  className="user-category-add-form"
+  onSubmit={handleAddCategory}
+  onChange={markCategoryChanged}
+  noValidate
+>
 <div className="user-field">
   <label className="qb-label" htmlFor="new-category">
     New Category <span className="required-star">*</span>
@@ -1895,6 +2233,7 @@ useEffect(() => {
     placeholder="Example: Audio Visual Items"
     value={newCategoryName}
     onFocus={() => clearCategoryFieldError("newCategoryName")}
+    onBlur={() => validateCategoryField("newCategoryName")}
     onChange={(event) => {
       setNewCategoryName(event.target.value);
       clearCategoryFieldError("newCategoryName");
@@ -2130,6 +2469,7 @@ useEffect(() => {
         className={csvFieldErrors.borrowerCsv ? "input-error" : ""}
         accept=".csv,text/csv"
         onFocus={() => clearCsvFieldError("borrowerCsv")}
+        onBlur={() => validateCsvField("borrowerCsv")}
         onChange={(event) => {
           clearCsvFieldError("borrowerCsv");
           handleCsvChange(event);
@@ -2467,7 +2807,16 @@ Showing {filteredUsers.length} of {users.length} loaded account
               <button
                 type="button"
                 className="user-modal-close-btn"
-                onClick={cancelEditingUser}
+                onClick={() => {
+  if (
+    editTouched &&
+    !window.confirm("Discard unsaved edit user changes?")
+  ) {
+    return;
+  }
+
+  cancelEditingUser();
+}}
                 aria-label="Close edit user"
               >
                 Close
@@ -2489,7 +2838,10 @@ Showing {filteredUsers.length} of {users.length} loaded account
                 <span>{editingUser.email || "No email"}</span>
               </div>
 
-              <div className="user-edit-panel user-edit-panel-modal">
+             <div
+  className="user-edit-panel user-edit-panel-modal"
+  onChange={markEditChanged}
+>
                 <div className="user-field">
                   <label className="qb-label">
                     Edit Role <span className="required-star">*</span>
@@ -2499,6 +2851,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
                     className={editFieldErrors.editRole ? "input-error" : ""}
                     value={editRole}
                     onFocus={() => clearEditFieldError("editRole")}
+                    onBlur={() => validateEditUserField("editRole")}
                     onChange={(e) => {
                       setEditRole(e.target.value);
                       clearEditFieldError("editRole");
@@ -2641,7 +2994,14 @@ Showing {filteredUsers.length} of {users.length} loaded account
                 )}
 
                 {editRole === "categoryAdmin" && (
-                  <div className="user-category-box compact">
+                  <div
+  className="user-category-box compact"
+  onBlur={(event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      validateEditUserField("editAssignedCategories");
+    }
+  }}
+>
                     <span>
                       Edit Assigned Categories{" "}
                       <span className="required-star">*</span>
@@ -2684,7 +3044,16 @@ Showing {filteredUsers.length} of {users.length} loaded account
                 <button
                   type="button"
                   className="user-secondary-btn"
-                  onClick={cancelEditingUser}
+                  onClick={() => {
+  if (
+    editTouched &&
+    !window.confirm("Discard unsaved edit user changes?")
+  ) {
+    return;
+  }
+
+  cancelEditingUser();
+}}
                   disabled={updatingId === editingUser.id}
                 >
                   Cancel

@@ -21,7 +21,7 @@ import "../styles/EditItem.css";
 function EditItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, setUnsavedChanges, guardedNavigate } = outletContext;
   const { showToast } = useToast();
 
   const [categories, setCategories] = useState([]);
@@ -47,6 +47,7 @@ function EditItem() {
   const [statusMessage, setStatusMessage] = useState(""); 
   const [statusType, setStatusType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [formTouched, setFormTouched] = useState(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isSuperAdmin = userData?.role === "superAdmin";
@@ -61,6 +62,10 @@ function EditItem() {
     ...previousErrors,
     [fieldName]: "",
   }));
+}
+
+function markFormChanged() {
+  setFormTouched(true);
 }
 
 function validateEditItemForm() {
@@ -167,6 +172,54 @@ function validateEditItemForm() {
     return availability;
   }
 
+  function validateEditItemField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "itemName") {
+      if (!itemName.trim()) {
+        nextErrors.itemName = "Item name is required.";
+      } else {
+        delete nextErrors.itemName;
+      }
+    }
+
+    if (fieldName === "categoryId") {
+      if (!categoryId) {
+        nextErrors.categoryId = "Category is required.";
+      } else {
+        delete nextErrors.categoryId;
+      }
+    }
+
+    if (fieldName === "maxBorrowDays") {
+      if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+        nextErrors.maxBorrowDays = "Max borrow days must be greater than 0.";
+      } else {
+        delete nextErrors.maxBorrowDays;
+      }
+    }
+
+    if (fieldName === "condition") {
+      if (!condition) {
+        nextErrors.condition = "Condition is required.";
+      } else {
+        delete nextErrors.condition;
+      }
+    }
+
+    if (fieldName === "availability") {
+      if (!getFinalAvailability()) {
+        nextErrors.availability = "Availability is required.";
+      } else {
+        delete nextErrors.availability;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
   async function fetchPageData(id) {
     setLoading(true);
     showStatus("", "");
@@ -257,6 +310,7 @@ function handleImageChange(event) {
     setImageFile(blob);
     setImagePreview(previewUrl);
     setCropSourceFile(null);
+    setFormTouched(true);
 
     showStatus(
       `Replacement image cropped and compressed to ${(blob.size / 1024).toFixed(
@@ -371,6 +425,9 @@ let updatedSuccessfully = false;
 
     updatedSuccessfully = true;
 
+setFormTouched(false);
+setUnsavedChanges?.(false);
+
 showToast("Successfully Updated", "success");
 
 setTimeout(() => {
@@ -399,6 +456,17 @@ setTimeout(() => {
     setItemId(idFromUrl);
     fetchPageData(idFromUrl);
   }, [userData]);
+
+  useEffect(() => {
+  setUnsavedChanges?.(
+    formTouched && !submitting,
+    "You have unsaved item changes. Leaving this page will discard your progress."
+  );
+
+  return () => {
+    setUnsavedChanges?.(false);
+  };
+}, [formTouched, submitting, setUnsavedChanges]);
 
   const selectedCategory = getSelectedCategory();
 
@@ -453,7 +521,14 @@ setTimeout(() => {
     <button
       type="button"
       className="edit-item-secondary-btn edit-item-header-back-btn"
-      onClick={() => navigate("/items")}
+      onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate("/items");
+    return;
+  }
+
+  navigate("/items");
+}}
     >
       Back to Item List
     </button>
@@ -482,7 +557,14 @@ setTimeout(() => {
           <button
             type="button"
             className="edit-item-primary-btn"
-            onClick={() => navigate("/items")}
+            onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate("/items");
+    return;
+  }
+
+  navigate("/items");
+}}
           >
             Back to Items
           </button>
@@ -511,10 +593,12 @@ setTimeout(() => {
     className={fieldErrors.itemName ? "input-error" : ""}
     value={itemName}
     onFocus={() => clearFieldError("itemName")}
-    onChange={(e) => {
-      setItemName(e.target.value);
-      clearFieldError("itemName");
-    }}
+    onBlur={() => validateEditItemField("itemName")}
+onChange={(e) => {
+  markFormChanged();
+  setItemName(e.target.value);
+  clearFieldError("itemName");
+}}
     disabled={submitting}
     placeholder="Example: Projector"
   />
@@ -550,10 +634,12 @@ setTimeout(() => {
       className={fieldErrors.categoryId ? "input-error" : ""}
       value={categoryId}
       onFocus={() => clearFieldError("categoryId")}
-      onChange={(e) => {
-        setCategoryId(e.target.value);
-        clearFieldError("categoryId");
-      }}
+      onBlur={() => validateEditItemField("categoryId")}
+onChange={(e) => {
+  markFormChanged();
+  setCategoryId(e.target.value);
+  clearFieldError("categoryId");
+}}
       disabled={submitting || availableCategories.length === 0}
     >
       {availableCategories.length === 0 ? (
@@ -582,7 +668,10 @@ setTimeout(() => {
                   id="item-code"
                   type="text"
                   value={itemCode}
-                  onChange={(e) => setItemCode(e.target.value)}
+                 onChange={(e) => {
+  markFormChanged();
+  setItemCode(e.target.value);
+}}
                   disabled={submitting}
                   placeholder="Example: IT-12345"
                 />
@@ -596,7 +685,10 @@ setTimeout(() => {
                 <textarea
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+  markFormChanged();
+  setDescription(e.target.value);
+}}
                   disabled={submitting}
                   placeholder="Describe the item..."
                 />
@@ -616,10 +708,12 @@ setTimeout(() => {
   className={fieldErrors.maxBorrowDays ? "input-error" : ""}
   value={maxBorrowDays}
   onFocus={() => clearFieldError("maxBorrowDays")}
-  onChange={(e) => {
-    setMaxBorrowDays(e.target.value);
-    clearFieldError("maxBorrowDays");
-  }}
+  onBlur={() => validateEditItemField("maxBorrowDays")}
+onChange={(e) => {
+  markFormChanged();
+  setMaxBorrowDays(e.target.value);
+  clearFieldError("maxBorrowDays");
+}}
   disabled={submitting}
 />
 
@@ -637,8 +731,15 @@ setTimeout(() => {
 
                   <select
                     id="condition"
+                    className={fieldErrors.condition ? "input-error" : ""}
                     value={condition}
-                    onChange={(e) => setCondition(e.target.value)}
+                    onBlur={() => validateEditItemField("condition")}
+                    onChange={(e) => {
+  markFormChanged();
+  setCondition(e.target.value);
+  clearFieldError("condition");
+  clearFieldError("availability");
+}}
                     disabled={submitting}
                   >
                     <option value="Good">Good</option>
@@ -646,6 +747,9 @@ setTimeout(() => {
                     <option value="Damaged">Damaged</option>
                     <option value="Lost">Lost</option>
                   </select>
+                  {fieldErrors.condition && (
+  <p className="field-error-message">{fieldErrors.condition}</p>
+)}
                 </div>
 
                 <div className="edit-item-field">
@@ -655,8 +759,14 @@ setTimeout(() => {
 
                   <select
                     id="availability"
+                    className={fieldErrors.availability ? "input-error" : ""}
                     value={availability}
-                    onChange={(e) => setAvailability(e.target.value)}
+                    onBlur={() => validateEditItemField("availability")}
+                    onChange={(e) => {
+  markFormChanged();
+  setAvailability(e.target.value);
+  clearFieldError("availability");
+}}
                     disabled={submitting || condition === "Damaged" || condition === "Lost"}
                   >
                     <option value="Available">Available</option>
@@ -664,6 +774,9 @@ setTimeout(() => {
                     <option value="Borrowed">Borrowed</option>
                     <option value="Unavailable">Unavailable</option>
                   </select>
+                  {fieldErrors.availability && (
+  <p className="field-error-message">{fieldErrors.availability}</p>
+)}
 
                   {(condition === "Damaged" || condition === "Lost") && (
                     <p>Availability will automatically become {condition}.</p>
@@ -694,7 +807,14 @@ setTimeout(() => {
                 <button
                   type="button"
                   className="edit-item-secondary-btn"
-                  onClick={() => navigate(`/item/${itemId}`)}
+                  onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate(`/item/${itemId}`);
+    return;
+  }
+
+  navigate(`/item/${itemId}`);
+}}
                   disabled={submitting}
                 >
                   View Item

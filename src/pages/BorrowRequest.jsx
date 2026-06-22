@@ -19,6 +19,7 @@ function BorrowRequest() {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
+  const { setUnsavedChanges, guardedNavigate } = outletContext;
   const { showToast } = useToast();
 
   function getTodayDate() {
@@ -57,6 +58,7 @@ function BorrowRequest() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [formTouched, setFormTouched] = useState(false);
 
   const submitLockRef = useRef(false);
 
@@ -69,6 +71,14 @@ function clearFieldError(fieldName) {
     ...previousErrors,
     [fieldName]: "",
   }));
+}
+
+function markFormChanged() {
+  setFormTouched(true);
+}
+
+function sanitizeRequestText(value) {
+  return String(value || "").replace(/[<>`]/g, "");
 }
 
 function validateBorrowRequestForm() {
@@ -100,6 +110,41 @@ function validateBorrowRequestForm() {
   setFieldErrors(errors);
 
   return Object.keys(errors).length === 0;
+}
+function validateBorrowRequestField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "purpose") {
+      if (!purpose.trim()) {
+        nextErrors.purpose = "Purpose of borrowing is required.";
+      } else {
+        delete nextErrors.purpose;
+      }
+    }
+
+    if (fieldName === "expectedReturnDate") {
+      if (!expectedReturnDate) {
+        nextErrors.expectedReturnDate = "Expected return date is required.";
+      } else if (expectedReturnDate < today) {
+        nextErrors.expectedReturnDate =
+          "Expected return date cannot be in the past.";
+      } else if (expectedReturnDate < borrowDate) {
+        nextErrors.expectedReturnDate =
+          "Expected return date cannot be earlier than the borrow date.";
+      } else if (
+        expectedReturnDate &&
+        getMaxExpectedReturnDate() &&
+        expectedReturnDate > getMaxExpectedReturnDate()
+      ) {
+        nextErrors.expectedReturnDate = `Expected return date cannot exceed the item's max borrow limit. Latest allowed return date is ${getMaxExpectedReturnDate()}.`;
+      } else {
+        delete nextErrors.expectedReturnDate;
+      }
+    }
+
+    return nextErrors;
+  });
 }
   function getItemCode() {
     return item?.itemCode || item?.id || "No code";
@@ -347,6 +392,17 @@ function validateBorrowRequestForm() {
     return () => unsubscribe();
   }, [itemId, navigate, outletContext?.userData]);
 
+useEffect(() => {
+  setUnsavedChanges?.(
+    formTouched && !submitting && !requestSubmitted,
+    "You have an unfinished borrow request. Leaving this page will discard your progress."
+  );
+
+  return () => {
+    setUnsavedChanges?.(false);
+  };
+}, [formTouched, submitting, requestSubmitted, setUnsavedChanges]);
+
 async function handleSubmitRequest(e) {
   e.preventDefault();
 
@@ -470,8 +526,10 @@ await addDoc(collection(db, "notifications"), {
   link: "/manage-requests",
 });
 
-    submittedSuccessfully = true;
-    setRequestSubmitted(true);
+submittedSuccessfully = true;
+setRequestSubmitted(true);
+setFormTouched(false);
+setUnsavedChanges?.(false);
 
 showToast("Borrow Request Submitted", "success");
 
@@ -519,7 +577,14 @@ setTimeout(() => {
     <button
       type="button"
       className="borrow-request-secondary-btn borrow-request-header-back-btn"
-      onClick={() => navigate(`/item/${itemId}`)}
+      onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate(`/item/${itemId}`);
+    return;
+  }
+
+  navigate(`/item/${itemId}`);
+}}
     >
       Back to Item
     </button>
@@ -648,10 +713,14 @@ setTimeout(() => {
     placeholder="Example: For classroom presentation"
     value={purpose}
     onFocus={() => clearFieldError("purpose")}
-    onChange={(e) => {
-      setPurpose(e.target.value);
-      clearFieldError("purpose");
-    }}
+    onBlur={() => validateBorrowRequestField("purpose")}
+onChange={(e) => {
+  const sanitizedValue = sanitizeRequestText(e.target.value);
+
+  markFormChanged();
+  setPurpose(sanitizedValue);
+  clearFieldError("purpose");
+}}
     disabled={submitting || requestSubmitted}
   />
 
@@ -689,11 +758,13 @@ setTimeout(() => {
     value={expectedReturnDate}
     min={today}
     max={maxExpectedReturnDate || undefined}
+    onBlur={() => validateBorrowRequestField("expectedReturnDate")}
     onFocus={() => clearFieldError("expectedReturnDate")}
-    onChange={(e) => {
-      setExpectedReturnDate(e.target.value);
-      clearFieldError("expectedReturnDate");
-    }}
+ onChange={(e) => {
+  markFormChanged();
+  setExpectedReturnDate(e.target.value);
+  clearFieldError("expectedReturnDate");
+}}
     disabled={submitting || requestSubmitted}
   />
 
@@ -713,7 +784,14 @@ setTimeout(() => {
             <button
               type="button"
               className="borrow-request-secondary-btn"
-              onClick={() => navigate(`/item/${itemId}`)}
+              onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate(`/item/${itemId}`);
+    return;
+  }
+
+  navigate(`/item/${itemId}`);
+}}
               disabled={submitting || requestSubmitted}
             >
               Cancel

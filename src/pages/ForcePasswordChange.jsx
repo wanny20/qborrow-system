@@ -16,6 +16,7 @@ function ForcePasswordChange() {
   const [showPassword, setShowPassword] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   const { showToast } = useToast();
@@ -24,6 +25,80 @@ function ForcePasswordChange() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function clearFieldError(fieldName) {
+  setFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateForcePasswordField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "termsAccepted") {
+      if (!termsAccepted) {
+        nextErrors.termsAccepted =
+          "Please accept the Data Privacy Notice and System Use Agreement.";
+      } else {
+        delete nextErrors.termsAccepted;
+      }
+    }
+
+    if (fieldName === "newPassword") {
+      const validationError = validatePassword(newPassword);
+
+      if (validationError) {
+        nextErrors.newPassword = validationError;
+      } else {
+        delete nextErrors.newPassword;
+      }
+
+      if (confirmPassword && newPassword !== confirmPassword) {
+        nextErrors.confirmPassword = "Passwords do not match.";
+      } else if (confirmPassword) {
+        delete nextErrors.confirmPassword;
+      }
+    }
+
+    if (fieldName === "confirmPassword") {
+      if (!confirmPassword.trim()) {
+        nextErrors.confirmPassword = "Please confirm your new password.";
+      } else if (newPassword !== confirmPassword) {
+        nextErrors.confirmPassword = "Passwords do not match.";
+      } else {
+        delete nextErrors.confirmPassword;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
+function validateForcePasswordForm() {
+  const errors = {};
+
+  const passwordError = validatePassword(newPassword);
+
+  if (passwordError) {
+    errors.newPassword = passwordError;
+  }
+
+  if (!confirmPassword.trim()) {
+    errors.confirmPassword = "Please confirm your new password.";
+  } else if (newPassword !== confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
+  }
+
+  if (!termsAccepted) {
+    errors.termsAccepted =
+      "Please accept the Data Privacy Notice and System Use Agreement.";
+  }
+
+  setFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
 
   function validatePassword(password) {
     const hasEightCharacters = password.length >= 8;
@@ -61,21 +136,12 @@ function ForcePasswordChange() {
       return;
     }
 
-    const validationError = validatePassword(newPassword);
+const isValid = validateForcePasswordForm();
 
-    if (validationError) {
-      showStatus(validationError, "error");
-      return;
-    }
-
-if (!termsAccepted) {
-  showStatus(
-    "Please accept the Data Privacy Notice and System Use Agreement before continuing.",
-    "error"
-  );
+if (!isValid) {
+  showStatus("Please fix the highlighted fields before continuing.", "error");
   return;
 }
-
     setSaving(true);
 
     try {
@@ -175,16 +241,23 @@ setTimeout(async () => {
   </div>
 
   <label className="force-password-terms-check">
-    <input
-      type="checkbox"
-      checked={termsAccepted}
-      onChange={(event) => setTermsAccepted(event.target.checked)}
-      disabled={saving}
-    />
+<input
+  type="checkbox"
+  checked={termsAccepted}
+  onBlur={() => validateForcePasswordField("termsAccepted")}
+  onChange={(event) => {
+    setTermsAccepted(event.target.checked);
+    clearFieldError("termsAccepted");
+  }}
+  disabled={saving}
+/>
     <span>
       I have read and agree to the Data Privacy Notice and System Use Agreement.
     </span>
   </label>
+  {fieldErrors.termsAccepted && (
+  <p className="field-error-message">{fieldErrors.termsAccepted}</p>
+)}
 </div>
             <label className="qb-label" htmlFor="new-password">
               New Password
@@ -192,13 +265,23 @@ setTimeout(async () => {
 
             <input
               id="new-password"
+              className={fieldErrors.newPassword ? "input-error" : ""}
+onFocus={() => clearFieldError("newPassword")}
+onBlur={() => validateForcePasswordField("newPassword")}
+onChange={(event) => {
+  setNewPassword(event.target.value);
+  clearFieldError("newPassword");
+}}
               type={showPassword ? "text" : "password"}
               placeholder="At least 8 characters"
               value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
+
               autoComplete="new-password"
               required
             />
+            {fieldErrors.newPassword && (
+  <p className="field-error-message">{fieldErrors.newPassword}</p>
+)}
           </div>
 
           <div className="force-password-field">
@@ -208,13 +291,23 @@ setTimeout(async () => {
 
             <input
               id="confirm-password"
+              className={fieldErrors.confirmPassword ? "input-error" : ""}
+onFocus={() => clearFieldError("confirmPassword")}
+onBlur={() => validateForcePasswordField("confirmPassword")}
+onChange={(event) => {
+  setConfirmPassword(event.target.value);
+  clearFieldError("confirmPassword");
+}}
               type={showPassword ? "text" : "password"}
               placeholder="Re-enter new password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              
               autoComplete="new-password"
               required
             />
+            {fieldErrors.confirmPassword && (
+  <p className="field-error-message">{fieldErrors.confirmPassword}</p>
+)}
           </div>
 
           <button

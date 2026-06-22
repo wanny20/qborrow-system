@@ -107,6 +107,67 @@ function validateReturnForm() {
   return Object.keys(errors).length === 0;
 }
 
+function validateReturnField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "manualItemId") {
+      if (!manualItemId.trim()) {
+        nextErrors.manualItemId =
+          "Manual Item ID, barcode, or QR URL is required.";
+      } else {
+        delete nextErrors.manualItemId;
+      }
+    }
+
+    if (fieldName === "selectedRequest") {
+      if (!selectedRequest) {
+        nextErrors.selectedRequest =
+          "Please scan, enter, or select a borrowed request first.";
+      } else {
+        delete nextErrors.selectedRequest;
+      }
+    }
+
+    if (fieldName === "actualReturnDate") {
+      if (!actualReturnDate) {
+        nextErrors.actualReturnDate = "Actual return date is required.";
+      } else {
+        delete nextErrors.actualReturnDate;
+      }
+    }
+
+    if (fieldName === "returnCondition") {
+      if (!returnCondition) {
+        nextErrors.returnCondition = "Return condition is required.";
+      } else {
+        delete nextErrors.returnCondition;
+      }
+    }
+
+    if (fieldName === "damageLostReport") {
+      if (
+        (returnCondition === "Damaged" || returnCondition === "Lost") &&
+        !damageLostReport.trim()
+      ) {
+        nextErrors.damageLostReport = "Damage / lost report is required.";
+      } else {
+        delete nextErrors.damageLostReport;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
+function sanitizeScannerInput(value) {
+  return String(value || "").replace(/[<>`]/g, "");
+}
+
+function sanitizeReportText(value) {
+  return String(value || "").replace(/[<>`]/g, "");
+}
+
   function startReturnAction() {
   if (returnLockRef.current || confirming) {
     return false;
@@ -777,8 +838,11 @@ scanner.render(
   className={fieldErrors.manualItemId ? "input-error" : ""}
   value={manualItemId}
   onFocus={() => clearFieldError("manualItemId")}
+  onBlur={() => validateReturnField("manualItemId")}
   onChange={(e) => {
-    setManualItemId(e.target.value);
+    const sanitizedValue = sanitizeScannerInput(e.target.value);
+
+    setManualItemId(sanitizedValue);
     clearFieldError("manualItemId");
   }}
   placeholder="Example: item ID or /item/itemId"
@@ -900,6 +964,7 @@ scanner.render(
   className={fieldErrors.returnCondition ? "input-error" : ""}
   value={returnCondition}
   onFocus={() => clearFieldError("returnCondition")}
+  onBlur={() => validateReturnField("returnCondition")}
   onChange={(e) => {
     setReturnCondition(e.target.value);
     clearFieldError("returnCondition");
@@ -929,8 +994,11 @@ scanner.render(
   className={fieldErrors.damageLostReport ? "input-error" : ""}
   value={damageLostReport}
   onFocus={() => clearFieldError("damageLostReport")}
+  onBlur={() => validateReturnField("damageLostReport")}
   onChange={(e) => {
-    setDamageLostReport(e.target.value);
+    const sanitizedValue = sanitizeReportText(e.target.value);
+
+    setDamageLostReport(sanitizedValue);
     clearFieldError("damageLostReport");
   }}
   placeholder="Describe the damage or lost item issue..."
@@ -953,11 +1021,15 @@ scanner.render(
               </button>
             </>
           ) : (
-            <div className="return-empty-selected">
-              <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-              <h3>No selected request yet</h3>
-              <p>Scan an item or select from the borrowed request queue.</p>
-            </div>
+<div className="return-empty-selected">
+  <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+  <h3>No selected request yet</h3>
+  <p>Scan an item or select from the borrowed request queue.</p>
+
+  {fieldErrors.selectedRequest && (
+    <p className="field-error-message">{fieldErrors.selectedRequest}</p>
+  )}
+</div>
           )}
         </section>
       </section>
