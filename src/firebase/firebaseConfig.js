@@ -1,5 +1,10 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  getAuth,
+  inMemoryPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getFunctions } from "firebase/functions";
@@ -14,14 +19,44 @@ const firebaseConfig = {
   measurementId: "G-JQR18BTGE9"
 };
 
-const app = initializeApp(firebaseConfig);
+const app =
+  getApps().find((firebaseApp) => firebaseApp.name === "[DEFAULT]") ||
+  initializeApp(firebaseConfig);
 
 const secondaryApp =
   getApps().find((firebaseApp) => firebaseApp.name === "Secondary") ||
   initializeApp(firebaseConfig, "Secondary");
 
-const auth = getAuth(app);
-const secondaryAuth = getAuth(secondaryApp);
+function getPersistentAuth(firebaseApp) {
+  try {
+    return initializeAuth(firebaseApp, {
+      persistence: browserLocalPersistence,
+    });
+  } catch (error) {
+    if (error.code === "auth/already-initialized") {
+      return getAuth(firebaseApp);
+    }
+
+    throw error;
+  }
+}
+
+function getSecondaryAuth(firebaseApp) {
+  try {
+    return initializeAuth(firebaseApp, {
+      persistence: inMemoryPersistence,
+    });
+  } catch (error) {
+    if (error.code === "auth/already-initialized") {
+      return getAuth(firebaseApp);
+    }
+
+    throw error;
+  }
+}
+
+const auth = getPersistentAuth(app);
+const secondaryAuth = getSecondaryAuth(secondaryApp);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const functions = getFunctions(app, "us-central1");
