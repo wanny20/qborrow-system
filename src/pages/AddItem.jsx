@@ -20,7 +20,7 @@ import "../styles/AddItem.css";
 function AddItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, setUnsavedChanges, guardedNavigate } = outletContext;
   const { showToast } = useToast();
 
   const [categories, setCategories] = useState([]);
@@ -32,6 +32,8 @@ function AddItem() {
   const [condition, setCondition] = useState("Good");
   const [availability, setAvailability] = useState("Available");
   const [maxBorrowDays, setMaxBorrowDays] = useState("7");
+
+  const [formTouched, setFormTouched] = useState(false);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -140,6 +142,18 @@ function AddItem() {
   }, []);
 
   useEffect(() => {
+  setUnsavedChanges?.(
+    formTouched && !submitting,
+    "You have unsaved item details. Leaving this page will discard your progress."
+  );
+
+  return () => {
+    setUnsavedChanges?.(false);
+  };
+}, [formTouched, submitting, setUnsavedChanges]);
+
+
+  useEffect(() => {
     if (availableCategories.length === 0) {
       setCategoryId("");
       return;
@@ -160,6 +174,9 @@ function AddItem() {
       null
     );
   }
+  function markFormChanged() {
+  setFormTouched(true);
+}
 
   function generateItemCode() {
     const selectedCategory = getSelectedCategory();
@@ -178,7 +195,53 @@ function AddItem() {
 
     return availability;
   }
+function validateAddItemField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
 
+    if (fieldName === "itemName") {
+      if (!itemName.trim()) {
+        nextErrors.itemName = "Item name is required.";
+      } else {
+        delete nextErrors.itemName;
+      }
+    }
+
+    if (fieldName === "categoryId") {
+      if (!categoryId) {
+        nextErrors.categoryId = "Category is required.";
+      } else {
+        delete nextErrors.categoryId;
+      }
+    }
+
+    if (fieldName === "maxBorrowDays") {
+      if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
+        nextErrors.maxBorrowDays = "Max borrow days must be greater than 0.";
+      } else {
+        delete nextErrors.maxBorrowDays;
+      }
+    }
+
+    if (fieldName === "condition") {
+      if (!condition) {
+        nextErrors.condition = "Condition is required.";
+      } else {
+        delete nextErrors.condition;
+      }
+    }
+
+    if (fieldName === "availability") {
+      if (!getFinalAvailability()) {
+        nextErrors.availability = "Availability is required.";
+      } else {
+        delete nextErrors.availability;
+      }
+    }
+
+    return nextErrors;
+  });
+}
   function resetForm() {
     revokePreview(imagePreview);
 
@@ -196,6 +259,7 @@ function AddItem() {
     if (availableCategories.length > 0) {
       setCategoryId(availableCategories[0].id);
     }
+    setFormTouched(false);
   }
 
   function handleImageChange(event) {
@@ -227,6 +291,7 @@ function AddItem() {
     setImageFile(blob);
     setImagePreview(previewUrl);
     setCropSourceFile(null);
+    setFormTouched(true);
 
     showStatus(
       `Item image cropped and compressed to ${(blob.size / 1024).toFixed(1)} KB.`,
@@ -380,7 +445,14 @@ resetForm();
     <button
       type="button"
       className="add-item-secondary-btn add-item-header-back-btn"
-      onClick={() => navigate("/dashboard")}
+      onClick={() => {
+  if (guardedNavigate) {
+    guardedNavigate("/dashboard");
+    return;
+  }
+
+  navigate("/dashboard");
+}}
     >
       Back to Dashboard
     </button>
@@ -420,7 +492,9 @@ resetForm();
                 placeholder="Example: Projector"
                 value={itemName}
                 onFocus={() => clearFieldError("itemName")}
+                onBlur={() => validateAddItemField("itemName")}
                 onChange={(e) => {
+                  markFormChanged();
                   setItemName(e.target.value);
                   clearFieldError("itemName");
                 }}
@@ -443,7 +517,10 @@ resetForm();
                 type="text"
                 placeholder="Leave blank to auto-generate"
                 value={itemCode}
-                onChange={(e) => setItemCode(e.target.value)}
+                onChange={(e) => {
+                  markFormChanged();
+                  setItemCode(e.target.value);
+                }}
                 disabled={submitting}
               />
 
@@ -460,7 +537,10 @@ resetForm();
                 id="description"
                 placeholder="Describe the item, included accessories, or notes..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  markFormChanged();
+                  setDescription(e.target.value);
+                }}
                 disabled={submitting}
               />
             </div>
@@ -497,7 +577,9 @@ resetForm();
       className={fieldErrors.categoryId ? "input-error" : ""}
       value={categoryId}
       onFocus={() => clearFieldError("categoryId")}
+      onBlur={() => validateAddItemField("categoryId")}
       onChange={(e) => {
+        markFormChanged();
         setCategoryId(e.target.value);
         clearFieldError("categoryId");
       }}
@@ -537,7 +619,9 @@ resetForm();
                   className={fieldErrors.maxBorrowDays ? "input-error" : ""}
                   value={maxBorrowDays}
                   onFocus={() => clearFieldError("maxBorrowDays")}
+                  onBlur={() => validateAddItemField("maxBorrowDays")}
                   onChange={(e) => {
+                    markFormChanged();
                     setMaxBorrowDays(e.target.value);
                     clearFieldError("maxBorrowDays");
                   }}
@@ -562,7 +646,9 @@ resetForm();
                   className={fieldErrors.condition ? "input-error" : ""}
                   value={condition}
                   onFocus={() => clearFieldError("condition")}
+                  onBlur={() => validateAddItemField("condition")}
                   onChange={(e) => {
+                    markFormChanged();
                     setCondition(e.target.value);
                     clearFieldError("condition");
                     clearFieldError("availability");
@@ -591,7 +677,9 @@ resetForm();
                   className={fieldErrors.availability ? "input-error" : ""}
                   value={availability}
                   onFocus={() => clearFieldError("availability")}
+                  onBlur={() => validateAddItemField("availability")}
                   onChange={(e) => {
+                    markFormChanged();
                     setAvailability(e.target.value);
                     clearFieldError("availability");
                   }}

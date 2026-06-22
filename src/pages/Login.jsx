@@ -107,6 +107,31 @@ function validateLoginForm() {
 
   return Object.keys(errors).length === 0;
 }
+function validateLoginField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "email") {
+      if (!email.trim()) {
+        nextErrors.email = "Email address is required.";
+      } else if (!isValidEmail(email)) {
+        nextErrors.email = "Please enter a valid email address.";
+      } else {
+        delete nextErrors.email;
+      }
+    }
+
+    if (fieldName === "password") {
+      if (!password.trim()) {
+        nextErrors.password = "Password is required.";
+      } else {
+        delete nextErrors.password;
+      }
+    }
+
+    return nextErrors;
+  });
+}
 
 function validateForgotPassword() {
   const errors = {};
@@ -295,6 +320,7 @@ if (checkingSession) {
   placeholder="example@email.com"
   value={email}
   onFocus={() => clearFieldError("email")}
+  onBlur={() => validateLoginField("email")}
   onChange={(e) => {
     setEmail(e.target.value);
     clearFieldError("email");
@@ -325,6 +351,7 @@ inputMode="email"
                     placeholder="Enter your password"
 value={password}
 onFocus={() => clearFieldError("password")}
+onBlur={() => validateLoginField("password")}
 onChange={(e) => {
   setPassword(e.target.value);
   clearFieldError("password");

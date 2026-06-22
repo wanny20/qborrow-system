@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -31,6 +31,13 @@ function AppLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+const [unsavedChangesMessage, setUnsavedChangesMessage] = useState(
+  "Leaving this page will discard your progress."
+);
+const [pendingNavigationPath, setPendingNavigationPath] = useState("");
+
+
   const [rejectedRequestAlerts, setRejectedRequestAlerts] = useState([]);
   const [acknowledgingRejectedAlerts, setAcknowledgingRejectedAlerts] =
   useState(false);
@@ -40,6 +47,61 @@ function AppLayout() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const closeSidebarOnMobile = useCallback(() => {
+  if (typeof window !== "undefined" && window.innerWidth <= 820) {
+    setSidebarOpen(false);
+  }
+}, []);
+
+const setUnsavedChanges = useCallback((hasChanges, message = "") => {
+  setHasUnsavedChanges(Boolean(hasChanges));
+  setUnsavedChangesMessage(
+    message || "Leaving this page will discard your progress."
+  );
+}, []);
+
+const guardedNavigate = useCallback(
+  (path) => {
+    const currentFullPath = `${location.pathname}${location.search || ""}`;
+
+    if (path === currentFullPath) {
+      closeSidebarOnMobile();
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      setPendingNavigationPath(path);
+      return;
+    }
+
+    navigate(path);
+    closeSidebarOnMobile();
+  },
+  [
+    closeSidebarOnMobile,
+    hasUnsavedChanges,
+    location.pathname,
+    location.search,
+    navigate,
+  ]
+);
+
+function cancelPendingNavigation() {
+  setPendingNavigationPath("");
+}
+
+function confirmPendingNavigation() {
+  const targetPath = pendingNavigationPath;
+
+  setPendingNavigationPath("");
+  setHasUnsavedChanges(false);
+  setUnsavedChangesMessage("Leaving this page will discard your progress.");
+
+  if (targetPath) {
+    navigate(targetPath);
+    closeSidebarOnMobile();
+  }
+}
 
 const currentPath = location.pathname;
 
@@ -402,6 +464,21 @@ function handleViewAdminBorrowRequestAlert() {
   }, [navigate]);
 
   useEffect(() => {
+  if (!hasUnsavedChanges) return;
+
+  function handleBeforeUnload(event) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  return () => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  };
+}, [hasUnsavedChanges]);
+
+  useEffect(() => {
     function handleUserUpdate(event) {
       setUserData((previousData) => ({
         ...previousData,
@@ -637,7 +714,7 @@ async function confirmLogout() {
     new URLSearchParams(location.search).get("tool") || "";
 
   function openUserManagementTool(tool) {
-    navigate(`/user-management?tool=${tool}`);
+    guardedNavigate(`/user-management?tool=${tool}`);
 
     if (window.innerWidth <= 820) {
       setSidebarOpen(false);
@@ -652,11 +729,10 @@ function renderNavLink(link) {
       key={link.label}
       to={link.path}
       className={isActive ? "app-nav-link active" : "app-nav-link"}
-      onClick={() => {
-        if (window.innerWidth <= 820) {
-          setSidebarOpen(false);
-        }
-      }}
+onClick={(event) => {
+  event.preventDefault();
+  guardedNavigate(link.path);
+}}
     >
       <span className="app-nav-icon">
         <img
@@ -684,6 +760,10 @@ function renderUserManagementMenu() {
     <div className={`app-nav-group ${isActive ? "active" : ""}`}>
       <NavLink
         to="/user-management"
+        onClick={(event) => {
+  event.preventDefault();
+  guardedNavigate("/user-management");
+}}
         className={
           isActive
             ? "app-nav-link app-nav-parent-link active"
@@ -752,7 +832,7 @@ function renderUserManagementMenu() {
           <button
             type="button"
             className="app-sidebar-brand"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => guardedNavigate("/dashboard")}
             aria-label="Go to dashboard"
           >
             <span className="app-brand-logo">
@@ -1005,6 +1085,49 @@ function renderUserManagementMenu() {
   </div>
 )}
 
+{pendingNavigationPath && (
+  <div
+    className="app-logout-confirm-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="unsaved-changes-title"
+    onClick={cancelPendingNavigation}
+  >
+    <section
+      className="app-logout-confirm-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="app-logout-confirm-icon">!</div>
+
+      <div className="app-logout-confirm-text">
+        <p>Unsaved Changes</p>
+
+        <h2 id="unsaved-changes-title">You have unsaved changes.</h2>
+
+        <span>{unsavedChangesMessage}</span>
+      </div>
+
+      <div className="app-logout-confirm-actions">
+        <button
+          type="button"
+          className="app-logout-confirm-cancel"
+          onClick={cancelPendingNavigation}
+        >
+          No, Stay Here
+        </button>
+
+        <button
+          type="button"
+          className="app-logout-confirm-yes"
+          onClick={confirmPendingNavigation}
+        >
+          Yes, Leave Page
+        </button>
+      </div>
+    </section>
+  </div>
+)}
+
 <main className="app-main-content">
         <header className="app-topbar">
           <div className="app-topbar-left">
@@ -1030,7 +1153,7 @@ function renderUserManagementMenu() {
   <button
     type="button"
     className="app-topbar-notification"
-    onClick={() => navigate("/notifications")}
+    onClick={() => guardedNavigate("/notifications")}
     aria-label="Open notifications"
   >
     <span className="app-topbar-notification-icon">!</span>
@@ -1093,7 +1216,7 @@ function renderUserManagementMenu() {
             className="app-profile-menu-item"
             onClick={() => {
               setProfileDropdownOpen(false);
-              navigate("/settings");
+              guardedNavigate("/settings");
             }}
             role="menuitem"
           >
@@ -1118,7 +1241,13 @@ function renderUserManagementMenu() {
         </header>
 
         <div className="app-page-content">
-          <Outlet context={{ userData }} />
+          <Outlet
+  context={{
+    userData,
+    setUnsavedChanges,
+    guardedNavigate,
+  }}
+/>
         </div>
       </main>
     </div>

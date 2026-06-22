@@ -82,6 +82,36 @@ function validateReleaseForm() {
 
   return Object.keys(errors).length === 0;
 }
+function validateReleaseField(fieldName) {
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+
+    if (fieldName === "manualItemId") {
+      if (!manualItemId.trim()) {
+        nextErrors.manualItemId =
+          "Manual Item ID, barcode, or QR URL is required.";
+      } else {
+        delete nextErrors.manualItemId;
+      }
+    }
+
+    if (fieldName === "selectedRequest") {
+      if (!selectedRequest) {
+        nextErrors.selectedRequest =
+          "Please scan, enter, or select an approved request first.";
+      } else {
+        delete nextErrors.selectedRequest;
+      }
+    }
+
+    return nextErrors;
+  });
+}
+
+function sanitizeScannerInput(value) {
+  return String(value || "").replace(/[<>`]/g, "");
+}
+
   function startReleaseAction() {
   if (releaseLockRef.current || releasing) {
     return false;
@@ -641,20 +671,22 @@ useEffect(() => {
 </label>
 
             <div className="release-manual-row">
-<input
-  id="manual-item-id"
-  type="text"
-  className={fieldErrors.manualItemId ? "input-error" : ""}
-  value={manualItemId}
-  onFocus={() => clearFieldError("manualItemId")}
-  onChange={(e) => {
-    setManualItemId(e.target.value);
-    clearFieldError("manualItemId");
-  }}
-  placeholder="Example: item ID or /item/itemId"
-  disabled={releasing}
-/>
+              <input
+                id="manual-item-id"
+                type="text"
+                className={fieldErrors.manualItemId ? "input-error" : ""}
+                value={manualItemId}
+                onFocus={() => clearFieldError("manualItemId")}
+                onBlur={() => validateReleaseField("manualItemId")}
+                onChange={(e) => {
+                  const sanitizedValue = sanitizeScannerInput(e.target.value);
 
+                  setManualItemId(sanitizedValue);
+                  clearFieldError("manualItemId");
+                }}
+                placeholder="Example: item ID or /item/itemId"
+                disabled={releasing}
+              />
             <button
               type="button"
               className="release-secondary-btn"

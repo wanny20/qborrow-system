@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import "../styles/LandingPage.css";
 
@@ -49,6 +52,57 @@ const workflowSteps = [
 function LandingPage() {
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+useEffect(() => {
+  let isMounted = true;
+
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      if (isMounted) {
+        setCheckingSession(false);
+      }
+
+      return;
+    }
+
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!isMounted) return;
+
+      if (!userSnap.exists()) {
+        setCheckingSession(false);
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      if (
+        userData.termsAccepted !== true ||
+        userData.mustChangePassword === true
+      ) {
+        navigate("/force-password-change", { replace: true });
+        return;
+      }
+
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error("Landing session check error:", error);
+
+      if (isMounted) {
+        setCheckingSession(false);
+      }
+    }
+  });
+
+  return () => {
+    isMounted = false;
+    unsubscribe();
+  };
+}, [navigate]);
+
 
   function goToLogin() {
     setIsLeaving(true);
@@ -57,7 +111,9 @@ function LandingPage() {
       navigate("/login");
     }, 650);
   }
-
+if (checkingSession) {
+  return null;
+}
   return (
     <main className={`landing-page qb-page ${isLeaving ? "landing-exit" : ""}`}>
       <div className="landing-confetti landing-confetti-one" aria-hidden="true"></div>
