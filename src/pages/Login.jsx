@@ -4,7 +4,8 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
+import { auth, db } from "../firebase/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 import "../styles/Login.css";
 import { useToast } from "../components/ToastProvider.jsx";
 
@@ -80,16 +81,45 @@ if (!isValid) {
   setIsLoading(true);
 
   try {
-    await signInWithEmailAndPassword(auth, email.trim(), password);
-    showToast("Login successful. Redirecting to your dashboard...", "success");
+const userCredential = await signInWithEmailAndPassword(
+  auth,
+  email.trim(),
+  password
+);
 
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 500);
-  } catch (error) {
-    console.error(error);
-    showStatus("Invalid email or password. Please check your assigned account.", "error");
-  } finally {
+const userRef = doc(db, "users", userCredential.user.uid);
+const userSnap = await getDoc(userRef);
+
+if (!userSnap.exists()) {
+  showStatus("No user profile found. Please contact the administrator.", "error");
+  return;
+}
+
+const userData = userSnap.data();
+
+showToast("Login successful. Redirecting...", "success");
+
+setTimeout(() => {
+  if (
+    userData.termsAccepted !== true ||
+    userData.mustChangePassword === true
+  ) {
+    navigate("/force-password-change", { replace: true });
+    return;
+  }
+
+  navigate("/dashboard", { replace: true });
+}, 700);
+
+} catch (error) {
+  console.error("Login error:", error);
+
+showStatus(
+  "Invalid email or password. Please check your assigned account.",
+  "error"
+);
+
+} finally {
     setIsLoading(false);
   }
 }
@@ -197,6 +227,11 @@ if (!isValid) {
     setEmail(e.target.value);
     clearFieldError("email");
   }}
+  autoCapitalize="none"
+autoCorrect="off"
+spellCheck={false}
+inputMode="email"
+autoComplete="username"
   autoComplete="email"
   disabled={isLoading}
 />
@@ -223,6 +258,9 @@ onChange={(e) => {
   setPassword(e.target.value);
   clearFieldError("password");
 }}
+autoCapitalize="none"
+autoCorrect="off"
+spellCheck={false}
 autoComplete="current-password"
 disabled={isLoading}
                   />

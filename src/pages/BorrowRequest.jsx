@@ -269,7 +269,7 @@ function validateBorrowRequestForm() {
     async function checkRequestConflict() {
     if (!item?.id) return null;
 
-    const activeStatuses = ["Pending", "Approved", "Borrowed"];
+    const activeStatuses = ["Approved", "Borrowed"];
 
     const requestsQuery = firestoreQuery(
       collection(db, "borrowRequests"),

@@ -385,6 +385,46 @@ function validateCsvImportForm() {
       mobileNumber: cleanInput(editMobileNumber),
     };
   }
+  async function fetchAllUsersForSearch() {
+  const usersRef = collection(db, "users");
+  const usersSnapshot = await getDocs(usersRef);
+
+  const userData = usersSnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .sort((a, b) =>
+      String(a.email || "").localeCompare(String(b.email || ""))
+    );
+
+  setUsers(userData);
+  setHasMoreUsers(false);
+  setLastUserDoc(null);
+}
+async function handleUserSearchChange(event) {
+  const value = event.target.value;
+
+  setSearchTerm(value);
+  showStatus("", "");
+
+  if (!value.trim()) {
+    try {
+      await fetchUsersPage("reset", roleFilter);
+    } catch (error) {
+      showStatus("Error loading users: " + error.message, "error");
+    }
+
+    return;
+  }
+
+  try {
+    await fetchAllUsersForSearch();
+  } catch (error) {
+    showStatus("Error searching users: " + error.message, "error");
+  }
+}
+
   async function fetchUserStats() {
   const usersRef = collection(db, "users");
 
@@ -631,10 +671,13 @@ if (!isValid) {
         suspendedUntil: "",
         suspensionReason: "",
         canBorrow: true,
-        mustChangePassword: true,
-        passwordChangedAt: "",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+termsAccepted: false,
+termsAcceptedAt: "",
+termsVersion: "1.0",
+mustChangePassword: true,
+passwordChangedAt: "",
+createdAt: serverTimestamp(),
+updatedAt: serverTimestamp(),
       });
 
       await signOut(secondaryAuth);
@@ -1236,12 +1279,20 @@ if (!isValid) {
 
       setImportResults(results);
 
-      showStatus(
-        `CSV import finished. Created: ${created}. Failed: ${failed}.`,
-        failed > 0 ? "error" : "success"
-      );
+showStatus(
+  `CSV import finished. Created: ${created}. Failed: ${failed}.`,
+  failed > 0 ? "error" : "success"
+);
 
-      fetchData();
+if (created > 0 && failed === 0) {
+  showToast("CSV Import Successful", "success");
+} else if (created > 0 && failed > 0) {
+  showToast("CSV Import Completed With Some Errors", "error");
+} else {
+  showToast("CSV Import Failed", "error");
+}
+
+fetchData();
     } catch (error) {
       showStatus("Error importing borrowers: " + error.message, "error");
     } finally {
@@ -1284,9 +1335,11 @@ if (!isValid) {
     };
   }
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+useEffect(() => {
+  fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
 useEffect(() => {
   const selectedTool = searchParams.get("tool");
   const validTools = ["create", "categories", "import"];
@@ -2062,9 +2115,13 @@ useEffect(() => {
             <h2>Existing Users</h2>
 
             <p>
-              Showing {filteredUsers.length} of {users.length} loaded account
-              {users.length === 1 ? "" : "s"}.
-              {hasMoreUsers ? " Load more to view additional users." : ""}
+Showing {filteredUsers.length} of {users.length} loaded account
+{users.length === 1 ? "" : "s"}.
+{searchTerm.trim()
+  ? " Search checks all loaded matching users."
+  : hasMoreUsers
+  ? " Load more to view additional users."
+  : ""}
             </p>
           </div>
 
@@ -2074,13 +2131,13 @@ useEffect(() => {
                 Search Users
               </label>
 
-              <input
-                id="user-search"
-                type="text"
-                placeholder="Search name, email, role, ID, course, section..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
+<input
+  id="user-search"
+  type="text"
+  placeholder="Search name, email, role, ID, course, section..."
+  value={searchTerm}
+  onChange={handleUserSearchChange}
+/>
             </div>
 
             <div>

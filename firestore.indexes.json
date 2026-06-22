@@ -13,6 +13,130 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "borrowRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "approvalStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "borrowRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "borrowRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "approvalStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+  "collectionGroup": "borrowRequests",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {
+      "fieldPath": "categoryId",
+      "order": "ASCENDING"
+    },
+    {
+      "fieldPath": "approvalStatus",
+      "order": "ASCENDING"
+    }
+  ]
+},
+{
+  "collectionGroup": "borrowRequests",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {
+      "fieldPath": "categoryId",
+      "order": "ASCENDING"
+    },
+    {
+      "fieldPath": "approvalStatus",
+      "order": "ASCENDING"
+    },
+    {
+      "fieldPath": "expectedReturnDate",
+      "order": "ASCENDING"
+    }
+  ]
+},
+{
+  "collectionGroup": "borrowRequests",
+  "queryScope": "COLLECTION",
+  "fields": [
+    {
+      "fieldPath": "approvalStatus",
+      "order": "ASCENDING"
+    },
+    {
+      "fieldPath": "expectedReturnDate",
+      "order": "ASCENDING"
+    }
+  ]
+},
+    {
+      "collectionGroup": "borrowRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "categoryId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "approvalStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expectedReturnDate",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "borrowRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "approvalStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expectedReturnDate",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []
