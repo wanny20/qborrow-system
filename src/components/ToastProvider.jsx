@@ -1,35 +1,52 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import "../styles/Toast.css";
 
 const ToastContext = createContext(null);
 
+function createToastId() {
+  if (typeof window !== "undefined" && window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  function removeToast(id) {
+  const removeToast = useCallback((id) => {
     setToasts((previousToasts) =>
       previousToasts.filter((toast) => toast.id !== id)
     );
-  }
+  }, []);
 
-  function showToast(message, type = "success", duration = 3000) {
-    const id = crypto.randomUUID();
+  const showToast = useCallback(
+    (message, type = "success", duration = 3000) => {
+      const id = createToastId();
 
-    setToasts((previousToasts) => [
-      ...previousToasts,
-      {
-        id,
-        message,
-        type,
-      },
-    ]);
+      setToasts((previousToasts) => [
+        ...previousToasts,
+        {
+          id,
+          message,
+          type,
+        },
+      ]);
 
-    window.setTimeout(() => {
-      removeToast(id);
-    }, duration);
-  }
+      window.setTimeout(() => {
+        removeToast(id);
+      }, duration);
+    },
+    [removeToast]
+  );
 
-  const value = useMemo(() => ({ showToast }), []);
+  const value = useMemo(() => ({ showToast }), [showToast]);
 
   return (
     <ToastContext.Provider value={value}>

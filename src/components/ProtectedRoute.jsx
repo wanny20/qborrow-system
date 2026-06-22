@@ -70,9 +70,17 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (!userData?.role) {
     return <Navigate to="/login" replace />;
   }
+const isForcePasswordPage = location.pathname === "/force-password-change";
 
-if (userData?.mustChangePassword && location.pathname !== "/force-password-change") {
+const needsFirstTimeSetup =
+  userData?.termsAccepted !== true || userData?.mustChangePassword === true;
+
+if (needsFirstTimeSetup && !isForcePasswordPage) {
   return <Navigate to="/force-password-change" replace />;
+}
+
+if (!needsFirstTimeSetup && isForcePasswordPage) {
+  return <Navigate to="/dashboard" replace />;
 }
 
 if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
@@ -81,5 +89,4 @@ if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
 
 return children;
 }
-
 export default ProtectedRoute;

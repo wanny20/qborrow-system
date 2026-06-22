@@ -9,6 +9,8 @@ import { useToast } from "../components/ToastProvider.jsx";
 function ForcePasswordChange() {
   const navigate = useNavigate();
 
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -66,28 +68,35 @@ function ForcePasswordChange() {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      showStatus("Passwords do not match.", "error");
-      return;
-    }
+if (!termsAccepted) {
+  showStatus(
+    "Please accept the Data Privacy Notice and System Use Agreement before continuing.",
+    "error"
+  );
+  return;
+}
 
     setSaving(true);
 
     try {
       await updatePassword(currentUser, newPassword);
 
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        mustChangePassword: false,
-        passwordChangedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+await updateDoc(doc(db, "users", currentUser.uid), {
+  termsAccepted: true,
+  termsAcceptedAt: serverTimestamp(),
+  termsVersion: "1.0",
+  mustChangePassword: false,
+  passwordChangedAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+});
 
-showToast("Password updated successfully. Please log in again.", "success");
+showToast("First-time setup completed. Please log in again.", "success");
 
 setTimeout(async () => {
   await signOut(auth);
   navigate("/login", { replace: true });
 }, 900);
+
     } catch (error) {
       console.error(error);
 
@@ -136,6 +145,47 @@ setTimeout(async () => {
 
         <form onSubmit={handleChangePassword} className="force-password-form">
           <div className="force-password-field">
+            <div className="force-password-terms-box">
+  <h2>Data Privacy Notice & System Use Agreement</h2>
+
+  <div className="force-password-terms-content">
+    <p>
+      QBorrow stores account and borrowing information such as your name,
+      email address, user type, student or employee ID, course or department,
+      year and section, mobile number, item requests, approval records, release
+      records, return records, and related notifications.
+    </p>
+
+    <p>
+      These records are used only for managing item borrowing, tracking
+      approvals, monitoring returns, generating reports, and maintaining
+      accountability within the system.
+    </p>
+
+    <p>
+      By using QBorrow, you agree to provide accurate borrowing information,
+      follow the borrowing process, take care of borrowed items, and return
+      items on or before the expected return date.
+    </p>
+
+    <p>
+      You are responsible for keeping your account secure. Do not share your
+      password with other users.
+    </p>
+  </div>
+
+  <label className="force-password-terms-check">
+    <input
+      type="checkbox"
+      checked={termsAccepted}
+      onChange={(event) => setTermsAccepted(event.target.checked)}
+      disabled={saving}
+    />
+    <span>
+      I have read and agree to the Data Privacy Notice and System Use Agreement.
+    </span>
+  </label>
+</div>
             <label className="qb-label" htmlFor="new-password">
               New Password
             </label>

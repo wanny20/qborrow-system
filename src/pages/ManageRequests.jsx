@@ -8,10 +8,19 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  runTransaction,
+  query as firestoreQuery,
+  orderBy,
+  startAfter,
+  limit as queryLimit,
+  getCountFromServer,
+  where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ManageRequests.css";
+
+const MANAGE_REQUESTS_PAGE_SIZE = 6;
 
 function getRequestPriority(request) {
   if (request.priority === "High") return "High";
@@ -45,6 +54,21 @@ function ManageRequests() {
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalMatchingRequestCount, setTotalMatchingRequestCount] = useState(0);
+  const [serverRequestStats, setServerRequestStats] = useState({
+  total: 0,
+  pending: 0,
+  approved: 0,
+  borrowed: 0,
+  overdue: 0,
+  returned: 0,
+  rejected: 0,
+});
+
+  const [lastRequestDoc, setLastRequestDoc] = useState(null);
+  const [hasMoreRequests, setHasMoreRequests] = useState(false);
+  const [loadingMoreRequests, setLoadingMoreRequests] = useState(false);
+
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [actionLoadingType, setActionLoadingType] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -155,21 +179,19 @@ function isRequestActionLoading(requestId, actionType) {
     return today > expectedDate;
   }
 
-  function handleStatusFilterChange(value) {
-    setStatusFilter(value);
+function handleStatusFilterChange(value) {
+  setStatusFilter(value);
 
-    if (value === "Pending") {
-      setSearchParams({ status: "Pending" });
-      return;
-    }
-
-    if (value === "All") {
-      setSearchParams({});
-      return;
-    }
-
+  if (value === "Pending") {
+    setSearchParams({ status: "Pending" });
+  } else if (value === "All") {
+    setSearchParams({});
+  } else {
     setSearchParams({ status: value });
   }
+
+  fetchRequests("reset", value);
+}
 
   function canCategoryAdminSeeRequest(request) {
     if (!isCategoryAdmin) return true;
@@ -231,24 +253,226 @@ async function autoRejectExpiredPendingRequests() {
     })
   );
 }
-  async function fetchRequests() {
-    setLoading(true);
+async function autoRejectOtherPendingRequests(approvedRequest) {
+  const snapshot = await getDocs(collection(db, "borrowRequests"));
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "borrowRequests"));
+  const otherPendingRequests = snapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((request) => {
+      return (
+        request.id !== approvedRequest.id &&
+        request.itemId === approvedRequest.itemId &&
+        request.approvalStatus === "Pending"
+      );
+    });
 
-      const requestData = querySnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+  await Promise.all(
+    otherPendingRequests.map(async (request) => {
+      await updateDoc(doc(db, "borrowRequests", request.id), {
+        approvalStatus: "Rejected",
+        rejectReason:
+          "Automatically rejected because another request for the same item was approved.",
+        rejectedAt: serverTimestamp(),
+        autoRejected: true,
+        updatedAt: serverTimestamp(),
+      });
 
-      setRequests(requestData);
-    } catch (error) {
-      showStatus("Error loading requests: " + error.message, "error");
-    } finally {
-      setLoading(false);
+      await addDoc(collection(db, "notifications"), {
+        userId: request.borrowerId,
+        targetRole: "borrower",
+        categoryId: request.categoryId || "",
+        categoryName: request.categoryName || "",
+        title: "Borrow Request Auto-Rejected",
+        message: `Your request for ${request.itemName} was automatically rejected because another request for the same item was approved.`,
+        status: "Unread",
+        createdAt: serverTimestamp(),
+        link: "/my-requests",
+      });
+    })
+  );
+}
+
+function getTodayDateKey() {
+  const date = new Date();
+  const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+  return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+}
+
+function getRequestQueryConstraints(
+  selectedStatus = statusFilter,
+  includeSort = false,
+  mode = "reset"
+) {
+  const constraints = [];
+
+  if (isCategoryAdmin) {
+    const assignedCategories = Array.isArray(userData?.assignedCategories)
+      ? userData.assignedCategories.filter(Boolean).slice(0, 10)
+      : [];
+
+    if (assignedCategories.length === 0) {
+      return null;
+    }
+
+    constraints.push(where("categoryId", "in", assignedCategories));
+  }
+
+  if (selectedStatus === "Overdue") {
+    constraints.push(where("approvalStatus", "in", ["Approved", "Borrowed"]));
+    constraints.push(where("expectedReturnDate", "<", getTodayDateKey()));
+
+    if (includeSort) {
+      constraints.push(orderBy("expectedReturnDate", "desc"));
+
+      if (mode === "more" && lastRequestDoc) {
+        constraints.push(startAfter(lastRequestDoc));
+      }
+    }
+
+    return constraints;
+  }
+
+  if (selectedStatus !== "All") {
+    constraints.push(where("approvalStatus", "==", selectedStatus));
+  }
+
+  if (includeSort) {
+    constraints.push(orderBy("createdAt", "desc"));
+
+    if (mode === "more" && lastRequestDoc) {
+      constraints.push(startAfter(lastRequestDoc));
     }
   }
+
+  return constraints;
+}
+
+async function getRequestCount(selectedStatus = "All") {
+  const requestsRef = collection(db, "borrowRequests");
+  const constraints = getRequestQueryConstraints(selectedStatus, false);
+
+  if (constraints === null) {
+    return 0;
+  }
+
+  const countQuery =
+    constraints.length > 0
+      ? firestoreQuery(requestsRef, ...constraints)
+      : requestsRef;
+
+  const countSnapshot = await getCountFromServer(countQuery);
+
+  return countSnapshot.data().count || 0;
+}
+
+async function fetchRequestCounts(selectedStatus = statusFilter) {
+  const [
+    totalCount,
+    matchingCount,
+    pendingCount,
+    approvedCount,
+    borrowedCount,
+    overdueCount,
+    returnedCount,
+    rejectedCount,
+  ] = await Promise.all([
+    getRequestCount("All"),
+    getRequestCount(selectedStatus),
+    getRequestCount("Pending"),
+    getRequestCount("Approved"),
+    getRequestCount("Borrowed"),
+    getRequestCount("Overdue"),
+    getRequestCount("Returned"),
+    getRequestCount("Rejected"),
+  ]);
+
+  setTotalMatchingRequestCount(matchingCount);
+
+  setServerRequestStats({
+    total: totalCount,
+    pending: pendingCount,
+    approved: approvedCount,
+    borrowed: borrowedCount,
+    overdue: overdueCount,
+    returned: returnedCount,
+    rejected: rejectedCount,
+  });
+}
+
+async function fetchRequests(mode = "reset", selectedStatus = statusFilter) {
+  if (mode === "reset") {
+    setLoading(true);
+  } else {
+    setLoadingMoreRequests(true);
+  }
+
+  try {
+    if (mode === "reset") {
+      await fetchRequestCounts(selectedStatus);
+    }
+
+    const requestsRef = collection(db, "borrowRequests");
+    const constraints = getRequestQueryConstraints(selectedStatus, true, mode);
+
+    if (constraints === null) {
+      setRequests([]);
+      setHasMoreRequests(false);
+      setTotalMatchingRequestCount(0);
+      return;
+    }
+
+    const requestsQuery = firestoreQuery(
+      requestsRef,
+      ...constraints,
+      queryLimit(MANAGE_REQUESTS_PAGE_SIZE + 1)
+    );
+
+    const querySnapshot = await getDocs(requestsQuery);
+    const docs = querySnapshot.docs;
+    const visibleDocs = docs.slice(0, MANAGE_REQUESTS_PAGE_SIZE);
+
+    const requestData = visibleDocs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setHasMoreRequests(docs.length > MANAGE_REQUESTS_PAGE_SIZE);
+    setLastRequestDoc(visibleDocs[visibleDocs.length - 1] || null);
+
+    if (mode === "more") {
+      setRequests((previousRequests) => {
+        const existingIds = new Set(
+          previousRequests.map((request) => request.id)
+        );
+
+        const newRequests = requestData.filter(
+          (request) => !existingIds.has(request.id)
+        );
+
+        return [...previousRequests, ...newRequests];
+      });
+    } else {
+      setRequests(requestData);
+    }
+  } catch (error) {
+    showStatus("Error loading requests: " + error.message, "error");
+  } finally {
+    setLoading(false);
+    setLoadingMoreRequests(false);
+  }
+}
+
+async function handleLoadMoreRequests() {
+  if (!hasMoreRequests || loadingMoreRequests || hasActiveRequestAction()) {
+    return;
+  }
+
+  await fetchRequests("more", statusFilter);
+}
 
 async function handleApproveRequest(request) {
   if (hasActiveRequestAction()) return;
@@ -301,42 +525,67 @@ async function handleApproveRequest(request) {
       return;
     }
 
-    const itemData = itemSnap.data();
+await runTransaction(db, async (transaction) => {
+  const freshRequestSnap = await transaction.get(requestRef);
+  const freshItemSnap = await transaction.get(itemRef);
 
-if (itemData.availability !== "Available") {
-  showStatus(
-    `This item is currently ${itemData.availability}. Only available items can be approved.`,
-    "error"
-  );
-  return;
-}
+  if (!freshRequestSnap.exists()) {
+    throw new Error("This request no longer exists.");
+  }
 
-    await updateDoc(requestRef, {
-      approvalStatus: "Approved",
-      assignedAdminId: getAdminId(),
-      approvedBy: getAdminId(),
-      approvedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+  if (!freshItemSnap.exists()) {
+    throw new Error("Item not found. This request cannot be approved.");
+  }
 
-    await updateDoc(itemRef, {
-      availability: "Reserved",
-      updatedAt: serverTimestamp(),
-    });
+  const freshRequest = freshRequestSnap.data();
+  const freshItem = freshItemSnap.data();
 
-    await addDoc(collection(db, "notifications"), {
-      userId: latestRequest.borrowerId,
-      targetRole: "borrower",
-      categoryId: getRequestCategoryId(latestRequest),
-      title: "Borrow Request Approved",
-      message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/my-requests",
-    });
+  if (freshRequest.approvalStatus !== "Pending") {
+    throw new Error(
+      `This request is already ${freshRequest.approvalStatus}.`
+    );
+  }
 
-  showToast("Request Approved", "success");
-  await fetchRequests();
+  if (freshItem.availability !== "Available") {
+    throw new Error(
+      `This item is currently ${freshItem.availability}. Only available items can be approved.`
+    );
+  }
+
+  transaction.update(requestRef, {
+    approvalStatus: "Approved",
+    assignedAdminId: getAdminId(),
+    approvedBy: getAdminId(),
+    approvedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  transaction.update(itemRef, {
+    availability: "Reserved",
+    updatedAt: serverTimestamp(),
+  });
+});
+
+await addDoc(collection(db, "notifications"), {
+  userId: latestRequest.borrowerId,
+  targetRole: "borrower",
+  categoryId: getRequestCategoryId(latestRequest),
+  title: "Borrow Request Approved",
+  message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
+  status: "Unread",
+  createdAt: serverTimestamp(),
+  link: "/my-requests",
+});
+
+await autoRejectOtherPendingRequests(latestRequest);
+
+showToast(
+  "Request Approved. Other pending requests were auto-rejected.",
+  "success"
+);
+
+await fetchRequests("reset", statusFilter);
+
   } catch (error) {
     showStatus("Error approving request: " + error.message, "error");
   } finally {
@@ -573,25 +822,7 @@ const filteredRequests = visibleRequests
     return getRequestCreatedTime(b) - getRequestCreatedTime(a);
   });
 
-  const requestStats = {
-    total: visibleRequests.length,
-    pending: visibleRequests.filter(
-      (request) => request.approvalStatus === "Pending"
-    ).length,
-    approved: visibleRequests.filter(
-      (request) => request.approvalStatus === "Approved"
-    ).length,
-    borrowed: visibleRequests.filter(
-      (request) => request.approvalStatus === "Borrowed"
-    ).length,
-    overdue: visibleRequests.filter((request) => isRequestOverdue(request)).length,
-    returned: visibleRequests.filter(
-      (request) => request.approvalStatus === "Returned"
-    ).length,
-    rejected: visibleRequests.filter(
-      (request) => request.approvalStatus === "Rejected"
-    ).length,
-  };
+const requestStats = serverRequestStats;
 
   if (loading) {
     return (
@@ -727,7 +958,7 @@ const filteredRequests = visibleRequests
         <button
           type="button"
           className="manage-refresh-btn"
-          onClick={fetchRequests}
+          onClick={() => fetchRequests("reset")}
           disabled={hasActiveRequestAction()}
         >
           Refresh
@@ -739,8 +970,8 @@ const filteredRequests = visibleRequests
           <div>
             <h2>Borrow Requests</h2>
             <p>
-              Showing {filteredRequests.length} of {visibleRequests.length} visible
-              request{visibleRequests.length === 1 ? "" : "s"}.
+Showing {filteredRequests.length} of {totalMatchingRequestCount} visible
+request{totalMatchingRequestCount === 1 ? "" : "s"}.
             </p>
           </div>
         </div>
@@ -877,6 +1108,18 @@ const filteredRequests = visibleRequests
         </article>
       ))}
     </div>
+    {hasMoreRequests && filteredRequests.length < totalMatchingRequestCount && (
+  <div className="manage-load-more-row">
+    <button
+      type="button"
+      className="manage-load-more-btn"
+      onClick={handleLoadMoreRequests}
+      disabled={loadingMoreRequests || hasActiveRequestAction()}
+    >
+      {loadingMoreRequests ? "Loading..." : "Load More Requests"}
+    </button>
+  </div>
+)}
   </>
 )}
       </section>

@@ -561,6 +561,10 @@ await db.collection("users").doc(createdUser.uid).set({
   suspensionReason: "",
   canBorrow: true,
 
+  termsAccepted: false,
+  termsAcceptedAt: "",
+  termsVersion: "1.0",
+
   mustChangePassword: true,
   passwordChangedAt: "",
 

@@ -3,6 +3,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /* =========================
+       BASIC HELPERS
+    ========================= */
+
     function signedIn() {
       return request.auth != null;
     }
@@ -16,12 +20,20 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
     function userData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userDoc().data;
     }
 
     function role() {
       return hasUserDoc() ? userData().role : "";
+    }
+
+    function isBorrower() {
+      return role() == "borrower";
     }
 
     function isSuperAdmin() {
@@ -69,6 +81,18 @@ service cloud.firestore {
         );
     }
 
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function hasOnlyChangedFields(fields) {
+      return changedKeys().hasOnly(fields);
+    }
+
+    /* =========================
+       USERS
+    ========================= */
+
     match /users/{userId} {
       allow read: if signedIn() && (
         isOwner(userId) ||
@@ -80,36 +104,80 @@ service cloud.firestore {
       allow update: if isSuperAdmin();
 
       allow update: if isOwner(userId) &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            "fullName",
-            "photoURL",
-            "photoPath",
-            "themeMode",
-            "updatedAt"
-          ]);
+        hasOnlyChangedFields([
+          "fullName",
+          "photoURL",
+          "photoPath",
+          "themeMode",
+          "mobileNumber",
+          "courseDepartment",
+          "yearLevel",
+          "section",
+          "updatedAt"
+        ]);
+        allow update: if isOwner(userId) &&
+  request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly([
+      "termsAccepted",
+      "termsAcceptedAt",
+      "termsVersion",
+      "mustChangePassword",
+      "passwordChangedAt",
+      "updatedAt"
+    ]) &&
+  request.resource.data.termsAccepted == true &&
+  request.resource.data.mustChangePassword == false;
 
       allow update: if isOwner(userId) &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            "mustChangePassword",
-            "passwordChangedAt",
-            "updatedAt"
-          ]) &&
+        hasOnlyChangedFields([
+          "mustChangePassword",
+          "passwordChangedAt",
+          "updatedAt"
+        ]) &&
         request.resource.data.mustChangePassword == false;
+        allow update: if isOwner(userId) &&
+  request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly([
+      "mustChangePassword",
+      "passwordChangedAt",
+      "updatedAt"
+    ]) &&
+  request.resource.data.mustChangePassword == false;
+
+allow update: if isOwner(userId) &&
+  request.resource.data.diff(resource.data).affectedKeys()
+    .hasOnly([
+      "termsAccepted",
+      "termsAcceptedAt",
+      "termsVersion",
+      "updatedAt"
+    ]) &&
+  request.resource.data.termsAccepted == true;
+
+        allow update: if isOwner(userId) &&
+  hasOnlyChangedFields([
+    "termsAccepted",
+    "termsAcceptedAt",
+    "termsVersion",
+    "updatedAt"
+  ]) &&
+  request.resource.data.termsAccepted == true;
 
       allow update: if isAdmin() &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            "overdueCount",
-            "suspendedUntil",
-            "suspensionReason",
-            "canBorrow",
-            "updatedAt"
-          ]);
+        hasOnlyChangedFields([
+          "overdueCount",
+          "suspendedUntil",
+          "suspensionReason",
+          "canBorrow",
+          "updatedAt"
+        ]);
 
       allow delete: if isSuperAdmin();
     }
+
+    /* =========================
+       ITEMS
+    ========================= */
 
     match /items/{itemId} {
       allow read: if signedIn();
@@ -118,53 +186,255 @@ service cloud.firestore {
         adminCanAccessCategory(request.resource.data);
 
       allow update: if isAdmin() &&
-        adminCanAccessCategory(resource.data);
+        adminCanAccessCategory(resource.data) &&
+        adminCanAccessCategory(request.resource.data);
 
       allow delete: if isAdmin() &&
         adminCanAccessCategory(resource.data);
     }
 
+    /* =========================
+       BORROW REQUESTS
+    ========================= */
+
     match /borrowRequests/{requestId} {
+      /*
+        Kept broad for now because current pages load full collections
+        and filter in React. Strict read rules need query updates first.
+      */
       allow read: if signedIn();
 
-      allow create: if signedIn() &&
-        role() == "borrower" &&
+      allow create: if isBorrower() &&
         request.resource.data.borrowerId == request.auth.uid &&
-        request.resource.data.approvalStatus == "Pending";
+        request.resource.data.approvalStatus == "Pending" &&
+        request.resource.data.actualReturnDate == "" &&
+        request.resource.data.assignedAdminId == "" &&
+        request.resource.data.approvedBy == "" &&
+        request.resource.data.releasedBy == "" &&
+        request.resource.data.returnedBy == "" &&
+        request.resource.data.returnCondition == "" &&
+        request.resource.data.damageLostReport == "" &&
+        request.resource.data.keys().hasOnly([
+          "itemId",
+          "itemCode",
+          "itemName",
+          "categoryId",
+          "categoryName",
+
+          "borrowerId",
+          "borrowerEmail",
+          "borrowerName",
+          "borrowerUserType",
+          "borrowerStudentNumber",
+          "borrowerEmployeeId",
+          "borrowerCourseDepartment",
+          "borrowerYearLevel",
+          "borrowerSection",
+          "borrowerMobileNumber",
+
+          "purpose",
+          "borrowDate",
+          "expectedReturnDate",
+          "actualReturnDate",
+
+          "approvalStatus",
+
+          "assignedAdminId",
+          "approvedBy",
+          "releasedBy",
+          "returnedBy",
+
+          "returnCondition",
+          "damageLostReport",
+
+          "createdAt",
+          "approvedAt",
+          "rejectedAt",
+          "releasedAt",
+          "returnedAt"
+        ]);
 
       allow update: if isAdmin() &&
-        adminCanAccessCategory(resource.data);
+        adminCanAccessCategory(resource.data) &&
+        adminCanAccessCategory(request.resource.data) &&
+        validAdminRequestUpdate();
 
-      allow update: if signedIn() &&
+      allow update: if isBorrower() &&
         resource.data.borrowerId == request.auth.uid &&
         resource.data.approvalStatus == "Pending" &&
         request.resource.data.approvalStatus == "Cancelled" &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            "approvalStatus",
-            "cancelledAt",
-            "cancelledBy"
-          ]);
+        request.resource.data.cancelledBy == request.auth.uid &&
+        hasOnlyChangedFields([
+          "approvalStatus",
+          "cancelledAt",
+          "cancelledBy",
+          "updatedAt"
+        ]);
+        
+        allow update: if isBorrower() &&
+  resource.data.borrowerId == request.auth.uid &&
+  resource.data.approvalStatus == "Rejected" &&
+  request.resource.data.approvalStatus == "Rejected" &&
+  request.resource.data.borrowerAcknowledgedBy == request.auth.uid &&
+  hasOnlyChangedFields([
+    "borrowerAcknowledgedAt",
+    "borrowerAcknowledgedBy"
+  ]);
 
       allow delete: if isSuperAdmin();
+
+      function validAdminRequestUpdate() {
+        return validApproveUpdate() ||
+          validRejectUpdate() ||
+          validReleaseUpdate() ||
+          validReturnUpdate();
+      }
+
+      function validApproveUpdate() {
+        return resource.data.approvalStatus == "Pending" &&
+          request.resource.data.approvalStatus == "Approved" &&
+          hasOnlyChangedFields([
+            "approvalStatus",
+            "assignedAdminId",
+            "approvedBy",
+            "approvedAt",
+            "updatedAt"
+          ]);
+      }
+
+      function validRejectUpdate() {
+        return resource.data.approvalStatus == "Pending" &&
+          request.resource.data.approvalStatus == "Rejected" &&
+          hasOnlyChangedFields([
+            "approvalStatus",
+            "rejectedAt",
+            "rejectReason",
+            "autoRejected",
+            "updatedAt"
+          ]);
+      }
+
+      function validReleaseUpdate() {
+        return resource.data.approvalStatus == "Approved" &&
+          request.resource.data.approvalStatus == "Borrowed" &&
+          hasOnlyChangedFields([
+            "approvalStatus",
+            "releasedBy",
+            "releasedAt",
+            "updatedAt"
+          ]);
+      }
+
+      function validReturnUpdate() {
+        return resource.data.approvalStatus == "Borrowed" &&
+          request.resource.data.approvalStatus == "Returned" &&
+          hasOnlyChangedFields([
+            "approvalStatus",
+            "actualReturnDate",
+            "returnCondition",
+            "damageLostReport",
+            "returnedAt",
+            "returnedBy",
+            "updatedAt"
+          ]);
+      }
     }
 
+    /* =========================
+       NOTIFICATIONS
+    ========================= */
+
     match /notifications/{notificationId} {
+      /*
+        Kept broad for now because Notifications.jsx loads all notifications
+        then filters them in React.
+      */
       allow read: if signedIn();
-      allow create: if signedIn();
-      allow update: if signedIn();
+
+      allow create: if signedIn() &&
+        request.resource.data.status == "Unread" &&
+        request.resource.data.keys().hasOnly([
+          "userId",
+          "targetRole",
+          "categoryId",
+          "categoryName",
+          "title",
+          "message",
+          "priority",
+          "borrowerUserType",
+          "status",
+          "createdAt",
+          "link"
+        ]);
+
+      allow update: if signedIn() &&
+        validNotificationUpdate();
 
       allow delete: if signedIn() &&
         (
           resource.data.userId == request.auth.uid ||
-          isAdmin()
+          isSuperAdmin()
         );
+
+      function validNotificationUpdate() {
+        return validOwnNotificationReadUpdate() ||
+          validSharedNotificationReadUpdate() ||
+          validSharedNotificationDeleteUpdate();
+      }
+
+      function validOwnNotificationReadUpdate() {
+        return resource.data.userId == request.auth.uid &&
+          request.resource.data.status == "Read" &&
+          hasOnlyChangedFields([
+            "status",
+            "readAt"
+          ]);
+      }
+
+      function validSharedNotificationReadUpdate() {
+        return resource.data.userId != request.auth.uid &&
+          canReadSharedNotification(resource.data) &&
+          hasOnlyChangedFields([
+            "readBy",
+            "lastReadAt"
+          ]);
+      }
+
+      function validSharedNotificationDeleteUpdate() {
+        return resource.data.userId != request.auth.uid &&
+          canReadSharedNotification(resource.data) &&
+          hasOnlyChangedFields([
+            "deletedBy",
+            "deletedAt"
+          ]);
+      }
+
+      function canReadSharedNotification(data) {
+        return isSuperAdmin() ||
+          (
+            isCategoryAdmin() &&
+            data.targetRole in ["categoryAdmin", "admin", "all"] &&
+            (
+              getCategoryId(data) == "" ||
+              getCategoryId(data) in assignedCategories() ||
+              getCategoryName(data) in assignedCategories()
+            )
+          );
+      }
     }
+
+    /* =========================
+       CATEGORIES
+    ========================= */
 
     match /categories/{categoryId} {
       allow read: if signedIn();
-      allow write: if isSuperAdmin();
+      allow create, update, delete: if isSuperAdmin();
     }
+
+    /* =========================
+       DEFAULT DENY
+    ========================= */
 
     match /{document=**} {
       allow read, write: if false;
