@@ -173,6 +173,25 @@ function cancelCloseUserToolModal() {
   setShowToolCloseConfirm(false);
 }
 
+function goToUserManagementHome() {
+  if (guardedNavigate) {
+    guardedNavigate("/user-management");
+    return;
+  }
+
+  setActiveUserTool("");
+  setSearchParams({});
+}
+
+function goToDashboard() {
+  if (guardedNavigate) {
+    guardedNavigate("/dashboard");
+    return;
+  }
+
+  navigate("/dashboard");
+}
+
 function confirmCloseUserToolModal() {
   resetCurrentUserToolChanges();
   setShowToolCloseConfirm(false);
@@ -1700,6 +1719,7 @@ useEffect(() => {
 }, [searchParams]);
 
   const editingUser = users.find((user) => user.id === editingUserId) || null;
+  const isToolPage = Boolean(activeUserTool);
 
   const filteredUsers = users.filter((user) => {
     const searchableText = `
@@ -1781,6 +1801,7 @@ useEffect(() => {
     </section>
   </div>
 )}
+{!isToolPage && (
 <section className="user-management-header user-management-header-compact">
   <div className="user-management-header-content">
 <div className="user-management-header-text">
@@ -1808,6 +1829,7 @@ useEffect(() => {
     </button>
   </div>
 </section>
+)}
 
       {statusMessage && (
         <div
@@ -1818,6 +1840,7 @@ useEffect(() => {
         </div>
       )}
 
+{!isToolPage && (
       <section className="user-summary-grid">
         <div>
           <span>Σ</span>
@@ -1849,22 +1872,23 @@ useEffect(() => {
           <p>Suspended</p>
         </div>
       </section>
+      )}
 
 <section className="user-management-layout">
-  <div className={`user-left-stack ${activeUserTool ? "user-modal-open" : ""}`}>
+  <div className="user-left-stack">
           <section
   className={`user-create-card user-tool-modal-card ${
     activeUserTool === "create" ? "user-tool-active" : ""
   }`}
 >
-  <button
-    type="button"
-    className="user-modal-close-btn"
-    onClick={closeUserToolModal}
-    aria-label="Close Add User modal"
-  >
-    Close
-  </button>
+<button
+  type="button"
+  className="user-modal-close-btn"
+  onClick={goToUserManagementHome}
+>
+  Back to User Management
+</button>
+
 <div className="user-modal-hero">
   <div className="user-modal-hero-text">
     <h2>Create User</h2>
@@ -1873,6 +1897,14 @@ useEffect(() => {
       recommended for students, faculty, and staff.
     </p>
   </div>
+
+  <button
+    type="button"
+    className="user-secondary-btn user-tool-dashboard-btn"
+    onClick={goToDashboard}
+  >
+    Back to Dashboard
+  </button>
 </div>
 
             <form onSubmit={handleCreateUser} onChange={markCreateChanged} noValidate>
@@ -2200,6 +2232,13 @@ onChange={(e) => {
       allowed to manage. Delete is allowed only when a category is unused.
     </p>
   </div>
+    <button
+    type="button"
+    className="user-secondary-btn user-tool-dashboard-btn"
+    onClick={goToDashboard}
+  >
+    Back to Dashboard
+  </button>
 </div>
 
 {categories.length === 0 && (
@@ -2364,6 +2403,13 @@ onChange={(e) => {
       Level, Section, Mobile Number.
     </p>
   </div>
+    <button
+    type="button"
+    className="user-secondary-btn user-tool-dashboard-btn"
+    onClick={goToDashboard}
+  >
+    Back to Dashboard
+  </button>
 </div>
         <div className="user-import-polish-grid">
     <div className="user-import-guide-card">

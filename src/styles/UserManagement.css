@@ -1,7 +1,7 @@
 /* =========================================================
    QBORROW USER MANAGEMENT
    Cleaned responsive CSS for UserManagement.jsx
-   Keeps the modal tools, compact user table, view/edit modal,
+   Full-page user tools, compact user table, view/edit modal,
    category table, CSV import, and validation styles.
 ========================================================= */
 
@@ -866,35 +866,8 @@
    Tool Modals
 ========================= */
 
-.user-management-page:has(.user-tool-active)::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(4px);
-  pointer-events: auto;
-}
 
-.user-tool-modal-card.user-tool-active {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: block;
-  width: min(980px, calc(100vw - 32px));
-  max-height: calc(100dvh - 36px);
-  overflow-y: auto;
-  margin: auto;
-  border: 2px solid var(--qb-border);
-  border-radius: 26px;
-  background: #ffffff;
-  box-shadow: 8px 8px 0 var(--qb-border);
-  padding: 20px;
-}
 
-.user-tool-modal-card.user-tool-active * {
-  pointer-events: auto;
-}
 
 .user-tool-modal-card .user-section-heading {
   padding-right: 0;
@@ -1038,22 +1011,19 @@
 }
 
 .user-category-list::-webkit-scrollbar,
-.user-category-table-wrap::-webkit-scrollbar,
-.user-tool-modal-card.user-tool-active::-webkit-scrollbar {
+.user-category-table-wrap::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .user-category-list::-webkit-scrollbar-track,
-.user-category-table-wrap::-webkit-scrollbar-track,
-.user-tool-modal-card.user-tool-active::-webkit-scrollbar-track {
+.user-category-table-wrap::-webkit-scrollbar-track-track {
   border-radius: 999px;
   background: rgba(30, 41, 59, 0.08);
 }
 
 .user-category-list::-webkit-scrollbar-thumb,
-.user-category-table-wrap::-webkit-scrollbar-thumb,
-.user-tool-modal-card.user-tool-active::-webkit-scrollbar-thumb {
+.user-category-table-wrap::-webkit-scrollbar-thumb-thumb {
   border-radius: 999px;
   background: rgba(30, 41, 59, 0.35);
 }
@@ -2353,5 +2323,208 @@ html[data-theme="dark"] .user-empty {
 
   .user-unsaved-confirm-actions {
     grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   FULL PAGE USER MANAGEMENT TOOLS - FINAL FIX
+   Add New User, Manage Categories, and Import CSV are now
+   regular page sections, not popup modals.
+========================================================= */
+
+.user-management-page::before,
+.user-management-page:has(.user-tool-active)::before {
+  display: none !important;
+  content: none !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+.user-management-layout {
+  display: block !important;
+}
+
+.user-left-stack,
+.user-left-stack.user-modal-open {
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  width: 100% !important;
+  min-height: auto !important;
+  display: block !important;
+  padding: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: visible !important;
+}
+
+.user-left-stack::before,
+.user-left-stack::after,
+.user-left-stack.user-modal-open::before,
+.user-left-stack.user-modal-open::after {
+  display: none !important;
+  content: none !important;
+}
+
+.user-left-stack .user-tool-modal-card,
+.user-left-stack.user-modal-open .user-tool-modal-card {
+  display: none !important;
+}
+
+.user-left-stack .user-tool-modal-card.user-tool-active,
+.user-left-stack.user-modal-open .user-tool-modal-card.user-tool-active {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  z-index: auto !important;
+  padding: 18px !important;
+}
+
+.user-left-stack .user-tool-modal-card.user-tool-active * {
+  pointer-events: auto !important;
+}
+
+.user-left-stack:has(.user-tool-active) + .user-list-card,
+.user-left-stack.user-modal-open + .user-list-card {
+  display: none !important;
+}
+
+.user-left-stack .user-modal-close-btn,
+.user-left-stack.user-modal-open .user-modal-close-btn {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  z-index: 1 !important;
+  width: fit-content !important;
+  min-width: 190px !important;
+  height: 42px !important;
+  margin: 0 0 12px auto !important;
+  float: none !important;
+}
+
+.user-left-stack .user-modal-hero {
+  margin-top: 0 !important;
+}
+
+.user-left-stack .user-tool-modal-card.user-tool-active .user-section-heading,
+.user-left-stack .user-tool-modal-card.user-tool-active form,
+.user-left-stack .user-tool-modal-card.user-tool-active .user-import-polish-grid,
+.user-left-stack .user-tool-modal-card.user-tool-active .user-csv-format-panel,
+.user-left-stack .user-tool-modal-card.user-tool-active .user-upload-panel {
+  max-width: 100% !important;
+}
+
+@media (max-width: 860px) {
+  .user-left-stack .user-tool-modal-card.user-tool-active,
+  .user-left-stack.user-modal-open .user-tool-modal-card.user-tool-active {
+    width: 100% !important;
+    max-height: none !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .user-left-stack .user-modal-close-btn,
+  .user-left-stack.user-modal-open .user-modal-close-btn {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 12px 0 !important;
+  }
+}
+
+/* Hide old modal close/back buttons on full-page tool screens */
+.user-tool-modal-card > .user-modal-close-btn {
+  display: none !important;
+}
+/* =========================================================
+   FIX IMPORT CSV GUIDE CARD BUTTON LAYOUT
+========================================================= */
+
+.user-import-guide-card {
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  align-items: start !important;
+}
+
+.user-import-guide-card:first-child {
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+}
+
+.user-import-guide-card:first-child .user-secondary-btn {
+  grid-column: 1 / -1 !important;
+  width: fit-content !important;
+  min-width: 220px !important;
+  justify-self: center !important;
+  margin-top: 12px !important;
+  padding: 0 18px !important;
+  white-space: nowrap !important;
+}
+
+.user-import-guide-card strong {
+  line-height: 1.15 !important;
+}
+
+.user-import-guide-card p {
+  max-width: 100% !important;
+  line-height: 1.45 !important;
+}
+
+@media (max-width: 760px) {
+  .user-import-guide-card,
+  .user-import-guide-card:first-child {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+
+  .user-import-guide-icon {
+    margin: 0 auto !important;
+  }
+
+  .user-import-guide-card:first-child .user-secondary-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+/* =========================================================
+   TOOL PAGE HERO DASHBOARD BUTTON
+========================================================= */
+
+.user-modal-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 18px 24px 18px 20px !important;
+}
+
+.user-tool-dashboard-btn {
+  position: relative;
+  z-index: 2;
+  min-width: 190px;
+  min-height: 46px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+}
+
+@media (max-width: 760px) {
+  .user-modal-hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-tool-dashboard-btn {
+    width: 100%;
+    min-width: 0;
   }
 }

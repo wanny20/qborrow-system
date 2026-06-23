@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection,
@@ -692,47 +692,49 @@ async function confirmLogout() {
     },
   ];
 
-  const userManagementSubLinks = [
-    {
-      label: "Add New User",
-      fallbackIcon: "+",
-      tool: "create",
-    },
-    {
-      label: "Manage Item Categories",
-      fallbackIcon: "C",
-      tool: "categories",
-    },
-    {
-      label: "Import Borrowers",
-      fallbackIcon: "CSV",
-      tool: "import",
-    },
-  ];
-
-  const activeUserManagementTool =
-    new URLSearchParams(location.search).get("tool") || "";
-
-  function openUserManagementTool(tool) {
-    guardedNavigate(`/user-management?tool=${tool}`);
-
-    if (window.innerWidth <= 820) {
-      setSidebarOpen(false);
-    }
-  }
+  const superAdminLinks = [
+  {
+    label: "User Management",
+    icon: "/icons/manage.png",
+    fallbackIcon: "◎",
+    path: "/user-management",
+  },
+  {
+    label: "Add New User",
+    icon: "/icons/add-item.png",
+    fallbackIcon: "+",
+    path: "/user-management?tool=create",
+  },
+  {
+    label: "Manage Item Categories",
+    icon: "/icons/manage.png",
+    fallbackIcon: "C",
+    path: "/user-management?tool=categories",
+  },
+  {
+    label: "Import CSV",
+    icon: "/icons/reports.png",
+    fallbackIcon: "CSV",
+    path: "/user-management?tool=import",
+  },
+];
 
 function renderNavLink(link) {
-  const isActive = activeSidebarPath === link.path;
+  const currentFullPath = `${location.pathname}${location.search || ""}`;
+  const isQueryLink = link.path.includes("?");
+
+  const isActive = isQueryLink
+    ? currentFullPath === link.path
+    : link.path === "/user-management"
+    ? location.pathname === "/user-management" && !location.search
+    : activeSidebarPath === link.path;
 
   return (
-    <NavLink
+    <button
+      type="button"
       key={link.label}
-      to={link.path}
       className={isActive ? "app-nav-link active" : "app-nav-link"}
-onClick={(event) => {
-  event.preventDefault();
-  guardedNavigate(link.path);
-}}
+      onClick={() => guardedNavigate(link.path)}
     >
       <span className="app-nav-icon">
         <img
@@ -750,64 +752,7 @@ onClick={(event) => {
       </span>
 
       <span className="app-nav-text">{link.label}</span>
-    </NavLink>
-  );
-}
-function renderUserManagementMenu() {
-  const isActive = activeSidebarPath === "/user-management";
-
-  return (
-    <div className={`app-nav-group ${isActive ? "active" : ""}`}>
-      <NavLink
-        to="/user-management"
-        onClick={(event) => {
-  event.preventDefault();
-  guardedNavigate("/user-management");
-}}
-        className={
-          isActive
-            ? "app-nav-link app-nav-parent-link active"
-            : "app-nav-link app-nav-parent-link"
-        }
-        aria-expanded={isActive}
-      >
-        <span className="app-nav-icon">
-          <img
-            src="/icons/manage.png"
-            alt=""
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-              event.currentTarget.nextElementSibling.style.display = "grid";
-            }}
-          />
-
-          <span className="app-nav-fallback-icon">◎</span>
-        </span>
-
-        <span className="app-nav-text">User Management</span>
-        <span className="app-nav-chevron">{isActive ? "▲" : "▼"}</span>
-      </NavLink>
-
-      {isActive && (
-        <div className="app-nav-submenu">
-          {userManagementSubLinks.map((toolLink) => (
-            <button
-              type="button"
-              key={toolLink.tool}
-              className={
-                activeUserManagementTool === toolLink.tool
-                  ? "app-nav-subitem active"
-                  : "app-nav-subitem"
-              }
-              onClick={() => openUserManagementTool(toolLink.tool)}
-            >
-              <span>{toolLink.fallbackIcon}</span>
-              <strong>{toolLink.label}</strong>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    </button>
   );
 }
 
@@ -874,12 +819,12 @@ function renderUserManagementMenu() {
             </>
           )}
 
-          {isSuperAdmin && (
-            <>
-              <p className="app-nav-label">Super Admin</p>
-              {renderUserManagementMenu()}
-            </>
-          )}
+{isSuperAdmin && (
+  <>
+    <p className="app-nav-label">Super Admin</p>
+    {superAdminLinks.map(renderNavLink)}
+  </>
+)}
         </nav>
 
         <button type="button" className="app-logout-btn" onClick={handleLogout}>
