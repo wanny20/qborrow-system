@@ -1580,3 +1580,249 @@ html[data-theme="dark"] .app-nav-subitem > span,
 html[data-theme="dark"] .app-admin-request-alert-grid > div {
   background: var(--qb-bg);
 }
+/* =========================================================
+   SUSPENDED BORROWER ALERT
+========================================================= */
+
+.app-suspended-alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999998;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(10px);
+}
+
+.app-suspended-alert-card {
+  width: min(540px, calc(100vw - 32px));
+  border: 3px solid #172033;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 12px 12px 0 #172033;
+  padding: 26px 28px 24px;
+  text-align: center;
+  color: #172033;
+  animation: suspendedAlertPop 0.18s ease-out;
+}
+
+.app-suspended-alert-icon {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  margin: -4px auto 12px;
+  border: 3px solid #172033;
+  border-radius: 999px;
+  background: #fecaca;
+  box-shadow: 4px 4px 0 #172033;
+  color: #7f1d1d;
+  font-size: 32px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.app-suspended-alert-content p {
+  width: fit-content;
+  margin: 0 auto 12px;
+  border: 3px solid #172033;
+  border-radius: 999px;
+  background: #f3bf1e;
+  box-shadow: 3px 3px 0 #172033;
+  padding: 6px 18px;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-suspended-alert-content h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.app-suspended-alert-content span {
+  display: block;
+  width: min(430px, 100%);
+  margin: 12px auto 0;
+  color: #64748b;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.app-suspended-alert-reason {
+  margin-top: 18px;
+  border: 2px dashed #172033;
+  border-radius: 18px;
+  background: #fff7ed;
+  padding: 12px;
+  text-align: left;
+}
+
+.app-suspended-alert-reason span {
+  display: block;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-suspended-alert-reason strong {
+  display: block;
+  color: #172033;
+  font-size: 0.9rem;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.app-suspended-alert-ok {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 20px;
+  border: 3px solid #172033;
+  border-radius: 999px;
+  background: #ec64ad;
+  color: #172033;
+  box-shadow: 4px 4px 0 #172033;
+  padding: 12px 16px;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-suspended-alert-ok:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 #172033;
+}
+
+.app-suspended-alert-ok:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #172033;
+}
+
+@keyframes suspendedAlertPop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 560px) {
+  .app-suspended-alert-card {
+    padding: 22px 18px 20px;
+    border-radius: 24px;
+  }
+
+  .app-suspended-alert-icon {
+    width: 62px;
+    height: 62px;
+    font-size: 28px;
+  }
+}
+/* =========================================================
+   TOPBAR SUSPENDED BORROWING WARNING ICON
+========================================================= */
+
+.app-suspended-topbar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-suspended-topbar-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 var(--qb-border);
+  font-family: var(--qb-heading-font);
+  font-size: 1.05rem;
+  font-weight: 950;
+  line-height: 1;
+  cursor: help;
+}
+
+.app-suspended-topbar-icon:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--qb-border);
+}
+
+.app-suspended-topbar-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 99999;
+  width: max-content;
+  max-width: 260px;
+  display: none;
+  border: 2px solid var(--qb-border);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  box-shadow: 4px 4px 0 var(--qb-border);
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-weight: 850;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.app-suspended-topbar-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  border-left: 2px solid var(--qb-border);
+  border-top: 2px solid var(--qb-border);
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+
+.app-suspended-topbar-wrap:hover .app-suspended-topbar-tooltip,
+.app-suspended-topbar-wrap:focus-within .app-suspended-topbar-tooltip {
+  display: block;
+}
+
+html[data-theme="dark"] .app-suspended-topbar-tooltip,
+html[data-theme="dark"] .app-suspended-topbar-tooltip::before {
+  background: var(--qb-surface);
+  color: var(--qb-foreground);
+}
+
+@media (max-width: 560px) {
+  .app-suspended-topbar-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
+  }
+
+  .app-suspended-topbar-tooltip {
+    right: -80px;
+    max-width: 220px;
+  }
+
+  .app-suspended-topbar-tooltip::before {
+    right: 94px;
+  }
+}
