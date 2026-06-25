@@ -2,38 +2,27 @@ import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
-  query as firestoreQuery,
-  where,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import "../styles/ItemDetails.css";
 
-const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
 
 function ItemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
-  const isSuperAdmin = userData?.role === "superAdmin";
-  const isCategoryAdmin = userData?.role === "categoryAdmin";
-  const isBorrower = userData?.role === "borrower";
-  const isAdmin = isSuperAdmin || isCategoryAdmin;
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLowerCase();
-  }
+const isBorrower = userData?.role === "borrower";
 
   function getCategoryName(targetItem = item) {
     return (
@@ -44,30 +33,8 @@ function ItemDetails() {
     );
   }
 
-  function getCategoryId(targetItem = item) {
-    return targetItem?.categoryId || targetItem?.category || "";
-  }
-
   function getItemCode(targetItem = item) {
     return targetItem?.itemCode || targetItem?.id || "No code";
-  }
-
-  function canAdminManageItem(targetItem = item) {
-    if (!targetItem) return false;
-    if (isSuperAdmin) return true;
-    if (!isCategoryAdmin) return false;
-
-    const assignedCategories = Array.isArray(userData?.assignedCategories)
-      ? userData.assignedCategories.map(normalizeText)
-      : [];
-
-    const itemCategoryId = normalizeText(getCategoryId(targetItem));
-    const itemCategoryName = normalizeText(getCategoryName(targetItem));
-
-    return (
-      assignedCategories.includes(itemCategoryId) ||
-      assignedCategories.includes(itemCategoryName)
-    );
   }
 
   function getAvailabilityClass(availability) {
@@ -146,62 +113,6 @@ function ItemDetails() {
     }
   }
 
-async function hasActiveBorrowRequest() {
-  if (!item?.id) return false;
-
-  const requestsQuery = firestoreQuery(
-    collection(db, "borrowRequests"),
-    where("itemId", "==", item.id)
-  );
-
-  const requestsSnapshot = await getDocs(requestsQuery);
-
-  return requestsSnapshot.docs.some((document) => {
-    const request = document.data();
-
-    return activeRequestStatuses.includes(request.approvalStatus);
-  });
-}
-
-  async function handleDeleteItem() {
-    if (!item) return;
-
-    if (!canAdminManageItem(item)) {
-      alert("You do not have permission to delete this item.");
-      return;
-    }
-
-    if (["Reserved", "Borrowed"].includes(item.availability)) {
-      alert("This item cannot be deleted because it is currently reserved or borrowed.");
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
-    );
-
-    if (!confirmDelete) return;
-
-    setDeleting(true);
-
-    try {
-      const hasActiveRequest = await hasActiveBorrowRequest();
-
-      if (hasActiveRequest) {
-        alert("This item cannot be deleted because it has an active borrow request.");
-        return;
-      }
-
-      await deleteDoc(doc(db, "items", item.id));
-
-      alert("Item deleted successfully.");
-      navigate("/items");
-    } catch (error) {
-      alert("Error deleting item: " + error.message);
-    } finally {
-      setDeleting(false);
-    }
-  }
 
   useEffect(() => {
     fetchItem();
@@ -242,10 +153,7 @@ async function hasActiveBorrowRequest() {
     );
   }
 
-  const canBorrow = isBorrower && item.availability === "Available";
-  const canManageThisItem = isAdmin && canAdminManageItem(item);
-  const canDeleteThisItem =
-    canManageThisItem && !["Reserved", "Borrowed"].includes(item.availability);
+const canBorrow = isBorrower && item.availability === "Available";
 
   return (
     <div className="item-details-page">
@@ -262,36 +170,15 @@ async function hasActiveBorrowRequest() {
       </p>
     </div>
 
-    <div className="item-details-header-actions item-details-header-actions-compact">
-      <button
-        type="button"
-        className="item-details-secondary-btn"
-        onClick={() => navigate("/items")}
-      >
-        Back to Items
-      </button>
-
-      {canManageThisItem && (
-        <button
-          type="button"
-          className="item-details-primary-btn"
-          onClick={() => navigate(`/edit-item?id=${item.id}`)}
-        >
-          Edit Item
-        </button>
-      )}
-
-      {canDeleteThisItem && (
-        <button
-          type="button"
-          className="item-details-danger-btn"
-          onClick={handleDeleteItem}
-          disabled={deleting}
-        >
-          {deleting ? "Deleting..." : "Delete Item"}
-        </button>
-      )}
-    </div>
+<div className="item-details-header-actions item-details-header-actions-compact">
+  <button
+    type="button"
+    className="item-details-secondary-btn"
+    onClick={() => navigate("/items")}
+  >
+    Back to Items
+  </button>
+</div>
   </div>
 </section>
 
@@ -374,11 +261,11 @@ async function hasActiveBorrowRequest() {
                 </div>
               ) : (
                 <div className="item-details-warning">
-                  <strong>Admin View</strong>
-                  <p>
-                    Admins can manage this item using edit, release, return, and
-                    delete workflows.
-                  </p>
+<strong>Admin View</strong>
+<p>
+  Admins can review item information and use release or return workflows
+  from the scan shortcuts.
+</p>
                 </div>
               )}
             </div>
@@ -392,13 +279,16 @@ async function hasActiveBorrowRequest() {
           </div>
 
           <div className="item-details-qr-box">
-            <QRCodeGenerator
-              itemId={item.id}
-              itemName={item.itemName}
-              itemCode={getItemCode(item)}
-              qrValue={item.qrValue}
-              barcodeValue={item.barcodeValue}
-            />
+              <QRCodeGenerator
+                itemId={item.id}
+                itemName={item.itemName}
+                itemCode={getItemCode(item)}
+                qrValue={item.qrValue}
+                barcodeValue={item.barcodeValue}
+                qrSize={120}
+                barcodeHeight={54}
+                compact
+              />
           </div>
 
           <div className="item-details-scan-values">
@@ -413,20 +303,7 @@ async function hasActiveBorrowRequest() {
             </div>
           </div>
 
-          {canManageThisItem && (
-            <div className="item-details-admin-shortcuts">
-              <button type="button" onClick={() => navigate("/release-item")}>
-                Release Scan
-              </button>
 
-              <button
-                type="button"
-                onClick={() => navigate("/return-confirmation")}
-              >
-                Return Scan
-              </button>
-            </div>
-          )}
         </aside>
       </section>
     </div>

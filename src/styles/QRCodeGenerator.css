@@ -291,3 +291,190 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================================
+   ITEM DETAILS COMPACT QR / BARCODE POLISH
+========================================================= */
+
+.code-generator-box.compact {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.code-generator-box.compact .code-generator-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  width: 100% !important;
+}
+
+.code-generator-box.compact .qr-code-area,
+.code-generator-box.compact .barcode-area {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 10px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.18), transparent 38%),
+    #ffffff !important;
+  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  padding: 14px !important;
+}
+
+.code-generator-box.compact .code-area-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.code-generator-box.compact .code-area-title span {
+  width: fit-content !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: var(--qb-quaternary) !important;
+  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+  padding: 5px 10px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.66rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.code-generator-box.compact .code-canvas-shell {
+  width: 100% !important;
+  min-height: 150px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border: 2px dashed rgba(30, 41, 59, 0.45) !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle, rgba(30, 41, 59, 0.1) 1px, transparent 1.5px),
+    #fffef8 !important;
+  background-size: 18px 18px !important;
+  padding: 14px !important;
+}
+
+.code-generator-box.compact .qr-shell canvas {
+  width: 120px !important;
+  height: 120px !important;
+}
+
+.code-generator-box.compact .barcode-shell {
+  min-height: 150px !important;
+}
+
+.code-generator-box.compact .barcode-shell canvas {
+  width: 100% !important;
+  max-width: 190px !important;
+  height: auto !important;
+}
+
+.code-generator-box.compact button {
+  width: 100% !important;
+  height: 42px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+.code-generator-box.compact button:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+}
+
+.code-generator-box.compact .code-generator-footer,
+.code-generator-box.compact .code-generator-header {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .code-generator-box.compact .code-generator-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   COMPACT PRINT LABEL BUTTON
+========================================================= */
+
+.code-generator-box.compact .code-generator-compact-actions {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 14px !important;
+}
+
+.code-generator-box.compact .code-generator-print-label-btn {
+  width: min(260px, 100%) !important;
+  height: 46px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 999px !important;
+  background: var(--qb-accent) !important;
+  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+.code-generator-box.compact .code-generator-print-label-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+}
+/* =========================================================
+   STANDALONE COMPACT QR / BARCODE CARDS
+========================================================= */
+
+.code-generator-box.compact {
+  overflow: visible !important;
+}
+
+.code-generator-box.compact .code-generator-grid {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.code-generator-box.compact .qr-code-area,
+.code-generator-box.compact .barcode-area {
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.2), transparent 40%),
+    #ffffff !important;
+  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  padding: 16px !important;
+}
+
+.code-generator-box.compact .code-generator-compact-actions {
+  margin-top: 16px !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.code-generator-box.compact .code-generator-print-label-btn {
+  width: min(280px, 100%) !important;
+  background: var(--qb-accent) !important;
+}

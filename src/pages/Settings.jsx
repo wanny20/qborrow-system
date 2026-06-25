@@ -19,10 +19,12 @@ import {
 } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/Settings.css";
 
 function Settings() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userRecord, setUserRecord] = useState(null);
@@ -237,7 +239,6 @@ showStatus("", "");
 const isValid = validateProfileForm();
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
 
@@ -302,7 +303,7 @@ setSavingProfile(true);
         })
       );
 
-      showStatus("Settings saved successfully.", "success");
+      showToast("Settings Saved", "success");
     } catch (error) {
       showStatus("Error saving settings: " + error.message, "error");
     } finally {
@@ -323,10 +324,8 @@ setSavingProfile(true);
 const isValid = validatePasswordForm();
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
-
 setChangingPassword(true);
 
     try {
@@ -338,7 +337,7 @@ setChangingPassword(true);
       setConfirmNewPassword("");
       setPasswordFieldErrors({});
 
-      showStatus("Password changed successfully.", "success");
+      showToast("Password Changed", "success");
     } catch (error) {
       showStatus("Error changing password: " + error.message, "error");
     } finally {
@@ -370,11 +369,15 @@ setChangingPassword(true);
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    applyTheme(themeMode);
-  }, [themeMode]);
+useEffect(() => {
+  applyTheme(themeMode);
+}, [themeMode]);
 
-  if (loading) {
+const hasSettingsFieldErrors =
+  Object.values(profileFieldErrors).some(Boolean) ||
+  Object.values(passwordFieldErrors).some(Boolean);
+
+if (loading) {
     return (
       <div className="settings-loading">
         <div className="settings-loading-card">
@@ -401,12 +404,14 @@ setChangingPassword(true);
 
 <section className="settings-header settings-header-compact">
   <div className="settings-header-content">
-    <div className="settings-header-text">
-      <p>
-        Manage your display name, profile picture, interface theme, and account
-        password. Your email is kept fixed for account safety.
-      </p>
-    </div>
+<div className="settings-header-text">
+  <h1>Settings</h1>
+
+  <p>
+    Manage your display name, profile picture, interface theme, and account
+    password. Your email is kept fixed for account safety.
+  </p>
+</div>
 
     <button
       type="button"
@@ -418,11 +423,11 @@ setChangingPassword(true);
   </div>
 </section>
 
-      {statusMessage && (
-        <div className={`settings-status settings-status-${statusType}`}>
-          {statusMessage}
-        </div>
-      )}
+{statusMessage && !hasSettingsFieldErrors && (
+  <div className={`settings-status settings-status-${statusType}`}>
+    {statusMessage}
+  </div>
+)}
 
       <section className="settings-layout">
 <form

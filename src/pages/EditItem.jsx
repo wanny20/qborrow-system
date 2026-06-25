@@ -15,12 +15,14 @@ import {
 } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/EditItem.css";
 
 function EditItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
 
   const [categories, setCategories] = useState([]);
 
@@ -290,7 +292,6 @@ showStatus("", "");
 const isValid = validateEditItemForm();
 
 if (!isValid) {
-  showStatus("Please correct the highlighted fields.", "error");
   return;
 }
 
@@ -370,11 +371,12 @@ let updatedSuccessfully = false;
 
     updatedSuccessfully = true;
 
-    showStatus("Item updated successfully.", "success");
+showToast("Successfully Updated", "success");
 
-    setTimeout(() => {
-      navigate("/items");
-    }, 700);
+setTimeout(() => {
+  navigate("/items");
+}, 700);
+
   } catch (error) {
     showStatus("Error updating item: " + error.message, "error");
   } finally {
@@ -427,15 +429,15 @@ let updatedSuccessfully = false;
 
 <section className="edit-item-header edit-item-header-compact">
   <div className="edit-item-header-content">
-    <div className="edit-item-header-text">
-      <span>{itemCode || itemId || "Edit Item"}</span>
+<div className="edit-item-header-text">
+  <h1>Edit Item</h1>
 
-      <h2>Edit Item</h2>
+  <span>{itemCode || itemId || "No item code"}</span>
 
-      <p>
-        Update item details, image, category, condition, availability, and
-        borrowing limits.
-      </p>
+  <p>
+    Update item details, image, category, condition, availability, and
+    borrowing limits.
+  </p>
 
       {isCategoryAdmin && (
         <div className="edit-item-assigned-note">
@@ -497,6 +499,31 @@ let updatedSuccessfully = false;
             </div>
 
             <form onSubmit={handleUpdateItem} noValidate>
+
+              <div className="edit-item-field">
+  <label className="qb-label" htmlFor="item-name">
+    Item Name <span className="required-star">*</span>
+  </label>
+
+  <input
+    id="item-name"
+    type="text"
+    className={fieldErrors.itemName ? "input-error" : ""}
+    value={itemName}
+    onFocus={() => clearFieldError("itemName")}
+    onChange={(e) => {
+      setItemName(e.target.value);
+      clearFieldError("itemName");
+    }}
+    disabled={submitting}
+    placeholder="Example: Projector"
+  />
+
+  {fieldErrors.itemName && (
+    <p className="field-error-message">{fieldErrors.itemName}</p>
+  )}
+</div>
+
 <div className="edit-item-field">
   <label className="qb-label" htmlFor="category">
     Category <span className="required-star">*</span>

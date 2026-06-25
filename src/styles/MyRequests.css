@@ -1311,3 +1311,109 @@
     width: 100% !important;
   }
 }
+/* =========================================================
+   MY REQUESTS CLOSED / AUTO-REJECTED REASON
+========================================================= */
+
+.my-requests-closed-reason {
+  margin-top: 12px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 16px !important;
+  background: #fee2e2 !important;
+  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+  padding: 12px !important;
+}
+
+.my-requests-closed-reason span {
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.58rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.my-requests-closed-reason p {
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.my-request-row-reason {
+  margin-top: 8px !important;
+  border: 2px dashed var(--qb-border) !important;
+  border-radius: 14px !important;
+  background: #fee2e2 !important;
+  padding: 8px 10px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.72rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+}
+
+.my-request-row-reason strong {
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+}
+
+@media (max-width: 760px) {
+  .my-requests-closed-reason {
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .my-requests-closed-reason p {
+    font-size: 0.74rem !important;
+  }
+
+  .my-request-row-reason {
+    font-size: 0.68rem !important;
+  }
+}
+/* =========================================================
+   MY REQUESTS TITLE INSIDE HEADER CARD
+========================================================= */
+
+.my-requests-header-text h1 {
+  position: relative !important;
+  z-index: 2 !important;
+  margin: 0 0 6px !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+  text-transform: uppercase !important;
+}
+
+.my-requests-header-compact > div,
+.my-requests-header-compact > .my-requests-header-content {
+  min-height: 96px !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+}
+
+.my-requests-header-text p {
+  max-width: 850px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 760px) {
+  .my-requests-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .my-requests-header-text p {
+    font-size: 0.72rem !important;
+  }
+}

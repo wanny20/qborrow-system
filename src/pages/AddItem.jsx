@@ -14,12 +14,14 @@ import {
 } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/AddItem.css";
 
 function AddItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
 
   const [categories, setCategories] = useState([]);
 
@@ -94,15 +96,7 @@ function AddItem() {
       URL.revokeObjectURL(url);
     }
   }
-
-  function getCategoryName(categoryIdValue) {
-    const category = categories.find(
-      (item) => normalizeText(item.id) === normalizeText(categoryIdValue)
-    );
-
-    return category?.name || categoryIdValue || "Unknown";
-  }
-
+  
   async function fetchCategories() {
     setLoadingCategories(true);
 
@@ -266,9 +260,8 @@ function AddItem() {
     const isValid = validateAddItemForm();
 
     if (!isValid) {
-      showStatus("Please correct the highlighted fields.", "error");
-      return;
-    }
+  return;
+}
 
     submitLockRef.current = true;
     setSubmitting(true);
@@ -338,8 +331,8 @@ function AddItem() {
         updatedAt: serverTimestamp(),
       });
 
-      showStatus("Item added successfully.", "success");
-      resetForm();
+showToast("Successfully Created", "success");
+resetForm();
     } catch (error) {
       showStatus("Error adding item: " + error.message, "error");
     } finally {
@@ -365,11 +358,13 @@ function AddItem() {
 
 <section className="add-item-header add-item-header-compact">
   <div className="add-item-header-content">
-    <div className="add-item-header-text">
-      <p>
-        Create a borrowable item record with category, condition, availability,
-        image, QR value, and barcode value.
-      </p>
+<div className="add-item-header-text">
+  <h1>Add Item</h1>
+
+  <p>
+    Create a borrowable item record with category, condition, availability,
+    image, QR value, and barcode value.
+  </p>
 
       {isCategoryAdmin && (
         <div className="add-item-assigned-note">
