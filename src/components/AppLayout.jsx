@@ -45,6 +45,8 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
   const [adminBorrowRequestAlerts, setAdminBorrowRequestAlerts] = useState([]);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
+  const [showSuspendedAlert, setShowSuspendedAlert] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const closeSidebarOnMobile = useCallback(() => {
@@ -191,6 +193,69 @@ function getRejectedRequestReason(request) {
   }
 
   return "Your borrow request was rejected. You may submit a new request if needed.";
+}
+
+function getSuspendedUntilDate(value) {
+  if (!value) return null;
+
+  if (typeof value?.toDate === "function") {
+    return value.toDate();
+  }
+
+  if (value?.seconds) {
+    return new Date(value.seconds * 1000);
+  }
+
+  const parsedDate = new Date(value);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function isCurrentUserSuspended() {
+  if (userData?.role !== "borrower") return false;
+
+  const suspendedUntilDate = getSuspendedUntilDate(userData?.suspendedUntil);
+
+  if (suspendedUntilDate && suspendedUntilDate > new Date()) {
+    return true;
+  }
+
+  return userData?.canBorrow === false;
+}
+
+function getSuspendedUntilLabel() {
+  const suspendedUntilDate = getSuspendedUntilDate(userData?.suspendedUntil);
+
+  if (!suspendedUntilDate) return "until further notice";
+
+  return suspendedUntilDate.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function getSuspensionReason() {
+  return (
+    userData?.suspensionReason ||
+    "Your account is temporarily restricted from borrowing because of overdue return records."
+  );
+}
+
+function getSuspensionStorageKey() {
+  const userId = userData?.uid || auth.currentUser?.uid || "unknown-user";
+  const suspendedUntil = userData?.suspendedUntil?.seconds
+    ? userData.suspendedUntil.seconds
+    : String(userData?.suspendedUntil || "no-date");
+
+  return `qborrowSuspensionAlertSeen-${userId}-${suspendedUntil}`;
+}
+
+function handleCloseSuspendedAlert() {
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem(getSuspensionStorageKey(), "yes");
+  }
+
+  setShowSuspendedAlert(false);
 }
 
 async function checkRejectedRequestAlerts(userId) {
@@ -355,6 +420,9 @@ function handleViewAdminBorrowRequestAlert() {
   const isSuperAdmin = userData?.role === "superAdmin";
   const isAdmin = isCategoryAdmin || isSuperAdmin;
 
+  const showBorrowingSuspendedIndicator =
+  isBorrower && isCurrentUserSuspended();
+
   const roleLabel = useMemo(() => {
     if (isSuperAdmin) return "Super Admin";
     if (isCategoryAdmin) return "Category Admin";
@@ -464,6 +532,32 @@ function handleViewAdminBorrowRequestAlert() {
   }, [navigate]);
 
   useEffect(() => {
+  if (!userData?.uid) return;
+
+  const userRef = doc(db, "users", userData.uid);
+
+  const unsubscribe = onSnapshot(userRef, (snapshot) => {
+    if (!snapshot.exists()) return;
+
+    const latestUserData = snapshot.data();
+
+    setUserData((previousData) => ({
+      ...previousData,
+      id: snapshot.id,
+      ...latestUserData,
+      uid: previousData?.uid || auth.currentUser?.uid || snapshot.id,
+      email:
+        auth.currentUser?.email ||
+        latestUserData.email ||
+        previousData?.email ||
+        "",
+    }));
+  });
+
+  return () => unsubscribe();
+}, [userData?.uid]);
+
+  useEffect(() => {
   if (!hasUnsavedChanges) return;
 
   function handleBeforeUnload(event) {
@@ -527,6 +621,34 @@ function handleViewAdminBorrowRequestAlert() {
 
     return () => unsubscribe();
   }, [userData]);
+
+  useEffect(() => {
+  if (!userData?.uid) {
+    setShowSuspendedAlert(false);
+    return;
+  }
+
+  if (!isCurrentUserSuspended()) {
+    setShowSuspendedAlert(false);
+    return;
+  }
+
+  const alreadySeen =
+    typeof window !== "undefined" &&
+    sessionStorage.getItem(getSuspensionStorageKey()) === "yes";
+
+if (!alreadySeen && rejectedRequestAlerts.length === 0) {
+  setShowSuspendedAlert(true);
+}
+}, [
+  userData?.uid,
+  userData?.role,
+  userData?.canBorrow,
+  userData?.suspendedUntil,
+  userData?.suspensionReason,
+  rejectedRequestAlerts.length,
+]);
+
 
   useEffect(() => {
   if (!isAdmin || !userData?.uid) {
@@ -934,6 +1056,45 @@ function renderNavLink(link) {
     </section>
   </div>
 )}
+
+{showSuspendedAlert && (
+  <div
+    className="app-suspended-alert-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="suspended-alert-title"
+  >
+    <section className="app-suspended-alert-card">
+      <div className="app-suspended-alert-icon">!</div>
+
+      <div className="app-suspended-alert-content">
+        <p>Borrowing Suspended</p>
+
+        <h2 id="suspended-alert-title">
+          Your account is temporarily suspended
+        </h2>
+
+        <span>
+          You cannot submit new borrow requests {getSuspendedUntilLabel()}.
+        </span>
+      </div>
+
+      <div className="app-suspended-alert-reason">
+        <span>Reason</span>
+        <strong>{getSuspensionReason()}</strong>
+      </div>
+
+      <button
+        type="button"
+        className="app-suspended-alert-ok"
+        onClick={handleCloseSuspendedAlert}
+      >
+        OK, I Understand
+      </button>
+    </section>
+  </div>
+)}
+
 {adminBorrowRequestAlerts.length > 0 && (
   <div
     className="app-admin-request-alert-backdrop"
@@ -1095,6 +1256,29 @@ function renderNavLink(link) {
           </div>
 
 <div className="app-topbar-right">
+  {showBorrowingSuspendedIndicator && (
+    <div
+      className="app-suspended-topbar-wrap"
+      aria-label="Borrowing suspended"
+    >
+      <button
+        type="button"
+        className="app-suspended-topbar-icon"
+        aria-describedby="suspended-topbar-tooltip"
+      >
+        !
+      </button>
+
+      <div
+        id="suspended-topbar-tooltip"
+        className="app-suspended-topbar-tooltip"
+        role="tooltip"
+      >
+        You are suspended from borrowing items.
+      </div>
+    </div>
+  )}
+
   <button
     type="button"
     className="app-topbar-notification"
