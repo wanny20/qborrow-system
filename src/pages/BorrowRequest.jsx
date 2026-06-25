@@ -66,6 +66,21 @@ function BorrowRequest() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
 function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -346,9 +361,9 @@ function validateBorrowRequestField(fieldName) {
         const itemSnap = await getDoc(itemRef);
 
         if (!itemSnap.exists()) {
-          alert("Item not found.");
-          navigate("/items");
-          return;
+            showBlockedAction("Item not found.");
+            navigate("/items");
+            return;
         }
 
         setItem({
@@ -372,7 +387,7 @@ function validateBorrowRequestField(fieldName) {
           }
         }
       } catch (error) {
-        alert("Error loading borrow request form: " + error.message);
+        showActionError("Failed to load borrow request form", error);
       } finally {
         setLoading(false);
       }
@@ -380,7 +395,7 @@ function validateBorrowRequestField(fieldName) {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        alert("Please login first.");
+        showBlockedAction("Please login first.");
         navigate("/login");
         return;
       }
@@ -425,40 +440,39 @@ let submittedSuccessfully = false;
 
   try {
     if (currentUserData?.role && currentUserData.role !== "borrower") {
-      showStatus("Only borrower accounts can submit borrow requests.", "error");
-      return;
+        showBlockedAction("Only borrower accounts can submit borrow requests.");
+        return;
     }
 
     if (currentUserData?.canBorrow === false || isBorrowerSuspended()) {
-      showStatus(getBorrowRestrictionMessage(), "error");
-      return;
+        showBlockedAction(getBorrowRestrictionMessage());
+        return;
     }
 
 
     if (borrowDate !== today) {
-      showStatus("Borrow date must be today.", "error");
-      return;
+        showBlockedAction("Borrow date must be today.");
+        return;
     }
 
     if (!item) {
-      showStatus("Item data is missing.", "error");
-      return;
+        showBlockedAction("Item data is missing.");
+        return;
     }
 
     if (item.availability !== "Available") {
-      showStatus("This item is not available for borrowing right now.", "error");
-      return;
+        showBlockedAction("This item is not available for borrowing right now.");
+        return;
     }
 
 
     const conflictingRequest = await checkRequestConflict();
 
     if (conflictingRequest) {
-showStatus(
-  "This item already has an active request. Please wait until the current request is approved, rejected, cancelled, or auto-rejected.",
-  "error"
-);
-return; 
+        showBlockedAction(
+          "This item already has an active request. Please wait until the current request is approved, rejected, cancelled, or auto-rejected."
+        );
+        return;
     }
 
     await addDoc(collection(db, "borrowRequests"), {
@@ -538,7 +552,7 @@ setTimeout(() => {
 }, 700);
 
   } catch (error) {
-    showStatus("Error submitting request: " + error.message, "error");
+    showActionError("Failed to submit borrow request", error);
   } finally {
     if (!submittedSuccessfully) {
       submitLockRef.current = false;

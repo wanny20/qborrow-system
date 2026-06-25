@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ReturnConfirmation.css";
 
 function ReturnConfirmation() {
@@ -48,6 +49,8 @@ function ReturnConfirmation() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   const returnLockRef = useRef(false);
   const scannerLockRef = useRef(false);
@@ -58,6 +61,43 @@ function ReturnConfirmation() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -304,7 +344,9 @@ function isReturnBusy() {
     return "Unavailable";
   }
 
-async function fetchBorrowedRequests() {
+async function fetchBorrowedRequests(options = {}) {
+  const { showSuccessToast = false } = options;
+
   setLoading(true);
 
   try {
@@ -321,8 +363,12 @@ async function fetchBorrowedRequests() {
     }));
 
     setRequests(requestData);
+
+    if (showSuccessToast) {
+      showToast("Return queue refreshed", "success");
+    }
   } catch (error) {
-    showStatus("Error loading borrowed requests: " + error.message, "error");
+    showActionError("Failed to load borrowed requests", error);
   } finally {
     setLoading(false);
   }
@@ -400,15 +446,14 @@ clearFieldError("manualItemId");
 
     if (!matchingRequest) {
       setSelectedRequest(null);
-      showStatus("No active borrowed request found for this item.", "error");
+      showBlockedAction("No active borrowed request found for this item.");
       return;
     }
 
     if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
       setSelectedRequest(null);
-      showStatus(
-        "This borrowed item belongs to a category that is not assigned to your account.",
-        "error"
+      showBlockedAction(
+        "This borrowed item belongs to a category that is not assigned to your account."
       );
       return;
     }
@@ -420,7 +465,7 @@ clearFieldError("manualItemId");
     setFieldErrors({});
     showToast("Borrowed request found. Review details before confirming return.", "success");
   } catch (error) {
-    showStatus("Error finding borrowed request: " + error.message, "error");
+    showActionError("Failed to find borrowed request", error);
   }
 }
   async function updateBorrowerOverdueRecord(request) {
@@ -460,124 +505,130 @@ async function handleReturn() {
 
   const isValid = validateReturnForm();
 
-if (!isValid) {
-  return;
-}
-
-  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-    showStatus("You are not allowed to confirm returns for this category.", "error");
+  if (!isValid) {
     return;
   }
 
-
-  const started = startReturnAction();
-
-  if (!started) return;
-
-  try {
-    const confirmReturn = window.confirm(
-      `Confirm return of ${selectedRequest.itemName} from ${
-        selectedRequest.borrowerName || selectedRequest.borrowerEmail
-      }?`
-    );
-
-    if (!confirmReturn) return;
-
-    showStatus("", "");
-
-    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-    const latestRequestSnap = await getDoc(requestRef);
-
-    if (!latestRequestSnap.exists()) {
-      showStatus("This request no longer exists.", "error");
-      return;
-    }
-
-    const latestRequest = {
-      id: latestRequestSnap.id,
-      ...latestRequestSnap.data(),
-    };
-
-    if (latestRequest.approvalStatus !== "Borrowed") {
-      showStatus(
-        `This request is already ${latestRequest.approvalStatus}. Refreshing return queue...`,
-        "error"
-      );
-
-      setSelectedRequest(null);
-      setManualItemId("");
-      await fetchBorrowedRequests();
-      return;
-    }
-
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
-      showStatus("You are not allowed to confirm returns for this category.", "error");
-      return;
-    }
-
-    const itemRef = doc(db, "items", latestRequest.itemId);
-    const itemSnap = await getDoc(itemRef);
-
-    if (!itemSnap.exists()) {
-      showStatus("Item record not found. Return cannot continue.", "error");
-      return;
-    }
-
-    await updateDoc(requestRef, {
-      approvalStatus: "Returned",
-      actualReturnDate,
-      returnCondition,
-      damageLostReport: damageLostReport.trim(),
-      returnedAt: serverTimestamp(),
-      returnedBy: getAdminId(),
-      updatedAt: serverTimestamp(),
-    });
-
-    await updateDoc(itemRef, {
-      availability: getNewItemAvailability(),
-      condition: returnCondition,
-      updatedAt: serverTimestamp(),
-    });
-
-    await updateBorrowerOverdueRecord(latestRequest);
-
-    await addDoc(collection(db, "notifications"), {
-      userId: latestRequest.borrowerId,
-      targetRole: "borrower",
-      categoryId: getRequestCategoryId(latestRequest),
-      title: "Item Return Confirmed",
-      message: `${latestRequest.itemName} has been returned successfully with condition: ${returnCondition}.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/my-requests",
-    });
-
-    if (returnCondition === "Damaged" || returnCondition === "Lost") {
-      await addDoc(collection(db, "notifications"), {
-        userId: "",
-        targetRole: "categoryAdmin",
-        categoryId: getRequestCategoryId(latestRequest),
-        title: `${returnCondition} Item Reported`,
-        message: `${latestRequest.itemName} was returned as ${returnCondition}.`,
-        status: "Unread",
-        createdAt: serverTimestamp(),
-        link: "/reports",
-      });
-    }
-
-showToast("Return Confirmed", "success");
-
-setSelectedRequest(null);
-setManualItemId("");
-setReturnCondition("Good");
-
-    setDamageLostReport("");
-    await fetchBorrowedRequests();
-  } catch (error) {
-    showStatus("Error confirming return: " + error.message, "error");
-  } finally {
-    finishReturnAction();
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showBlockedAction("You are not allowed to confirm returns for this category.");
+    return;
   }
+
+  const requestToReturn = selectedRequest;
+  const selectedReturnCondition = returnCondition;
+  const selectedDamageLostReport = damageLostReport.trim();
+
+  openConfirmAction({
+    title: "Confirm Item Return?",
+    message: `Confirm return of ${requestToReturn.itemName || "this item"} from ${
+      requestToReturn.borrowerName ||
+      requestToReturn.borrowerEmail ||
+      "this borrower"
+    }?`,
+    confirmText: "Confirm Return",
+    danger: selectedReturnCondition === "Damaged" || selectedReturnCondition === "Lost",
+    onConfirm: async () => {
+      const started = startReturnAction();
+
+      if (!started) return;
+
+      try {
+        showStatus("", "");
+
+        const requestRef = doc(db, "borrowRequests", requestToReturn.id);
+        const latestRequestSnap = await getDoc(requestRef);
+
+        if (!latestRequestSnap.exists()) {
+          showBlockedAction("This request no longer exists.");
+          return;
+        }
+
+        const latestRequest = {
+          id: latestRequestSnap.id,
+          ...latestRequestSnap.data(),
+        };
+
+        if (latestRequest.approvalStatus !== "Borrowed") {
+          showBlockedAction(
+            `This request is already ${latestRequest.approvalStatus}. Refreshing return queue...`
+          );
+
+          setSelectedRequest(null);
+          setManualItemId("");
+          await fetchBorrowedRequests();
+          return;
+        }
+
+        if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+          showBlockedAction("You are not allowed to confirm returns for this category.");
+          return;
+        }
+
+        const itemRef = doc(db, "items", latestRequest.itemId);
+        const itemSnap = await getDoc(itemRef);
+
+        if (!itemSnap.exists()) {
+          showBlockedAction("Item record not found. Return cannot continue.");
+          return;
+        }
+
+        await updateDoc(requestRef, {
+          approvalStatus: "Returned",
+          actualReturnDate,
+          returnCondition: selectedReturnCondition,
+          damageLostReport: selectedDamageLostReport,
+          returnedAt: serverTimestamp(),
+          returnedBy: getAdminId(),
+          updatedAt: serverTimestamp(),
+        });
+
+        await updateDoc(itemRef, {
+          availability: getNewItemAvailability(),
+          condition: selectedReturnCondition,
+          updatedAt: serverTimestamp(),
+        });
+
+        await updateBorrowerOverdueRecord(latestRequest);
+
+        await addDoc(collection(db, "notifications"), {
+          userId: latestRequest.borrowerId,
+          targetRole: "borrower",
+          categoryId: getRequestCategoryId(latestRequest),
+          title: "Item Return Confirmed",
+          message: `${latestRequest.itemName} has been returned successfully with condition: ${selectedReturnCondition}.`,
+          status: "Unread",
+          createdAt: serverTimestamp(),
+          link: "/my-requests",
+        });
+
+        if (selectedReturnCondition === "Damaged" || selectedReturnCondition === "Lost") {
+          await addDoc(collection(db, "notifications"), {
+            userId: "",
+            targetRole: "categoryAdmin",
+            categoryId: getRequestCategoryId(latestRequest),
+            title: `${selectedReturnCondition} Item Reported`,
+            message: `${latestRequest.itemName} was returned as ${selectedReturnCondition}.`,
+            status: "Unread",
+            createdAt: serverTimestamp(),
+            link: "/reports",
+          });
+        }
+
+        showToast("Return Confirmed", "success");
+
+        setSelectedRequest(null);
+        setManualItemId("");
+        setReturnCondition("Good");
+        setDamageLostReport("");
+
+        await fetchBorrowedRequests();
+      } catch (error) {
+        showActionError("Failed to confirm return", error);
+      } finally {
+        finishReturnAction();
+      }
+    },
+  });
 }
 
   useEffect(() => {
@@ -653,8 +704,19 @@ scanner.render(
     );
   }
 
-  return (
-    <div className="return-page">
+return (
+  <div className="return-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
       {viewingBorrowedRequest && (
   <div
     className="return-modal-backdrop"
@@ -1047,7 +1109,7 @@ scanner.render(
         <button
           type="button"
           className="return-secondary-btn"
-          onClick={fetchBorrowedRequests}
+          onClick={() => fetchBorrowedRequests({ showSuccessToast: true })}
           disabled={confirming}
         >
           Refresh

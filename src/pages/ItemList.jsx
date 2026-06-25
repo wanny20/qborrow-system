@@ -16,6 +16,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { db, auth } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ItemList.css";
 
 const activeRequestStatuses = ["Pending", "Approved", "Borrowed"];
@@ -46,6 +47,9 @@ function ItemList() {
 
   const deleteLockRef = useRef("");
 
+  const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
+
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
@@ -66,10 +70,40 @@ function finishDeleteAction() {
   deleteLockRef.current = "";
   setDeletingId("");
 }
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
 
 function isDeleteBusy() {
   return Boolean(deleteLockRef.current || deletingId);
 }
+
+    function showActionError(shortMessage, error) {
+      console.error(shortMessage, error);
+      showToast(shortMessage, "error");
+    }
+
+    function showBlockedAction(message) {
+      showToast(message, "error");
+    }
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -178,14 +212,20 @@ async function fetchItemsPage(mode = "reset") {
   setItems(itemData);
 }
 
-async function fetchItemsAndCategories() {
+async function fetchItemsAndCategories(options = {}) {
+  const { showSuccessToast = false } = options;
+
   try {
     await Promise.all([
       fetchCategories(),
       fetchItemsPage("reset"),
     ]);
+
+    if (showSuccessToast) {
+      showToast("Items refreshed", "success");
+    }
   } catch (error) {
-    alert("Error loading items: " + error.message);
+    showActionError("Failed to load items", error);
   }
 }
 
@@ -197,7 +237,7 @@ async function handleLoadMoreItems() {
   try {
     await fetchItemsPage("more");
   } catch (error) {
-    alert("Error loading more items: " + error.message);
+    showActionError("Failed to load more items", error);
   } finally {
     setLoadingMoreItems(false);
   }
@@ -217,66 +257,66 @@ async function hasActiveBorrowRequest(itemId) {
     return activeRequestStatuses.includes(request.approvalStatus);
   });
 }
-
 async function handleDeleteItem(item) {
   if (!isAdmin) return;
 
   if (isDeleteBusy()) return;
 
   if (["Reserved", "Borrowed"].includes(item.availability)) {
-    alert("This item cannot be deleted because it is reserved or borrowed.");
+    showBlockedAction("This item cannot be deleted because it is reserved or borrowed.");
     return;
   }
 
-  const confirmDelete = window.confirm(
-    `Delete "${item.itemName || "this item"}"? This action cannot be undone.`
-  );
+  openConfirmAction({
+    title: "Delete Item?",
+    message: `Delete "${item.itemName || "this item"}"? This action cannot be undone.`,
+    confirmText: "Delete Item",
+    danger: true,
+    onConfirm: async () => {
+      const started = startDeleteAction(item.id);
 
-  if (!confirmDelete) return;
+      if (!started) return;
 
-  const started = startDeleteAction(item.id);
+      try {
+        const itemRef = doc(db, "items", item.id);
+        const latestItemSnap = await getDoc(itemRef);
 
-  if (!started) return;
+        if (!latestItemSnap.exists()) {
+          showBlockedAction("This item no longer exists.");
+          await fetchItemsAndCategories();
+          return;
+        }
 
-  try {
-    const itemRef = doc(db, "items", item.id);
-    const latestItemSnap = await getDoc(itemRef);
+        const latestItem = {
+          id: latestItemSnap.id,
+          ...latestItemSnap.data(),
+        };
 
-    if (!latestItemSnap.exists()) {
-      alert("This item no longer exists.");
-      await fetchItemsAndCategories();
-      return;
-    }
+        if (["Reserved", "Borrowed"].includes(latestItem.availability)) {
+          showBlockedAction("This item cannot be deleted because it is now reserved or borrowed.");
+          await fetchItemsAndCategories();
+          return;
+        }
 
-    const latestItem = {
-      id: latestItemSnap.id,
-      ...latestItemSnap.data(),
-    };
+        const hasActiveRequest = await hasActiveBorrowRequest(item.id);
 
-    if (["Reserved", "Borrowed"].includes(latestItem.availability)) {
-      alert("This item cannot be deleted because it is now reserved or borrowed.");
-      await fetchItemsAndCategories();
-      return;
-    }
+        if (hasActiveRequest) {
+          showBlockedAction("This item cannot be deleted because it has an active borrow request.");
+          await fetchItemsAndCategories();
+          return;
+        }
 
-    const hasActiveRequest = await hasActiveBorrowRequest(item.id);
+        await deleteDoc(itemRef);
 
-    if (hasActiveRequest) {
-      alert("This item cannot be deleted because it has an active borrow request.");
-      await fetchItemsAndCategories();
-      return;
-    }
-
-await deleteDoc(itemRef);
-
-showToast("Successfully Deleted", "success");
-await fetchItemsAndCategories();
-
-  } catch (error) {
-    alert("Error deleting item: " + error.message);
-  } finally {
-    finishDeleteAction();
-  }
+        showToast("Successfully Deleted", "success");
+        await fetchItemsAndCategories();
+      } catch (error) {
+        showActionError("Failed to delete item", error);
+      } finally {
+        finishDeleteAction();
+      }
+    },
+  });
 }
 
   useEffect(() => {
@@ -315,7 +355,7 @@ await fetchItemsAndCategories();
 
         await fetchItemsAndCategories();
       } catch (error) {
-        alert("Error loading item list: " + error.message);
+        showActionError("Failed to load item list", error);
       } finally {
         setLoading(false);
       }
@@ -466,8 +506,20 @@ await fetchItemsAndCategories();
     );
   }
 
-  return (
-    <div className="inventory-page">
+return (
+  <div className="inventory-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
+
 <section className="inventory-header-row inventory-header-compact">
   <div className="inventory-title-area inventory-title-area-compact">
     <div className="inventory-header-text">
@@ -495,7 +547,7 @@ await fetchItemsAndCategories();
         Back to Dashboard
       </button>
     </div>
-  </div>
+  </div>        
 </section>
 
       <section className="inventory-tools">
@@ -605,7 +657,7 @@ await fetchItemsAndCategories();
           <button
             type="button"
             className="inventory-refresh-btn"
-            onClick={fetchItemsAndCategories}
+            onClick={() => fetchItemsAndCategories({ showSuccessToast: true })}
             disabled={isDeleteBusy() || loadingMoreItems}
           >
             Refresh

@@ -61,7 +61,7 @@ useEffect(() => {
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      console.error("Session check error:", error);
+      showActionError("Failed to check login session", error);
 
       if (isMounted) {
         setCheckingSession(false);
@@ -79,6 +79,20 @@ useEffect(() => {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  setStatusMessage("");
+  setStatusType("");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  setStatusMessage("");
+  setStatusType("");
+  showToast(message, "error");
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -172,7 +186,7 @@ const userRef = doc(db, "users", userCredential.user.uid);
 const userSnap = await getDoc(userRef);
 
 if (!userSnap.exists()) {
-  showStatus("No user profile found. Please contact the administrator.", "error");
+  showBlockedAction("No user profile found. Please contact the administrator.");
   return;
 }
 
@@ -195,9 +209,8 @@ setTimeout(() => {
 } catch (error) {
   console.error("Login error:", error);
 
-showStatus(
-  "Invalid email or password. Please check your assigned account.",
-  "error"
+showBlockedAction(
+  "Invalid email or password. Please check your assigned account."
 );
 
 } finally {
@@ -218,8 +231,10 @@ if (!isValid) {
     await sendPasswordResetEmail(auth, email.trim());
     showToast("Password reset email sent. Please check your inbox.", "success");
   } catch (error) {
-    console.error(error);
-    showStatus("Failed to send password reset email. Please check your email address.", "error");
+    showActionError(
+      "Failed to send password reset email. Please check your email address.",
+      error
+    );
   } finally {
     setIsLoading(false);
   }

@@ -53,6 +53,19 @@ function AddItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
 
   function clearFieldError(fieldName) {
     setFieldErrors((previousErrors) => ({
@@ -117,7 +130,7 @@ function AddItem() {
 
       setCategories(categoryData);
     } catch (error) {
-      showStatus("Error loading categories: " + error.message, "error");
+      showActionError("Failed to load categories", error);
     } finally {
       setLoadingCategories(false);
     }
@@ -273,12 +286,12 @@ function validateAddItemField(fieldName) {
     showStatus("", "");
 
     if (!file.type.startsWith("image/")) {
-      showStatus("Please upload an image file only.", "error");
+      showBlockedAction("Please upload an image file only.");
       return;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      showStatus("Image is too large. Please upload an image below 8MB.", "error");
+      showBlockedAction("Image is too large. Please upload an image below 8MB.");
       return;
     }
 
@@ -333,31 +346,29 @@ function validateAddItemField(fieldName) {
 
     try {
       if (!isSuperAdmin && !isCategoryAdmin) {
-        showStatus("Only super admins and category admins can add items.", "error");
-        return;
+showBlockedAction("Only super admins and category admins can add items.");
+return;
       }
 
       if (categories.length === 0) {
-        showStatus(
-          "No categories found. Go to User Management and seed or add categories first.",
-          "error"
-        );
-        return;
+showBlockedAction(
+  "No categories found. Go to User Management and seed or add categories first."
+);
+return;
       }
 
       if (availableCategories.length === 0) {
-        showStatus(
-          "You do not have assigned categories yet. Ask the super admin to assign categories first.",
-          "error"
-        );
-        return;
+showBlockedAction(
+  "You do not have assigned categories yet. Ask the super admin to assign categories first."
+);
+return;
       }
 
       const selectedCategory = getSelectedCategory();
 
       if (!selectedCategory) {
-        showStatus("Selected category is invalid.", "error");
-        return;
+showBlockedAction("Selected category is invalid.");
+return;
       }
 
       const finalItemCode = itemCode.trim() || generateItemCode();
@@ -399,7 +410,7 @@ function validateAddItemField(fieldName) {
 showToast("Successfully Created", "success");
 resetForm();
     } catch (error) {
-      showStatus("Error adding item: " + error.message, "error");
+      showActionError("Failed to add item", error);
     } finally {
       submitLockRef.current = false;
       setSubmitting(false);

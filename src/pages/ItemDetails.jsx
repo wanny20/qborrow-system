@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/ItemDetails.css";
 
 
@@ -18,11 +19,27 @@ function ItemDetails() {
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
+  const { showToast } = useToast();
+
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
 
 const isBorrower = userData?.role === "borrower";
+
+function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  setStatusMessage(detailedMessage);
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  setStatusMessage(message);
+  showToast(message, "error");
+}
 
   function getCategoryName(targetItem = item) {
     return (
@@ -83,6 +100,7 @@ const isBorrower = userData?.role === "borrower";
     try {
       if (!id) {
         setItem(null);
+        showBlockedAction("Item ID is missing.");
         return;
       }
 
@@ -105,10 +123,12 @@ const isBorrower = userData?.role === "borrower";
       }
 
       setItem(null);
-    } catch (error) {
-      setStatusMessage("Error loading item: " + error.message);
-      setItem(null);
-    } finally {
+      showBlockedAction("Item not found.");
+
+      } catch (error) {
+        showActionError("Failed to load item", error);
+        setItem(null);
+      } finally {
       setLoading(false);
     }
   }

@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/Dashboard.css";
 
 const emptyDashboardCounts = {
@@ -27,6 +28,8 @@ function Dashboard() {
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
 
+  const { showToast } = useToast();
+
   const currentUser = auth.currentUser;
 
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,11 @@ function Dashboard() {
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
   const isAdmin = isSuperAdmin || isCategoryAdmin;
+
+  function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  showToast(shortMessage, "error");
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -277,7 +285,7 @@ setRequests(mapSnapshot(allRequestsSnapshot));
         await fetchBorrowerDashboardData();
       }
     } catch (error) {
-      alert("Error loading dashboard: " + error.message);
+      showActionError("Failed to load dashboard", error);
     } finally {
       setLoading(false);
     }

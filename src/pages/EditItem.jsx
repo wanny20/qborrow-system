@@ -57,6 +57,21 @@ function EditItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -275,7 +290,7 @@ function validateEditItemForm() {
       setImageFile(null);
       setCropSourceFile(null);
     } catch (error) {
-      showStatus("Error loading item: " + error.message, "error");
+      showActionError("Failed to load item", error);
     } finally {
       setLoading(false);
     }
@@ -292,13 +307,13 @@ function handleImageChange(event) {
     showStatus("", "");
 
     if (!file.type.startsWith("image/")) {
-      showStatus("Please upload an image file only.", "error");
-      return;
+showBlockedAction("Please upload an image file only.");
+return;;
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      showStatus("Image is too large. Please upload an image below 8MB.", "error");
-      return;
+showBlockedAction("Image is too large. Please upload an image below 8MB.");
+return;
     }
 
     setCropSourceFile(file);
@@ -356,43 +371,42 @@ let updatedSuccessfully = false;
 
   try {
     if (!isSuperAdmin && !isCategoryAdmin) {
-      showStatus("Only super admins and category admins can edit items.", "error");
-      return;
+showBlockedAction("Only super admins and category admins can edit items.");
+return;
     }
 
     if (isForbidden) {
-      showStatus("You are not allowed to edit this item.", "error");
-      return;
+showBlockedAction("You are not allowed to edit this item.");
+return;
     }
 
     if (categories.length === 0) {
-      showStatus(
-        "No categories found. Go to User Management and seed or add categories first.",
-        "error"
-      );
-      return;
+showBlockedAction(
+  "No categories found. Go to User Management and seed or add categories first."
+);
+return;
     }
 
     if (!itemName.trim() || !categoryId) {
-      showStatus("Please fill in item name and category.", "error");
-      return;
+showBlockedAction("Please fill in item name and category.");
+return;
     }
 
     if (!maxBorrowDays || Number(maxBorrowDays) <= 0) {
-      showStatus("Max borrow days must be greater than 0.", "error");
-      return;
+showBlockedAction("Max borrow days must be greater than 0.");
+return;
     }
 
     const selectedCategory = getSelectedCategory();
 
     if (!selectedCategory) {
-      showStatus("Selected category is invalid.", "error");
-      return;
+showBlockedAction("Selected category is invalid.");
+return;
     }
 
     if (!canEditCategory(selectedCategory.id, selectedCategory.name)) {
-      showStatus("You cannot move this item to an unassigned category.", "error");
-      return;
+showBlockedAction("You cannot move this item to an unassigned category.");
+return;
     }
 
     const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
@@ -435,7 +449,7 @@ setTimeout(() => {
 }, 700);
 
   } catch (error) {
-    showStatus("Error updating item: " + error.message, "error");
+    showActionError("Failed to update item", error);
   } finally {
     if (!updatedSuccessfully) {
       submitLockRef.current = false;
@@ -448,7 +462,7 @@ setTimeout(() => {
     const idFromUrl = params.get("id");
 
     if (!idFromUrl) {
-      showStatus("No item ID found.", "error");
+      showBlockedAction("No item ID found.");
       setLoading(false);
       return;
     }

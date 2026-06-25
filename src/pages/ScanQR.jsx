@@ -46,6 +46,21 @@ function ScanQR() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -244,7 +259,7 @@ async function createScannerFriendlyImageFile(file) {
     } catch (error) {
       setScannerActive(false);
       setScannerPaused(false);
-      showStatus("Camera could not start: " + error.message, "error");
+      showActionError("Camera could not start", error);
     } finally {
       setStartingScanner(false);
     }
@@ -346,7 +361,7 @@ async function handleDetectedValue(value) {
     }, 600);
   } catch (error) {
     hasScannedRef.current = false;
-    showStatus(error.message, "error");
+    showBlockedAction(error.message || "No matching item found.");
   } finally {
     finishScanAction();
   }
@@ -387,7 +402,7 @@ if (!file.type.startsWith("image/")) {
     ...previousErrors,
     uploadImage: "Please upload an image file only.",
   }));
-  showStatus("Please upload an image file only.", "error");
+  showBlockedAction("Please upload an image file only.");
   event.target.value = "";
   return;
 }
@@ -449,7 +464,7 @@ setFieldErrors({});
   ...previousErrors,
   uploadImage: "Upload scan failed: " + error.message,
 }));
-showStatus("Upload scan failed: " + error.message, "error");
+showActionError("Upload scan failed", error);
   } finally {
     finishScanAction();
     event.target.value = "";
@@ -558,7 +573,10 @@ async function restartScanner() {
             <button
               type="button"
               className="scan-secondary-btn"
-              onClick={() => stopScanner(false)}
+              onClick={async () => {
+                await stopScanner(false);
+                showToast("Scanner stopped.", "success");
+              }}
               disabled={!scannerActive || isSearching}
             >
               Stop Scanning
