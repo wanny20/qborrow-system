@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
+import { useToast } from "./ToastProvider.jsx";
 import "../styles/QRCodeGenerator.css";
 
 function QRCodeGenerator({
@@ -16,8 +17,31 @@ function QRCodeGenerator({
   const qrCanvasRef = useRef(null);
   const barcodeCanvasRef = useRef(null);
 
+  const { showToast } = useToast();
+
   const [statusMessage, setStatusMessage] = useState("");
   const [hasGenerated, setHasGenerated] = useState(false);
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  console.error(shortMessage, error);
+  setStatusMessage(detailedMessage);
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  setStatusMessage(message);
+  showToast(message, "error");
+}
+
+function showActionSuccess(message) {
+  setStatusMessage("");
+  showToast(message, "success");
+}
+
 
   const finalQrValue = useMemo(() => {
     if (qrValue) return qrValue;
@@ -50,7 +74,7 @@ function QRCodeGenerator({
       setHasGenerated(false);
 
       if (!finalQrValue || !finalBarcodeValue) {
-        setStatusMessage("Missing QR or barcode value.");
+        showBlockedAction("Missing QR or barcode value.");
         return;
       }
 
@@ -84,21 +108,29 @@ function QRCodeGenerator({
 
         setHasGenerated(true);
       } catch (error) {
-        console.error("Code generation failed:", error);
-        setStatusMessage("Code generation failed. Please check the item value.");
+        showActionError("Code generation failed", error);
       }
     }
 
     generateCodes();
   }, [finalQrValue, finalBarcodeValue, qrSize, barcodeHeight, compact]);
 
-  function downloadCanvas(canvasRef, filename) {
-    if (!canvasRef.current) return;
+  function downloadCanvas(canvasRef, filename, successMessage) {
+    if (!canvasRef.current || !hasGenerated) {
+      showBlockedAction("Code is not ready yet. Please wait and try again.");
+      return;
+    }
 
-    const link = document.createElement("a");
-    link.download = filename;
-    link.href = canvasRef.current.toDataURL("image/png");
-    link.click();
+    try {
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = canvasRef.current.toDataURL("image/png");
+      link.click();
+
+      showActionSuccess(successMessage);
+    } catch (error) {
+      showActionError("Failed to download code", error);
+    }
   }
 
   function handleDownloadQR() {
@@ -106,7 +138,8 @@ function QRCodeGenerator({
       qrCanvasRef,
       `${sanitizeFileName(displayItemName)}-${sanitizeFileName(
         displayItemCode
-      )}-qr-code.png`
+      )}-qr-code.png`,
+      "QR Code Downloaded"
     );
   }
 
@@ -115,12 +148,16 @@ function QRCodeGenerator({
       barcodeCanvasRef,
       `${sanitizeFileName(displayItemName)}-${sanitizeFileName(
         displayItemCode
-      )}-barcode.png`
+      )}-barcode.png`,
+      "Barcode Downloaded"
     );
   }
 
   function handlePrintLabel() {
-    if (!qrCanvasRef.current || !barcodeCanvasRef.current) return;
+    if (!qrCanvasRef.current || !barcodeCanvasRef.current || !hasGenerated) {
+  showBlockedAction("Code is not ready yet. Please wait and try again.");
+  return;
+}
 
     const qrImage = qrCanvasRef.current.toDataURL("image/png");
     const barcodeImage = barcodeCanvasRef.current.toDataURL("image/png");
@@ -128,7 +165,7 @@ function QRCodeGenerator({
     const printWindow = window.open("", "_blank", "width=700,height=800");
 
     if (!printWindow) {
-      setStatusMessage("Popup blocked. Please allow popups to print labels.");
+      showBlockedAction("Popup blocked. Please allow popups to print labels.");
       return;
     }
 
@@ -208,6 +245,7 @@ function QRCodeGenerator({
     `);
 
     printWindow.document.close();
+    showActionSuccess("Print label opened");
   }
 
   return (

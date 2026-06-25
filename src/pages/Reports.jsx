@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/Reports.css";
 const REPORTS_HISTORY_PAGE_SIZE = 10;
 
@@ -9,14 +10,17 @@ function Reports() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+  const { showToast } = useToast();
 
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
   const [categories, setCategories] = useState([]);
 
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+const [searchTerm, setSearchTerm] = useState("");
+const [statusFilter, setStatusFilter] = useState("All");
+const [dateFrom, setDateFrom] = useState("");
+const [dateTo, setDateTo] = useState("");
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(
     REPORTS_HISTORY_PAGE_SIZE
   );
@@ -180,54 +184,136 @@ function getRequestCategoryName(request) {
     if (record.createdAt?.seconds) return record.createdAt.seconds * 1000;
     return 0;
   }
+function formatDateForInput(dateValue) {
+  if (!dateValue) return "";
 
-  async function fetchReportsData() {
-    setLoading(true);
+  const date = new Date(dateValue);
 
-    try {
-      const [itemsSnapshot, requestsSnapshot, categoriesSnapshot] =
-        await Promise.all([
-          getDocs(collection(db, "items")),
-          getDocs(collection(db, "borrowRequests")),
-          getDocs(collection(db, "categories")),
-        ]);
+  if (Number.isNaN(date.getTime())) return "";
 
-      const itemData = itemsSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-      const requestData = requestsSnapshot.docs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+  return `${year}-${month}-${day}`;
+}
 
-      const categoryData = categoriesSnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter((category) => category.isActive !== false)
-        .sort((a, b) =>
-          String(a.name || "").localeCompare(String(b.name || ""))
-        );
-
-      setItems(itemData);
-      setRequests(requestData);
-      setCategories(categoryData);
-    } catch (error) {
-      alert("Error loading reports: " + error.message);
-    } finally {
-      setLoading(false);
-    }
+function getRequestReportDate(request) {
+  if (request.borrowDate) {
+    return request.borrowDate;
   }
+
+  if (request.createdAt?.toMillis) {
+    return formatDateForInput(request.createdAt.toMillis());
+  }
+
+  if (request.createdAt?.seconds) {
+    return formatDateForInput(request.createdAt.seconds * 1000);
+  }
+
+  return "";
+}
+
+function isRequestInsideDateRange(request) {
+  const reportDate = getRequestReportDate(request);
+
+  if (!reportDate) return true;
+
+  if (dateFrom && reportDate < dateFrom) {
+    return false;
+  }
+
+  if (dateTo && reportDate > dateTo) {
+    return false;
+  }
+
+  return true;
+}
+
+function resetDateRange() {
+  setDateFrom("");
+  setDateTo("");
+}
+
+function getDateRangeLabel() {
+  if (dateFrom && dateTo) {
+    return `${dateFrom} to ${dateTo}`;
+  }
+
+  if (dateFrom) {
+    return `From ${dateFrom}`;
+  }
+
+  if (dateTo) {
+    return `Until ${dateTo}`;
+  }
+
+  return "All dates";
+}
+
+function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+
+  showToast(shortMessage, "error");
+}
+
+function showActionSuccess(message) {
+  showToast(message, "success");
+}
+
+async function fetchReportsData(options = {}) {
+  const { showSuccessToast = false } = options;
+
+  setLoading(true);
+
+  try {
+    const [itemsSnapshot, requestsSnapshot, categoriesSnapshot] =
+      await Promise.all([
+        getDocs(collection(db, "items")),
+        getDocs(collection(db, "borrowRequests")),
+        getDocs(collection(db, "categories")),
+      ]);
+
+    const itemData = itemsSnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    const requestData = requestsSnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    const categoryData = categoriesSnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .filter((category) => category.isActive !== false)
+      .sort((a, b) =>
+        String(a.name || "").localeCompare(String(b.name || ""))
+      );
+
+    setItems(itemData);
+    setRequests(requestData);
+    setCategories(categoryData);
+
+    if (showSuccessToast) {
+      showActionSuccess("Reports Refreshed");
+    }
+  } catch (error) {
+    showActionError("Failed to load reports", error);
+  } finally {
+    setLoading(false);
+  }
+}
 
   useEffect(() => {
     fetchReportsData();
   }, []);
-  useEffect(() => {
+useEffect(() => {
   setVisibleHistoryCount(REPORTS_HISTORY_PAGE_SIZE);
-}, [searchTerm, statusFilter]);
+}, [searchTerm, statusFilter, dateFrom, dateTo]);
 
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
@@ -238,14 +324,16 @@ function getRequestCategoryName(request) {
     );
   }, [items, categories, userData]);
 
-  const visibleRequests = useMemo(() => {
-    return requests.filter((request) =>
-      canCategoryAdminSeeCategory(
-        getRequestCategoryId(request),
-        getRequestCategoryName(request)
-      )
+const visibleRequests = useMemo(() => {
+  return requests.filter((request) => {
+    const canSeeCategory = canCategoryAdminSeeCategory(
+      getRequestCategoryId(request),
+      getRequestCategoryName(request)
     );
-  }, [requests, categories, userData]);
+
+    return canSeeCategory && isRequestInsideDateRange(request);
+  });
+}, [requests, categories, userData, dateFrom, dateTo]);
 
   const availableItems = visibleItems.filter(
     (item) => item.availability === "Available"
@@ -293,6 +381,44 @@ function getRequestCategoryName(request) {
       request.approvalStatus === "Cancelled"
   );
 
+  const activeRequestTotal = approvedRequests.length + borrowedRequests.length;
+
+const returnableRequestTotal =
+  approvedRequests.length + borrowedRequests.length + returnedRequests.length;
+
+const reportStatistics = [
+  {
+    label: "Available Item Rate",
+    value: getPercentage(availableItems.length, visibleItems.length),
+    detail: `${availableItems.length} of ${visibleItems.length} visible items are available.`,
+  },
+  {
+    label: "Borrowed Item Rate",
+    value: getPercentage(borrowedItems.length, visibleItems.length),
+    detail: `${borrowedItems.length} of ${visibleItems.length} visible items are currently borrowed.`,
+  },
+  {
+    label: "Damaged/Lost Rate",
+    value: getPercentage(damagedLostItems.length, visibleItems.length),
+    detail: `${damagedLostItems.length} of ${visibleItems.length} visible items are damaged or lost.`,
+  },
+  {
+    label: "Overdue Active Rate",
+    value: getPercentage(overdueRequests.length, activeRequestTotal),
+    detail: `${overdueRequests.length} of ${activeRequestTotal} active requests are overdue.`,
+  },
+  {
+    label: "Return Completion Rate",
+    value: getPercentage(returnedRequests.length, returnableRequestTotal),
+    detail: `${returnedRequests.length} of ${returnableRequestTotal} release/return records are completed.`,
+  },
+  {
+    label: "Closed Request Rate",
+    value: getPercentage(closedRequests.length, visibleRequests.length),
+    detail: `${closedRequests.length} of ${visibleRequests.length} requests are rejected or cancelled.`,
+  },
+];
+
   const filteredHistory = visibleRequests
     .filter((request) => {
       const searchableText = `
@@ -332,6 +458,252 @@ function handleLoadMoreHistory() {
     Math.min(currentCount + REPORTS_HISTORY_PAGE_SIZE, filteredHistory.length)
   );
 }
+
+function handlePrintReport() {
+  window.print();
+}
+function getCsvDateStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function escapeCsvValue(value) {
+  const cleanedValue = String(value ?? "")
+    .replace(/\r?\n|\r/g, " ")
+    .trim();
+
+  if (
+    cleanedValue.includes(",") ||
+    cleanedValue.includes('"') ||
+    cleanedValue.includes("\n")
+  ) {
+    return `"${cleanedValue.replace(/"/g, '""')}"`;
+  }
+
+  return cleanedValue;
+}
+
+function downloadCsvFile(fileName, headers, rows) {
+  const csvRows = [
+    headers,
+    ...rows,
+  ];
+
+  const csvText = csvRows
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n");
+
+  const blob = new Blob([`\ufeff${csvText}`], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function handleExportBorrowingHistoryCsv() {
+  if (filteredHistory.length === 0) {
+    showToast("No borrowing history records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = [
+      "Item Code",
+      "Item Name",
+      "Borrower",
+      "Email",
+      "User Type",
+      "ID Number",
+      "Course / Department",
+      "Year / Section",
+      "Mobile Number",
+      "Category",
+      "Borrow Date",
+      "Expected Return",
+      "Actual Return",
+      "Status",
+      "Purpose",
+    ];
+
+    const rows = filteredHistory.map((request) => [
+      request.itemCode || request.itemId || "No code",
+      request.itemName || "Untitled Item",
+      request.borrowerName || "Unnamed Borrower",
+      request.borrowerEmail || "No email",
+      getBorrowerUserType(request),
+      getBorrowerIdNumber(request),
+      cleanDisplay(request.borrowerCourseDepartment),
+      getBorrowerYearSection(request),
+      cleanDisplay(request.borrowerMobileNumber),
+      getRequestCategoryName(request),
+      request.borrowDate || "Not set",
+      request.expectedReturnDate || "Not set",
+      request.actualReturnDate || "Not returned",
+      getRequestStatusLabel(request),
+      request.purpose || "No purpose provided",
+    ]);
+
+    downloadCsvFile(
+      `qborrow-borrowing-history-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Borrowing History Exported");
+  } catch (error) {
+    showActionError("Failed to export borrowing history", error);
+  }
+}
+
+function handleExportCategoryReportCsv() {
+  if (categoryReports.length === 0) {
+    showToast("No category report records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = [
+      "Category",
+      "Total Items",
+      "Available",
+      "Reserved",
+      "Borrowed",
+      "Damaged / Lost",
+      "Total Requests",
+    ];
+
+    const rows = categoryReports.map((category) => [
+      category.categoryName,
+      category.totalItems,
+      category.available,
+      category.reserved,
+      category.borrowed,
+      category.damagedLost,
+      category.totalRequests,
+    ]);
+
+    downloadCsvFile(
+      `qborrow-category-report-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Category Report Exported");
+  } catch (error) {
+    showActionError("Failed to export category report", error);
+  }
+}
+
+function handleExportOverdueItemsCsv() {
+  if (overdueRequests.length === 0) {
+    showToast("No overdue item records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = [
+      "Item Code",
+      "Item Name",
+      "Borrower",
+      "Email",
+      "ID Number",
+      "Course / Department",
+      "Category",
+      "Borrow Date",
+      "Expected Return",
+      "Status",
+    ];
+
+    const rows = overdueRequests.map((request) => [
+      request.itemCode || request.itemId || "No code",
+      request.itemName || "Untitled Item",
+      request.borrowerName || "Unnamed Borrower",
+      request.borrowerEmail || "No email",
+      getBorrowerIdNumber(request),
+      cleanDisplay(request.borrowerCourseDepartment),
+      getRequestCategoryName(request),
+      request.borrowDate || "Not set",
+      request.expectedReturnDate || "Not set",
+      getRequestStatusLabel(request),
+    ]);
+
+    downloadCsvFile(
+      `qborrow-overdue-items-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Overdue Items Exported");
+  } catch (error) {
+    showActionError("Failed to export overdue items", error);
+  }
+}
+
+function handleExportDamagedLostCsv() {
+  if (damagedLostItems.length === 0) {
+    showToast("No damaged or lost item records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = [
+      "Item Code",
+      "Item Name",
+      "Category",
+      "Availability",
+      "Condition",
+      "Item ID",
+    ];
+
+    const rows = damagedLostItems.map((item) => [
+      item.itemCode || item.id,
+      item.itemName || "Untitled Item",
+      getItemCategoryName(item),
+      item.availability || "N/A",
+      item.condition || item.availability || "N/A",
+      item.id,
+    ]);
+
+    downloadCsvFile(
+      `qborrow-damaged-lost-items-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Damaged / Lost Items Exported");
+  } catch (error) {
+    showActionError("Failed to export damaged or lost items", error);
+  }
+}
+
+function getPercentage(value, total) {
+  if (!total || total <= 0) return 0;
+
+  return Math.round((value / total) * 100);
+}
+
+function getChartPercent(value, total) {
+  if (!total || total <= 0) return 0;
+
+  return Math.max(4, Math.round((value / total) * 100));
+}
+
+function getReportGeneratedDate() {
+  return new Date().toLocaleString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 
   const frequentlyBorrowedItems = useMemo(() => {
     const countMap = {};
@@ -450,6 +822,99 @@ return Object.values(categoryMap)
   .sort((a, b) => a.categoryName.localeCompare(b.categoryName));
   }, [categories, visibleItems, visibleRequests, userData]);
 
+  const itemAvailabilityChartTotal =
+  availableItems.length +
+  reservedItems.length +
+  borrowedItems.length +
+  damagedLostItems.length;
+
+const itemAvailabilityChart = [
+  {
+    label: "Available",
+    value: availableItems.length,
+    percent: getChartPercent(availableItems.length, itemAvailabilityChartTotal),
+  },
+  {
+    label: "Reserved",
+    value: reservedItems.length,
+    percent: getChartPercent(reservedItems.length, itemAvailabilityChartTotal),
+  },
+  {
+    label: "Borrowed",
+    value: borrowedItems.length,
+    percent: getChartPercent(borrowedItems.length, itemAvailabilityChartTotal),
+  },
+  {
+    label: "Damaged / Lost",
+    value: damagedLostItems.length,
+    percent: getChartPercent(damagedLostItems.length, itemAvailabilityChartTotal),
+  },
+];
+
+const requestStatusChartTotal =
+  pendingRequests.length +
+  approvedRequests.length +
+  borrowedRequests.length +
+  returnedRequests.length +
+  closedRequests.length +
+  overdueRequests.length;
+
+const requestStatusChart = [
+  {
+    label: "Pending",
+    value: pendingRequests.length,
+    percent: getChartPercent(pendingRequests.length, requestStatusChartTotal),
+  },
+  {
+    label: "Approved",
+    value: approvedRequests.length,
+    percent: getChartPercent(approvedRequests.length, requestStatusChartTotal),
+  },
+  {
+    label: "Borrowed",
+    value: borrowedRequests.length,
+    percent: getChartPercent(borrowedRequests.length, requestStatusChartTotal),
+  },
+  {
+    label: "Returned",
+    value: returnedRequests.length,
+    percent: getChartPercent(returnedRequests.length, requestStatusChartTotal),
+  },
+  {
+    label: "Closed",
+    value: closedRequests.length,
+    percent: getChartPercent(closedRequests.length, requestStatusChartTotal),
+  },
+  {
+    label: "Overdue",
+    value: overdueRequests.length,
+    percent: getChartPercent(overdueRequests.length, requestStatusChartTotal),
+  },
+];
+
+const topBorrowedChartMax = Math.max(
+  ...frequentlyBorrowedItems.slice(0, 8).map((item) => item.count),
+  1
+);
+
+const topBorrowedChart = frequentlyBorrowedItems.slice(0, 8).map((item) => ({
+  ...item,
+  percent: getChartPercent(item.count, topBorrowedChartMax),
+}));
+
+const categoryPerformanceMax = Math.max(
+  ...categoryReports.map((category) =>
+    Math.max(category.totalItems, category.totalRequests)
+  ),
+  1
+);
+
+const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => ({
+  ...category,
+  itemPercent: getChartPercent(category.totalItems, categoryPerformanceMax),
+  requestPercent: getChartPercent(category.totalRequests, categoryPerformanceMax),
+}));
+
   if (loading) {
     return (
       <div className="reports-loading">
@@ -464,6 +929,273 @@ return Object.values(categoryMap)
 
   return (
     <div className="reports-page">
+      <div className="reports-print-only reports-print-header">
+  <h1>QBorrow Reports</h1>
+  <p>QR-Based Digital Borrowing System</p>
+  <span>Generated: {getReportGeneratedDate()}</span>
+  <span>Report Range: {getDateRangeLabel()}</span>
+
+  {isCategoryAdmin && (
+    <strong>Assigned categories: {getAssignedCategoryNames()}</strong>
+  )}
+</div>
+<div className="reports-print-only reports-formal-report">
+  <section className="reports-print-section">
+    <h2>Inventory Summary</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Total Items</th>
+          <th>Available</th>
+          <th>Reserved</th>
+          <th>Borrowed</th>
+          <th>Overdue</th>
+          <th>Damaged / Lost</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>{visibleItems.length}</td>
+          <td>{availableItems.length}</td>
+          <td>{reservedItems.length}</td>
+          <td>{borrowedItems.length}</td>
+          <td>{overdueRequests.length}</td>
+          <td>{damagedLostItems.length}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+    <h2>Borrow Request Summary</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Pending</th>
+          <th>Approved</th>
+          <th>Active Borrowed</th>
+          <th>Returned</th>
+          <th>Closed</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>{pendingRequests.length}</td>
+          <td>{approvedRequests.length}</td>
+          <td>{borrowedRequests.length}</td>
+          <td>{returnedRequests.length}</td>
+          <td>{closedRequests.length}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+  <h2>Statistics Overview</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Statistic</th>
+        <th>Percentage</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {reportStatistics.map((statistic) => (
+        <tr key={statistic.label}>
+          <td>{statistic.label}</td>
+          <td>{statistic.value}%</td>
+          <td>{statistic.detail}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</section>
+
+  <section className="reports-print-section">
+    <h2>Category Report</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Total Items</th>
+          <th>Available</th>
+          <th>Reserved</th>
+          <th>Borrowed</th>
+          <th>Damaged / Lost</th>
+          <th>Total Requests</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {categoryReports.length === 0 ? (
+          <tr>
+            <td colSpan="7">No category data available.</td>
+          </tr>
+        ) : (
+          categoryReports.map((category) => (
+            <tr key={category.categoryId}>
+              <td>{category.categoryName}</td>
+              <td>{category.totalItems}</td>
+              <td>{category.available}</td>
+              <td>{category.reserved}</td>
+              <td>{category.borrowed}</td>
+              <td>{category.damagedLost}</td>
+              <td>{category.totalRequests}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+    <h2>Frequently Borrowed Items</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Borrow Count</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {frequentlyBorrowedItems.length === 0 ? (
+          <tr>
+            <td colSpan="4">No borrowed item records available.</td>
+          </tr>
+        ) : (
+          frequentlyBorrowedItems.slice(0, 10).map((item, index) => (
+            <tr key={item.itemKey}>
+              <td>{index + 1}</td>
+              <td>{item.itemName}</td>
+              <td>{item.categoryName}</td>
+              <td>{item.count}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+    <h2>Overdue Items</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Borrower</th>
+          <th>Email</th>
+          <th>ID Number</th>
+          <th>Course / Department</th>
+          <th>Expected Return</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {overdueRequests.length === 0 ? (
+          <tr>
+            <td colSpan="6">No overdue items.</td>
+          </tr>
+        ) : (
+          overdueRequests.map((request) => (
+            <tr key={request.id}>
+              <td>{request.itemName || "Untitled Item"}</td>
+              <td>{request.borrowerName || "Unnamed Borrower"}</td>
+              <td>{request.borrowerEmail || "No email"}</td>
+              <td>{getBorrowerIdNumber(request)}</td>
+              <td>{cleanDisplay(request.borrowerCourseDepartment)}</td>
+              <td>{request.expectedReturnDate || "Not set"}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+    <h2>Borrowing History</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Borrower</th>
+          <th>Category</th>
+          <th>Borrow Date</th>
+          <th>Expected Return</th>
+          <th>Actual Return</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {filteredHistory.length === 0 ? (
+          <tr>
+            <td colSpan="7">No borrowing history found.</td>
+          </tr>
+        ) : (
+          filteredHistory.map((request) => (
+            <tr key={request.id}>
+              <td>{request.itemName || "Untitled Item"}</td>
+              <td>{request.borrowerName || request.borrowerEmail || "Borrower"}</td>
+              <td>{getRequestCategoryName(request)}</td>
+              <td>{request.borrowDate || "Not set"}</td>
+              <td>{request.expectedReturnDate || "Not set"}</td>
+              <td>{request.actualReturnDate || "Not returned"}</td>
+              <td>{getRequestStatusLabel(request)}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+
+  <section className="reports-print-section">
+    <h2>Damaged / Lost Items</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Availability</th>
+          <th>Condition</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {damagedLostItems.length === 0 ? (
+          <tr>
+            <td colSpan="5">No damaged or lost items.</td>
+          </tr>
+        ) : (
+          damagedLostItems.map((item) => (
+            <tr key={item.id}>
+              <td>{item.itemCode || item.id}</td>
+              <td>{item.itemName || "Untitled Item"}</td>
+              <td>{getItemCategoryName(item)}</td>
+              <td>{item.availability || "N/A"}</td>
+              <td>{item.condition || item.availability || "N/A"}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+</div>
       {viewingHistoryRequest && (
   <div
     className="reports-history-modal-backdrop"
@@ -650,12 +1382,124 @@ return Object.values(categoryMap)
       )}
     </div>
 
+<div className="reports-header-actions">
+  <button
+    type="button"
+    className="reports-secondary-btn reports-header-back-btn"
+    onClick={() => navigate("/dashboard")}
+  >
+    Back to Dashboard
+  </button>
+</div>
+  </div>
+</section>
+
+<section className="reports-panel reports-export-panel reports-control-export-panel">
+  <div className="reports-section-heading">
+    <div>
+      <h2>Report Controls & Export</h2>
+      <p>
+        Filter reports by date range, print a PDF copy, or download report
+        records as CSV files.
+      </p>
+    </div>
+  </div>
+
+  <div className="reports-export-control-grid">
+    <div>
+      <label className="qb-label" htmlFor="reports-date-from">
+        From Date
+      </label>
+
+      <input
+        id="reports-date-from"
+        type="date"
+        value={dateFrom}
+        onChange={(event) => setDateFrom(event.target.value)}
+      />
+    </div>
+
+    <div>
+      <label className="qb-label" htmlFor="reports-date-to">
+        To Date
+      </label>
+
+      <input
+        id="reports-date-to"
+        type="date"
+        value={dateTo}
+        onChange={(event) => setDateTo(event.target.value)}
+      />
+    </div>
+
+<button
+  type="button"
+  className="reports-refresh-btn"
+  onClick={() => fetchReportsData({ showSuccessToast: true })}
+>
+  Refresh
+</button>
+
     <button
       type="button"
-      className="reports-secondary-btn reports-header-back-btn"
-      onClick={() => navigate("/dashboard")}
+      className="reports-secondary-btn reports-reset-date-btn"
+      onClick={resetDateRange}
+      disabled={!dateFrom && !dateTo}
     >
-      Back to Dashboard
+      Reset Date
+    </button>
+  </div>
+
+  <div className="reports-export-range-row">
+    <div className="reports-date-range-note reports-compact-range-note">
+      <span>Showing report range:</span>
+      <strong>{getDateRangeLabel()}</strong>
+    </div>
+
+    <button
+      type="button"
+      className="reports-secondary-btn reports-print-btn reports-inline-print-btn"
+      onClick={handlePrintReport}
+    >
+      Print / Save PDF
+    </button>
+  </div>
+
+  <div className="reports-export-grid">
+    <button
+      type="button"
+      className="reports-secondary-btn"
+      onClick={handleExportBorrowingHistoryCsv}
+      disabled={filteredHistory.length === 0}
+    >
+      Export Borrowing History
+    </button>
+
+    <button
+      type="button"
+      className="reports-secondary-btn"
+      onClick={handleExportCategoryReportCsv}
+      disabled={categoryReports.length === 0}
+    >
+      Export Category Report
+    </button>
+
+    <button
+      type="button"
+      className="reports-secondary-btn"
+      onClick={handleExportOverdueItemsCsv}
+      disabled={overdueRequests.length === 0}
+    >
+      Export Overdue Items
+    </button>
+
+    <button
+      type="button"
+      className="reports-secondary-btn"
+      onClick={handleExportDamagedLostCsv}
+      disabled={damagedLostItems.length === 0}
+    >
+      Export Damaged / Lost
     </button>
   </div>
 </section>
@@ -730,50 +1574,158 @@ return Object.values(categoryMap)
         </div>
       </section>
 
-      <section className="reports-tools">
-        <div>
-          <label className="qb-label" htmlFor="reports-search">
-            Search History
-          </label>
+      <section className="reports-panel reports-statistics-panel">
+  <div className="reports-section-heading">
+    <div>
+      <h2>Statistics Overview</h2>
+      <p>
+        Percentage analytics based on the current visible report range and
+        category permissions.
+      </p>
+    </div>
+  </div>
 
-          <input
-            id="reports-search"
-            type="text"
-            placeholder="Search item, borrower, purpose, category..."
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
+  <div className="reports-statistics-grid">
+    {reportStatistics.map((statistic) => (
+      <article className="reports-statistics-card" key={statistic.label}>
+        <div className="reports-statistics-card-top">
+          <h3>{statistic.label}</h3>
+          <strong>{statistic.value}%</strong>
         </div>
 
-        <div>
-          <label className="qb-label" htmlFor="reports-status-filter">
-            Request Status
-          </label>
-
-          <select
-            id="reports-status-filter"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-          >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Borrowed">Borrowed</option>
-            <option value="Returned">Returned</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Overdue">Overdue</option>
-          </select>
+        <div className="reports-statistics-bar">
+          <span style={{ width: `${statistic.value}%` }}></span>
         </div>
 
-        <button
-          type="button"
-          className="reports-refresh-btn"
-          onClick={fetchReportsData}
-        >
-          Refresh
-        </button>
-      </section>
+        <p>{statistic.detail}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<section className="reports-panel reports-chart-panel">
+  <div className="reports-section-heading">
+    <div>
+      <h2>Visual Analytics</h2>
+      <p>
+        Simple chart overview of item availability, request status, frequently
+        borrowed items, and category performance.
+      </p>
+    </div>
+  </div>
+
+  <div className="reports-chart-grid">
+    <article className="reports-chart-card">
+      <div className="reports-chart-card-heading">
+        <h3>Item Availability</h3>
+        <span>{itemAvailabilityChartTotal} records</span>
+      </div>
+
+      <div className="reports-chart-list">
+        {itemAvailabilityChart.map((item) => (
+          <div className="reports-chart-row" key={item.label}>
+            <div className="reports-chart-row-label">
+              <strong>{item.label}</strong>
+              <span>{item.value}</span>
+            </div>
+
+            <div className="reports-chart-bar">
+              <span style={{ width: `${item.percent}%` }}></span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+
+    <article className="reports-chart-card">
+      <div className="reports-chart-card-heading">
+        <h3>Request Status</h3>
+        <span>{requestStatusChartTotal} records</span>
+      </div>
+
+      <div className="reports-chart-list">
+        {requestStatusChart.map((request) => (
+          <div className="reports-chart-row" key={request.label}>
+            <div className="reports-chart-row-label">
+              <strong>{request.label}</strong>
+              <span>{request.value}</span>
+            </div>
+
+            <div className="reports-chart-bar">
+              <span style={{ width: `${request.percent}%` }}></span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+
+    <article className="reports-chart-card">
+      <div className="reports-chart-card-heading">
+        <h3>Top Borrowed Items</h3>
+        <span>Top {topBorrowedChart.length}</span>
+      </div>
+
+      {topBorrowedChart.length === 0 ? (
+        <div className="reports-chart-empty">No borrowed item data yet.</div>
+      ) : (
+        <div className="reports-chart-list">
+          {topBorrowedChart.map((item) => (
+            <div className="reports-chart-row" key={item.itemKey}>
+              <div className="reports-chart-row-label">
+                <strong>{item.itemName}</strong>
+                <span>{item.count}</span>
+              </div>
+
+              <div className="reports-chart-bar">
+                <span style={{ width: `${item.percent}%` }}></span>
+              </div>
+
+              <small>{item.categoryName}</small>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+
+    <article className="reports-chart-card">
+      <div className="reports-chart-card-heading">
+        <h3>Category Performance</h3>
+        <span>Top {categoryPerformanceChart.length}</span>
+      </div>
+
+      {categoryPerformanceChart.length === 0 ? (
+        <div className="reports-chart-empty">No category data yet.</div>
+      ) : (
+        <div className="reports-chart-list">
+          {categoryPerformanceChart.map((category) => (
+            <div className="reports-chart-row" key={category.categoryId}>
+              <div className="reports-chart-row-label">
+                <strong>{category.categoryName}</strong>
+                <span>{category.totalRequests} req.</span>
+              </div>
+
+              <div className="reports-chart-dual">
+                <div>
+                  <small>Items</small>
+                  <div className="reports-chart-bar">
+                    <span style={{ width: `${category.itemPercent}%` }}></span>
+                  </div>
+                </div>
+
+                <div>
+                  <small>Requests</small>
+                  <div className="reports-chart-bar">
+                    <span style={{ width: `${category.requestPercent}%` }}></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  </div>
+</section>
 
       <section className="reports-panel">
         <div className="reports-section-heading">
@@ -782,6 +1734,7 @@ return Object.values(categoryMap)
             <p>Item and request totals grouped by active category.</p>
           </div>
         </div>
+        
 
         {categoryReports.length === 0 ? (
           <div className="reports-empty">
@@ -905,6 +1858,54 @@ return Object.values(categoryMap)
             </p>
           </div>
         </div>
+        <div className="reports-history-controls">
+  <div>
+    <label className="qb-label" htmlFor="reports-search">
+      Search History
+    </label>
+
+    <input
+      id="reports-search"
+      type="text"
+      placeholder="Search item, borrower, purpose, category..."
+      value={searchTerm}
+      onChange={(event) => setSearchTerm(event.target.value)}
+    />
+  </div>
+
+  <div>
+    <label className="qb-label" htmlFor="reports-status-filter">
+      Request Status
+    </label>
+
+    <select
+      id="reports-status-filter"
+      value={statusFilter}
+      onChange={(event) => setStatusFilter(event.target.value)}
+    >
+      <option value="All">All Statuses</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Borrowed">Borrowed</option>
+      <option value="Returned">Returned</option>
+      <option value="Rejected">Rejected</option>
+      <option value="Cancelled">Cancelled</option>
+      <option value="Overdue">Overdue</option>
+    </select>
+  </div>
+
+  <button
+    type="button"
+    className="reports-secondary-btn reports-clear-history-filter-btn"
+    onClick={() => {
+      setSearchTerm("");
+      setStatusFilter("All");
+    }}
+    disabled={!searchTerm && statusFilter === "All"}
+  >
+    Clear Filter
+  </button>
+</div>
 
         {filteredHistory.length === 0 ? (
           <div className="reports-empty">
@@ -998,6 +1999,7 @@ return Object.values(categoryMap)
             <p>Items currently marked as damaged or lost.</p>
           </div>
         </div>
+        
 
         {damagedLostItems.length === 0 ? (
           <div className="reports-empty">

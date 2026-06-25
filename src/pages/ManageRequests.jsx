@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ManageRequests.css";
 
 const MANAGE_REQUESTS_PAGE_SIZE = 6;
@@ -79,6 +80,9 @@ function ManageRequests() {
   const [statusType, setStatusType] = useState("");
   const [viewingRequest, setViewingRequest] = useState(null);
 
+  const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
+
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const actionLockRef = useRef("");
 
@@ -86,6 +90,42 @@ function ManageRequests() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
+
   function startRequestAction(requestId, actionType) {
   if (actionLockRef.current) {
     return false;
@@ -459,7 +499,7 @@ async function fetchRequests(mode = "reset", selectedStatus = statusFilter) {
       setRequests(requestData);
     }
   } catch (error) {
-    showStatus("Error loading requests: " + error.message, "error");
+    showActionError("Failed to load requests", error);
   } finally {
     setLoading(false);
     setLoadingMoreRequests(false);
@@ -478,291 +518,306 @@ async function handleApproveRequest(request) {
   if (hasActiveRequestAction()) return;
 
   if (request.approvalStatus !== "Pending") {
-    showStatus("Only pending requests can be approved.", "error");
+    showBlockedAction("Only pending requests can be approved.");
     return;
   }
 
-  const started = startRequestAction(request.id, "approve");
+  openConfirmAction({
+    title: "Approve Borrow Request?",
+    message: `Approve ${
+      request.borrowerName || request.borrowerEmail || "this borrower"
+    }'s request for ${request.itemName || "this item"}?`,
+    confirmText: "Approve Request",
+    danger: false,
+    onConfirm: async () => {
+      const started = startRequestAction(request.id, "approve");
 
-  if (!started) return;
+      if (!started) return;
 
-  try {
-    const confirmApprove = window.confirm(
-      `Approve ${request.borrowerName || request.borrowerEmail}'s request for ${request.itemName}?`
-    );
+      try {
+        showStatus("", "");
 
-    if (!confirmApprove) return;
+        const requestRef = doc(db, "borrowRequests", request.id);
+        const latestRequestSnap = await getDoc(requestRef);
 
-    showStatus("", "");
+        if (!latestRequestSnap.exists()) {
+          showBlockedAction("This request no longer exists.");
+          return;
+        }
 
-    const requestRef = doc(db, "borrowRequests", request.id);
-    const latestRequestSnap = await getDoc(requestRef);
+        const latestRequest = {
+          id: latestRequestSnap.id,
+          ...latestRequestSnap.data(),
+        };
 
-    if (!latestRequestSnap.exists()) {
-      showStatus("This request no longer exists.", "error");
-      return;
-    }
+        if (latestRequest.approvalStatus !== "Pending") {
+          showBlockedAction(
+            `This request is already ${latestRequest.approvalStatus}. Refreshing list...`
+          );
+          await fetchRequests("reset", statusFilter);
+          return;
+        }
 
-    const latestRequest = {
-      id: latestRequestSnap.id,
-      ...latestRequestSnap.data(),
-    };
+        const itemRef = doc(db, "items", latestRequest.itemId);
+        const itemSnap = await getDoc(itemRef);
 
-    if (latestRequest.approvalStatus !== "Pending") {
-      showStatus(
-        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
-        "error"
-      );
-      await fetchRequests();
-      return;
-    }
+        if (!itemSnap.exists()) {
+          showBlockedAction("Item not found. This request cannot be approved.");
+          return;
+        }
 
-    const itemRef = doc(db, "items", latestRequest.itemId);
-    const itemSnap = await getDoc(itemRef);
+        await runTransaction(db, async (transaction) => {
+          const freshRequestSnap = await transaction.get(requestRef);
+          const freshItemSnap = await transaction.get(itemRef);
 
-    if (!itemSnap.exists()) {
-      showStatus("Item not found. This request cannot be approved.", "error");
-      return;
-    }
+          if (!freshRequestSnap.exists()) {
+            throw new Error("This request no longer exists.");
+          }
 
-await runTransaction(db, async (transaction) => {
-  const freshRequestSnap = await transaction.get(requestRef);
-  const freshItemSnap = await transaction.get(itemRef);
+          if (!freshItemSnap.exists()) {
+            throw new Error("Item not found. This request cannot be approved.");
+          }
 
-  if (!freshRequestSnap.exists()) {
-    throw new Error("This request no longer exists.");
-  }
+          const freshRequest = freshRequestSnap.data();
+          const freshItem = freshItemSnap.data();
 
-  if (!freshItemSnap.exists()) {
-    throw new Error("Item not found. This request cannot be approved.");
-  }
+          if (freshRequest.approvalStatus !== "Pending") {
+            throw new Error(
+              `This request is already ${freshRequest.approvalStatus}.`
+            );
+          }
 
-  const freshRequest = freshRequestSnap.data();
-  const freshItem = freshItemSnap.data();
+          if (freshItem.availability !== "Available") {
+            throw new Error(
+              `This item is currently ${freshItem.availability}. Only available items can be approved.`
+            );
+          }
 
-  if (freshRequest.approvalStatus !== "Pending") {
-    throw new Error(
-      `This request is already ${freshRequest.approvalStatus}.`
-    );
-  }
+          transaction.update(requestRef, {
+            approvalStatus: "Approved",
+            assignedAdminId: getAdminId(),
+            approvedBy: getAdminId(),
+            approvedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
 
-  if (freshItem.availability !== "Available") {
-    throw new Error(
-      `This item is currently ${freshItem.availability}. Only available items can be approved.`
-    );
-  }
+          transaction.update(itemRef, {
+            availability: "Reserved",
+            updatedAt: serverTimestamp(),
+          });
+        });
 
-  transaction.update(requestRef, {
-    approvalStatus: "Approved",
-    assignedAdminId: getAdminId(),
-    approvedBy: getAdminId(),
-    approvedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
+        await addDoc(collection(db, "notifications"), {
+          userId: latestRequest.borrowerId,
+          targetRole: "borrower",
+          categoryId: getRequestCategoryId(latestRequest),
+          title: "Borrow Request Approved",
+          message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
+          status: "Unread",
+          createdAt: serverTimestamp(),
+          link: "/my-requests",
+        });
+
+        await autoRejectOtherPendingRequests(latestRequest);
+
+        showToast(
+          "Request Approved. Other pending requests were auto-rejected.",
+          "success"
+        );
+
+        await fetchRequests("reset", statusFilter);
+      } catch (error) {
+        showActionError("Failed to approve request", error);
+      } finally {
+        finishRequestAction();
+      }
+    },
   });
-
-  transaction.update(itemRef, {
-    availability: "Reserved",
-    updatedAt: serverTimestamp(),
-  });
-});
-
-await addDoc(collection(db, "notifications"), {
-  userId: latestRequest.borrowerId,
-  targetRole: "borrower",
-  categoryId: getRequestCategoryId(latestRequest),
-  title: "Borrow Request Approved",
-  message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
-  status: "Unread",
-  createdAt: serverTimestamp(),
-  link: "/my-requests",
-});
-
-await autoRejectOtherPendingRequests(latestRequest);
-
-showToast(
-  "Request Approved. Other pending requests were auto-rejected.",
-  "success"
-);
-
-await fetchRequests("reset", statusFilter);
-
-  } catch (error) {
-    showStatus("Error approving request: " + error.message, "error");
-  } finally {
-    finishRequestAction();
-  }
 }
 
 async function handleReleaseRequest(request) {
   if (hasActiveRequestAction()) return;
 
   if (request.approvalStatus !== "Approved") {
-    showStatus("Only approved requests can be released.", "error");
+    showBlockedAction("Only approved requests can be released.");
     return;
   }
 
-  const started = startRequestAction(request.id, "release");
+  openConfirmAction({
+    title: "Release Item?",
+    message: `Release ${request.itemName || "this item"} to ${
+      request.borrowerName || request.borrowerEmail || "this borrower"
+    }? This will mark the request as Borrowed.`,
+    confirmText: "Release Item",
+    danger: false,
+    onConfirm: async () => {
+      const started = startRequestAction(request.id, "release");
 
-  if (!started) return;
+      if (!started) return;
 
-  try {
-    const confirmRelease = window.confirm(
-      `Release ${request.itemName} to ${request.borrowerName || request.borrowerEmail}? This will mark the request as Borrowed.`
-    );
+      try {
+        showStatus("", "");
 
-    if (!confirmRelease) return;
+        const requestRef = doc(db, "borrowRequests", request.id);
+        const latestRequestSnap = await getDoc(requestRef);
 
-    showStatus("", "");
+        if (!latestRequestSnap.exists()) {
+          showBlockedAction("This request no longer exists.");
+          return;
+        }
 
-    const requestRef = doc(db, "borrowRequests", request.id);
-    const latestRequestSnap = await getDoc(requestRef);
+        const latestRequest = {
+          id: latestRequestSnap.id,
+          ...latestRequestSnap.data(),
+        };
 
-    if (!latestRequestSnap.exists()) {
-      showStatus("This request no longer exists.", "error");
-      return;
-    }
+        if (latestRequest.approvalStatus !== "Approved") {
+          showBlockedAction(
+            `This request is already ${latestRequest.approvalStatus}. Refreshing list...`
+          );
+          await fetchRequests("reset", statusFilter);
+          return;
+        }
 
-    const latestRequest = {
-      id: latestRequestSnap.id,
-      ...latestRequestSnap.data(),
-    };
+        const itemRef = doc(db, "items", latestRequest.itemId);
+        const itemSnap = await getDoc(itemRef);
 
-    if (latestRequest.approvalStatus !== "Approved") {
-      showStatus(
-        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
-        "error"
-      );
-      await fetchRequests();
-      return;
-    }
+        if (!itemSnap.exists()) {
+          showBlockedAction("Item not found. This request cannot be released.");
+          return;
+        }
 
-    const itemRef = doc(db, "items", latestRequest.itemId);
-    const itemSnap = await getDoc(itemRef);
+        const itemData = itemSnap.data();
 
-    if (!itemSnap.exists()) {
-      showStatus("Item not found. This request cannot be released.", "error");
-      return;
-    }
+        if (itemData.availability !== "Reserved") {
+          showBlockedAction(
+            `This item is currently ${itemData.availability}. Only reserved items can be released.`
+          );
+          return;
+        }
 
-    const itemData = itemSnap.data();
+        await updateDoc(requestRef, {
+          approvalStatus: "Borrowed",
+          releasedBy: getAdminId(),
+          releasedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
 
-if (itemData.availability !== "Reserved") {
-  showStatus(
-    `This item is currently ${itemData.availability}. Only reserved items can be released.`,
-    "error"
-  );
-  return;
-}
+        await updateDoc(itemRef, {
+          availability: "Borrowed",
+          updatedAt: serverTimestamp(),
+        });
 
-    await updateDoc(requestRef, {
-      approvalStatus: "Borrowed",
-      releasedBy: getAdminId(),
-      releasedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+        await addDoc(collection(db, "notifications"), {
+          userId: latestRequest.borrowerId,
+          targetRole: "borrower",
+          categoryId: getRequestCategoryId(latestRequest),
+          title: "Item Released",
+          message: `${latestRequest.itemName} has been released to you. Please return it on or before ${
+            latestRequest.expectedReturnDate || "the expected return date"
+          }.`,
+          status: "Unread",
+          createdAt: serverTimestamp(),
+          link: "/my-requests",
+        });
 
-    await updateDoc(itemRef, {
-      availability: "Borrowed",
-      updatedAt: serverTimestamp(),
-    });
-
-    await addDoc(collection(db, "notifications"), {
-      userId: latestRequest.borrowerId,
-      targetRole: "borrower",
-      categoryId: getRequestCategoryId(latestRequest),
-      title: "Item Released",
-      message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate || "the expected return date"}.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/my-requests",
-    });
-
-showToast("Item Released", "success");
-await fetchRequests();
-  } catch (error) {
-    showStatus("Error releasing item: " + error.message, "error");
-  } finally {
-    finishRequestAction();
-  }
+        showToast("Item Released", "success");
+        await fetchRequests("reset", statusFilter);
+      } catch (error) {
+        showActionError("Failed to release item", error);
+      } finally {
+        finishRequestAction();
+      }
+    },
+  });
 }
 
 async function handleRejectRequest(request) {
   if (hasActiveRequestAction()) return;
 
   if (request.approvalStatus !== "Pending") {
-    showStatus("Only pending requests can be rejected.", "error");
+    showBlockedAction("Only pending requests can be rejected.");
     return;
   }
 
-  const started = startRequestAction(request.id, "reject");
+  openConfirmAction({
+    title: "Reject Borrow Request?",
+    message: `Reject ${
+      request.borrowerName || request.borrowerEmail || "this borrower"
+    }'s request for ${request.itemName || "this item"}?`,
+    confirmText: "Reject Request",
+    danger: true,
+    onConfirm: async () => {
+      const started = startRequestAction(request.id, "reject");
 
-  if (!started) return;
+      if (!started) return;
 
-  try {
-    const confirmReject = window.confirm(
-      `Reject ${request.borrowerName || request.borrowerEmail}'s request for ${request.itemName}?`
-    );
+      try {
+        showStatus("", "");
 
-    if (!confirmReject) return;
+        const requestRef = doc(db, "borrowRequests", request.id);
+        const latestRequestSnap = await getDoc(requestRef);
 
-    showStatus("", "");
+        if (!latestRequestSnap.exists()) {
+          showBlockedAction("This request no longer exists.");
+          return;
+        }
 
-    const requestRef = doc(db, "borrowRequests", request.id);
-    const latestRequestSnap = await getDoc(requestRef);
+        const latestRequest = {
+          id: latestRequestSnap.id,
+          ...latestRequestSnap.data(),
+        };
 
-    if (!latestRequestSnap.exists()) {
-      showStatus("This request no longer exists.", "error");
-      return;
-    }
+        if (latestRequest.approvalStatus !== "Pending") {
+          showBlockedAction(
+            `This request is already ${latestRequest.approvalStatus}. Refreshing list...`
+          );
+          await fetchRequests("reset", statusFilter);
+          return;
+        }
 
-    const latestRequest = {
-      id: latestRequestSnap.id,
-      ...latestRequestSnap.data(),
-    };
+        await updateDoc(requestRef, {
+          approvalStatus: "Rejected",
+          rejectedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
 
-    if (latestRequest.approvalStatus !== "Pending") {
-      showStatus(
-        `This request is already ${latestRequest.approvalStatus}. Refreshing list...`,
-        "error"
-      );
-      await fetchRequests();
-      return;
-    }
+        await addDoc(collection(db, "notifications"), {
+          userId: latestRequest.borrowerId,
+          targetRole: "borrower",
+          categoryId: getRequestCategoryId(latestRequest),
+          title: "Borrow Request Rejected",
+          message: `Your request for ${latestRequest.itemName} has been rejected.`,
+          status: "Unread",
+          createdAt: serverTimestamp(),
+          link: "/my-requests",
+        });
 
-    await updateDoc(requestRef, {
-      approvalStatus: "Rejected",
-      rejectedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    await addDoc(collection(db, "notifications"), {
-      userId: latestRequest.borrowerId,
-      targetRole: "borrower",
-      categoryId: getRequestCategoryId(latestRequest),
-      title: "Borrow Request Rejected",
-      message: `Your request for ${latestRequest.itemName} has been rejected.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/my-requests",
-    });
-
-showToast("Request Rejected", "success");
-await fetchRequests();
-
-  } catch (error) {
-    showStatus("Error rejecting request: " + error.message, "error");
-  } finally {
-    finishRequestAction();
-  }
+        showToast("Request Rejected", "success");
+        await fetchRequests("reset", statusFilter);
+      } catch (error) {
+        showActionError("Failed to reject request", error);
+      } finally {
+        finishRequestAction();
+      }
+    },
+  });
 }
 
 useEffect(() => {
   async function loadRequests() {
-    await autoRejectExpiredPendingRequests();
-    await fetchRequests();
+    try {
+      await autoRejectExpiredPendingRequests();
+      await fetchRequests();
+    } catch (error) {
+      showActionError("Failed to prepare borrow requests", error);
+      setLoading(false);
+      setLoadingMoreRequests(false);
+    }
   }
 
   loadRequests();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
   useEffect(() => {
@@ -836,8 +891,19 @@ const requestStats = serverRequestStats;
     );
   }
 
-  return (
-    <div className="manage-requests-page">
+return (
+  <div className="manage-requests-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
 <section className="manage-requests-header manage-requests-header-compact">
   <div className="manage-requests-header-content">
 <div className="manage-requests-header-text">

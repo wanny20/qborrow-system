@@ -21,6 +21,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, secondaryAuth, functions } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/UserManagement.css";
 
 const USERS_PAGE_SIZE = 5;
@@ -111,11 +112,48 @@ const [categoryTouched, setCategoryTouched] = useState(false);
 const [csvTouched, setCsvTouched] = useState(false);
 const [editTouched, setEditTouched] = useState(false);
 const [showToolCloseConfirm, setShowToolCloseConfirm] = useState(false);
+const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
 
 function markCreateChanged() {
   setCreateTouched(true);
@@ -979,13 +1017,14 @@ setCreating(true);
         suspendedUntil: "",
         suspensionReason: "",
         canBorrow: true,
-termsAccepted: false,
-termsAcceptedAt: "",
-termsVersion: "1.0",
-mustChangePassword: true,
-passwordChangedAt: "",
-createdAt: serverTimestamp(),
-updatedAt: serverTimestamp(),
+        isActive: true,
+        termsAccepted: false,
+        termsAcceptedAt: "",
+        termsVersion: "1.0",
+        mustChangePassword: true,
+        passwordChangedAt: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       await signOut(secondaryAuth);
@@ -1009,40 +1048,40 @@ updatedAt: serverTimestamp(),
   return;
 }
 
-showStatus("Error creating user: " + error.message, "error");
+showActionError("Failed to create user", error);
     } finally {
       setCreating(false);
     }
   }
 
-  async function handleSeedCategories() {
-    const confirmSeed = window.confirm(
-      "Seed default categories: Sports, Laboratory, STEM, and IT?"
-    );
+async function handleSeedCategories() {
+  openConfirmAction({
+    title: "Add Default Categories?",
+    message: "Seed default categories: Sports, Laboratory, STEM, and IT?",
+    confirmText: "Add Defaults",
+    danger: false,
+    onConfirm: async () => {
+      setCategoryAction("seed");
+      showStatus("", "");
 
-    if (!confirmSeed) return;
+      try {
+        const seedDefaultCategories = httpsCallable(
+          functions,
+          "seedDefaultCategories"
+        );
 
-    setCategoryAction("seed");
-    showStatus("", "");
+        await seedDefaultCategories();
 
-    try {
-      const seedDefaultCategories = httpsCallable(
-        functions,
-        "seedDefaultCategories"
-      );
-
-      await seedDefaultCategories();
-
-      showToast("Default Categories Ready", "success");
-      fetchData();
-
-    } catch (error) {
-      showStatus("Error seeding categories: " + error.message, "error");
-    } finally {
-      setCategoryAction("");
-    }
-  }
-
+        showToast("Default Categories Ready", "success");
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to add default categories", error);
+      } finally {
+        setCategoryAction("");
+      }
+    },
+  });
+}
 async function handleAddCategory(event) {
   event.preventDefault();
   showStatus("", "");
@@ -1067,48 +1106,48 @@ async function handleAddCategory(event) {
       fetchData();
 
     } catch (error) {
-      showStatus("Error adding category: " + error.message, "error");
+      showActionError("Failed to add category", error);
     } finally {
       setCategoryAction("");
     }
   }
 
-  async function handleDeleteCategory(category) {
-    const usage = getCategoryUsage(category.id);
+async function handleDeleteCategory(category) {
+  const usage = getCategoryUsage(category.id);
 
-    if (!usage.canDelete) {
-      showStatus(
-        "This category cannot be deleted because it is still used by items, admins, or borrow requests.",
-        "error"
-      );
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      `Delete category "${category.name}"? This is allowed only because it has no items, admins, or borrow requests.`
+  if (!usage.canDelete) {
+    showBlockedAction(
+      "This category cannot be deleted because it is still used by items, admins, or borrow requests."
     );
+    return;
+  }
 
-    if (!confirmDelete) return;
+  openConfirmAction({
+    title: "Delete Category?",
+    message: `Delete category "${category.name}"? This is allowed only because it has no items, admins, or borrow requests.`,
+    confirmText: "Delete Category",
+    danger: true,
+    onConfirm: async () => {
+      setCategoryAction(category.id);
+      showStatus("", "");
 
-    setCategoryAction(category.id);
-    showStatus("", "");
+      try {
+        const deleteCategory = httpsCallable(functions, "deleteCategory");
 
-    try {
-      const deleteCategory = httpsCallable(functions, "deleteCategory");
-
-      await deleteCategory({
-        categoryId: category.id,
-      });
+        await deleteCategory({
+          categoryId: category.id,
+        });
 
         showToast("Successfully Deleted", "success");
         fetchData();
-
-    } catch (error) {
-      showStatus("Error deleting category: " + error.message, "error");
-    } finally {
-      setCategoryAction("");
-    }
-  }
+      } catch (error) {
+        showActionError("Failed to delete category", error);
+      } finally {
+        setCategoryAction("");
+      }
+    },
+  });
+}
 
   function startEditingUser(user) {
     setEditTouched(false);
@@ -1144,6 +1183,23 @@ async function handleAddCategory(event) {
     setEditTouched(false);
   }
 
+  function confirmDiscardEditChanges() {
+  if (!editTouched) {
+    cancelEditingUser();
+    return;
+  }
+
+  openConfirmAction({
+    title: "Discard Edit Changes?",
+    message: "Discard unsaved edit user changes?",
+    confirmText: "Discard Changes",
+    danger: true,
+    onConfirm: async () => {
+      cancelEditingUser();
+    },
+  });
+}
+
 async function handleSaveUserChanges(user) {
   showStatus("", "");
 
@@ -1171,116 +1227,166 @@ setUpdatingId(user.id);
       fetchData();
 
     } catch (error) {
-      showStatus("Error updating user: " + error.message, "error");
+      showActionError("Failed to update user", error);
     } finally {
       setUpdatingId("");
     }
   }
 
-  async function handleToggleBorrowing(user) {
-    const nextValue = user.canBorrow === false;
-
-    const confirmAction = window.confirm(
-      nextValue
-        ? `Enable borrowing for ${user.fullName || user.email}?`
-        : `Disable borrowing for ${user.fullName || user.email}?`
-    );
-
-    if (!confirmAction) return;
-
-    setUpdatingId(user.id);
-    showStatus("", "");
-
-    try {
-      const userRef = doc(db, "users", user.id);
-
-      await updateDoc(userRef, {
-        canBorrow: nextValue,
-        updatedAt: serverTimestamp(),
-      });
-
-      showToast(
-        nextValue ? "Borrowing Enabled" : "Borrowing Disabled",
-        "success"
-      );
-
-      fetchData();
-    } catch (error) {
-      showStatus("Error updating borrowing status: " + error.message, "error");
-    } finally {
-      setUpdatingId("");
-    }
+async function handleToggleAccountStatus(user) {
+  if (user.role === "superAdmin") {
+    showBlockedAction("Super admin accounts cannot be disabled here.");
+    return;
   }
 
-  async function handleResetSuspension(user) {
-    const confirmReset = window.confirm(
-      `Reset suspension and overdue count for ${user.fullName || user.email}?`
-    );
-
-    if (!confirmReset) return;
-
-    setUpdatingId(user.id);
-    showStatus("", "");
-
-    try {
-      const userRef = doc(db, "users", user.id);
-
-      await updateDoc(userRef, {
-        overdueCount: 0,
-        suspendedUntil: "",
-        suspensionReason: "",
-        canBorrow: true,
-        updatedAt: serverTimestamp(),
-      });
-
-      showToast("Suspension Reset", "success");
-      fetchData();
-    } catch (error) {
-      showStatus("Error resetting suspension: " + error.message, "error");
-    } finally {
-      setUpdatingId("");
-    }
+  if (currentAdmin?.uid === user.id) {
+    showBlockedAction("You cannot disable your own account.");
+    return;
   }
 
-  async function handleDeleteUser(user) {
-    if (user.role === "superAdmin") {
-      showStatus("Super admin accounts cannot be deleted here.", "error");
-      return;
-    }
+  const currentlyActive = user.isActive !== false;
+  const nextValue = !currentlyActive;
 
-    if (currentAdmin?.uid === user.id) {
-      showStatus("You cannot delete your own account.", "error");
-      return;
-    }
+  openConfirmAction({
+    title: nextValue ? "Enable Account?" : "Disable Account?",
+    message: nextValue
+      ? `Enable account access for ${user.fullName || user.email}?`
+      : `Disable account access for ${user.fullName || user.email}? This user will be blocked from using the system.`,
+    confirmText: nextValue ? "Enable Account" : "Disable Account",
+    danger: !nextValue,
+    onConfirm: async () => {
+      setUpdatingId(user.id);
+      showStatus("", "");
 
-    const confirmDelete = window.confirm(
-      `Permanently delete ${user.fullName || user.email}? This deletes the Firebase Auth account and Firestore user record.`
-    );
+      try {
+        const userRef = doc(db, "users", user.id);
 
-    if (!confirmDelete) return;
+        await updateDoc(userRef, {
+          isActive: nextValue,
+          updatedAt: serverTimestamp(),
+        });
 
-    setUpdatingId(user.id);
-    showStatus("", "");
+        showToast(nextValue ? "Account Enabled" : "Account Disabled", "success");
 
-    try {
-      const deleteUserCompletely = httpsCallable(
-        functions,
-        "deleteUserCompletely"
-      );
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to update account status", error);
+      } finally {
+        setUpdatingId("");
+      }
+    },
+  });
+}
 
-      await deleteUserCompletely({
-        uid: user.id,
-      });
+async function handleToggleBorrowing(user) {
+  const nextValue = user.canBorrow === false;
 
-      showToast("Successfully Deleted", "success");
-      fetchData();
+  openConfirmAction({
+    title: nextValue ? "Enable Borrowing?" : "Disable Borrowing?",
+    message: nextValue
+      ? `Enable borrowing for ${user.fullName || user.email}?`
+      : `Disable borrowing for ${user.fullName || user.email}?`,
+    confirmText: nextValue ? "Enable Borrowing" : "Disable Borrowing",
+    danger: !nextValue,
+    onConfirm: async () => {
+      setUpdatingId(user.id);
+      showStatus("", "");
 
-    } catch (error) {
-      showStatus("Error deleting user: " + error.message, "error");
-    } finally {
-      setUpdatingId("");
-    }
+      try {
+        const userRef = doc(db, "users", user.id);
+
+        await updateDoc(userRef, {
+          canBorrow: nextValue,
+          updatedAt: serverTimestamp(),
+        });
+
+        showToast(
+          nextValue ? "Borrowing Enabled" : "Borrowing Disabled",
+          "success"
+        );
+
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to update borrowing status", error);
+      } finally {
+        setUpdatingId("");
+      }
+    },
+  });
+}
+
+async function handleResetSuspension(user) {
+  openConfirmAction({
+    title: "Reset Suspension?",
+    message: `Reset suspension and overdue count for ${user.fullName || user.email}? This will allow the borrower to borrow again.`,
+    confirmText: "Reset Suspension",
+    danger: true,
+    onConfirm: async () => {
+      setUpdatingId(user.id);
+      showStatus("", "");
+
+      try {
+        const userRef = doc(db, "users", user.id);
+
+        await updateDoc(userRef, {
+          overdueCount: 0,
+          suspendedUntil: "",
+          suspensionReason: "",
+          canBorrow: true,
+          updatedAt: serverTimestamp(),
+        });
+
+        showToast("Suspension Reset", "success");
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to reset suspension", error);
+      } finally {
+        setUpdatingId("");
+      }
+    },
+  });
+}
+
+async function handleDeleteUser(user) {
+  if (user.role === "superAdmin") {
+    showBlockedAction("Super admin accounts cannot be deleted here.");
+    return;
   }
+
+  if (currentAdmin?.uid === user.id) {
+    showBlockedAction("You cannot delete your own account.");
+    return;
+  }
+
+  openConfirmAction({
+    title: "Delete User Permanently?",
+    message: `Permanently delete ${user.fullName || user.email}? This deletes the Firebase Auth account and Firestore user record.`,
+    confirmText: "Delete User",
+    danger: true,
+    onConfirm: async () => {
+      setUpdatingId(user.id);
+      showStatus("", "");
+
+      try {
+        const deleteUserCompletely = httpsCallable(
+          functions,
+          "deleteUserCompletely"
+        );
+
+        await deleteUserCompletely({
+          uid: user.id,
+        });
+
+        showToast("Successfully Deleted", "success");
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to delete user", error);
+      } finally {
+        setUpdatingId("");
+      }
+    },
+  });
+}
 
   function parseCsvText(text) {
     const rows = [];
@@ -1487,7 +1593,7 @@ setUpdatingId(user.id);
         "success"
       );
     } catch (error) {
-      showStatus("Error reading CSV: " + error.message, "error");
+      showActionError("Failed to read CSV file", error);
     }
   }
 
@@ -1580,12 +1686,14 @@ if (!isValid) {
   return;
 }
 
-    const confirmImport = window.confirm(
-      `Import ${csvBorrowers.length} borrower account${csvBorrowers.length === 1 ? "" : "s"}?`
-    );
-
-    if (!confirmImport) return;
-
+openConfirmAction({
+  title: "Import Borrower Accounts?",
+  message: `Import ${csvBorrowers.length} borrower account${
+    csvBorrowers.length === 1 ? "" : "s"
+  }?`,
+  confirmText: "Import CSV",
+  danger: false,
+  onConfirm: async () => {
     setImportingCsv(true);
     showStatus("", "");
 
@@ -1624,10 +1732,12 @@ if (created > 0 && failed === 0) {
 
 fetchData();
     } catch (error) {
-      showStatus("Error importing borrowers: " + error.message, "error");
+      showActionError("Failed to import borrowers", error);
     } finally {
       setImportingCsv(false);
     }
+  },
+});
   }
 
   function getCategoryUsage(categoryId) {
@@ -1757,6 +1867,17 @@ useEffect(() => {
 
   return (
     <div className="user-management-page">
+      <ConfirmActionModal
+  open={Boolean(confirmAction)}
+  title={confirmAction?.title}
+  message={confirmAction?.message}
+  confirmText={confirmAction?.confirmText}
+  cancelText={confirmAction?.cancelText || "Cancel"}
+  danger={confirmAction?.danger}
+  loading={confirmActionLoading}
+  onConfirm={runConfirmAction}
+  onCancel={closeConfirmAction}
+/>
       {showToolCloseConfirm && (
   <div
     className="user-unsaved-confirm-backdrop"
@@ -2765,9 +2886,6 @@ Showing {filteredUsers.length} of {users.length} loaded account
                           <p>{user.suspensionReason}</p>
                         </div>
                       )}
-
-
-
 <div className="user-actions">
   <>
     <button
@@ -2786,40 +2904,53 @@ Showing {filteredUsers.length} of {users.length} loaded account
       Edit
     </button>
 
-                            <button
-                              type="button"
-                              className={
-                                user.canBorrow === false
-                                  ? "user-primary-btn"
-                                  : "user-warning-btn"
-                              }
-                              onClick={() => handleToggleBorrowing(user)}
-                              disabled={updatingId === user.id}
-                            >
-                              {user.canBorrow === false ? "Enable" : "Disable"}
-                            </button>
+    <button
+      type="button"
+      className={
+        user.canBorrow === false ? "user-primary-btn" : "user-warning-btn"
+      }
+      onClick={() => handleToggleBorrowing(user)}
+      disabled={updatingId === user.id || user.isActive === false}
+    >
+      {user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
+    </button>
 
-                            <button
-                              type="button"
-                              className="user-danger-btn"
-                              onClick={() => handleResetSuspension(user)}
-                              disabled={updatingId === user.id}
-                            >
-                              Reset
-                            </button>
+    <button
+      type="button"
+      className={
+        user.isActive === false ? "user-secondary-btn" : "user-danger-btn"
+      }
+      onClick={() => handleToggleAccountStatus(user)}
+      disabled={
+        updatingId === user.id ||
+        user.role === "superAdmin" ||
+        currentAdmin?.uid === user.id
+      }
+    >
+      {user.isActive === false ? "Enable Account" : "Disable Account"}
+    </button>
 
-                            <button
-                              type="button"
-                              className="user-delete-btn"
-                              onClick={() => handleDeleteUser(user)}
-                              disabled={
-                                updatingId === user.id ||
-                                user.role === "superAdmin" ||
-                                currentAdmin?.uid === user.id
-                              }
-                            >
-                              {updatingId === user.id ? "Deleting..." : "Delete"}
-                            </button>
+    <button
+      type="button"
+      className="user-danger-btn"
+      onClick={() => handleResetSuspension(user)}
+      disabled={updatingId === user.id || user.isActive === false}
+    >
+      Reset
+    </button>
+
+    <button
+      type="button"
+      className="user-delete-btn"
+      onClick={() => handleDeleteUser(user)}
+      disabled={
+        updatingId === user.id ||
+        user.role === "superAdmin" ||
+        currentAdmin?.uid === user.id
+      }
+    >
+      {updatingId === user.id ? "Deleting..." : "Delete"}
+    </button>
   </>
 </div>
                     </article>
@@ -2853,16 +2984,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
               <button
                 type="button"
                 className="user-modal-close-btn"
-                onClick={() => {
-  if (
-    editTouched &&
-    !window.confirm("Discard unsaved edit user changes?")
-  ) {
-    return;
-  }
-
-  cancelEditingUser();
-}}
+onClick={confirmDiscardEditChanges}
                 aria-label="Close edit user"
               >
                 Close
@@ -3090,16 +3212,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
                 <button
                   type="button"
                   className="user-secondary-btn"
-                  onClick={() => {
-  if (
-    editTouched &&
-    !window.confirm("Discard unsaved edit user changes?")
-  ) {
-    return;
-  }
-
-  cancelEditingUser();
-}}
+onClick={confirmDiscardEditChanges}
                   disabled={updatingId === editingUser.id}
                 >
                   Cancel

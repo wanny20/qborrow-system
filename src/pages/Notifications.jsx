@@ -13,6 +13,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/Notifications.css";
 
 const NOTIFICATIONS_PAGE_SIZE = 10;
@@ -39,11 +40,49 @@ const [statusMessage, setStatusMessage] = useState("");
 const [statusType, setStatusType] = useState("");
 const [selectedNotification, setSelectedNotification] = useState(null);
 const notificationActionLockRef = useRef("");
+const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
+
   function startNotificationAction(actionId) {
   if (notificationActionLockRef.current || actionLoadingId) {
     return false;
@@ -194,34 +233,43 @@ const notificationActionLockRef = useRef("");
     };
   }
 
-  async function fetchNotifications(user, userData) {
-    setLoading(true);
+async function fetchNotifications(user, userData, options = {}) {
+  const { showSuccessToast = false } = options;
 
-    try {
-      const querySnapshot = await getDocs(collection(db, "notifications"));
+  setLoading(true);
 
-      const notificationData = querySnapshot.docs
-        .map((document) => ({
-          id: document.id,
-          ...document.data(),
-        }))
-        .filter(
-          (notification) =>
-            canSeeNotification(notification, userData, user) &&
-            !isNotificationDeletedForUser(notification, user)
-        )
-        .sort((a, b) => getNotificationTime(b) - getNotificationTime(a));
+  try {
+    const querySnapshot = await getDocs(collection(db, "notifications"));
 
-      setNotifications(notificationData);
-    } catch (error) {
-      showStatus("Error loading notifications: " + error.message, "error");
-    } finally {
-      setLoading(false);
+    const notificationData = querySnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .filter(
+        (notification) =>
+          canSeeNotification(notification, userData, user) &&
+          !isNotificationDeletedForUser(notification, user)
+      )
+      .sort((a, b) => getNotificationTime(b) - getNotificationTime(a));
+
+    setNotifications(notificationData);
+
+    if (showSuccessToast) {
+      showToast("Notifications refreshed", "success");
     }
+  } catch (error) {
+    showActionError("Failed to load notifications", error);
+  } finally {
+    setLoading(false);
   }
+}
 
 async function handleOpenNotification(notification) {
-  if (!currentUser) return;
+  if (!currentUser) {
+  showBlockedAction("Please login first.");
+  return;
+}
 
   setSelectedNotification(notification);
 
@@ -247,7 +295,7 @@ async function handleOpenNotification(notification) {
         previousNotifications.filter((item) => item.id !== notification.id)
       );
 
-      showStatus("This notification no longer exists.", "error");
+      showBlockedAction("This notification no longer exists.");
       return;
     }
 
@@ -302,14 +350,17 @@ async function handleOpenNotification(notification) {
       )
     );
   } catch (error) {
-    showStatus("Error opening notification: " + error.message, "error");
+    showActionError("Failed to open notification", error);
   } finally {
     finishNotificationAction();
   }
 }
 
 async function handleMarkAllAsRead() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    showBlockedAction("Please login first.");
+    return;
+  }
 
   if (isNotificationActionBusy()) return;
 
@@ -319,129 +370,141 @@ async function handleMarkAllAsRead() {
 
   if (unreadNotifications.length === 0) {
     showToast("No Unread Notifications", "success");
-return;
+    return;
   }
 
-  const started = startNotificationAction("all");
+  openConfirmAction({
+    title: "Mark All as Read?",
+    message: `Mark ${unreadNotifications.length} notification(s) as read?`,
+    confirmText: "Mark as Read",
+    danger: false,
+    onConfirm: async () => {
+      const started = startNotificationAction("all");
 
-  if (!started) return;
+      if (!started) return;
 
-  try {
-    const confirmRead = window.confirm(
-      `Mark ${unreadNotifications.length} notification(s) as read?`
-    );
+      try {
+        showStatus("", "");
 
-    if (!confirmRead) return;
+        await Promise.all(
+          unreadNotifications.map((notification) => {
+            const notificationRef = doc(db, "notifications", notification.id);
 
-    showStatus("", "");
+            if (notification.userId === currentUser.uid) {
+              return updateDoc(notificationRef, {
+                status: "Read",
+                readAt: serverTimestamp(),
+              });
+            }
 
-    await Promise.all(
-      unreadNotifications.map((notification) => {
-        const notificationRef = doc(db, "notifications", notification.id);
-
-        if (notification.userId === currentUser.uid) {
-          return updateDoc(notificationRef, {
-            status: "Read",
-            readAt: serverTimestamp(),
-          });
-        }
-
-        return updateDoc(notificationRef, {
-          readBy: arrayUnion(currentUser.uid),
-          lastReadAt: serverTimestamp(),
-        });
-      })
-    );
-
-    setNotifications((previousNotifications) =>
-      previousNotifications.map((notification) => {
-        const shouldUpdate = unreadNotifications.some(
-          (unread) => unread.id === notification.id
+            return updateDoc(notificationRef, {
+              readBy: arrayUnion(currentUser.uid),
+              lastReadAt: serverTimestamp(),
+            });
+          })
         );
 
-        if (!shouldUpdate) return notification;
+        setNotifications((previousNotifications) =>
+          previousNotifications.map((notification) => {
+            const shouldUpdate = unreadNotifications.some(
+              (unread) => unread.id === notification.id
+            );
 
-        if (notification.userId === currentUser.uid) {
-          return {
-            ...notification,
-            status: "Read",
-          };
-        }
+            if (!shouldUpdate) return notification;
 
-        return {
-          ...notification,
-          readBy: Array.isArray(notification.readBy)
-            ? [...new Set([...notification.readBy, currentUser.uid])]
-            : [currentUser.uid],
-        };
-      })
-    );
+            if (notification.userId === currentUser.uid) {
+              return {
+                ...notification,
+                status: "Read",
+              };
+            }
 
-    showToast("Notifications Marked as Read", "success");
-  } catch (error) {
-    showStatus("Error marking notifications as read: " + error.message, "error");
-  } finally {
-    finishNotificationAction();
-  }
+            return {
+              ...notification,
+              readBy: Array.isArray(notification.readBy)
+                ? [...new Set([...notification.readBy, currentUser.uid])]
+                : [currentUser.uid],
+            };
+          })
+        );
+
+        showToast("Notifications Marked as Read", "success");
+      } catch (error) {
+        showActionError("Failed to mark notifications as read", error);
+      } finally {
+        finishNotificationAction();
+      }
+    },
+  });
 }
 
 async function handleDeleteAllNotifications() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    showBlockedAction("Please login first.");
+    return;
+  }
 
   if (isNotificationActionBusy()) return;
 
   if (filteredNotifications.length === 0) {
-showToast("No Notifications to Delete", "success");
-return;
+    showToast("No Notifications to Delete", "success");
+    return;
   }
 
-  const started = startNotificationAction("delete-all");
+  const notificationsToDelete = [...filteredNotifications];
 
-  if (!started) return;
+  openConfirmAction({
+    title: "Delete Notifications?",
+    message: `Delete ${notificationsToDelete.length} visible notification(s)? This action cannot be undone for your view.`,
+    confirmText: "Delete Notifications",
+    danger: true,
+    onConfirm: async () => {
+      const started = startNotificationAction("delete-all");
 
-  try {
-    const confirmDelete = window.confirm(
-      `Delete ${filteredNotifications.length} visible notification(s)?`
-    );
+      if (!started) return;
 
-    if (!confirmDelete) return;
+      try {
+        showStatus("", "");
 
-    showStatus("", "");
+        await Promise.all(
+          notificationsToDelete.map((notification) => {
+            const notificationRef = doc(db, "notifications", notification.id);
 
-    await Promise.all(
-      filteredNotifications.map((notification) => {
-        const notificationRef = doc(db, "notifications", notification.id);
+            if (notification.userId === currentUser.uid) {
+              return deleteDoc(notificationRef);
+            }
 
-        if (notification.userId === currentUser.uid) {
-          return deleteDoc(notificationRef);
-        }
+            return updateDoc(notificationRef, {
+              deletedBy: arrayUnion(currentUser.uid),
+              deletedAt: serverTimestamp(),
+            });
+          })
+        );
 
-        return updateDoc(notificationRef, {
-          deletedBy: arrayUnion(currentUser.uid),
-          deletedAt: serverTimestamp(),
-        });
-      })
-    );
-
-    setNotifications((previousNotifications) =>
-      previousNotifications.filter(
-        (notification) =>
-          !filteredNotifications.some(
-            (deletedNotification) => deletedNotification.id === notification.id
+        setNotifications((previousNotifications) =>
+          previousNotifications.filter(
+            (notification) =>
+              !notificationsToDelete.some(
+                (deletedNotification) =>
+                  deletedNotification.id === notification.id
+              )
           )
-      )
-    );
+        );
 
-    showToast("Notifications Deleted", "success");
-  } catch (error) {
-    showStatus("Error deleting notifications: " + error.message, "error");
-  } finally {
-    finishNotificationAction();
-  }
+        showToast("Notifications Deleted", "success");
+      } catch (error) {
+        showActionError("Failed to delete notifications", error);
+      } finally {
+        finishNotificationAction();
+      }
+    },
+  });
 }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        showBlockedAction("Please login first.");
         navigate("/login");
         return;
       }
@@ -453,7 +516,7 @@ return;
         setCurrentUserData(loadedUserData);
         await fetchNotifications(user, loadedUserData);
       } catch (error) {
-        showStatus("Error loading notification page: " + error.message, "error");
+        showActionError("Failed to load notification page", error);
         setLoading(false);
       }
     });
@@ -538,8 +601,20 @@ function handleLoadMoreNotifications() {
     );
   }
 
-  return (
-    <div className="notifications-page">
+return (
+  <div className="notifications-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
+
 <section className="notifications-header notifications-header-compact">
   <div className="notifications-header-content">
 <div className="notifications-header-text">
@@ -720,7 +795,9 @@ function handleLoadMoreNotifications() {
           onClick={() =>
             currentUser &&
             currentUserData &&
-            fetchNotifications(currentUser, currentUserData)
+            fetchNotifications(currentUser, currentUserData, {
+              showSuccessToast: true,
+            })
           }
           disabled={isNotificationActionBusy()}
         >

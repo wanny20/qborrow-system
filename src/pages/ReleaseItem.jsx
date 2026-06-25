@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ReleaseItem.css";
 
 function ReleaseItem() {
@@ -42,6 +43,8 @@ function ReleaseItem() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
@@ -49,6 +52,42 @@ function ReleaseItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -267,7 +306,7 @@ await scanner.start(
     showToast("Scanner opened. Point the camera at the QR code or barcode.", "success");
   } catch (error) {
     await stopReleaseScanner(false);
-    showStatus("Scanner could not start: " + error.message, "error");
+    showActionError("Scanner could not start", error);
   } finally {
     setStartingScanner(false);
   }
@@ -311,7 +350,9 @@ async function restartReleaseScanner() {
     );
   }
 
-async function fetchApprovedRequests() {
+async function fetchApprovedRequests(options = {}) {
+  const { showSuccessToast = false } = options;
+
   setLoading(true);
 
   try {
@@ -328,8 +369,12 @@ async function fetchApprovedRequests() {
     }));
 
     setApprovedRequests(requestData);
+
+    if (showSuccessToast) {
+      showToast("Release queue refreshed", "success");
+    }
   } catch (error) {
-    showStatus("Error loading approved requests: " + error.message, "error");
+    showActionError("Failed to load approved requests", error);
   } finally {
     setLoading(false);
   }
@@ -397,15 +442,14 @@ clearFieldError("manualItemId");
 
     if (!matchingRequest) {
       setSelectedRequest(null);
-      showStatus("No approved request found for this item.", "error");
+      showBlockedAction("No approved request found for this item.");
       return;
     }
 
     if (isCategoryAdmin && !canCategoryAdminSeeRequest(matchingRequest)) {
       setSelectedRequest(null);
-      showStatus(
-        "This request belongs to a category that is not assigned to your account.",
-        "error"
+      showBlockedAction(
+        "This request belongs to a category that is not assigned to your account."
       );
       return;
     }
@@ -415,7 +459,7 @@ setManualItemId(itemId);
 setFieldErrors({});
 showToast("Approved request found. Review details before release.", "success");
   } catch (error) {
-    showStatus("Error finding approved request: " + error.message, "error");
+    showActionError("Failed to find approved request", error);
   }
 }
 
@@ -424,114 +468,115 @@ async function handleConfirmRelease() {
 
   const isValid = validateReleaseForm();
 
-if (!isValid) {
-  return;
-}
-
-  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
-    showStatus("You are not allowed to release this category item.", "error");
+  if (!isValid) {
     return;
   }
 
-  const started = startReleaseAction();
-
-  if (!started) return;
-
-  try {
-    const confirmRelease = window.confirm(
-      `Confirm release of ${selectedRequest.itemName} to ${
-        selectedRequest.borrowerName || selectedRequest.borrowerEmail
-      }?`
-    );
-
-    if (!confirmRelease) return;
-
-    showStatus("", "");
-
-    const requestRef = doc(db, "borrowRequests", selectedRequest.id);
-    const latestRequestSnap = await getDoc(requestRef);
-
-    if (!latestRequestSnap.exists()) {
-      showStatus("This request no longer exists.", "error");
-      return;
-    }
-
-    const latestRequest = {
-      id: latestRequestSnap.id,
-      ...latestRequestSnap.data(),
-    };
-
-    if (latestRequest.approvalStatus !== "Approved") {
-      showStatus(
-        `This request is already ${latestRequest.approvalStatus}. Refreshing release queue...`,
-        "error"
-      );
-
-      setSelectedRequest(null);
-      setManualItemId("");
-      await fetchApprovedRequests();
-      return;
-    }
-
-    if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
-      showStatus("You are not allowed to release this category item.", "error");
-      return;
-    }
-
-    const itemRef = doc(db, "items", latestRequest.itemId);
-    const itemSnap = await getDoc(itemRef);
-
-    if (!itemSnap.exists()) {
-      showStatus("Item record not found. Release cannot continue.", "error");
-      return;
-    }
-
-    const itemData = itemSnap.data();
-
-    if (
-      itemData.availability !== "Reserved" &&
-      itemData.availability !== "Available"
-    ) {
-      showStatus(
-        `This item is currently ${itemData.availability}. It cannot be released.`,
-        "error"
-      );
-      return;
-    }
-
-    await updateDoc(requestRef, {
-      approvalStatus: "Borrowed",
-      releasedAt: serverTimestamp(),
-      releasedBy: getAdminId(),
-      updatedAt: serverTimestamp(),
-    });
-
-    await updateDoc(itemRef, {
-      availability: "Borrowed",
-      updatedAt: serverTimestamp(),
-    });
-
-    await addDoc(collection(db, "notifications"), {
-      userId: latestRequest.borrowerId,
-      targetRole: "borrower",
-      categoryId: getRequestCategoryId(latestRequest),
-      title: "Item Released",
-      message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate}.`,
-      status: "Unread",
-      createdAt: serverTimestamp(),
-      link: "/my-requests",
-    });
-
-      showToast("Item Released", "success");
-      setSelectedRequest(null);
-      setManualItemId("");
-      await fetchApprovedRequests();
-
-  } catch (error) {
-    showStatus("Error releasing item: " + error.message, "error");
-  } finally {
-    finishReleaseAction();
+  if (isCategoryAdmin && !canCategoryAdminSeeRequest(selectedRequest)) {
+    showBlockedAction("You are not allowed to release this category item.");
+    return;
   }
+
+  const requestToRelease = selectedRequest;
+
+  openConfirmAction({
+    title: "Confirm Item Release?",
+    message: `Confirm release of ${requestToRelease.itemName || "this item"} to ${
+      requestToRelease.borrowerName || requestToRelease.borrowerEmail || "this borrower"
+    }?`,
+    confirmText: "Release Item",
+    danger: false,
+    onConfirm: async () => {
+      const started = startReleaseAction();
+
+      if (!started) return;
+
+      try {
+        showStatus("", "");
+
+        const requestRef = doc(db, "borrowRequests", requestToRelease.id);
+        const latestRequestSnap = await getDoc(requestRef);
+
+        if (!latestRequestSnap.exists()) {
+          showBlockedAction("This request no longer exists.");
+          return;
+        }
+
+        const latestRequest = {
+          id: latestRequestSnap.id,
+          ...latestRequestSnap.data(),
+        };
+
+        if (latestRequest.approvalStatus !== "Approved") {
+          showBlockedAction(
+            `This request is already ${latestRequest.approvalStatus}. Refreshing release queue...`
+          );
+
+          setSelectedRequest(null);
+          setManualItemId("");
+          await fetchApprovedRequests();
+          return;
+        }
+
+        if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
+          showBlockedAction("You are not allowed to release this category item.");
+          return;
+        }
+
+        const itemRef = doc(db, "items", latestRequest.itemId);
+        const itemSnap = await getDoc(itemRef);
+
+        if (!itemSnap.exists()) {
+          showBlockedAction("Item record not found. Release cannot continue.");
+          return;
+        }
+
+        const itemData = itemSnap.data();
+
+        if (
+          itemData.availability !== "Reserved" &&
+          itemData.availability !== "Available"
+        ) {
+          showBlockedAction(
+            `This item is currently ${itemData.availability}. It cannot be released.`
+          );
+          return;
+        }
+
+        await updateDoc(requestRef, {
+          approvalStatus: "Borrowed",
+          releasedAt: serverTimestamp(),
+          releasedBy: getAdminId(),
+          updatedAt: serverTimestamp(),
+        });
+
+        await updateDoc(itemRef, {
+          availability: "Borrowed",
+          updatedAt: serverTimestamp(),
+        });
+
+        await addDoc(collection(db, "notifications"), {
+          userId: latestRequest.borrowerId,
+          targetRole: "borrower",
+          categoryId: getRequestCategoryId(latestRequest),
+          title: "Item Released",
+          message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate}.`,
+          status: "Unread",
+          createdAt: serverTimestamp(),
+          link: "/my-requests",
+        });
+
+        showToast("Item Released", "success");
+        setSelectedRequest(null);
+        setManualItemId("");
+        await fetchApprovedRequests();
+      } catch (error) {
+        showActionError("Failed to release item", error);
+      } finally {
+        finishReleaseAction();
+      }
+    },
+  });
 }
 
   useEffect(() => {
@@ -561,8 +606,19 @@ useEffect(() => {
     );
   }
 
-  return (
-    <div className="release-page">
+return (
+  <div className="release-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
 <section className="release-header release-header-compact">
   <div className="release-header-content">
 <div className="release-header-text">
@@ -783,7 +839,7 @@ useEffect(() => {
           <button
             type="button"
             className="release-secondary-btn"
-            onClick={fetchApprovedRequests}
+            onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
             disabled={releasing}
           >
             Refresh

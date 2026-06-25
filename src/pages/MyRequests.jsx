@@ -16,6 +16,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastProvider.jsx";
+import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/MyRequests.css";
 const REQUESTS_PAGE_SIZE = 10;
 
@@ -45,11 +46,48 @@ const [requestStats, setRequestStats] = useState({
 const [statusMessage, setStatusMessage] = useState("");
 const [statusType, setStatusType] = useState("");
 const [selectedRequest, setSelectedRequest] = useState(null);
+const [confirmAction, setConfirmAction] = useState(null);
+const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+function openConfirmAction(config) {
+  setConfirmAction(config);
+}
+
+function closeConfirmAction() {
+  if (confirmActionLoading) return;
+  setConfirmAction(null);
+}
+
+async function runConfirmAction() {
+  if (!confirmAction?.onConfirm) return;
+
+  setConfirmActionLoading(true);
+
+  try {
+    await confirmAction.onConfirm();
+    setConfirmAction(null);
+  } finally {
+    setConfirmActionLoading(false);
+  }
+}
 
   function getTodayDate() {
     const date = new Date();
@@ -123,76 +161,9 @@ function shouldShowClosedReason(request) {
 
     return "neutral";
   }
-  async function fetchMyRequestStats(userId) {
-  const requestsRef = collection(db, "borrowRequests");
+async function fetchMyRequests(userId, mode = "reset", options = {}) {
+  const { showSuccessToast = false } = options;
 
-  const [
-    totalSnapshot,
-    pendingSnapshot,
-    approvedSnapshot,
-    borrowedSnapshot,
-    returnedSnapshot,
-    rejectedSnapshot,
-    cancelledSnapshot,
-  ] = await Promise.all([
-    getCountFromServer(query(requestsRef, where("borrowerId", "==", userId))),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Pending")
-      )
-    ),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Approved")
-      )
-    ),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Borrowed")
-      )
-    ),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Returned")
-      )
-    ),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Rejected")
-      )
-    ),
-    getCountFromServer(
-      query(
-        requestsRef,
-        where("borrowerId", "==", userId),
-        where("approvalStatus", "==", "Cancelled")
-      )
-    ),
-  ]);
-
-  setRequestStats({
-    total: totalSnapshot.data().count || 0,
-    pending: pendingSnapshot.data().count || 0,
-    approved: approvedSnapshot.data().count || 0,
-    borrowed: borrowedSnapshot.data().count || 0,
-    returned: returnedSnapshot.data().count || 0,
-    closed:
-      (rejectedSnapshot.data().count || 0) +
-      (cancelledSnapshot.data().count || 0),
-  });
-}
-
-async function fetchMyRequests(userId, mode = "reset") {
   if (mode === "reset") {
     setLoading(true);
   }
@@ -228,7 +199,10 @@ async function fetchMyRequests(userId, mode = "reset") {
 
     if (mode === "more") {
       setRequests((previousRequests) => {
-        const existingIds = new Set(previousRequests.map((request) => request.id));
+        const existingIds = new Set(
+          previousRequests.map((request) => request.id)
+        );
+
         const newRequests = requestData.filter(
           (request) => !existingIds.has(request.id)
         );
@@ -241,14 +215,19 @@ async function fetchMyRequests(userId, mode = "reset") {
 
     setRequests(requestData);
     await fetchMyRequestStats(userId);
+
+    if (showSuccessToast) {
+      showToast("My requests refreshed", "success");
+    }
   } catch (error) {
-    showStatus("Error loading your requests: " + error.message, "error");
+    showActionError("Failed to load your requests", error);
   } finally {
     if (mode === "reset") {
       setLoading(false);
     }
   }
 }
+
 async function handleLoadMoreRequests() {
   if (!currentUser?.uid || !hasMoreRequests || loadingMoreRequests) return;
 
@@ -258,56 +237,58 @@ async function handleLoadMoreRequests() {
   try {
     await fetchMyRequests(currentUser.uid, "more");
   } catch (error) {
-    showStatus("Error loading more requests: " + error.message, "error");
+    showActionError("Failed to load more requests", error);
   } finally {
     setLoadingMoreRequests(false);
   }
 }
 
-  async function handleCancelRequest(request) {
-    if (request.approvalStatus !== "Pending") {
-      showStatus("Only pending requests can be cancelled.", "error");
-      return;
-    }
-
-    const confirmCancel = window.confirm(
-      `Cancel your request for ${request.itemName}?`
-    );
-
-    if (!confirmCancel) return;
-
-    setActionLoadingId(request.id);
-    showStatus("", "");
-
-    try {
-      const requestRef = doc(db, "borrowRequests", request.id);
-
-      await updateDoc(requestRef, {
-        approvalStatus: "Cancelled",
-        cancelledAt: serverTimestamp(),
-        cancelledBy: currentUser?.uid || "",
-      });
-
-showToast("Request Cancelled", "success");
-setSelectedRequest(null);
-
-if (currentUser?.uid) {
-  fetchMyRequests(currentUser.uid, "reset");
-}
-
-    } catch (error) {
-      showStatus("Error cancelling request: " + error.message, "error");
-    } finally {
-      setActionLoadingId("");
-    }
+async function handleCancelRequest(request) {
+  if (request.approvalStatus !== "Pending") {
+    showBlockedAction("Only pending requests can be cancelled.");
+    return;
   }
+
+  openConfirmAction({
+    title: "Cancel Borrow Request?",
+    message: `Cancel your request for ${request.itemName || "this item"}?`,
+    confirmText: "Cancel Request",
+    danger: true,
+    onConfirm: async () => {
+      setActionLoadingId(request.id);
+      showStatus("", "");
+
+      try {
+        const requestRef = doc(db, "borrowRequests", request.id);
+
+        await updateDoc(requestRef, {
+          approvalStatus: "Cancelled",
+          cancelledAt: serverTimestamp(),
+          cancelledBy: currentUser?.uid || "",
+        });
+
+        showToast("Request Cancelled", "success");
+        setSelectedRequest(null);
+
+        if (currentUser?.uid) {
+          fetchMyRequests(currentUser.uid, "reset");
+        }
+      } catch (error) {
+        showActionError("Failed to cancel request", error);
+      } finally {
+        setActionLoadingId("");
+      }
+    },
+  });
+}
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        navigate("/login");
-        return;
-      }
+        if (!user) {
+          showBlockedAction("Please login first.");
+          navigate("/login");
+          return;
+        }
 
       setCurrentUser(user);
       await fetchMyRequests(user.uid);
@@ -349,8 +330,19 @@ if (currentUser?.uid) {
     );
   }
 
-  return (
-    <div className="my-requests-page">
+return (
+  <div className="my-requests-page">
+    <ConfirmActionModal
+      open={Boolean(confirmAction)}
+      title={confirmAction?.title}
+      message={confirmAction?.message}
+      confirmText={confirmAction?.confirmText}
+      cancelText={confirmAction?.cancelText || "Cancel"}
+      danger={confirmAction?.danger}
+      loading={confirmActionLoading}
+      onConfirm={runConfirmAction}
+      onCancel={closeConfirmAction}
+    />
 <section className="my-requests-header my-requests-header-compact">
   <div className="my-requests-header-content">
 <div className="my-requests-header-text">
@@ -574,7 +566,10 @@ if (currentUser?.uid) {
         <button
           type="button"
           className="my-requests-refresh-btn"
-          onClick={() => currentUser?.uid && fetchMyRequests(currentUser.uid, "reset")}
+          onClick={() =>
+            currentUser?.uid &&
+            fetchMyRequests(currentUser.uid, "reset", { showSuccessToast: true })
+          }
         >
           Refresh
         </button>

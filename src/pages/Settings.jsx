@@ -62,6 +62,21 @@ const [passwordTouched, setPasswordTouched] = useState(false);
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
   function markProfileChanged() {
   setProfileTouched(true);
 }
@@ -314,7 +329,7 @@ if (!file.type.startsWith("image/")) {
     ...previousErrors,
     profilePhoto: "Please upload an image file only.",
   }));
-  showStatus("Please upload an image file only.", "error");
+  showBlockedAction("Please upload an image file only.");
   return;
 }
 
@@ -323,8 +338,8 @@ if (file.size > 5 * 1024 * 1024) {
     ...previousErrors,
     profilePhoto: "Image is too large. Please upload an image below 5MB.",
   }));
-  showStatus("Image is too large. Please upload an image below 5MB.", "error");
-  return;
+  showBlockedAction("Image is too large. Please upload an image below 5MB.");
+  return;;
 }
 
     setCropSourceFile(file);
@@ -351,7 +366,7 @@ if (file.size > 5 * 1024 * 1024) {
     event.preventDefault();
 
     if (!currentUser) {
-      showStatus("No logged-in user found.", "error");
+      showBlockedAction("No logged-in user found.");
       return;
     }
 
@@ -427,7 +442,7 @@ setSavingProfile(true);
 
       showToast("Settings Saved", "success");
     } catch (error) {
-      showStatus("Error saving settings: " + error.message, "error");
+      showActionError("Failed to save settings", error);
     } finally {
       setSavingProfile(false);
     }
@@ -462,7 +477,7 @@ setChangingPassword(true);
 
       showToast("Password Changed", "success");
     } catch (error) {
-      showStatus("Error changing password: " + error.message, "error");
+      showActionError("Failed to change password", error);
     } finally {
       setChangingPassword(false);
     }
@@ -474,6 +489,7 @@ setChangingPassword(true);
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        showBlockedAction("Please login first.");
         setLoading(false);
         return;
       }
@@ -483,7 +499,7 @@ setChangingPassword(true);
       try {
         await loadUserRecord(user);
       } catch (error) {
-        showStatus("Error loading settings: " + error.message, "error");
+        showActionError("Failed to load settings", error);
       } finally {
         setLoading(false);
       }

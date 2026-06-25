@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -13,6 +13,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useToast } from "../components/ToastProvider.jsx";
 import "../styles/AppLayout.css";
 
 function AppLayout() {
@@ -47,13 +48,32 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
 
   const [showSuspendedAlert, setShowSuspendedAlert] = useState(false);
 
+  const [showBorrowingRestoredAlert, setShowBorrowingRestoredAlert] =
+  useState(false);
+
+  const [showAccountDisabledAlert, setShowAccountDisabledAlert] =
+  useState(false);
+
+const [suspensionClock, setSuspensionClock] = useState(() => Date.now());
+const previousSuspendedStateRef = useRef(false);
+
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   const closeSidebarOnMobile = useCallback(() => {
   if (typeof window !== "undefined" && window.innerWidth <= 820) {
     setSidebarOpen(false);
   }
 }, []);
+
+function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showToast(message, "error");
+}
 
 const setUnsavedChanges = useCallback((hasChanges, message = "") => {
   setHasUnsavedChanges(Boolean(hasChanges));
@@ -90,6 +110,14 @@ const guardedNavigate = useCallback(
 
 function cancelPendingNavigation() {
   setPendingNavigationPath("");
+}
+function isCurrentAccountDisabled() {
+  return userData?.isActive === false;
+}
+
+function handleCloseAccountDisabledAlert() {
+  setShowAccountDisabledAlert(false);
+  confirmLogout();
 }
 
 function confirmPendingNavigation() {
@@ -214,9 +242,14 @@ function isCurrentUserSuspended() {
   if (userData?.role !== "borrower") return false;
 
   const suspendedUntilDate = getSuspendedUntilDate(userData?.suspendedUntil);
+  const currentDate = new Date(suspensionClock);
 
-  if (suspendedUntilDate && suspendedUntilDate > new Date()) {
-    return true;
+  if (userData?.canBorrow === true) {
+    return false;
+  }
+
+  if (suspendedUntilDate) {
+    return suspendedUntilDate > currentDate;
   }
 
   return userData?.canBorrow === false;
@@ -256,6 +289,23 @@ function handleCloseSuspendedAlert() {
   }
 
   setShowSuspendedAlert(false);
+}
+
+function getBorrowingRestoredStorageKey() {
+  const userId = userData?.uid || auth.currentUser?.uid || "unknown-user";
+  const suspensionMarker = userData?.suspendedUntil?.seconds
+    ? userData.suspendedUntil.seconds
+    : String(userData?.suspendedUntil || "manual-restored");
+
+  return `qborrowBorrowingRestoredAlertSeen-${userId}-${suspensionMarker}`;
+}
+
+function handleCloseBorrowingRestoredAlert() {
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem(getBorrowingRestoredStorageKey(), "yes");
+  }
+
+  setShowBorrowingRestoredAlert(false);
 }
 
 async function checkRejectedRequestAlerts(userId) {
@@ -303,7 +353,7 @@ async function handleAcknowledgeRejectedRequests() {
 
     setRejectedRequestAlerts([]);
   } catch (error) {
-    alert("Error closing rejected request alert: " + error.message);
+    showActionError("Failed to close rejected request alert", error);
   } finally {
     setAcknowledgingRejectedAlerts(false);
   }
@@ -517,12 +567,12 @@ function handleViewAdminBorrowRequestAlert() {
             ...userSnap.data(),
           });
         } else {
-          alert("No user role found in Firestore.");
+          showBlockedAction("No user role found in Firestore.");
           await signOut(auth);
           navigate("/login");
         }
       } catch (error) {
-        alert("Error loading user data: " + error.message);
+        showActionError("Failed to load user data", error);
       } finally {
         setLoading(false);
       }
@@ -536,7 +586,9 @@ function handleViewAdminBorrowRequestAlert() {
 
   const userRef = doc(db, "users", userData.uid);
 
-  const unsubscribe = onSnapshot(userRef, (snapshot) => {
+const unsubscribe = onSnapshot(
+  userRef,
+  (snapshot) => {
     if (!snapshot.exists()) return;
 
     const latestUserData = snapshot.data();
@@ -552,7 +604,11 @@ function handleViewAdminBorrowRequestAlert() {
         previousData?.email ||
         "",
     }));
-  });
+  },
+  (error) => {
+    showActionError("Failed to sync user account", error);
+  }
+);
 
   return () => unsubscribe();
 }, [userData?.uid]);
@@ -627,6 +683,10 @@ function handleViewAdminBorrowRequestAlert() {
     setShowSuspendedAlert(false);
     return;
   }
+  if (isCurrentAccountDisabled()) {
+  setShowSuspendedAlert(false);
+  return;
+}
 
   if (!isCurrentUserSuspended()) {
     setShowSuspendedAlert(false);
@@ -648,7 +708,79 @@ if (!alreadySeen && rejectedRequestAlerts.length === 0) {
   userData?.suspensionReason,
   rejectedRequestAlerts.length,
 ]);
+useEffect(() => {
+  if (
+    userData?.role !== "borrower" ||
+    !userData?.uid ||
+    isCurrentAccountDisabled()
+  ) {
+    previousSuspendedStateRef.current = false;
+    setShowBorrowingRestoredAlert(false);
+    return;
+  }
 
+  const currentlySuspended = isCurrentUserSuspended();
+
+  if (currentlySuspended) {
+    previousSuspendedStateRef.current = true;
+    return;
+  }
+
+  if (previousSuspendedStateRef.current) {
+    const alreadySeen =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(getBorrowingRestoredStorageKey()) === "yes";
+
+    if (!alreadySeen) {
+      setShowBorrowingRestoredAlert(true);
+    }
+
+    previousSuspendedStateRef.current = false;
+  }
+}, [
+  userData?.uid,
+  userData?.role,
+  userData?.canBorrow,
+  userData?.suspendedUntil,
+  suspensionClock,
+]);
+
+useEffect(() => {
+  if (!userData?.uid) {
+    setShowAccountDisabledAlert(false);
+    return;
+  }
+
+  if (isCurrentAccountDisabled()) {
+    setShowAccountDisabledAlert(true);
+    setShowSuspendedAlert(false);
+    setShowBorrowingRestoredAlert(false);
+    return;
+  }
+
+  setShowAccountDisabledAlert(false);
+}, [userData?.uid, userData?.isActive]);
+
+useEffect(() => {
+  if (userData?.role !== "borrower") return;
+
+  const suspendedUntilDate = getSuspendedUntilDate(userData?.suspendedUntil);
+
+  if (!suspendedUntilDate) return;
+
+  const delay = suspendedUntilDate.getTime() - Date.now();
+
+  if (delay <= 0) {
+    setSuspensionClock(Date.now());
+    return;
+  }
+
+  const timer = window.setTimeout(() => {
+    setSuspensionClock(Date.now());
+  }, Math.min(delay + 1000, 2147483647));
+
+  return () => window.clearTimeout(timer);
+}, [userData?.role, userData?.suspendedUntil]);
 
   useEffect(() => {
   if (!isAdmin || !userData?.uid) {
@@ -745,7 +877,7 @@ async function confirmLogout() {
     setShowLogoutConfirm(false);
     navigate("/");
   } catch (error) {
-    alert("Logout failed: " + error.message);
+    showActionError("Logout failed", error);
   } finally {
     setLoggingOut(false);
   }
@@ -1052,6 +1184,74 @@ function renderNavLink(link) {
         disabled={acknowledgingRejectedAlerts}
       >
         {acknowledgingRejectedAlerts ? "Closing..." : "OK, I Understand"}
+      </button>
+    </section>
+  </div>
+)}
+
+{showBorrowingRestoredAlert && (
+  <div
+    className="app-restored-alert-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="restored-alert-title"
+  >
+    <section className="app-restored-alert-card">
+      <div className="app-restored-alert-icon">✓</div>
+
+      <div className="app-restored-alert-content">
+        <p>Borrowing Restored</p>
+
+        <h2 id="restored-alert-title">
+          Your borrowing access is now active
+        </h2>
+
+        <span>
+          Your account is no longer suspended. You can now submit borrow
+          requests again.
+        </span>
+      </div>
+
+      <button
+        type="button"
+        className="app-restored-alert-ok"
+        onClick={handleCloseBorrowingRestoredAlert}
+      >
+        OK, I Understand
+      </button>
+    </section>
+  </div>
+)}
+
+{showAccountDisabledAlert && (
+  <div
+    className="app-disabled-alert-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="disabled-alert-title"
+  >
+    <section className="app-disabled-alert-card">
+      <div className="app-disabled-alert-icon">!</div>
+
+      <div className="app-disabled-alert-content">
+        <p>Account Disabled</p>
+
+        <h2 id="disabled-alert-title">
+          Your account has been disabled
+        </h2>
+
+        <span>
+          You can no longer use QBorrow at this time. Please contact the
+          administrator for assistance.
+        </span>
+      </div>
+
+      <button
+        type="button"
+        className="app-disabled-alert-ok"
+        onClick={handleCloseAccountDisabledAlert}
+      >
+        OK, Logout
       </button>
     </section>
   </div>

@@ -2216,3 +2216,2007 @@ html[data-theme="dark"] .reports-tools select {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 }
+/* =========================================================
+   REPORT PRINT / SAVE PDF
+========================================================= */
+
+.reports-print-only {
+  display: none;
+}
+
+.reports-header-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.reports-print-btn,
+.reports-header-back-btn {
+  min-width: 180px;
+}
+
+@media (max-width: 760px) {
+  .reports-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .reports-print-btn,
+  .reports-header-back-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .app-sidebar,
+  .app-sidebar-backdrop,
+  .app-topbar,
+  .reports-header,
+  .reports-tools,
+  .reports-refresh-btn,
+  .reports-load-more-row,
+  .reports-history-table-actions,
+  .reports-damaged-table-actions,
+  .reports-history-modal-backdrop,
+  .reports-damaged-modal-backdrop,
+  .reports-header-actions,
+  .reports-header-back-btn,
+  .reports-print-btn {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  .app-main-content,
+  .app-page-content {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  .reports-page {
+    width: 100% !important;
+    max-width: none !important;
+    display: block !important;
+    color: #172033 !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  .reports-print-only {
+    display: block !important;
+  }
+
+  .reports-print-header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #172033;
+  }
+
+  .reports-print-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 950;
+    line-height: 1.1;
+  }
+
+  .reports-print-header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .reports-print-header span,
+  .reports-print-header strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 750;
+  }
+
+  .reports-summary-grid,
+  .reports-request-summary {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+    page-break-inside: avoid;
+  }
+
+  .reports-summary-grid div,
+  .reports-request-summary div,
+  .reports-panel,
+  .reports-category-card,
+  .reports-mini-card,
+  .reports-history-table-row,
+  .reports-damaged-table-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border-color: #172033 !important;
+    background: #ffffff !important;
+  }
+
+  .reports-panel {
+    margin-top: 12px !important;
+    padding: 12px !important;
+  }
+
+  .reports-section-heading h2 {
+    font-size: 17px !important;
+  }
+
+  .reports-section-heading p {
+    font-size: 11px !important;
+  }
+
+  .reports-history-table-header,
+  .reports-history-table-row,
+  .reports-damaged-table-header,
+  .reports-damaged-table-row {
+    min-width: 0 !important;
+  }
+
+  .reports-history-table-header {
+    grid-template-columns: 1.3fr 1.2fr 1fr 0.7fr 0.7fr 0.7fr !important;
+  }
+
+  .reports-history-table-row {
+    grid-template-columns: 1.3fr 1.2fr 1fr 0.7fr 0.7fr 0.7fr !important;
+  }
+
+  .reports-damaged-table-header {
+    grid-template-columns: 1.4fr 1fr 0.9fr 0.9fr !important;
+  }
+
+  .reports-damaged-table-row {
+    grid-template-columns: 1.4fr 1fr 0.9fr 0.9fr !important;
+  }
+
+  .reports-history-table-header span:last-child,
+  .reports-damaged-table-header span:last-child {
+    display: none !important;
+  }
+
+  .reports-status-pill,
+  .reports-damage-pill {
+    border: 1.5px solid #172033 !important;
+    box-shadow: none !important;
+  }
+}
+/* =========================================================
+   FORMAL TABLE PDF / PRINT REPORT
+========================================================= */
+
+.reports-formal-report {
+  display: none;
+}
+
+@media print {
+  .reports-formal-report {
+    display: block !important;
+  }
+
+  .reports-summary-grid,
+  .reports-request-summary,
+  .reports-tools,
+  .reports-panel,
+  .reports-two-column,
+  .reports-header,
+  .reports-history-modal-backdrop,
+  .reports-damaged-modal-backdrop {
+    display: none !important;
+  }
+
+  .reports-print-section {
+    display: block !important;
+    margin: 0 0 16px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .reports-print-section h2 {
+    margin: 0 0 6px !important;
+    color: #172033 !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+  }
+
+  .reports-print-section table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #172033 !important;
+    font-size: 10px !important;
+  }
+
+  .reports-print-section th,
+  .reports-print-section td {
+    border: 1px solid #172033 !important;
+    padding: 6px 7px !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+  }
+
+  .reports-print-section th {
+    background: #f1f5f9 !important;
+    color: #172033 !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .reports-print-section td {
+    font-weight: 600 !important;
+  }
+
+  .reports-print-section tbody tr:nth-child(even) td {
+    background: #f8fafc !important;
+  }
+
+  .reports-print-section tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .reports-print-header {
+    display: block !important;
+    margin-bottom: 18px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 2px solid #172033 !important;
+    color: #172033 !important;
+  }
+
+  .reports-print-header h1 {
+    margin: 0 !important;
+    font-size: 24px !important;
+    font-weight: 950 !important;
+    text-transform: uppercase !important;
+  }
+
+  .reports-print-header p {
+    margin: 4px 0 0 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  .reports-print-header span,
+  .reports-print-header strong {
+    display: block !important;
+    margin-top: 4px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+  }
+}
+/* =========================================================
+   FORMAL PDF PRINT REFINEMENT
+   Better spacing, page breaks, and table continuation
+========================================================= */
+
+@media print {
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  .reports-formal-report {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .reports-print-section {
+    display: block !important;
+    margin: 0 0 18px !important;
+    padding: 0 !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .reports-print-section h2 {
+    margin: 0 0 7px !important;
+    color: #172033 !important;
+    font-size: 14px !important;
+    font-weight: 950 !important;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .reports-print-section table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .reports-print-section thead {
+    display: table-header-group !important;
+  }
+
+  .reports-print-section tbody {
+    display: table-row-group !important;
+  }
+
+  .reports-print-section tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .reports-print-section th,
+  .reports-print-section td {
+    border: 1px solid #172033 !important;
+    padding: 5px 6px !important;
+    color: #172033 !important;
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .reports-print-section th {
+    background: #f1f5f9 !important;
+    font-weight: 950 !important;
+    text-transform: uppercase !important;
+  }
+
+  .reports-print-section td {
+    font-weight: 650 !important;
+  }
+
+  .reports-print-section:nth-of-type(5),
+  .reports-print-section:nth-of-type(6),
+  .reports-print-section:nth-of-type(7) {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .reports-print-header {
+    margin-bottom: 16px !important;
+  }
+
+  .reports-print-header h1 {
+    font-size: 22px !important;
+  }
+
+  .reports-print-header p,
+  .reports-print-header span,
+  .reports-print-header strong {
+    font-size: 10px !important;
+  }
+}
+/* =========================================================
+   REPORT DATE RANGE FILTER
+========================================================= */
+
+.reports-tools-with-date {
+  grid-template-columns:
+    minmax(220px, 1.4fr)
+    minmax(170px, 0.8fr)
+    minmax(150px, 0.7fr)
+    minmax(150px, 0.7fr)
+    auto
+    auto !important;
+}
+
+.reports-tools-with-date input[type="date"] {
+  width: 100%;
+  min-height: 42px;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 13px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  outline: none;
+}
+
+.reports-tools-with-date input[type="date"]:focus {
+  border-color: var(--qb-accent);
+  box-shadow: 3px 3px 0 rgba(139, 92, 246, 0.22);
+}
+
+.reports-reset-date-btn {
+  align-self: end;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.reports-date-range-note {
+  grid-column: 1 / -1;
+  border: 2px dashed var(--qb-border);
+  border-radius: 14px;
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--qb-muted-foreground);
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.reports-date-range-note strong {
+  color: var(--qb-foreground);
+}
+
+@media (max-width: 1180px) {
+  .reports-tools-with-date {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reports-refresh-btn,
+  .reports-reset-date-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 680px) {
+  .reports-tools-with-date {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media print {
+  .reports-date-range-note {
+    display: none !important;
+  }
+}
+/* =========================================================
+   REPORT STATISTICS / PERCENTAGE ANALYTICS
+========================================================= */
+
+.reports-statistics-panel {
+  overflow: hidden;
+}
+
+.reports-statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reports-statistics-card {
+  min-width: 0;
+  border: 2px solid var(--qb-border);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 var(--qb-border);
+  padding: 14px;
+}
+
+.reports-statistics-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reports-statistics-card h3 {
+  margin: 0;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.reports-statistics-card strong {
+  min-width: 58px;
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-tertiary);
+  box-shadow: 2px 2px 0 var(--qb-border);
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.88rem;
+  font-weight: 950;
+}
+
+.reports-statistics-bar {
+  height: 14px;
+  overflow: hidden;
+  margin-top: 12px;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-bg);
+}
+
+.reports-statistics-bar span {
+  height: 100%;
+  display: block;
+  border-right: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-accent);
+}
+
+.reports-statistics-card p {
+  margin: 10px 0 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .reports-statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .reports-statistics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .reports-statistics-panel {
+    display: none !important;
+  }
+}
+/* =========================================================
+   REPORT CSV EXPORT
+========================================================= */
+
+.reports-export-panel {
+  overflow: hidden;
+}
+
+.reports-export-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.reports-export-grid button {
+  min-height: 44px;
+  width: 100%;
+  padding-inline: 12px;
+  white-space: normal;
+}
+
+.reports-export-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 1180px) {
+  .reports-export-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .reports-export-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .reports-export-panel {
+    display: none !important;
+  }
+}
+/* =========================================================
+   REPORT VISUAL CHARTS / ANALYTICS
+========================================================= */
+
+.reports-chart-panel {
+  overflow: hidden;
+}
+
+.reports-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.reports-chart-card {
+  min-width: 0;
+  border: 2px solid var(--qb-border);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 var(--qb-border);
+  padding: 14px;
+}
+
+.reports-chart-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.reports-chart-card-heading h3 {
+  margin: 0;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.reports-chart-card-heading span {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-tertiary);
+  box-shadow: 2px 2px 0 var(--qb-border);
+  padding: 0 10px;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.58rem;
+  font-weight: 950;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.reports-chart-list {
+  display: grid;
+  gap: 10px;
+}
+
+.reports-chart-row {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.reports-chart-row-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reports-chart-row-label strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qb-foreground);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-chart-row-label span {
+  min-width: 34px;
+  min-height: 24px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-bg);
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.64rem;
+  font-weight: 950;
+}
+
+.reports-chart-row small,
+.reports-chart-dual small {
+  color: var(--qb-muted-foreground);
+  font-size: 0.65rem;
+  font-weight: 850;
+}
+
+.reports-chart-bar {
+  height: 15px;
+  overflow: hidden;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-bg);
+}
+
+.reports-chart-bar span {
+  height: 100%;
+  display: block;
+  min-width: 4%;
+  border-right: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: var(--qb-accent);
+}
+
+.reports-chart-dual {
+  display: grid;
+  gap: 6px;
+}
+
+.reports-chart-dual > div {
+  display: grid;
+  gap: 4px;
+}
+
+.reports-chart-empty {
+  border: 2px dashed var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 18px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .reports-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .reports-chart-panel {
+    display: none !important;
+  }
+}
+/* =========================================================
+   REPORTS COMPACT SUMMARY CARDS
+   Makes top report cards shorter and less space-consuming
+========================================================= */
+
+.reports-summary-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.reports-request-summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.reports-summary-grid div,
+.reports-request-summary div {
+  min-height: 64px !important;
+  border-radius: 14px !important;
+  padding: 8px 10px !important;
+}
+
+.reports-summary-grid span,
+.reports-request-summary span {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 0.62rem !important;
+  margin-bottom: 4px !important;
+}
+
+.reports-summary-grid h3,
+.reports-request-summary h3 {
+  margin: 2px 0 0 !important;
+  font-size: 1.08rem !important;
+  line-height: 1 !important;
+}
+
+.reports-summary-grid p,
+.reports-request-summary p {
+  margin: 3px 0 0 !important;
+  font-size: 0.5rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Keep cards compact even when the sidebar makes the content area smaller */
+@media (max-width: 1280px) {
+  .reports-summary-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .reports-request-summary {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .reports-summary-grid,
+  .reports-request-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .reports-summary-grid div,
+  .reports-request-summary div {
+    min-height: 58px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .reports-summary-grid,
+  .reports-request-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .reports-summary-grid div,
+  .reports-request-summary div {
+    min-height: 52px !important;
+    padding: 6px !important;
+  }
+
+  .reports-summary-grid span,
+  .reports-request-summary span {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.42rem !important;
+  }
+
+  .reports-summary-grid h3,
+  .reports-request-summary h3 {
+    font-size: 0.78rem !important;
+  }
+
+  .reports-summary-grid p,
+  .reports-request-summary p {
+    font-size: 0.32rem !important;
+  }
+}
+/* =========================================================
+   REPORTS COMPACT STATISTICS + VISUAL ANALYTICS
+========================================================= */
+
+/* Main panel spacing */
+.reports-statistics-panel,
+.reports-chart-panel {
+  padding: 12px !important;
+  border-radius: 18px !important;
+  box-shadow: 4px 4px 0 var(--qb-border) !important;
+}
+
+.reports-statistics-panel .reports-section-heading,
+.reports-chart-panel .reports-section-heading {
+  margin-bottom: 8px !important;
+}
+
+.reports-statistics-panel .reports-section-heading h2,
+.reports-chart-panel .reports-section-heading h2 {
+  font-size: 1.08rem !important;
+}
+
+.reports-statistics-panel .reports-section-heading p,
+.reports-chart-panel .reports-section-heading p {
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Statistics cards */
+.reports-statistics-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.reports-statistics-card {
+  min-height: 98px !important;
+  border-radius: 14px !important;
+  padding: 9px 11px !important;
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
+}
+
+.reports-statistics-card-top {
+  gap: 8px !important;
+}
+
+.reports-statistics-card h3 {
+  font-size: 0.74rem !important;
+  line-height: 1.1 !important;
+}
+
+.reports-statistics-card strong {
+  min-width: 50px !important;
+  min-height: 30px !important;
+  font-size: 0.72rem !important;
+  box-shadow: 2px 2px 0 var(--qb-border) !important;
+}
+
+.reports-statistics-bar {
+  height: 11px !important;
+  margin-top: 8px !important;
+  border-width: 1.5px !important;
+}
+
+.reports-statistics-bar span {
+  border-right-width: 1.5px !important;
+}
+
+.reports-statistics-card p {
+  margin-top: 7px !important;
+  font-size: 0.62rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Visual analytics cards */
+.reports-chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.reports-chart-card {
+  border-radius: 15px !important;
+  padding: 10px 12px !important;
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
+}
+
+.reports-chart-card-heading {
+  margin-bottom: 8px !important;
+  gap: 8px !important;
+}
+
+.reports-chart-card-heading h3 {
+  font-size: 0.82rem !important;
+  line-height: 1.05 !important;
+}
+
+.reports-chart-card-heading span {
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  font-size: 0.5rem !important;
+  box-shadow: 1.5px 1.5px 0 var(--qb-border) !important;
+}
+
+.reports-chart-list {
+  gap: 7px !important;
+}
+
+.reports-chart-row {
+  gap: 4px !important;
+}
+
+.reports-chart-row-label strong {
+  font-size: 0.66rem !important;
+}
+
+.reports-chart-row-label span {
+  min-width: 28px !important;
+  min-height: 20px !important;
+  font-size: 0.52rem !important;
+}
+
+.reports-chart-row small,
+.reports-chart-dual small {
+  font-size: 0.54rem !important;
+}
+
+.reports-chart-bar {
+  height: 11px !important;
+  border-width: 1.5px !important;
+}
+
+.reports-chart-bar span {
+  border-right-width: 1.5px !important;
+}
+
+.reports-chart-dual {
+  gap: 4px !important;
+}
+
+.reports-chart-empty {
+  padding: 12px !important;
+  border-radius: 12px !important;
+  font-size: 0.68rem !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .reports-statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reports-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 680px) {
+  .reports-statistics-grid,
+  .reports-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-statistics-card {
+    min-height: auto !important;
+  }
+
+  .reports-statistics-panel,
+  .reports-chart-panel {
+    padding: 9px !important;
+  }
+
+  .reports-statistics-panel .reports-section-heading h2,
+  .reports-chart-panel .reports-section-heading h2 {
+    font-size: 0.88rem !important;
+  }
+
+  .reports-statistics-panel .reports-section-heading p,
+  .reports-chart-panel .reports-section-heading p {
+    font-size: 0.58rem !important;
+  }
+} 
+/* =========================================================
+   REPORTS VISUAL ANALYTICS - MORE COMPACT VERSION
+   Especially fixes Category Performance card
+========================================================= */
+
+.reports-chart-panel {
+  padding: 10px !important;
+  border-radius: 16px !important;
+}
+
+.reports-chart-panel .reports-section-heading {
+  margin-bottom: 8px !important;
+}
+
+.reports-chart-panel .reports-section-heading h2 {
+  font-size: 1rem !important;
+}
+
+.reports-chart-panel .reports-section-heading p {
+  font-size: 0.68rem !important;
+  line-height: 1.25 !important;
+}
+
+.reports-chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.reports-chart-card {
+  padding: 9px 10px !important;
+  border-radius: 14px !important;
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
+}
+
+.reports-chart-card-heading {
+  margin-bottom: 7px !important;
+}
+
+.reports-chart-card-heading h3 {
+  font-size: 0.78rem !important;
+  line-height: 1.05 !important;
+}
+
+.reports-chart-card-heading span {
+  min-height: 22px !important;
+  padding: 0 8px !important;
+  font-size: 0.46rem !important;
+}
+
+.reports-chart-list {
+  gap: 6px !important;
+}
+
+.reports-chart-row {
+  gap: 3px !important;
+}
+
+.reports-chart-row-label strong {
+  font-size: 0.6rem !important;
+}
+
+.reports-chart-row-label span {
+  min-width: 26px !important;
+  min-height: 20px !important;
+  font-size: 0.5rem !important;
+}
+
+.reports-chart-row small,
+.reports-chart-dual small {
+  font-size: 0.48rem !important;
+  line-height: 1 !important;
+}
+
+.reports-chart-bar {
+  height: 9px !important;
+  border-width: 1.5px !important;
+}
+
+.reports-chart-bar span {
+  border-right-width: 1.5px !important;
+}
+
+/* Category Performance card only */
+.reports-chart-card:nth-child(4) {
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  padding-right: 8px !important;
+}
+
+.reports-chart-card:nth-child(4)::-webkit-scrollbar {
+  width: 7px;
+}
+
+.reports-chart-card:nth-child(4)::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.08);
+}
+
+.reports-chart-card:nth-child(4)::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.35);
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-list {
+  gap: 7px !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-row {
+  border: 2px solid rgba(30, 41, 59, 0.18) !important;
+  border-radius: 12px !important;
+  background: var(--qb-bg) !important;
+  padding: 6px !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-row-label strong {
+  font-size: 0.58rem !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-row-label span {
+  min-width: auto !important;
+  padding: 0 7px !important;
+  font-size: 0.42rem !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-dual {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-dual > div {
+  gap: 3px !important;
+}
+
+.reports-chart-card:nth-child(4) .reports-chart-bar {
+  height: 8px !important;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .reports-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-chart-card:nth-child(4) {
+    max-height: 240px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 680px) {
+  .reports-chart-panel {
+    padding: 8px !important;
+  }
+
+  .reports-chart-card {
+    padding: 8px !important;
+  }
+
+  .reports-chart-card:nth-child(4) {
+    max-height: 220px !important;
+  }
+
+  .reports-chart-card:nth-child(4) .reports-chart-dual {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* Compact export panel when placed near the top */
+.reports-export-panel {
+  padding: 12px !important;
+  border-radius: 18px !important;
+}
+
+.reports-export-panel .reports-section-heading {
+  margin-bottom: 8px !important;
+}
+
+.reports-export-panel .reports-section-heading h2 {
+  font-size: 1rem !important;
+}
+
+.reports-export-panel .reports-section-heading p {
+  font-size: 0.68rem !important;
+  line-height: 1.25 !important;
+}
+
+.reports-export-grid {
+  gap: 8px !important;
+}
+
+.reports-export-grid button {
+  min-height: 38px !important;
+  font-size: 0.56rem !important;
+} 
+/* =========================================================
+   REPORT RANGE + PRINT BUTTON INLINE
+========================================================= */
+
+.reports-date-range-note-with-print {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+.reports-date-range-note-with-print > div {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 4px !important;
+}
+
+.reports-date-range-note-with-print span {
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+}
+
+.reports-date-range-note-with-print strong {
+  color: var(--qb-foreground) !important;
+  font-size: 0.86rem !important;
+  font-weight: 950 !important;
+}
+
+.reports-inline-print-btn {
+  flex: 0 0 auto !important;
+  min-width: 170px !important;
+  min-height: 38px !important;
+  background: #ffffff !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 720px) {
+  .reports-date-range-note-with-print {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-inline-print-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media print {
+  .reports-inline-print-btn {
+    display: none !important;
+  }
+}
+/* =========================================================
+   REPORTS COMPACT SEARCH HISTORY RANGE ROW
+   Makes report range + print button smaller
+========================================================= */
+
+.reports-date-range-note {
+  min-height: 0 !important;
+  padding: 8px 12px !important;
+  border-radius: 14px !important;
+}
+
+.reports-date-range-note-with-print {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.reports-date-range-note-with-print > div {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.reports-date-range-note-with-print span {
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.reports-date-range-note-with-print strong {
+  margin: 0 !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.82rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.reports-inline-print-btn {
+  flex: 0 0 auto !important;
+  min-width: 160px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  font-size: 0.52rem !important;
+  white-space: nowrap !important;
+}
+
+/* Make the whole search card tighter */
+.reports-tools-with-date {
+  padding: 10px 12px !important;
+  gap: 8px !important;
+}
+
+.reports-tools-with-date input,
+.reports-tools-with-date select {
+  min-height: 36px !important;
+  height: 36px !important;
+}
+
+.reports-tools-with-date .reports-refresh-btn,
+.reports-tools-with-date .reports-reset-date-btn {
+  min-height: 36px !important;
+  height: 36px !important;
+  font-size: 0.54rem !important;
+}
+
+/* Tablet/mobile: stack cleanly but still compact */
+@media (max-width: 760px) {
+  .reports-date-range-note-with-print {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-date-range-note-with-print > div {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .reports-inline-print-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+/* =========================================================
+   FINAL REPORT RANGE + PRINT BUTTON ROW FIX
+   Fixed small dotted range on the left, print button on the right
+========================================================= */
+
+.reports-tools-with-date .reports-range-print-row {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-top: 2px !important;
+}
+
+/* Small fixed dotted box */
+.reports-tools-with-date .reports-compact-range-note {
+  flex: 0 0 auto !important;
+  width: 420px !important;
+  max-width: 420px !important;
+  min-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  padding: 8px 14px !important;
+  border: 2px dashed var(--qb-border) !important;
+  border-radius: 14px !important;
+  background: rgba(251, 191, 36, 0.12) !important;
+  text-align: left !important;
+  overflow: hidden !important;
+}
+
+.reports-tools-with-date .reports-compact-range-note span {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.reports-tools-with-date .reports-compact-range-note strong {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.74rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Button stays on the right, outside dotted box */
+.reports-tools-with-date .reports-inline-print-btn {
+  flex: 0 0 auto !important;
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  font-size: 0.52rem !important;
+  white-space: nowrap !important;
+}
+
+/* Remove old full-width behavior */
+.reports-date-range-note-with-print,
+.reports-date-range-note {
+  grid-column: auto !important;
+}
+
+/* Smaller screens */
+@media (max-width: 900px) {
+  .reports-tools-with-date .reports-range-print-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-tools-with-date .reports-compact-range-note {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .reports-tools-with-date .reports-inline-print-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+/* =========================================================
+   FINAL FIX: REPORT RANGE LEFT + PRINT BUTTON RIGHT
+   Keeps dotted range small and fixed, button on the right
+========================================================= */
+
+.reports-tools-with-date .reports-range-print-row {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  margin-top: 2px !important;
+}
+
+/* Dotted range: fixed small box, does NOT expand full width */
+.reports-tools-with-date .reports-range-print-row .reports-compact-range-note {
+  flex: 0 0 470px !important;
+  width: 470px !important;
+  max-width: 470px !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  padding: 0 14px !important;
+  border: 2px dashed var(--qb-border) !important;
+  border-radius: 14px !important;
+  background: rgba(251, 191, 36, 0.12) !important;
+  text-align: left !important;
+  overflow: hidden !important;
+}
+
+.reports-tools-with-date .reports-range-print-row .reports-compact-range-note span {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.66rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.reports-tools-with-date .reports-range-print-row .reports-compact-range-note strong {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.74rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Print button: always on the right */
+.reports-tools-with-date .reports-range-print-row .reports-inline-print-btn {
+  flex: 0 0 190px !important;
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  margin-left: auto !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  font-size: 0.52rem !important;
+  white-space: nowrap !important;
+}
+
+/* Override old rules that made it centered/full width */
+.reports-date-range-note-with-print,
+.reports-date-range-note {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.reports-tools-with-date .reports-date-range-note {
+  grid-column: auto !important;
+}
+
+/* Only stack on real small screens, not desktop with sidebar */
+@media (max-width: 680px) {
+  .reports-tools-with-date .reports-range-print-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-tools-with-date .reports-range-print-row .reports-compact-range-note,
+  .reports-tools-with-date .reports-range-print-row .reports-inline-print-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex-basis: auto !important;
+  }
+}
+/* =========================================================
+   FINAL PDF FIX - ALLOW MULTIPLE PRINT PAGES
+   Fixes report being cut and showing only 1 page
+========================================================= */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  .app-layout,
+  .app-main-content,
+  .app-page-content,
+  .reports-page,
+  .reports-formal-report {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    background: #ffffff !important;
+  }
+
+  .reports-formal-report {
+    position: static !important;
+    contain: none !important;
+  }
+
+  .reports-print-section {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 0 14px !important;
+    padding: 0 !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .reports-print-section h2 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .reports-print-section table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .reports-print-section thead {
+    display: table-header-group !important;
+  }
+
+  .reports-print-section tbody {
+    display: table-row-group !important;
+  }
+
+  .reports-print-section tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .reports-print-section th,
+  .reports-print-section td {
+    font-size: 8.5px !important;
+    line-height: 1.2 !important;
+    padding: 4px 5px !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+  }
+
+  .reports-summary-grid,
+  .reports-request-summary,
+  .reports-tools,
+  .reports-export-panel,
+  .reports-statistics-panel,
+  .reports-chart-panel,
+  .reports-panel,
+  .reports-two-column,
+  .reports-header,
+  .app-sidebar,
+  .app-topbar {
+    display: none !important;
+  }
+
+  .reports-print-only,
+  .reports-print-header,
+  .reports-formal-report {
+    display: block !important;
+  }
+}
+/* =========================================================
+   FINAL PDF COMPACT PAGE BREAK FIX
+   Prevents each report section from wasting a whole page
+========================================================= */
+
+@media print {
+  .reports-print-section,
+  .reports-print-section:nth-of-type(1),
+  .reports-print-section:nth-of-type(2),
+  .reports-print-section:nth-of-type(3),
+  .reports-print-section:nth-of-type(4),
+  .reports-print-section:nth-of-type(5),
+  .reports-print-section:nth-of-type(6),
+  .reports-print-section:nth-of-type(7),
+  .reports-print-section:nth-of-type(8),
+  .reports-print-section:nth-of-type(9) {
+    page-break-before: auto !important;
+    break-before: auto !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    margin-bottom: 10px !important;
+  }
+
+  .reports-print-section h2 {
+    margin: 0 0 5px !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .reports-print-section table {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .reports-print-section thead {
+    display: table-header-group !important;
+  }
+
+  .reports-print-section tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .reports-print-section th,
+  .reports-print-section td {
+    padding: 3px 5px !important;
+    font-size: 8px !important;
+    line-height: 1.15 !important;
+  }
+
+  .reports-print-header {
+    margin-bottom: 10px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .reports-print-header h1 {
+    font-size: 20px !important;
+  }
+
+  .reports-print-header p,
+  .reports-print-header span,
+  .reports-print-header strong {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+}
+/* =========================================================
+   REPORT CONTROLS + EXPORT COMBINED CARD
+========================================================= */
+
+.reports-control-export-panel {
+  padding: 14px !important;
+  border-radius: 18px !important;
+}
+
+.reports-control-export-panel .reports-section-heading {
+  margin-bottom: 10px !important;
+}
+
+.reports-control-export-panel .reports-section-heading h2 {
+  font-size: 1.05rem !important;
+}
+
+.reports-control-export-panel .reports-section-heading p {
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
+
+.reports-export-control-grid {
+  display: grid !important;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) 130px 140px !important;
+  gap: 10px !important;
+  align-items: end !important;
+  margin-bottom: 10px !important;
+}
+
+.reports-export-control-grid > div {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 6px !important;
+}
+
+.reports-export-control-grid input[type="date"] {
+  width: 100% !important;
+  height: 38px !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  color: var(--qb-foreground) !important;
+  padding: 0 13px !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+  outline: none !important;
+}
+
+.reports-export-control-grid input[type="date"]:focus {
+  border-color: var(--qb-accent) !important;
+  box-shadow: 3px 3px 0 rgba(139, 92, 246, 0.22) !important;
+}
+
+.reports-export-control-grid .reports-refresh-btn,
+.reports-export-control-grid .reports-reset-date-btn {
+  width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  font-size: 0.54rem !important;
+}
+
+.reports-export-range-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.reports-export-range-row .reports-compact-range-note {
+  flex: 0 1 470px !important;
+  width: 470px !important;
+  max-width: 100% !important;
+  min-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 14px !important;
+  border: 2px dashed var(--qb-border) !important;
+  border-radius: 14px !important;
+  background: rgba(251, 191, 36, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.reports-export-range-row .reports-compact-range-note span {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.66rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.reports-export-range-row .reports-compact-range-note strong {
+  min-width: 0 !important;
+  margin: 0 !important;
+  color: var(--qb-foreground) !important;
+  font-size: 0.76rem !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.reports-export-range-row .reports-inline-print-btn {
+  flex: 0 0 190px !important;
+  width: 190px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  font-size: 0.52rem !important;
+}
+
+.reports-export-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.reports-export-grid button {
+  width: 100% !important;
+  min-height: 38px !important;
+  font-size: 0.52rem !important;
+}
+
+.reports-export-grid button:disabled,
+.reports-reset-date-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+}
+
+@media (max-width: 1180px) {
+  .reports-export-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .reports-export-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .reports-export-control-grid,
+  .reports-export-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-export-range-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .reports-export-range-row .reports-compact-range-note,
+  .reports-export-range-row .reports-inline-print-btn {
+    width: 100% !important;
+    max-width: none !important;
+    flex-basis: auto !important;
+  }
+}
+
+@media print {
+  .reports-control-export-panel {
+    display: none !important;
+  }
+}
+/* =========================================================
+   BORROWING HISTORY LOCAL FILTERS
+========================================================= */
+
+.reports-history-controls {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(190px, 260px) 150px;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 12px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-bg);
+  padding: 10px;
+}
+
+.reports-history-controls > div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.reports-history-controls input,
+.reports-history-controls select {
+  width: 100%;
+  height: 38px;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 13px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  outline: none;
+}
+
+.reports-history-controls select {
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--qb-foreground) 50%),
+    linear-gradient(135deg, var(--qb-foreground) 50%, transparent 50%),
+    #ffffff;
+  background-position:
+    calc(100% - 18px) 16px,
+    calc(100% - 12px) 16px,
+    0 0;
+  background-size:
+    6px 6px,
+    6px 6px,
+    100% 100%;
+  background-repeat: no-repeat;
+}
+
+.reports-history-controls input:focus,
+.reports-history-controls select:focus {
+  border-color: var(--qb-accent);
+  box-shadow: 3px 3px 0 rgba(139, 92, 246, 0.22);
+}
+
+.reports-clear-history-filter-btn {
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  font-size: 0.52rem;
+}
+
+.reports-clear-history-filter-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  .reports-history-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .reports-history-controls {
+    display: none !important;
+  }
+}

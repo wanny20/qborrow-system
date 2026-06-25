@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../styles/ImageCropModal.css";
+import { useToast } from "./ToastProvider.jsx";
 
 function ImageCropModal({
   file,
@@ -10,6 +11,8 @@ function ImageCropModal({
   onCropComplete,
 }) {
   const imageRef = useRef(null);
+
+  const { showToast } = useToast();
 
   const [imageUrl, setImageUrl] = useState("");
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -91,6 +94,11 @@ useEffect(() => {
       Math.min(Math.max(current, -cropData.maxOffsetY), cropData.maxOffsetY)
     );
   }, [cropData.maxOffsetX, cropData.maxOffsetY]);
+
+  function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  showToast(shortMessage, "error");
+}
 
   function canvasToBlob(canvas, quality) {
     return new Promise((resolve) => {
@@ -193,7 +201,7 @@ useEffect(() => {
 
       throw new Error("Unable to crop image.");
     } catch (error) {
-      alert("Crop failed: " + error.message);
+      showActionError("Crop failed", error);
     } finally {
       setProcessing(false);
     }

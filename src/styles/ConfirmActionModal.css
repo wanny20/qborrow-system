@@ -1,0 +1,134 @@
+.confirm-action-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(6px);
+}
+
+.confirm-action-card {
+  width: min(440px, 100%);
+  border: 3px solid #111827;
+  border-radius: 24px;
+  background: #fffdf5;
+  box-shadow: 8px 8px 0 #111827;
+  padding: 24px;
+  animation: confirmActionPop 0.18s ease-out;
+}
+
+.confirm-action-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #111827;
+  border-radius: 16px;
+  background: #fbc434;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: 4px 4px 0 #111827;
+  margin-bottom: 18px;
+}
+
+.confirm-action-icon-danger {
+  background: #fb7185;
+  color: #ffffff;
+}
+
+.confirm-action-text p {
+  margin: 0 0 8px;
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.confirm-action-text h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  line-height: 1.1;
+}
+
+.confirm-action-text span {
+  display: block;
+  margin-top: 10px;
+  color: #374151;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.confirm-action-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.confirm-action-actions button {
+  min-height: 44px;
+  border: 2px solid #111827;
+  border-radius: 14px;
+  padding: 0 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #111827;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.confirm-action-actions button:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #111827;
+}
+
+.confirm-action-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.confirm-action-cancel {
+  background: #ffffff;
+  color: #111827;
+}
+
+.confirm-action-confirm {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.confirm-action-confirm-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+@keyframes confirmActionPop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 520px) {
+  .confirm-action-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .confirm-action-actions {
+    flex-direction: column-reverse;
+  }
+
+  .confirm-action-actions button {
+    width: 100%;
+  }
+}

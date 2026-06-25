@@ -3,12 +3,15 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/AdminDashboardList.css";
+import { useToast } from "../components/ToastProvider.jsx";
 
 function AdminDashboardList() {
   const { listType } = useParams();
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
+
+  const { showToast } = useToast();
 
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -77,6 +80,10 @@ function AdminDashboardList() {
     return String(value || "").trim().toLowerCase();
   }
 
+  function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  showToast(shortMessage, "error");
+}
   function getItemCategoryId(item) {
     return item.categoryId || item.category || "";
   }
@@ -185,7 +192,7 @@ function AdminDashboardList() {
       setRequests(requestData);
       setCategories(categoryData);
     } catch (error) {
-      alert("Error loading dashboard list: " + error.message);
+      showActionError("Failed to load dashboard list", error);
     } finally {
       setLoading(false);
     }

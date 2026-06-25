@@ -25,6 +25,21 @@ function ForcePasswordChange() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function showActionError(shortMessage, error) {
+  const detailedMessage = error?.message
+    ? `${shortMessage}: ${error.message}`
+    : shortMessage;
+
+  showStatus(detailedMessage, "error");
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  showStatus(message, "error");
+  showToast(message, "error");
+}
+
   function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -132,14 +147,13 @@ function validateForcePasswordForm() {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      showStatus("Your session expired. Please log in again.", "error");
+      showBlockedAction("Your session expired. Please log in again.");
       return;
     }
 
 const isValid = validateForcePasswordForm();
 
 if (!isValid) {
-  showStatus("Please fix the highlighted fields before continuing.", "error");
   return;
 }
     setSaving(true);
@@ -167,10 +181,9 @@ setTimeout(async () => {
       console.error(error);
 
       if (error.code === "auth/requires-recent-login") {
-        showStatus(
-          "For security, please log in again using your temporary password, then change it immediately.",
-          "error"
-        );
+        showBlockedAction(
+          "For security, please log in again using your temporary password, then change it immediately."
+        );;
 
         await signOut(auth);
         setTimeout(() => {
@@ -180,7 +193,7 @@ setTimeout(async () => {
         return;
       }
 
-      showStatus("Error updating password: " + error.message, "error");
+      showActionError("Failed to update password", error);
     } finally {
       setSaving(false);
     }
