@@ -161,6 +161,51 @@ function shouldShowClosedReason(request) {
 
     return "neutral";
   }
+
+  async function getMyRequestCount(userId, status = "All") {
+  const requestsRef = collection(db, "borrowRequests");
+
+  const constraints = [where("borrowerId", "==", userId)];
+
+  if (status === "Closed") {
+    constraints.push(where("approvalStatus", "in", ["Rejected", "Cancelled"]));
+  } else if (status !== "All") {
+    constraints.push(where("approvalStatus", "==", status));
+  }
+
+  const countSnapshot = await getCountFromServer(
+    query(requestsRef, ...constraints)
+  );
+
+  return countSnapshot.data().count || 0;
+}
+
+async function fetchMyRequestStats(userId) {
+  const [
+    total,
+    pending,
+    approved,
+    borrowed,
+    returned,
+    closed,
+  ] = await Promise.all([
+    getMyRequestCount(userId, "All"),
+    getMyRequestCount(userId, "Pending"),
+    getMyRequestCount(userId, "Approved"),
+    getMyRequestCount(userId, "Borrowed"),
+    getMyRequestCount(userId, "Returned"),
+    getMyRequestCount(userId, "Closed"),
+  ]);
+
+  setRequestStats({
+    total,
+    pending,
+    approved,
+    borrowed,
+    returned,
+    closed,
+  });
+}
 async function fetchMyRequests(userId, mode = "reset", options = {}) {
   const { showSuccessToast = false } = options;
 
