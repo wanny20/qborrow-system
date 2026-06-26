@@ -67,17 +67,16 @@ function BorrowRequest() {
     setStatusType(type);
   }
 
-  function showActionError(shortMessage, error) {
-  const detailedMessage = error?.message
-    ? `${shortMessage}: ${error.message}`
-    : shortMessage;
-
-  showStatus(detailedMessage, "error");
+function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+  setStatusMessage("");
+  setStatusType("");
   showToast(shortMessage, "error");
 }
 
 function showBlockedAction(message) {
-  showStatus(message, "error");
+  setStatusMessage("");
+  setStatusType("");
   showToast(message, "error");
 }
 
