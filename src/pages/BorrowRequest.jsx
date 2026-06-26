@@ -325,6 +325,34 @@ function validateBorrowRequestField(fieldName) {
       newExpectedReturnDate >= existingBorrowDate
     );
   }
+
+  async function checkExistingBorrowerItemRequest() {
+  if (!item?.id || !currentUser?.uid) return null;
+
+  const activeStatuses = ["Pending", "Approved", "Borrowed"];
+
+  const requestsQuery = firestoreQuery(
+    collection(db, "borrowRequests"),
+    where("itemId", "==", item.id)
+  );
+
+  const requestsSnapshot = await getDocs(requestsQuery);
+
+  const existingRequest = requestsSnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .find((request) => {
+      return (
+        request.borrowerId === currentUser.uid &&
+        activeStatuses.includes(request.approvalStatus)
+      );
+    });
+
+  return existingRequest || null;
+}
+
     async function checkRequestConflict() {
     if (!item?.id) return null;
 
@@ -465,14 +493,23 @@ let submittedSuccessfully = false;
     }
 
 
-    const conflictingRequest = await checkRequestConflict();
+const existingBorrowerRequest = await checkExistingBorrowerItemRequest();
 
-    if (conflictingRequest) {
-        showBlockedAction(
-          "This item already has an active request. Please wait until the current request is approved, rejected, cancelled, or auto-rejected."
-        );
-        return;
-    }
+if (existingBorrowerRequest) {
+  showBlockedAction(
+    `You already have a ${existingBorrowerRequest.approvalStatus} request for this item. Please wait until it is completed, rejected, or cancelled.`
+  );
+  return;
+}
+
+const conflictingRequest = await checkRequestConflict();
+
+if (conflictingRequest) {
+  showBlockedAction(
+    "This item already has an active borrowed or approved request. Please wait until the current transaction is completed."
+  );
+  return;
+}
 
     await addDoc(collection(db, "borrowRequests"), {
       itemId: item.id,
