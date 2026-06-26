@@ -84,31 +84,32 @@ function Dashboard() {
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
   }
 
-  function isOverdue(request) {
-    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
-      return false;
-    }
-
-    if (!request.expectedReturnDate) return false;
-
-    const today = new Date();
-    const expectedDate = new Date(request.expectedReturnDate);
-
-    today.setHours(0, 0, 0, 0);
-    expectedDate.setHours(0, 0, 0, 0);
-
-    return today > expectedDate;
+function isOverdue(request) {
+  if (request.approvalStatus !== "Borrowed") {
+    return false;
   }
 
-  function isDueToday(request) {
-    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
-      return false;
-    }
+  if (!request.expectedReturnDate) return false;
 
-    if (!request.expectedReturnDate) return false;
+  const today = new Date();
+  const expectedDate = new Date(request.expectedReturnDate);
 
-    return request.expectedReturnDate === getTodayDateKey();
+  today.setHours(0, 0, 0, 0);
+  expectedDate.setHours(0, 0, 0, 0);
+
+  return today > expectedDate;
+}
+
+function isDueToday(request) {
+  if (request.approvalStatus !== "Borrowed") {
+    return false;
   }
+
+  if (!request.expectedReturnDate) return false;
+
+  return request.expectedReturnDate === getTodayDateKey();
+}
+
   function getRequestCreatedTime(request) {
   if (request.createdAt?.toMillis) {
     return request.createdAt.toMillis();
@@ -201,9 +202,9 @@ const [
 getDocs(requestsRef),
     ]);
 
-    const overdueCount = overdueSnapshot.docs.filter((document) =>
-      ["Approved", "Borrowed"].includes(document.data().approvalStatus)
-    ).length;
+const overdueCount = overdueSnapshot.docs.filter(
+  (document) => document.data().approvalStatus === "Borrowed"
+).length;
 
     const damagedLostItemIds = new Set();
 
@@ -369,7 +370,7 @@ const adminUrgentAlerts = [
   {
     title: "Overdue Borrowed Items",
     count: overdueRequests.length,
-    description: "Borrowed or approved items past expected return date.",
+    description: "Borrowed items past expected return date.",
     tone: "red",
     path: "/manage-requests?status=Overdue",
     items: overdueRequests.slice(0, 3),
