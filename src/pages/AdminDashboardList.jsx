@@ -81,9 +81,10 @@ function AdminDashboardList() {
   }
 
   function showActionError(shortMessage, error) {
-  console.error(shortMessage, error);
-  showToast(shortMessage, "error");
-}
+    console.error(shortMessage, error);
+    showToast(shortMessage, "error");
+  }
+
   function getItemCategoryId(item) {
     return item.categoryId || item.category || "";
   }
@@ -298,6 +299,21 @@ function AdminDashboardList() {
     return request.approvalStatus || "Unknown";
   }
 
+  function renderActionIcon({ label, icon, onClick, variant = "secondary" }) {
+    return (
+      <button
+        type="button"
+        className={`admin-list-icon-btn admin-list-icon-${variant}`}
+        onClick={onClick}
+        aria-label={label}
+        title={label}
+        data-tooltip={label}
+      >
+        <span aria-hidden="true">{icon}</span>
+      </button>
+    );
+  }
+
   if (loading) {
     return (
       <div className="admin-list-loading">
@@ -313,195 +329,196 @@ function AdminDashboardList() {
   return (
     <div className="admin-list-page">
       {viewingRecord && (
-  <div
-    className="admin-list-modal-backdrop"
-    role="dialog"
-    aria-modal="true"
-    onClick={() => setViewingRecord(null)}
-  >
-    <section
-      className="admin-list-modal-card"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="admin-list-modal-close"
-        onClick={() => setViewingRecord(null)}
-        aria-label="Close details"
-      >
-        ×
-      </button>
-
-      {currentList.type === "items" ? (
-        <>
-          <div className="admin-list-modal-heading">
-            <span>{viewingRecord.itemCode || viewingRecord.id}</span>
-            <h2>{viewingRecord.itemName || "Untitled Item"}</h2>
-            <p>{viewingRecord.description || "No description available."}</p>
-          </div>
-
-          <div className="admin-list-modal-grid">
-            <div>
-              <span>Category</span>
-              <strong>{getItemCategoryName(viewingRecord)}</strong>
-            </div>
-
-            <div>
-              <span>Condition</span>
-              <strong>{viewingRecord.condition || "N/A"}</strong>
-            </div>
-
-            <div>
-              <span>Availability</span>
-              <strong
-                className={`admin-list-pill status-${String(
-                  getItemStatusLabel(viewingRecord)
-                ).toLowerCase()}`}
-              >
-                {getItemStatusLabel(viewingRecord)}
-              </strong>
-            </div>
-
-            <div>
-              <span>Item ID</span>
-              <strong>{viewingRecord.id}</strong>
-            </div>
-          </div>
-
-          <div className="admin-list-modal-actions">
+        <div
+          className="admin-list-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setViewingRecord(null)}
+        >
+          <section
+            className="admin-list-modal-card"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               type="button"
-              className="admin-list-secondary-btn"
+              className="admin-list-modal-close"
               onClick={() => setViewingRecord(null)}
+              aria-label="Close details"
             >
-              Close
+              ×
             </button>
 
-            <button
-              type="button"
-              className="admin-list-primary-btn"
-              onClick={() => navigate(`/item/${viewingRecord.id}`)}
-            >
-              View Item
-            </button>
+            {currentList.type === "items" ? (
+              <>
+                <div className="admin-list-modal-heading">
+                  <span>{viewingRecord.itemCode || viewingRecord.id}</span>
+                  <h2>{viewingRecord.itemName || "Untitled Item"}</h2>
+                  <p>{viewingRecord.description || "No description available."}</p>
+                </div>
 
-            <button
-              type="button"
-              className="admin-list-secondary-btn"
-              onClick={() => navigate(`/edit-item?id=${viewingRecord.id}`)}
-            >
-              Edit
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="admin-list-modal-heading">
-            <span>{viewingRecord.itemCode || viewingRecord.itemId || viewingRecord.id}</span>
-            <h2>{viewingRecord.itemName || "Untitled Item"}</h2>
-            <p>{viewingRecord.purpose || "No purpose provided."}</p>
-          </div>
+                <div className="admin-list-modal-grid">
+                  <div>
+                    <span>Category</span>
+                    <strong>{getItemCategoryName(viewingRecord)}</strong>
+                  </div>
 
-          <div className="admin-list-modal-grid">
-            <div>
-              <span>Borrower</span>
-              <strong>{viewingRecord.borrowerName || "Unnamed Borrower"}</strong>
-              <p>{viewingRecord.borrowerEmail || "No email"}</p>
-            </div>
+                  <div>
+                    <span>Condition</span>
+                    <strong>{viewingRecord.condition || "N/A"}</strong>
+                  </div>
 
-            <div>
-              <span>Category</span>
-              <strong>{getRequestCategoryName(viewingRecord)}</strong>
-            </div>
+                  <div>
+                    <span>Availability</span>
+                    <strong
+                      className={`admin-list-pill status-${String(
+                        getItemStatusLabel(viewingRecord)
+                      ).toLowerCase()}`}
+                    >
+                      {getItemStatusLabel(viewingRecord)}
+                    </strong>
+                  </div>
 
-            <div>
-              <span>Status</span>
-              <strong
-                className={`admin-list-pill status-${String(
-                  getRequestStatusLabel(viewingRecord)
-                ).toLowerCase()}`}
-              >
-                {getRequestStatusLabel(viewingRecord)}
-              </strong>
-            </div>
+                  <div>
+                    <span>Item ID</span>
+                    <strong>{viewingRecord.id}</strong>
+                  </div>
+                </div>
 
-            <div>
-              <span>Borrow Date</span>
-              <strong>{viewingRecord.borrowDate || "Not set"}</strong>
-            </div>
+                <div className="admin-list-modal-actions">
+                  <button
+                    type="button"
+                    className="admin-list-secondary-btn"
+                    onClick={() => setViewingRecord(null)}
+                  >
+                    Close
+                  </button>
 
-            <div>
-              <span>Expected Return</span>
-              <strong>{viewingRecord.expectedReturnDate || "Not set"}</strong>
-            </div>
-          </div>
+                  <button
+                    type="button"
+                    className="admin-list-primary-btn"
+                    onClick={() => navigate(`/item/${viewingRecord.id}`)}
+                  >
+                    View Item
+                  </button>
 
-          <div className="admin-list-modal-actions">
-            <button
-              type="button"
-              className="admin-list-secondary-btn"
-              onClick={() => setViewingRecord(null)}
-            >
-              Close
-            </button>
+                  <button
+                    type="button"
+                    className="admin-list-secondary-btn"
+                    onClick={() => navigate(`/edit-item?id=${viewingRecord.id}`)}
+                  >
+                    Edit
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="admin-list-modal-heading">
+                  <span>{viewingRecord.itemCode || viewingRecord.itemId || viewingRecord.id}</span>
+                  <h2>{viewingRecord.itemName || "Untitled Item"}</h2>
+                  <p>{viewingRecord.purpose || "No purpose provided."}</p>
+                </div>
 
-            {viewingRecord.itemId && (
-              <button
-                type="button"
-                className="admin-list-primary-btn"
-                onClick={() => navigate(`/item/${viewingRecord.itemId}`)}
-              >
-                View Item
-              </button>
+                <div className="admin-list-modal-grid">
+                  <div>
+                    <span>Borrower</span>
+                    <strong>{viewingRecord.borrowerName || "Unnamed Borrower"}</strong>
+                    <p>{viewingRecord.borrowerEmail || "No email"}</p>
+                  </div>
+
+                  <div>
+                    <span>Category</span>
+                    <strong>{getRequestCategoryName(viewingRecord)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Status</span>
+                    <strong
+                      className={`admin-list-pill status-${String(
+                        getRequestStatusLabel(viewingRecord)
+                      ).toLowerCase()}`}
+                    >
+                      {getRequestStatusLabel(viewingRecord)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Borrow Date</span>
+                    <strong>{viewingRecord.borrowDate || "Not set"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Expected Return</span>
+                    <strong>{viewingRecord.expectedReturnDate || "Not set"}</strong>
+                  </div>
+                </div>
+
+                <div className="admin-list-modal-actions">
+                  <button
+                    type="button"
+                    className="admin-list-secondary-btn"
+                    onClick={() => setViewingRecord(null)}
+                  >
+                    Close
+                  </button>
+
+                  {viewingRecord.itemId && (
+                    <button
+                      type="button"
+                      className="admin-list-primary-btn"
+                      onClick={() => navigate(`/item/${viewingRecord.itemId}`)}
+                    >
+                      View Item
+                    </button>
+                  )}
+
+                  {viewingRecord.approvalStatus === "Pending" && (
+                    <button
+                      type="button"
+                      className="admin-list-secondary-btn"
+                      onClick={() => navigate("/manage-requests")}
+                    >
+                      Manage
+                    </button>
+                  )}
+
+                  {viewingRecord.approvalStatus === "Borrowed" && (
+                    <button
+                      type="button"
+                      className="admin-list-secondary-btn"
+                      onClick={() => navigate("/return-confirmation")}
+                    >
+                      Return
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-
-            {viewingRecord.approvalStatus === "Pending" && (
-              <button
-                type="button"
-                className="admin-list-secondary-btn"
-                onClick={() => navigate("/manage-requests")}
-              >
-                Manage
-              </button>
-            )}
-
-            {viewingRecord.approvalStatus === "Borrowed" && (
-              <button
-                type="button"
-                className="admin-list-secondary-btn"
-                onClick={() => navigate("/return-confirmation")}
-              >
-                Return
-              </button>
-            )}
-          </div>
-        </>
-      )}
-    </section>
-  </div>
-)}
-  <section className="admin-list-header admin-list-header-compact">
-  <div className="admin-list-header-content">
-    <div className="admin-list-header-text">
-      <h2>{currentList.title}</h2>
-      <p>{currentList.subtitle}</p>
-
-      {isCategoryAdmin && (
-        <div className="admin-list-assigned-note">
-          Assigned categories: {getAssignedCategoryNames()}
+          </section>
         </div>
       )}
-    </div>
 
-    <button
-      type="button"
-      className="admin-list-secondary-btn admin-list-header-back-btn"
-      onClick={() => navigate("/dashboard")}
-    >
-      Back to Dashboard
-    </button>
-  </div>
-</section>
+      <section className="admin-list-header admin-list-header-compact">
+        <div className="admin-list-header-content">
+          <div className="admin-list-header-text">
+            <h2>{currentList.title}</h2>
+            <p>{currentList.subtitle}</p>
+
+            {isCategoryAdmin && (
+              <div className="admin-list-assigned-note">
+                Assigned categories: {getAssignedCategoryNames()}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="admin-list-secondary-btn admin-list-header-back-btn"
+            onClick={() => navigate("/dashboard")}
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </section>
 
       <section className="admin-list-tools">
         <div>
@@ -523,171 +540,157 @@ function AdminDashboardList() {
           <strong>{filteredRecords.length}</strong>
         </div>
       </section>
-<section className="admin-list-panel">
-  {filteredRecords.length === 0 ? (
-    <div className="admin-list-empty">
-      <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-      <h2>{currentList.emptyTitle}</h2>
-      <p>{currentList.emptyText}</p>
-    </div>
-  ) : currentList.type === "items" ? (
-    <>
-      <div className="admin-list-compact-header item-table">
-        <span>Item</span>
-        <span>Category</span>
-        <span>Condition</span>
-        <span>Status</span>
-        <span>Actions</span>
-      </div>
 
-      <div className="admin-list-compact-grid">
-        {filteredRecords.map((item) => (
-          <article className="admin-list-compact-row item-table" key={item.id}>
-            <div className="admin-list-compact-cell admin-list-main-cell">
-              <span>{item.itemCode || item.id}</span>
-              <strong>{item.itemName || "Untitled Item"}</strong>
-              <p>{item.description || "No description available."}</p>
-            </div>
-
-            <div className="admin-list-compact-cell">
+      <section className="admin-list-panel">
+        {filteredRecords.length === 0 ? (
+          <div className="admin-list-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+            <h2>{currentList.emptyTitle}</h2>
+            <p>{currentList.emptyText}</p>
+          </div>
+        ) : currentList.type === "items" ? (
+          <>
+            <div className="admin-list-compact-header item-table">
+              <span>Item</span>
               <span>Category</span>
-              <strong>{getItemCategoryName(item)}</strong>
-            </div>
-
-            <div className="admin-list-compact-cell">
               <span>Condition</span>
-              <strong>{item.condition || "N/A"}</strong>
+              <span>Status</span>
+              <span>Actions</span>
             </div>
 
-            <div className="admin-list-compact-status">
-              <strong
-                className={`admin-list-pill status-${String(
-                  getItemStatusLabel(item)
-                ).toLowerCase()}`}
-              >
-                {getItemStatusLabel(item)}
-              </strong>
+            <div className="admin-list-compact-grid">
+              {filteredRecords.map((item) => (
+                <article className="admin-list-compact-row item-table" key={item.id}>
+                  <div className="admin-list-compact-cell admin-list-main-cell">
+                    <span>{item.itemCode || item.id}</span>
+                    <strong>{item.itemName || "Untitled Item"}</strong>
+                    <p>{item.description || "No description available."}</p>
+                  </div>
+
+                  <div className="admin-list-compact-cell">
+                    <span>Category</span>
+                    <strong>{getItemCategoryName(item)}</strong>
+                  </div>
+
+                  <div className="admin-list-compact-cell">
+                    <span>Condition</span>
+                    <strong>{item.condition || "N/A"}</strong>
+                  </div>
+
+                  <div className="admin-list-compact-status">
+                    <strong
+                      className={`admin-list-pill status-${String(
+                        getItemStatusLabel(item)
+                      ).toLowerCase()}`}
+                    >
+                      {getItemStatusLabel(item)}
+                    </strong>
+                  </div>
+
+                  <div className="admin-list-compact-actions">
+                    {renderActionIcon({
+                      label: "Details",
+                      icon: "i",
+                      onClick: () => setViewingRecord(item),
+                    })}
+
+                    {renderActionIcon({
+                      label: "View Item",
+                      icon: "↗",
+                      variant: "primary",
+                      onClick: () => navigate(`/item/${item.id}`),
+                    })}
+
+                    {renderActionIcon({
+                      label: "Edit Item",
+                      icon: "✎",
+                      onClick: () => navigate(`/edit-item?id=${item.id}`),
+                    })}
+                  </div>
+                </article>
+              ))}
             </div>
-
-            <div className="admin-list-compact-actions">
-              <button
-                type="button"
-                className="admin-list-secondary-btn"
-                onClick={() => setViewingRecord(item)}
-              >
-                Details
-              </button>
-
-              <button
-                type="button"
-                className="admin-list-primary-btn"
-                onClick={() => navigate(`/item/${item.id}`)}
-              >
-                View
-              </button>
-
-              <button
-                type="button"
-                className="admin-list-secondary-btn"
-                onClick={() => navigate(`/edit-item?id=${item.id}`)}
-              >
-                Edit
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </>
-  ) : (
-    <>
-      <div className="admin-list-compact-header request-table">
-        <span>Item</span>
-        <span>Borrower</span>
-        <span>Category</span>
-        <span>Expected</span>
-        <span>Status</span>
-        <span>Actions</span>
-      </div>
-
-      <div className="admin-list-compact-grid">
-        {filteredRecords.map((request) => (
-          <article className="admin-list-compact-row request-table" key={request.id}>
-            <div className="admin-list-compact-cell admin-list-main-cell">
-              <span>{request.itemCode || request.itemId || request.id}</span>
-              <strong>{request.itemName || "Untitled Item"}</strong>
-              <p>{request.purpose || "No purpose provided."}</p>
-            </div>
-
-            <div className="admin-list-compact-cell admin-list-borrower-cell">
-              <span>{request.borrowerEmail || "No email"}</span>
-              <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
-            </div>
-
-            <div className="admin-list-compact-cell">
+          </>
+        ) : (
+          <>
+            <div className="admin-list-compact-header request-table">
+              <span>Item</span>
+              <span>Borrower</span>
               <span>Category</span>
-              <strong>{getRequestCategoryName(request)}</strong>
-            </div>
-
-            <div className="admin-list-compact-cell">
               <span>Expected</span>
-              <strong>{request.expectedReturnDate || "Not set"}</strong>
+              <span>Status</span>
+              <span>Actions</span>
             </div>
 
-            <div className="admin-list-compact-status">
-              <strong
-                className={`admin-list-pill status-${String(
-                  getRequestStatusLabel(request)
-                ).toLowerCase()}`}
-              >
-                {getRequestStatusLabel(request)}
-              </strong>
+            <div className="admin-list-compact-grid">
+              {filteredRecords.map((request) => (
+                <article className="admin-list-compact-row request-table" key={request.id}>
+                  <div className="admin-list-compact-cell admin-list-main-cell">
+                    <span>{request.itemCode || request.itemId || request.id}</span>
+                    <strong>{request.itemName || "Untitled Item"}</strong>
+                    <p>{request.purpose || "No purpose provided."}</p>
+                  </div>
+
+                  <div className="admin-list-compact-cell admin-list-borrower-cell">
+                    <span>{request.borrowerEmail || "No email"}</span>
+                    <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                  </div>
+
+                  <div className="admin-list-compact-cell">
+                    <span>Category</span>
+                    <strong>{getRequestCategoryName(request)}</strong>
+                  </div>
+
+                  <div className="admin-list-compact-cell">
+                    <span>Expected</span>
+                    <strong>{request.expectedReturnDate || "Not set"}</strong>
+                  </div>
+
+                  <div className="admin-list-compact-status">
+                    <strong
+                      className={`admin-list-pill status-${String(
+                        getRequestStatusLabel(request)
+                      ).toLowerCase()}`}
+                    >
+                      {getRequestStatusLabel(request)}
+                    </strong>
+                  </div>
+
+                  <div className="admin-list-compact-actions">
+                    {renderActionIcon({
+                      label: "Details",
+                      icon: "i",
+                      onClick: () => setViewingRecord(request),
+                    })}
+
+                    {request.itemId &&
+                      renderActionIcon({
+                        label: "View Item",
+                        icon: "↗",
+                        variant: "primary",
+                        onClick: () => navigate(`/item/${request.itemId}`),
+                      })}
+
+                    {request.approvalStatus === "Pending" &&
+                      renderActionIcon({
+                        label: "Manage Request",
+                        icon: "✓",
+                        onClick: () => navigate("/manage-requests"),
+                      })}
+
+                    {request.approvalStatus === "Borrowed" &&
+                      renderActionIcon({
+                        label: "Return Item",
+                        icon: "↩",
+                        onClick: () => navigate("/return-confirmation"),
+                      })}
+                  </div>
+                </article>
+              ))}
             </div>
-
-            <div className="admin-list-compact-actions">
-              <button
-                type="button"
-                className="admin-list-secondary-btn"
-                onClick={() => setViewingRecord(request)}
-              >
-                Details
-              </button>
-
-              {request.itemId && (
-                <button
-                  type="button"
-                  className="admin-list-primary-btn"
-                  onClick={() => navigate(`/item/${request.itemId}`)}
-                >
-                  View
-                </button>
-              )}
-
-              {request.approvalStatus === "Pending" && (
-                <button
-                  type="button"
-                  className="admin-list-secondary-btn"
-                  onClick={() => navigate("/manage-requests")}
-                >
-                  Manage
-                </button>
-              )}
-
-              {request.approvalStatus === "Borrowed" && (
-                <button
-                  type="button"
-                  className="admin-list-secondary-btn"
-                  onClick={() => navigate("/return-confirmation")}
-                >
-                  Return
-                </button>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-    </>
-  )}
-</section>
+          </>
+        )}
+      </section>
     </div>
   );
 }

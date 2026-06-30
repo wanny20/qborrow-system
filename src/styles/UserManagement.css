@@ -4900,3 +4900,697 @@ html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid l
 html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid label span {
   color: #f8fafc !important;
 }
+
+
+/* =========================================================
+   USER MANAGEMENT - DARK MODE TITLE + EXISTING USERS CLEANUP
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Title card: readable in dark mode */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-compact {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-content,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header > div {
+  border: 1.5px solid rgba(203, 213, 225, 0.34) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 93% 82%, rgba(250, 204, 21, 0.24), transparent 27%),
+    radial-gradient(circle at 90% 18%, rgba(37, 99, 235, 0.16), transparent 30%),
+    linear-gradient(135deg, #111827 0%, #162033 48%, #1e293b 100%) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* Remove accidental sharp rectangle around header text. */
+html body .app-page-content .user-management-page .user-management-header-text,
+html body .app-page-content .user-management-page .user-management-header-text h1,
+html body .app-page-content .user-management-page .user-management-header-text h2,
+html body .app-page-content .user-management-page .user-management-header-text p,
+html body .app-page-content .user-management-page .user-management-header-content > div,
+html body .app-page-content .user-management-page .user-management-header-content > div *,
+html body .app-page-content .user-management-page .user-management-header > div > div,
+html body .app-page-content .user-management-page .user-management-header > div > div * {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+html body .app-page-content .user-management-page .user-management-header-text,
+html body .app-page-content .user-management-page .user-management-header-content > div,
+html body .app-page-content .user-management-page .user-management-header > div > div {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-text h1,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header h1 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-text p,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header p {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  text-shadow: none !important;
+}
+
+/* Back button readable in dark mode. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-back-btn,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header .user-secondary-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.45) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* Existing Users: remove the inner rectangle around email/role. */
+html body .app-page-content .user-management-page .user-table-grid .user-card-topline,
+html body .user-management-page .user-table-grid .user-card-topline,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-card-topline {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html body .app-page-content .user-management-page .user-table-grid .user-card-topline::before,
+html body .app-page-content .user-management-page .user-table-grid .user-card-topline::after,
+html body .user-management-page .user-table-grid .user-card-topline::before,
+html body .user-management-page .user-table-grid .user-card-topline::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html body .app-page-content .user-management-page .user-table-grid .user-card-topline > span,
+html body .user-management-page .user-table-grid .user-card-topline > span,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-card-topline > span {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+}
+
+html body .app-page-content .user-management-page .user-table-grid .user-card-topline strong,
+html body .user-management-page .user-table-grid .user-card-topline strong {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  min-height: 22px !important;
+  padding: 0 10px !important;
+}
+
+/* Remove global outline from table cell wrappers, but keep the real row outline. */
+html body .app-page-content .user-management-page .user-table-grid .user-table-cell,
+html body .user-management-page .user-table-grid .user-table-cell,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-table-cell {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Role pills stay readable. */
+html[data-theme="dark"] body .user-management-page .user-table-grid .user-card-topline > span {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] body .user-management-page .user-table-grid .user-card-topline strong.role-borrower {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+html[data-theme="dark"] body .user-management-page .user-table-grid .user-card-topline strong.role-categoryAdmin {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  -webkit-text-fill-color: #92400e !important;
+}
+
+html[data-theme="dark"] body .user-management-page .user-table-grid .user-card-topline strong.role-superAdmin {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Dark mode table readability. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card {
+  border-color: rgba(203, 213, 225, 0.28) !important;
+  background: #111827 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-header {
+  border-color: rgba(203, 213, 225, 0.18) !important;
+  background: rgba(30, 41, 59, 0.64) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-card {
+  border-color: rgba(203, 213, 225, 0.18) !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-card h3,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-grid .user-table-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-header span,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-small-note {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+
+
+/* =========================================================
+   VERY FINAL FIX - EXISTING USERS TITLE READABLE IN DARK MODE
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* The "Existing Users" title lives inside:
+   <section className="user-list-card">
+     <div className="user-section-heading">
+       <h2>Existing Users</h2>
+       <p>Showing...</p>
+*/
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading h2,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading h2,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-section-heading h2 {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.32) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading p,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading p,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-section-heading p {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Remove any pseudo element that may be covering/dimming the heading. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading::before,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading::after,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading::before,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Make sure the Existing Users card itself does not dim its children. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card {
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* If AppLayout global styles added a color to all direct children, override it here. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > *,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card * {
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT - ADD USER BORROWER DETAILS NO OUTLINE
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Remove the large rounded outline around the Borrower Details section
+   in Add New User only. This keeps the actual input/select borders. */
+html body .app-page-content .user-management-page .user-create-card form > .user-borrower-details-box,
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-box,
+html body .user-management-page .user-create-card form > .user-borrower-details-box,
+html body .user-management-page .user-create-card .user-borrower-details-box,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card form > .user-borrower-details-box,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-box {
+  grid-column: 1 / -1 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 2px 0 0 !important;
+}
+
+/* Kill any pseudo-element/global outline that may be injected into the section. */
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-box::before,
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-box::after,
+html body .user-management-page .user-create-card .user-borrower-details-box::before,
+html body .user-management-page .user-create-card .user-borrower-details-box::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* The Borrower Details label should be plain text, not a boxed element. */
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-box > span,
+html body .user-management-page .user-create-card .user-borrower-details-box > span,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-box > span {
+  display: block !important;
+  width: fit-content !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 0 0 8px !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  font-family: var(--qb-heading-font, inherit) !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+html:not([data-theme="dark"]) body .app-page-content .user-management-page .user-create-card .user-borrower-details-box > span,
+html:not([data-theme="dark"]) body .user-management-page .user-create-card .user-borrower-details-box > span {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+/* Keep the borrower fields compact and clean. */
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid,
+html body .user-management-page .user-create-card .user-borrower-details-grid,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px 14px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid::before,
+html body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid::after,
+html body .user-management-page .user-create-card .user-borrower-details-grid::before,
+html body .user-management-page .user-create-card .user-borrower-details-grid::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Do not remove the real field styling; only make it readable in dark mode. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid .qb-label,
+html[data-theme="dark"] body .user-management-page .user-create-card .user-borrower-details-grid .qb-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid input,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid select,
+html[data-theme="dark"] body .user-management-page .user-create-card .user-borrower-details-grid input,
+html[data-theme="dark"] body .user-management-page .user-create-card .user-borrower-details-grid select {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  border-color: rgba(203, 213, 225, 0.28) !important;
+}
+
+/* Responsive borrower details layout */
+@media (max-width: 1180px) {
+  html body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid,
+  html body .user-management-page .user-create-card .user-borrower-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  html body .app-page-content .user-management-page .user-create-card .user-borrower-details-grid,
+  html body .user-management-page .user-create-card .user-borrower-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT - MANAGE ITEM CATEGORIES DARK MODE FIX
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Main Manage Item Categories card */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card.user-tool-active,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-admin-card.user-tool-modal-card.user-tool-active {
+  border-color: rgba(203, 213, 225, 0.3) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+/* Title card / hero readable in dark mode */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero {
+  border: 1.5px solid rgba(203, 213, 225, 0.32) !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 92% 82%, rgba(250, 204, 21, 0.26), transparent 25%),
+    radial-gradient(circle at 90% 18%, rgba(37, 99, 235, 0.16), transparent 30%),
+    linear-gradient(135deg, #111827 0%, #172033 54%, #1e293b 100%) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero-text,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero-text *,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero h2,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero p {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-modal-hero p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Back button visible */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card .user-tool-dashboard-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.5) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* Category add form readable */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-add-form {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-add-form .qb-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-add-form input {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+/* Remove the rectangular outline around Hide Categories button row */
+html body .app-page-content .user-management-page .user-category-toggle-row,
+html body .user-management-page .user-category-toggle-row,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-toggle-row {
+  display: flex !important;
+  justify-content: center !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 10px 0 12px !important;
+  margin: 12px 0 !important;
+}
+
+html body .app-page-content .user-management-page .user-category-toggle-row::before,
+html body .app-page-content .user-management-page .user-category-toggle-row::after,
+html body .user-management-page .user-category-toggle-row::before,
+html body .user-management-page .user-category-toggle-row::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Keep Hide Categories as a clean pill */
+html body .app-page-content .user-management-page .user-category-toggle-btn,
+html body .user-management-page .user-category-toggle-btn {
+  width: fit-content !important;
+  min-width: 240px !important;
+  min-height: 46px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.35) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-toggle-btn,
+html[data-theme="dark"] body .user-management-page .user-category-toggle-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.44) !important;
+  background: #111827 !important;
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-toggle-btn span,
+html[data-theme="dark"] body .user-management-page .user-category-toggle-btn span {
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+}
+
+/* Category table wrapper/cards */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table-wrap {
+  border-color: rgba(203, 213, 225, 0.28) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table thead,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table thead tr,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table th {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  border-color: rgba(203, 213, 225, 0.2) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table tbody tr {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table td {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  border-color: rgba(203, 213, 225, 0.18) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table td strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table td span:not(.user-category-status) {
+  color: #93a4bd !important;
+  -webkit-text-fill-color: #93a4bd !important;
+}
+
+/* Status pills readable */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-status.deletable {
+  border: 0 !important;
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-status.locked {
+  border: 0 !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Action buttons readable */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table .user-danger-btn {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  background: rgba(127, 29, 29, 0.48) !important;
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table .user-secondary-btn {
+  border-color: rgba(203, 213, 225, 0.24) !important;
+  background: #111827 !important;
+  color: #facc15 !important;
+  -webkit-text-fill-color: #facc15 !important;
+  box-shadow: none !important;
+}
+
+/* Remove white/washed-out table cells caused by earlier light-mode table rules */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table tbody tr:nth-child(even),
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table tbody tr:nth-child(odd) {
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table tbody tr:hover td {
+  background: #162033 !important;
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT - IMPORT CSV HEADING NO RECTANGLE OUTLINE
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Remove the unwanted rectangle around "Upload Borrower CSV" text only.
+   The main upload card and input borders will stay unchanged. */
+html body .app-page-content .user-management-page .user-upload-panel-heading,
+html body .user-management-page .user-upload-panel-heading,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-upload-panel-heading {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 0 0 12px !important;
+}
+
+html body .app-page-content .user-management-page .user-upload-panel-heading::before,
+html body .app-page-content .user-management-page .user-upload-panel-heading::after,
+html body .user-management-page .user-upload-panel-heading::before,
+html body .user-management-page .user-upload-panel-heading::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Also remove borders from the inner heading text wrappers. */
+html body .app-page-content .user-management-page .user-upload-panel-heading > *,
+html body .app-page-content .user-management-page .user-upload-panel-heading strong,
+html body .app-page-content .user-management-page .user-upload-panel-heading p,
+html body .user-management-page .user-upload-panel-heading > *,
+html body .user-management-page .user-upload-panel-heading strong,
+html body .user-management-page .user-upload-panel-heading p {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Dark mode readability for Import CSV panel text. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-upload-panel-heading strong,
+html[data-theme="dark"] body .user-management-page .user-upload-panel-heading strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-upload-panel-heading p,
+html[data-theme="dark"] body .user-management-page .user-upload-panel-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Keep the upload panel clean/readable in dark mode. */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-upload-panel {
+  border-color: rgba(203, 213, 225, 0.3) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-upload-panel .qb-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

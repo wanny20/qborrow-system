@@ -712,3 +712,271 @@ html[data-theme="dark"] .scan-camera-controls select {
   background: var(--qb-input, #0f172a);
   color: var(--qb-foreground, #f8fafc);
 }
+/* =========================================================
+   SCAN QR PAGE - DARK MODE POLISH
+   Paste at the VERY BOTTOM of ScanQR.css
+========================================================= */
+
+/* ---------- Header: dark readable card, no text rectangle ---------- */
+html[data-theme="dark"] .scan-page .scan-header-content,
+html[data-theme="dark"] .scan-page .scan-header > div {
+  border: 1.8px solid rgba(148, 163, 184, 0.34) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 94% 18%, rgba(250, 204, 21, 0.18), transparent 28%),
+    radial-gradient(circle at 98% 96%, rgba(37, 99, 235, 0.18), transparent 30%),
+    linear-gradient(135deg, #101827 0%, #111827 56%, #172033 100%) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-header-text,
+html[data-theme="dark"] .scan-page .scan-header-text h1,
+html[data-theme="dark"] .scan-page .scan-header-text p {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-header-text h1 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-header-text p {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+  font-weight: 720 !important;
+}
+
+/* Back button consistent in dark mode */
+html[data-theme="dark"] .scan-page .scan-header-back-btn {
+  min-width: 190px !important;
+  min-height: 46px !important;
+  border: 1.8px solid rgba(226, 232, 240, 0.46) !important;
+  border-radius: 999px !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24) !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-weight: 900 !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-header-back-btn:hover:not(:disabled) {
+  border-color: rgba(147, 197, 253, 0.70) !important;
+  background: #172033 !important;
+  color: #ffffff !important;
+}
+
+/* ---------- Main cards and side panel ---------- */
+html[data-theme="dark"] .scan-page .scan-card,
+html[data-theme="dark"] .scan-page .scan-side-panel {
+  border: 1.8px solid rgba(148, 163, 184, 0.30) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-section-heading,
+html[data-theme="dark"] .scan-page .scan-section-heading h2,
+html[data-theme="dark"] .scan-page .scan-section-heading p {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-section-heading h2,
+html[data-theme="dark"] .scan-page .scan-help-card h3,
+html[data-theme="dark"] .scan-page .scan-admin-shortcuts h3,
+html[data-theme="dark"] .scan-page .scan-upload-card h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-section-heading p,
+html[data-theme="dark"] .scan-page .scan-upload-card p,
+html[data-theme="dark"] .scan-page .scan-help-card li,
+html[data-theme="dark"] .scan-page .scan-help-card ul {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* ---------- Scanner area ---------- */
+html[data-theme="dark"] .scan-page .scan-reader-shell {
+  border: 1.6px solid rgba(148, 163, 184, 0.26) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 20px 20px, rgba(96, 165, 250, 0.10) 1px, transparent 1.5px),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(250, 204, 21, 0.06)),
+    #152033 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-reader-paused {
+  border: 1.5px dashed rgba(96, 165, 250, 0.30) !important;
+  border-radius: 20px !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-reader-paused span {
+  background: #facc15 !important;
+  color: #0f172a !important;
+  box-shadow: 0 18px 34px rgba(250, 204, 21, 0.18) !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-reader-paused h3 {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-reader-paused p {
+  color: #dbeafe !important;
+}
+
+/* Html5Qrcode generated UI */
+html[data-theme="dark"] #qr-reader {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] #qr-reader__scan_region,
+html[data-theme="dark"] #qr-reader__dashboard {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] #qr-reader div,
+html[data-theme="dark"] #qr-reader span {
+  color: #f8fafc !important;
+}
+
+/* ---------- Manual search field ---------- */
+html[data-theme="dark"] .scan-page .scan-manual-form,
+html[data-theme="dark"] .scan-page .scan-manual-form .qb-label {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-manual-form input,
+html[data-theme="dark"] .scan-page .scan-camera-controls select {
+  border: 1.6px solid rgba(148, 163, 184, 0.34) !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-manual-form input::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* ---------- Upload + Tips cards: stop light card / white text issue ---------- */
+html[data-theme="dark"] .scan-page .scan-upload-card,
+html[data-theme="dark"] .scan-page .scan-help-card,
+html[data-theme="dark"] .scan-page .scan-admin-shortcuts {
+  border: 1.6px solid rgba(148, 163, 184, 0.26) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(250, 204, 21, 0.10), transparent 30%),
+    #152033 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-upload-name {
+  color: #cbd5e1 !important;
+}
+
+/* ---------- Buttons ---------- */
+html[data-theme="dark"] .scan-page .scan-primary-btn {
+  border: 1.6px solid rgba(250, 204, 21, 0.45) !important;
+  background: #facc15 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: 0 12px 24px rgba(250, 204, 21, 0.18) !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-primary-btn:hover:not(:disabled) {
+  background: #fde047 !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-secondary-btn:not(.scan-header-back-btn) {
+  border: 1.6px solid rgba(226, 232, 240, 0.36) !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-secondary-btn:not(.scan-header-back-btn):hover:not(:disabled) {
+  background: #ffffff !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-primary-btn:disabled,
+html[data-theme="dark"] .scan-page .scan-secondary-btn:disabled {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+  opacity: 0.72 !important;
+  box-shadow: none !important;
+}
+
+/* Upload image button should not disappear when disabled */
+html[data-theme="dark"] .scan-page .scan-upload-card .scan-secondary-btn:disabled {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* ---------- Status + result boxes ---------- */
+html[data-theme="dark"] .scan-page .scan-status {
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-status-success,
+html[data-theme="dark"] .scan-page .scan-result-box {
+  border-color: rgba(134, 239, 172, 0.28) !important;
+  background: rgba(34, 197, 94, 0.14) !important;
+  color: #bbf7d0 !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-result-box span,
+html[data-theme="dark"] .scan-page .scan-result-box strong {
+  color: #bbf7d0 !important;
+}
+
+html[data-theme="dark"] .scan-page .scan-status-error {
+  border-color: rgba(254, 202, 202, 0.30) !important;
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: #fecaca !important;
+}
+
+/* ---------- Remove accidental inner rectangle outlines from text wrappers ---------- */
+html[data-theme="dark"] .scan-page .scan-section-heading,
+html[data-theme="dark"] .scan-page .scan-manual-form,
+html[data-theme="dark"] .scan-page .scan-upload-card h3,
+html[data-theme="dark"] .scan-page .scan-upload-card p,
+html[data-theme="dark"] .scan-page .scan-help-card h3,
+html[data-theme="dark"] .scan-page .scan-help-card ul {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Light mode safety ---------- */
+html:not([data-theme="dark"]) .scan-page .scan-header-text h1 {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+html:not([data-theme="dark"]) .scan-page .scan-header-text p {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}

@@ -2138,3 +2138,875 @@ html[data-theme="dark"] .inventory-title-area-compact {
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28) !important;
 }
 
+
+/* =========================================================
+   VIEW ITEMS - NIGHT MODE POLISH + SUMMARY ICON FIX
+   Keep the real rounded cards. Remove text-wrapper rectangles.
+========================================================= */
+
+/* Page-level dark palette for inventory only */
+html[data-theme="dark"] .inventory-page {
+  --inventory-night-bg: #0b1220;
+  --inventory-night-panel: #101827;
+  --inventory-night-panel-soft: #111f33;
+  --inventory-night-border: rgba(148, 163, 184, 0.28);
+  --inventory-night-border-strong: rgba(203, 213, 225, 0.34);
+  --inventory-night-text: #f8fafc;
+  --inventory-night-muted: #cbd5e1;
+  color: var(--inventory-night-text) !important;
+}
+
+/* Remove inherited/global sharp rectangles from header text and wrappers */
+.inventory-page :where(
+  .inventory-header-row,
+  .inventory-header-row.has-actions,
+  .inventory-header-row.inventory-header-compact,
+  .inventory-header-text,
+  .inventory-header-text h1,
+  .inventory-header-text p,
+  .inventory-header-actions,
+  .inventory-header-actions-compact,
+  .inventory-section-heading,
+  .inventory-section-heading > div,
+  .inventory-section-heading h2,
+  .inventory-section-heading p,
+  .inventory-search,
+  .inventory-filter,
+  .inventory-summary h3,
+  .inventory-summary p,
+  .inventory-table-item,
+  .inventory-table-item-info,
+  .inventory-table-actions
+) {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Clean View Items hero card */
+.inventory-title-area,
+.inventory-title-area-compact {
+  border: 2px solid #1e293b !important;
+  border-radius: 30px !important;
+  box-shadow: 0 12px 0 rgba(30, 41, 59, 0.08) !important;
+  overflow: hidden !important;
+}
+
+.inventory-title-area-compact {
+  min-height: 116px !important;
+  padding: 24px 28px !important;
+}
+
+.inventory-title-area h1,
+.inventory-title-area-compact .inventory-header-text h1 {
+  background: transparent !important;
+  color: var(--qb-foreground, #0f172a) !important;
+  text-shadow: none !important;
+}
+
+.inventory-title-area p,
+.inventory-title-area-compact .inventory-header-text p {
+  background: transparent !important;
+  color: var(--qb-muted-foreground, #64748b) !important;
+}
+
+/* Search/filter card: keep only outer rounded card + input outlines */
+.inventory-tools {
+  border: 2px solid #1e293b !important;
+  border-radius: 26px !important;
+  box-shadow: 0 8px 0 rgba(30, 41, 59, 0.07) !important;
+  padding: 16px !important;
+}
+
+.inventory-tools label,
+.inventory-tools .qb-label {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.inventory-search input,
+.inventory-filter select {
+  border: 1.5px solid rgba(30, 41, 59, 0.22) !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+
+/* Summary group: keep outer card, improve cards and icon tiles */
+.inventory-summary {
+  border: 2px solid #1e293b !important;
+  border-radius: 26px !important;
+  box-shadow: 0 8px 0 rgba(30, 41, 59, 0.07) !important;
+  padding: 16px !important;
+}
+
+.inventory-summary > div {
+  position: relative !important;
+  min-height: 112px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.24) !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  padding: 16px !important;
+}
+
+.inventory-summary-icon {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 0 !important;
+  border-radius: 15px !important;
+  box-shadow: none !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+}
+
+.inventory-summary-icon::before {
+  display: block !important;
+  font-family: var(--qb-heading-font, inherit) !important;
+  font-size: 1rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.inventory-summary > div:nth-child(1) .inventory-summary-icon {
+  background: rgba(37, 99, 235, 0.14) !important;
+  color: #2563eb !important;
+}
+
+.inventory-summary > div:nth-child(1) .inventory-summary-icon::before {
+  content: "▦";
+}
+
+.inventory-summary > div:nth-child(2) .inventory-summary-icon {
+  background: rgba(34, 197, 94, 0.16) !important;
+  color: #16a34a !important;
+}
+
+.inventory-summary > div:nth-child(2) .inventory-summary-icon::before {
+  content: "✓";
+}
+
+.inventory-summary > div:nth-child(3) .inventory-summary-icon {
+  background: rgba(250, 204, 21, 0.24) !important;
+  color: #b45309 !important;
+}
+
+.inventory-summary > div:nth-child(3) .inventory-summary-icon::before {
+  content: "↗";
+}
+
+.inventory-summary > div:nth-child(4) .inventory-summary-icon {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #dc2626 !important;
+}
+
+.inventory-summary > div:nth-child(4) .inventory-summary-icon::before {
+  content: "!";
+}
+
+.inventory-summary h3 {
+  color: var(--qb-foreground, #0f172a) !important;
+}
+
+.inventory-summary p {
+  color: var(--qb-muted-foreground, #64748b) !important;
+  text-transform: none !important;
+}
+
+/* Items panel: rounded card only, no heading rectangle */
+.inventory-card-panel {
+  border: 2px solid #1e293b !important;
+  border-radius: 28px !important;
+  box-shadow: 0 8px 0 rgba(30, 41, 59, 0.07) !important;
+}
+
+/* Dark mode clean surfaces */
+html[data-theme="dark"] .inventory-title-area,
+html[data-theme="dark"] .inventory-title-area-compact {
+  border-color: var(--inventory-night-border-strong) !important;
+  background:
+    radial-gradient(circle at 96% 16%, rgba(250, 204, 21, 0.14), transparent 26%),
+    linear-gradient(135deg, #101827 0%, #132039 54%, #151e2e 100%) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-title-area h1,
+html[data-theme="dark"] .inventory-title-area-compact .inventory-header-text h1,
+html[data-theme="dark"] .inventory-section-heading h2 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-title-area p,
+html[data-theme="dark"] .inventory-title-area-compact .inventory-header-text p,
+html[data-theme="dark"] .inventory-section-heading p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .inventory-tools,
+html[data-theme="dark"] .inventory-summary,
+html[data-theme="dark"] .inventory-card-panel {
+  border-color: var(--inventory-night-border-strong) !important;
+  background: #101827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-search input,
+html[data-theme="dark"] .inventory-filter select {
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-search input::placeholder {
+  color: #9fb0c8 !important;
+}
+
+html[data-theme="dark"] .inventory-search input:focus,
+html[data-theme="dark"] .inventory-filter select:focus {
+  border-color: rgba(96, 165, 250, 0.7) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16) !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  background: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div::after {
+  opacity: 0.28 !important;
+}
+
+html[data-theme="dark"] .inventory-summary h3 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-summary p {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div:nth-child(1) .inventory-summary-icon {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div:nth-child(2) .inventory-summary-icon {
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div:nth-child(3) .inventory-summary-icon {
+  background: rgba(250, 204, 21, 0.18) !important;
+  color: #fde68a !important;
+}
+
+html[data-theme="dark"] .inventory-summary > div:nth-child(4) .inventory-summary-icon {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #fca5a5 !important;
+}
+
+/* Dark mode item table/card readability */
+html[data-theme="dark"] .inventory-admin-table-wrap {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  background: #101827 !important;
+}
+
+html[data-theme="dark"] .inventory-admin-table,
+html[data-theme="dark"] .inventory-admin-table tbody td {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-admin-table thead th {
+  border-bottom-color: rgba(148, 163, 184, 0.28) !important;
+  background: #172236 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .inventory-admin-table tbody td {
+  border-bottom-color: rgba(148, 163, 184, 0.14) !important;
+  background: #101827 !important;
+}
+
+html[data-theme="dark"] .inventory-admin-table tbody tr:hover td {
+  background: #111f33 !important;
+}
+
+html[data-theme="dark"] .inventory-table-image,
+html[data-theme="dark"] .inventory-table-category,
+html[data-theme="dark"] .inventory-table-days {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: #0b1220 !important;
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .inventory-table-item-info > span {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .inventory-table-item-info strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-table-item-info p {
+  color: #cbd5e1 !important;
+}
+
+/* Mobile keeps cards compact */
+@media (max-width: 760px) {
+  .inventory-title-area-compact {
+    border-radius: 22px !important;
+    padding: 16px !important;
+  }
+
+  .inventory-tools,
+  .inventory-summary,
+  .inventory-card-panel {
+    border-radius: 20px !important;
+    padding: 10px !important;
+  }
+
+  .inventory-summary > div {
+    min-height: 70px !important;
+    border-radius: 16px !important;
+    padding: 8px !important;
+  }
+
+  .inventory-summary-icon {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 9px !important;
+  }
+
+  .inventory-summary-icon::before {
+    font-size: 0.62rem !important;
+  }
+}
+
+/* =========================================================
+   VIEW ITEMS - FINAL HERO TEXT RECTANGLE REMOVAL
+   Fixes the dark rectangle behind the View Items title/description.
+   Paste-safe: overrides AppLayout/global outline rules.
+========================================================= */
+
+/* The hero text wrapper must NOT become a card/box */
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text {
+  width: auto !important;
+  max-width: 820px !important;
+  min-width: 0 !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 3 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  filter: none !important;
+}
+
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text::before,
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text::after,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text::before,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* H1 and paragraph should be pure text, never boxed */
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1,
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  display: block !important;
+  width: auto !important;
+  max-width: 780px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  filter: none !important;
+}
+
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+  margin: 0 0 8px !important;
+  color: #f8fafc !important;
+  text-shadow: none !important;
+}
+
+.app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+.app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  margin: 0 !important;
+  color: #cbd5e1 !important;
+  font-weight: 650 !important;
+}
+
+/* Keep the actual View Items hero as the only card */
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact {
+  border: 1.8px solid rgba(148, 163, 184, 0.42) !important;
+  border-radius: 30px !important;
+  background:
+    radial-gradient(circle at 93% 86%, rgba(250, 204, 21, 0.38), transparent 22%),
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.18), transparent 36%),
+    linear-gradient(135deg, #101827 0%, #132037 55%, #1a241f 100%) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* The action area/back button should stay clean, not boxed by global styles */
+.app-page-content .inventory-page .inventory-header-actions,
+.app-page-content .inventory-page .inventory-header-actions-compact,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-header-actions,
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-header-actions-compact {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-header-actions-compact .inventory-header-action-btn {
+  border: 1.6px solid rgba(203, 213, 225, 0.7) !important;
+  background: rgba(11, 18, 32, 0.78) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .app-page-content .inventory-page .inventory-header-actions-compact .inventory-header-action-btn:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.8) !important;
+  background: rgba(37, 99, 235, 0.2) !important;
+}
+
+@media (max-width: 760px) {
+  .app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+  .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1,
+  html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text h1,
+  html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+    max-width: calc(100% - 58px) !important;
+  }
+
+  .app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+  .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p,
+  html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area .inventory-header-text p,
+  html[data-theme="dark"] .app-page-content .inventory-page .inventory-title-area-compact .inventory-header-text p {
+    max-width: 100% !important;
+  }
+}
+
+/* =========================================================
+   VIEW ITEMS - FINAL DARK HEADER CARD FIX
+   Makes the hero/title card dark in night mode so text is readable.
+   Keeps only the outer rounded card, no inner rectangle behind text.
+========================================================= */
+
+html[data-theme="dark"] .inventory-page .inventory-title-area,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact {
+  border: 1.8px solid rgba(148, 163, 184, 0.36) !important;
+  background:
+    radial-gradient(circle at 92% 76%, rgba(250, 204, 21, 0.38), transparent 20%),
+    radial-gradient(circle at 10% 18%, rgba(37, 99, 235, 0.22), transparent 34%),
+    linear-gradient(135deg, #101827 0%, #111f35 54%, #172033 100%) !important;
+  box-shadow: none !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area::before,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact::before {
+  background:
+    linear-gradient(90deg, rgba(15, 23, 42, 0.06), transparent 72%) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area::after,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact::after {
+  background: rgba(250, 204, 21, 0.58) !important;
+  opacity: 0.78 !important;
+  box-shadow: none !important;
+}
+
+/* Force the title/description wrapper to be pure text, not a boxed card */
+html[data-theme="dark"] .inventory-page .inventory-header-text,
+html[data-theme="dark"] .inventory-page .inventory-header-text *,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text * {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area h1,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+  color: #f8fafc !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area p,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  color: #cbd5e1 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact .inventory-header-action-btn,
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact .inventory-refresh-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.72) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact .inventory-header-action-btn:hover,
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact .inventory-refresh-btn:hover {
+  border-color: rgba(96, 165, 250, 0.78) !important;
+  background: rgba(37, 99, 235, 0.28) !important;
+}
+/* =========================================================
+   ITEM DETAILS - DARK MODE READABILITY + CLEAN QR CONTAINER
+   Paste at the VERY BOTTOM of src/styles/ItemList.css
+========================================================= */
+
+/* Keep the item details hero dark and readable */
+html[data-theme="dark"] .item-details-header-content {
+  background:
+    radial-gradient(circle at 92% 18%, rgba(250, 204, 21, 0.16), transparent 28%),
+    linear-gradient(135deg, #101827 0%, #111f33 58%, #14203a 100%) !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .item-details-header-text,
+html[data-theme="dark"] .item-details-header-text h2,
+html[data-theme="dark"] .item-details-header-text p,
+html[data-theme="dark"] .item-details-header-actions-compact {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .item-details-header-text h2 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .item-details-header-text p {
+  color: #cbd5e1 !important;
+}
+
+/* Make Back to Items / Back to Dashboard visible in dark mode */
+html[data-theme="dark"] .item-details-header-actions-compact .inventory-refresh-btn,
+html[data-theme="dark"] .item-details-header-actions-compact button,
+html[data-theme="dark"] .item-details-header-content .inventory-refresh-btn {
+  min-height: 46px !important;
+  border: 1.8px solid rgba(191, 219, 254, 0.72) !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.36), rgba(15, 23, 42, 0.94)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.24) !important;
+  font-weight: 950 !important;
+}
+
+html[data-theme="dark"] .item-details-header-actions-compact .inventory-refresh-btn:hover,
+html[data-theme="dark"] .item-details-header-actions-compact button:hover,
+html[data-theme="dark"] .item-details-header-content .inventory-refresh-btn:hover {
+  border-color: #bfdbfe !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Main item detail cards */
+html[data-theme="dark"] .item-details-main-card,
+html[data-theme="dark"] .item-details-side-card {
+  background: #101827 !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .item-details-info-panel h2,
+html[data-theme="dark"] .item-details-qr-header span,
+html[data-theme="dark"] .item-details-meta-grid strong,
+html[data-theme="dark"] .item-details-scan-values p,
+html[data-theme="dark"] .item-details-action-panel strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .item-details-description,
+html[data-theme="dark"] .item-details-qr-header p,
+html[data-theme="dark"] .item-details-meta-grid span,
+html[data-theme="dark"] .item-details-scan-values span,
+html[data-theme="dark"] .item-details-action-panel p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .item-details-image-panel,
+html[data-theme="dark"] .item-details-meta-grid > div,
+html[data-theme="dark"] .item-details-scan-values > div,
+html[data-theme="dark"] .item-details-action-panel,
+html[data-theme="dark"] .item-details-warning {
+  background: rgba(30, 41, 59, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #f8fafc !important;
+}
+
+/* Remove accidental rectangle outlines from text wrappers */
+html[data-theme="dark"] .item-details-topline,
+html[data-theme="dark"] .item-details-info-panel,
+html[data-theme="dark"] .item-details-qr-header,
+html[data-theme="dark"] .item-details-action-panel,
+html[data-theme="dark"] .item-details-description {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Item code / ID pill in item details */
+html[data-theme="dark"] .item-details-topline > span:not(.availability-pill):not(.condition-pill),
+html[data-theme="dark"] .item-details-header-text > span {
+  border: 1px solid rgba(147, 197, 253, 0.28) !important;
+  border-radius: 999px !important;
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #bfdbfe !important;
+  box-shadow: none !important;
+}
+
+/* Readable status / condition pills in dark mode */
+html[data-theme="dark"] .availability-pill.available,
+html[data-theme="dark"] .condition-pill.good {
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #86efac !important;
+  border: 1px solid rgba(134, 239, 172, 0.30) !important;
+}
+
+html[data-theme="dark"] .availability-pill.reserved,
+html[data-theme="dark"] .condition-pill.fair {
+  background: rgba(250, 204, 21, 0.18) !important;
+  color: #fde68a !important;
+  border: 1px solid rgba(253, 230, 138, 0.30) !important;
+}
+
+html[data-theme="dark"] .availability-pill.borrowed {
+  background: rgba(96, 165, 250, 0.18) !important;
+  color: #bfdbfe !important;
+  border: 1px solid rgba(147, 197, 253, 0.30) !important;
+}
+
+html[data-theme="dark"] .availability-pill.damaged,
+html[data-theme="dark"] .availability-pill.lost,
+html[data-theme="dark"] .condition-pill.damaged,
+html[data-theme="dark"] .condition-pill.lost {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #fecaca !important;
+  border: 1px solid rgba(254, 202, 202, 0.30) !important;
+}
+
+html[data-theme="dark"] .availability-pill.unavailable,
+html[data-theme="dark"] .condition-pill.unknown {
+  background: rgba(148, 163, 184, 0.18) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(203, 213, 225, 0.26) !important;
+}
+
+/* Remove the cornered wrapper around QR/barcode content */
+.item-details-qr-box,
+html[data-theme="dark"] .item-details-qr-box {
+  max-height: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.item-details-qr-box > *,
+html[data-theme="dark"] .item-details-qr-box > * {
+  max-width: 100% !important;
+}
+/* =========================================================
+   BORROWER VIEW ITEMS - REMOVE META ROW RECTANGLE OUTLINE
+   Paste at the VERY BOTTOM of ItemList.css
+========================================================= */
+
+/* Remove the unwanted rectangular outline around item type + condition pills */
+.inventory-item-card .inventory-meta-row,
+.app-page-content .inventory-item-card .inventory-meta-row,
+html[data-theme="dark"] .inventory-item-card .inventory-meta-row,
+html[data-theme="dark"] .app-page-content .inventory-item-card .inventory-meta-row {
+  width: auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  margin-top: 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Make sure the pills themselves stay clean and readable */
+.inventory-item-card .inventory-meta-row > span,
+.inventory-item-card .condition-pill,
+.inventory-item-card .availability-pill {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+/* Dark mode pill readability */
+html[data-theme="dark"] .inventory-item-card .inventory-meta-row > span {
+  border: 1px solid rgba(147, 197, 253, 0.22) !important;
+  background: rgba(37, 99, 235, 0.14) !important;
+  color: #dbeafe !important;
+}
+
+html[data-theme="dark"] .inventory-item-card .condition-pill.good,
+html[data-theme="dark"] .inventory-item-card .availability-pill.available {
+  border: 1px solid rgba(134, 239, 172, 0.26) !important;
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .inventory-item-card .condition-pill.fair,
+html[data-theme="dark"] .inventory-item-card .availability-pill.reserved {
+  border: 1px solid rgba(253, 230, 138, 0.28) !important;
+  background: rgba(250, 204, 21, 0.15) !important;
+  color: #fde68a !important;
+}
+
+html[data-theme="dark"] .inventory-item-card .condition-pill.damaged,
+html[data-theme="dark"] .inventory-item-card .condition-pill.lost,
+html[data-theme="dark"] .inventory-item-card .availability-pill.damaged,
+html[data-theme="dark"] .inventory-item-card .availability-pill.lost,
+html[data-theme="dark"] .inventory-item-card .availability-pill.unavailable {
+  border: 1px solid rgba(254, 202, 202, 0.26) !important;
+  background: rgba(239, 68, 68, 0.16) !important;
+  color: #fecaca !important;
+}
+
+/* Mobile keeps the same clean pill layout */
+@media (max-width: 760px) {
+  .inventory-item-card .inventory-meta-row {
+    gap: 5px !important;
+    margin-top: 8px !important;
+  }
+}
+/* =========================================================
+   VIEW ITEMS TITLE CARD - LIGHT MODE TEXT FIX
+   Paste at the VERY BOTTOM of ItemList.css
+   Fixes Available Items / View Items title disappearing in light mode.
+========================================================= */
+
+/* Light mode title card should use dark readable text */
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area-compact {
+  background:
+    radial-gradient(circle at 96% 18%, rgba(250, 204, 21, 0.30), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #eff6ff 52%, #fffbea 100%) !important;
+  color: #0f172a !important;
+}
+
+/* Remove accidental text-block backgrounds and restore readable title/description */
+html:not([data-theme="dark"]) .inventory-page .inventory-header-text,
+html:not([data-theme="dark"]) .inventory-page .inventory-header-text h1,
+html:not([data-theme="dark"]) .inventory-page .inventory-header-text p,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area h1,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area p,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area-compact .inventory-header-text h1,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html:not([data-theme="dark"]) .inventory-page .inventory-header-text h1,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area h1,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+  color: #0f172a !important;
+}
+
+html:not([data-theme="dark"]) .inventory-page .inventory-header-text p,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area p,
+html:not([data-theme="dark"]) .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  color: #64748b !important;
+  font-weight: 760 !important;
+}
+
+/* Keep the Back to Dashboard button readable in light mode */
+html:not([data-theme="dark"]) .inventory-page .inventory-header-actions-compact,
+html:not([data-theme="dark"]) .inventory-page .inventory-header-actions-compact * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html:not([data-theme="dark"]) .inventory-page .inventory-header-actions-compact .inventory-header-action-btn {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* Dark mode remains dark/readable */
+html[data-theme="dark"] .inventory-page .inventory-title-area,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact {
+  background:
+    radial-gradient(circle at 96% 18%, rgba(250, 204, 21, 0.20), transparent 28%),
+    linear-gradient(135deg, #101827 0%, #111827 55%, #172033 100%) !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-text,
+html[data-theme="dark"] .inventory-page .inventory-header-text h1,
+html[data-theme="dark"] .inventory-page .inventory-header-text p {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-text h1 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-text p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}

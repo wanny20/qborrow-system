@@ -422,14 +422,12 @@ async function fetchNotifications(user, userData, options = {}) {
   } catch (error) {
     showActionError("Failed to load notifications", error);
   } finally {
-    if (requestId !== notificationFetchRequestRef.current) {
-      return;
-    }
-
-    if (loadMore) {
-      setLoadingMoreNotifications(false);
-    } else {
-      setLoading(false);
+    if (requestId === notificationFetchRequestRef.current) {
+      if (loadMore) {
+        setLoadingMoreNotifications(false);
+      } else {
+        setLoading(false);
+      }
     }
   }
 }

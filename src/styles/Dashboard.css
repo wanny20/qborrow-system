@@ -1157,95 +1157,27 @@ html[data-theme="dark"] .dashboard-urgent-empty {
   border-color: var(--dash-border);
 }
 /* =========================================================
-   DASHBOARD HERO RESTORE + COMPACT FIX
-   Keep Welcome text, remove role pill + Admin Control card
+   DASHBOARD COMPACT FIX
+   Remove large hero/admin control card + improve card strokes
 ========================================================= */
 
-/* Restore the hero after the previous patch hid it */
+/* Remove the large welcome / super admin / admin control hero area */
 .dashboard-hero {
-  display: block !important;
-}
-
-/* Keep only Welcome + description */
-.dashboard-hero-content,
-.dashboard-hero > div {
-  display: block !important;
-  min-height: auto !important;
-  border: 1px solid rgba(37, 99, 235, 0.22) !important;
-  border-radius: 24px !important;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.9)),
-    #ffffff !important;
-  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08) !important;
-  padding: 22px 26px !important;
-}
-
-/* Remove SUPER ADMIN DASHBOARD / CATEGORY ADMIN DASHBOARD / BORROWER DASHBOARD pill */
-.dashboard-eyebrow {
   display: none !important;
 }
 
-/* Remove the Admin Control / Borrower Portal card only */
-.dashboard-hero-summary {
-  display: none !important;
-}
-
-.dashboard-hero-copy {
-  max-width: 100% !important;
-}
-
-.dashboard-hero h1 {
-  max-width: 100% !important;
-  margin: 0 !important;
-  font-size: clamp(2rem, 3.4vw, 3rem) !important;
-  line-height: 1 !important;
-  color: #0f172a !important;
-}
-
-.dashboard-hero p {
-  max-width: 900px !important;
-  margin-top: 10px !important;
-  font-size: 0.95rem !important;
-  line-height: 1.55 !important;
-  color: #64748b !important;
-}
-
-/* Compact spacing */
+/* Make the whole dashboard more compact */
 .dashboard-page {
-  gap: 16px !important;
-}
-
-.dashboard-stats-grid {
   gap: 14px !important;
 }
 
-/* Fix stat card text overlapping */
-.dashboard-stat-card {
-  min-height: 132px !important;
-  padding: 18px 20px 42px !important;
-  border: 1px solid rgba(37, 99, 235, 0.22) !important;
-  border-radius: 22px !important;
-  background: #ffffff !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
+/* Compact stat grid */
+.dashboard-stats-grid {
+  gap: 16px !important;
 }
 
-.dashboard-stat-label {
-  margin-bottom: 20px !important;
-  color: #64748b !important;
-}
-
-.dashboard-stat-card strong {
-  color: #0f172a !important;
-  line-height: 1 !important;
-}
-
-.dashboard-stat-hint {
-  left: 20px !important;
-  bottom: 16px !important;
-  color: #2563eb !important;
-}
-
-/* Consistent light mode card stroke */
+/* Consistent noticeable card stroke for light mode */
+.dashboard-stat-card,
 .dashboard-panel,
 .dashboard-urgent-alerts,
 .dashboard-urgent-card,
@@ -1254,35 +1186,61 @@ html[data-theme="dark"] .dashboard-urgent-empty {
 .dashboard-item-preview-list article,
 .dashboard-empty-state {
   border: 1px solid rgba(37, 99, 235, 0.22) !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Compact stat cards */
+.dashboard-stat-card {
+  min-height: 118px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  padding: 18px 20px !important;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 20px 46px rgba(15, 23, 42, 0.12) !important;
+}
+
+.dashboard-stat-card::after {
+  border: 0 !important;
+  opacity: 0.9 !important;
+}
+
+.dashboard-stat-label,
+.dashboard-stat-card span {
+  color: #64748b !important;
+}
+
+.dashboard-stat-card strong {
+  color: #0f172a !important;
+}
+
+/* Compact panels below */
+.dashboard-panel,
+.dashboard-urgent-alerts {
+  border-radius: 22px !important;
+  padding: 18px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+.dashboard-main-grid {
+  gap: 16px !important;
 }
 
 /* =========================================================
-   DARK MODE DASHBOARD FIX
+   DASHBOARD DARK MODE FIX
 ========================================================= */
 
-html[data-theme="dark"] .dashboard-hero-content,
-html[data-theme="dark"] .dashboard-hero > div {
-  border-color: rgba(148, 163, 184, 0.24) !important;
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9)),
-    #0f172a !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24) !important;
-}
-
-html[data-theme="dark"] .dashboard-hero h1 {
+html[data-theme="dark"] .dashboard-page {
   color: #f8fafc !important;
-}
-
-html[data-theme="dark"] .dashboard-hero p {
-  color: #cbd5e1 !important;
 }
 
 html[data-theme="dark"] .dashboard-stat-card,
 html[data-theme="dark"] .dashboard-panel,
 html[data-theme="dark"] .dashboard-urgent-alerts,
 html[data-theme="dark"] .dashboard-urgent-card {
-  border-color: rgba(148, 163, 184, 0.24) !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
   background: rgba(15, 23, 42, 0.96) !important;
   color: #f8fafc !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24) !important;
@@ -1313,295 +1271,89 @@ html[data-theme="dark"] .dashboard-item-preview-list article,
 html[data-theme="dark"] .dashboard-empty-state,
 html[data-theme="dark"] .dashboard-urgent-preview-list div,
 html[data-theme="dark"] .dashboard-urgent-empty {
-  border-color: rgba(148, 163, 184, 0.22) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
   background: rgba(30, 41, 59, 0.9) !important;
   color: #f8fafc !important;
   box-shadow: none !important;
 }
 
-/* Mobile compact */
-@media (max-width: 768px) {
-  .dashboard-hero-content,
-  .dashboard-hero > div {
-    border-radius: 18px !important;
-    padding: 16px !important;
-  }
-
-  .dashboard-hero h1 {
-    font-size: clamp(1.5rem, 8vw, 2.1rem) !important;
-  }
-
-  .dashboard-hero p {
-    font-size: 0.82rem !important;
-  }
-
-  .dashboard-stat-card {
-    min-height: 112px !important;
-    padding: 13px 13px 36px !important;
-  }
-
-  .dashboard-stat-hint {
-    left: 13px !important;
-    bottom: 12px !important;
-  }
-}   
-/* =========================================================
-   DASHBOARD COMPACT CARDS + DARK MODE PILL FIX
-========================================================= */
-
-/* Admin Priority Center container */
-.dashboard-urgent-alerts {
-  padding: 18px 22px !important;
-  border-radius: 22px !important;
-  border: 1px solid rgba(37, 99, 235, 0.22) !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
-}
-
-/* Admin Priority heading */
-.dashboard-urgent-heading {
-  margin-bottom: 14px !important;
-  align-items: center !important;
-}
-
-.dashboard-urgent-heading h2 {
-  font-size: clamp(1.25rem, 2vw, 1.6rem) !important;
-  line-height: 1.05 !important;
-}
-
-.dashboard-urgent-heading span {
-  margin-top: 4px !important;
-  font-size: 0.86rem !important;
-  line-height: 1.4 !important;
-}
-
-.dashboard-urgent-heading button {
-  min-height: 40px !important;
-  padding: 0 18px !important;
-  border-radius: 999px !important;
-  font-size: 0.8rem !important;
-}
-
-/* Fix ADMIN PRIORITY CENTER pill */
-.dashboard-urgent-heading .qb-kicker {
-  margin-bottom: 8px !important;
-  padding: 7px 13px !important;
-  border: 1px solid rgba(37, 99, 235, 0.18) !important;
-  background: #dbeafe !important;
-  color: #1d4ed8 !important;
-  box-shadow: none !important;
-  font-size: 0.66rem !important;
-  letter-spacing: 0.09em !important;
-}
-
-/* Make urgent cards shorter */
-.dashboard-urgent-grid {
-  gap: 12px !important;
-}
-
-.dashboard-urgent-card {
-  min-height: 138px !important;
-  border-radius: 20px !important;
-  padding: 14px !important;
-  gap: 8px !important;
-}
-
-.dashboard-urgent-card-top {
-  gap: 8px !important;
-}
-
-.dashboard-urgent-card-top span {
-  font-size: 0.92rem !important;
-  line-height: 1.2 !important;
-}
-
-.dashboard-urgent-card-top strong {
-  min-width: 38px !important;
-  height: 34px !important;
-  font-size: 0.95rem !important;
-}
-
-.dashboard-urgent-card > p {
-  font-size: 0.78rem !important;
-  line-height: 1.35 !important;
-}
-
-.dashboard-urgent-preview-list {
-  gap: 6px !important;
-}
-
-.dashboard-urgent-preview-list div,
-.dashboard-urgent-empty {
-  min-height: 46px !important;
-  border-radius: 14px !important;
-  padding: 9px 10px !important;
-}
-
-.dashboard-urgent-empty {
-  font-size: 0.72rem !important;
-}
-
-/* Quick Actions and Needs Attention compact */
-.dashboard-main-grid {
-  gap: 14px !important;
-}
-
-.dashboard-panel {
-  padding: 18px 20px !important;
-  border-radius: 22px !important;
-  border: 1px solid rgba(37, 99, 235, 0.22) !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08) !important;
-}
-
-.dashboard-panel-heading {
-  margin-bottom: 14px !important;
-}
-
-.dashboard-panel-heading h2 {
-  font-size: clamp(1.25rem, 2vw, 1.55rem) !important;
-  line-height: 1.05 !important;
-}
-
-.dashboard-panel-heading p {
-  margin-top: 4px !important;
-  font-size: 0.84rem !important;
-  line-height: 1.35 !important;
-}
-
-.dashboard-action-list,
-.dashboard-attention-list {
-  gap: 9px !important;
-}
-
-.dashboard-action-list button,
-.dashboard-attention-list button {
-  min-height: 58px !important;
-  border-radius: 16px !important;
-  padding: 12px 14px !important;
-  border: 1px solid rgba(37, 99, 235, 0.18) !important;
-  box-shadow: none !important;
-}
-
-.dashboard-action-list strong,
-.dashboard-attention-list span {
-  font-size: 0.88rem !important;
-  line-height: 1.2 !important;
-}
-
-.dashboard-action-list span {
-  font-size: 0.76rem !important;
-  line-height: 1.3 !important;
-}
-
-.dashboard-action-list button > span:last-child {
-  width: 32px !important;
-  height: 32px !important;
-}
-
-.dashboard-attention-list strong {
-  min-width: 42px !important;
-  height: 34px !important;
-  font-size: 0.9rem !important;
-}
-
-/* =========================================================
-   DARK MODE FIXES
-========================================================= */
-
-html[data-theme="dark"] .dashboard-urgent-heading .qb-kicker {
-  border-color: rgba(96, 165, 250, 0.35) !important;
-  background: rgba(37, 99, 235, 0.26) !important;
-  color: #dbeafe !important;
-  box-shadow: none !important;
-}
-
-html[data-theme="dark"] .dashboard-urgent-alerts,
-html[data-theme="dark"] .dashboard-panel {
-  border-color: rgba(148, 163, 184, 0.24) !important;
-  background: rgba(15, 23, 42, 0.96) !important;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24) !important;
-}
-
-html[data-theme="dark"] .dashboard-urgent-card,
-html[data-theme="dark"] .dashboard-action-list button,
-html[data-theme="dark"] .dashboard-attention-list button {
-  border-color: rgba(148, 163, 184, 0.22) !important;
-  background: rgba(30, 41, 59, 0.86) !important;
-  color: #f8fafc !important;
-}
-
-html[data-theme="dark"] .dashboard-urgent-card-top span,
-html[data-theme="dark"] .dashboard-panel-heading h2,
-html[data-theme="dark"] .dashboard-action-list strong,
-html[data-theme="dark"] .dashboard-attention-list span {
-  color: #f8fafc !important;
-}
-
-html[data-theme="dark"] .dashboard-urgent-card > p,
-html[data-theme="dark"] .dashboard-panel-heading p,
-html[data-theme="dark"] .dashboard-action-list span {
-  color: #cbd5e1 !important;
-}
-
-html[data-theme="dark"] .dashboard-urgent-preview-list div,
-html[data-theme="dark"] .dashboard-urgent-empty {
-  border-color: rgba(148, 163, 184, 0.22) !important;
-  background: rgba(15, 23, 42, 0.82) !important;
-  color: #f8fafc !important;
+html[data-theme="dark"] .dashboard-action-list button:hover,
+html[data-theme="dark"] .dashboard-attention-list button:hover,
+html[data-theme="dark"] .dashboard-urgent-card:hover {
+  background: rgba(37, 99, 235, 0.22) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.26) !important;
 }
 
 /* Mobile compact */
 @media (max-width: 768px) {
-  .dashboard-urgent-alerts,
-  .dashboard-panel {
-    padding: 14px !important;
-    border-radius: 18px !important;
-  }
-
-  .dashboard-urgent-grid {
-    gap: 10px !important;
-  }
-
-  .dashboard-urgent-card {
-    min-height: auto !important;
-    padding: 12px !important;
-    border-radius: 16px !important;
-  }
-
-  .dashboard-action-list button,
-  .dashboard-attention-list button {
-    min-height: 54px !important;
-    padding: 11px 12px !important;
-  }
-}
-/* =========================================================
-   DASHBOARD - SIDEBAR CLOSED 6-COLUMN STATS + ACTION BUTTON FIX
-========================================================= */
-
-/* When sidebar is closed, use the wider screen space */
-@media (min-width: 1180px) {
-  .app-layout.sidebar-closed .dashboard-stats-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  .dashboard-page {
     gap: 12px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-stat-card {
-    min-height: 118px !important;
-    padding: 16px 14px 38px !important;
-    border-radius: 20px !important;
+  .dashboard-stats-grid {
+    gap: 10px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-stat-label {
-    max-width: calc(100% - 44px) !important;
-    margin-bottom: 18px !important;
+  .dashboard-stat-card {
+    min-height: 96px !important;
+    border-radius: 18px !important;
+    padding: 13px !important;
+  }
+
+  .dashboard-stat-card strong {
+    font-size: 1.65rem !important;
+  }
+
+  .dashboard-panel,
+  .dashboard-urgent-alerts {
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD - ONE ROW STAT CARDS DESKTOP FIX
+   Paste at the VERY BOTTOM of Dashboard.css
+   Goal: make the 6 dashboard stat cards fit in one row on desktop.
+========================================================= */
+
+/* Desktop / laptop: keep all 6 cards in one row */
+@media (min-width: 1024px) {
+  .dashboard-page .dashboard-stats-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 112px !important;
+    border-radius: 20px !important;
+    padding: 14px 16px !important;
+  }
+
+  .dashboard-page .dashboard-stat-label {
+    max-width: calc(100% - 42px) !important;
+    margin: 0 0 10px !important;
     font-size: 0.66rem !important;
     line-height: 1.15 !important;
+    letter-spacing: 0.075em !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-stat-card strong {
-    font-size: clamp(1.8rem, 2.2vw, 2.4rem) !important;
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: clamp(1.75rem, 2vw, 2.15rem) !important;
+    line-height: 0.95 !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-stat-card::before {
+  .dashboard-page .dashboard-stat-hint {
+    left: 16px !important;
+    bottom: 12px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .dashboard-page .dashboard-stat-card::before {
     top: 14px !important;
     right: 14px !important;
     width: 40px !important;
@@ -1609,79 +1361,303 @@ html[data-theme="dark"] .dashboard-urgent-empty {
     border-radius: 14px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-stat-card::after {
-    top: 23px !important;
+  .dashboard-page .dashboard-stat-card::after {
+    top: 24px !important;
     right: 26px !important;
     font-size: 1rem !important;
   }
-
-  .app-layout.sidebar-closed .dashboard-stat-hint {
-    left: 14px !important;
-    bottom: 13px !important;
-    font-size: 0.72rem !important;
-  }
 }
 
-/* If screen is not wide enough, keep 3 columns to avoid squeezing */
-@media (min-width: 821px) and (max-width: 1179px) {
-  .app-layout.sidebar-closed .dashboard-stats-grid {
+/* Medium screens: avoid cramped 6-column cards */
+@media (max-width: 1023px) {
+  .dashboard-page .dashboard-stats-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 }
 
-/* Fix broken Quick Actions arrow circle */
-.dashboard-action-list button {
-  grid-template-columns: minmax(0, 1fr) 40px !important;
+/* Small screens remain compact and readable */
+@media (max-width: 680px) {
+  .dashboard-page .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 96px !important;
+  }
 }
 
-.dashboard-action-list button > span:last-child {
-  width: 36px !important;
-  height: 36px !important;
+@media (max-width: 340px) {
+  .dashboard-page .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* =========================================================
+   DASHBOARD - RESTORE TITLE / WELCOME CARD
+   Paste at the VERY BOTTOM of Dashboard.css
+   This overrides the previous rule that accidentally hid the title card.
+========================================================= */
+
+.dashboard-page .dashboard-hero {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 16px !important;
+}
+
+.dashboard-page .dashboard-hero-content,
+.dashboard-page .dashboard-hero > div {
   display: grid !important;
-  place-items: center !important;
-  border-radius: 999px !important;
-  background: #dbeafe !important;
-  color: #2563eb !important;
-  font-size: 0 !important;
-  font-weight: 900 !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  min-height: 118px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 92% 30%, rgba(250, 204, 21, 0.34), transparent 32%),
+    linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.98) 48%, rgba(250, 204, 21, 0.12)),
+    var(--qb-surface, #ffffff) !important;
+  box-shadow: 0 16px 0 rgba(15, 23, 42, 0.08) !important;
+  padding: 24px 28px !important;
 }
 
-.dashboard-action-list button > span:last-child::before {
-  content: "→";
+.dashboard-page .dashboard-hero-copy {
+  position: relative !important;
+  z-index: 2 !important;
+  min-width: 0 !important;
+}
+
+.dashboard-page .dashboard-hero h1 {
+  margin: 0 0 10px !important;
+  color: var(--qb-foreground, #0f172a) !important;
+  font-family: var(--qb-heading-font, inherit) !important;
+  font-size: clamp(2.1rem, 4.2vw, 3.8rem) !important;
+  font-weight: 950 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.dashboard-page .dashboard-hero p {
+  max-width: 850px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground, #64748b) !important;
   font-size: 1rem !important;
-  line-height: 1 !important;
+  font-weight: 750 !important;
+  line-height: 1.45 !important;
 }
 
-/* Dark mode arrow circle fix */
-html[data-theme="dark"] .dashboard-action-list button > span:last-child {
-  background: rgba(96, 165, 250, 0.18) !important;
-  color: #dbeafe !important;
-  border: 1px solid rgba(147, 197, 253, 0.22) !important;
+/* Keep the decorative summary hidden if your dashboard uses the cleaner title-card layout */
+.dashboard-page .dashboard-hero-summary {
+  display: none !important;
 }
 
-/* Make Quick Actions and Needs Attention tighter when sidebar is closed */
-@media (min-width: 1180px) {
-  .app-layout.sidebar-closed .dashboard-main-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 14px !important;
+/* Dark mode title card */
+html[data-theme="dark"] .dashboard-page .dashboard-hero-content,
+html[data-theme="dark"] .dashboard-page .dashboard-hero > div {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background:
+    radial-gradient(circle at 92% 34%, rgba(250, 204, 21, 0.22), transparent 32%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98) 52%, rgba(30, 41, 59, 0.92)),
+    #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-hero h1 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-hero p {
+  color: #cbd5e1 !important;
+}
+
+/* Responsive */
+@media (max-width: 760px) {
+  .dashboard-page .dashboard-hero {
+    margin-bottom: 12px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-panel {
-    padding: 16px 18px !important;
+  .dashboard-page .dashboard-hero-content,
+  .dashboard-page .dashboard-hero > div {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+    border-radius: 20px !important;
+    padding: 18px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-action-list button,
-  .app-layout.sidebar-closed .dashboard-attention-list button {
-    min-height: 52px !important;
-    padding: 10px 12px !important;
+  .dashboard-page .dashboard-hero h1 {
+    font-size: 1.65rem !important;
+    line-height: 1 !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-action-list strong,
-  .app-layout.sidebar-closed .dashboard-attention-list span {
-    font-size: 0.84rem !important;
+  .dashboard-page .dashboard-hero p {
+    font-size: 0.82rem !important;
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD - COMPACT TITLE CARD LIKE OTHER PAGES
+   Paste at the VERY BOTTOM of Dashboard.css
+   Removes the Super Admin Dashboard pill and restores a clean compact header.
+========================================================= */
+
+.dashboard-page .dashboard-eyebrow,
+.dashboard-page .qb-kicker,
+.dashboard-page .dashboard-hero-summary {
+  display: none !important;
+}
+
+.dashboard-page .dashboard-hero {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 0 16px !important;
+}
+
+.dashboard-page .dashboard-hero-content,
+.dashboard-page .dashboard-hero > div {
+  position: relative !important;
+  min-height: 122px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 16px !important;
+  overflow: hidden !important;
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 92% 72%, rgba(250, 204, 21, 0.46), transparent 30%),
+    radial-gradient(circle at 82% 32%, rgba(37, 99, 235, 0.10), transparent 28%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.96) 48%, rgba(250, 204, 21, 0.12)),
+    var(--qb-surface, #ffffff) !important;
+  box-shadow: 0 14px 0 rgba(15, 23, 42, 0.08) !important;
+  padding: 26px 32px !important;
+}
+
+.dashboard-page .dashboard-hero-content::before,
+.dashboard-page .dashboard-hero > div::before {
+  content: "" !important;
+  position: absolute !important;
+  right: 34px !important;
+  bottom: -42px !important;
+  width: 128px !important;
+  height: 128px !important;
+  border-radius: 999px !important;
+  background: rgba(250, 204, 21, 0.42) !important;
+  pointer-events: none !important;
+}
+
+.dashboard-page .dashboard-hero-content::after,
+.dashboard-page .dashboard-hero > div::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 88px !important;
+  top: 24px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  background: #facc15 !important;
+  box-shadow: 0 0 0 12px rgba(250, 204, 21, 0.18) !important;
+  pointer-events: none !important;
+}
+
+.dashboard-page .dashboard-hero-copy {
+  position: relative !important;
+  z-index: 2 !important;
+  min-width: 0 !important;
+  max-width: 920px !important;
+}
+
+.dashboard-page .dashboard-hero h1 {
+  max-width: 920px !important;
+  margin: 0 0 8px !important;
+  color: var(--qb-foreground, #0f172a) !important;
+  font-family: var(--qb-heading-font, inherit) !important;
+  font-size: clamp(2rem, 4vw, 3.15rem) !important;
+  font-weight: 950 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.06em !important;
+  overflow-wrap: anywhere !important;
+}
+
+.dashboard-page .dashboard-hero p {
+  max-width: 900px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground, #64748b) !important;
+  font-size: 1rem !important;
+  font-weight: 750 !important;
+  line-height: 1.45 !important;
+}
+
+/* Category admin assigned note still stays readable, but no bulky pill style */
+.dashboard-page .dashboard-assigned-note {
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin-top: 10px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+  box-shadow: none !important;
+  color: #1d4ed8 !important;
+  padding: 7px 12px !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .dashboard-page .dashboard-hero-content,
+html[data-theme="dark"] .dashboard-page .dashboard-hero > div {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background:
+    radial-gradient(circle at 92% 72%, rgba(250, 204, 21, 0.24), transparent 30%),
+    radial-gradient(circle at 82% 32%, rgba(37, 99, 235, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98) 52%, rgba(30, 41, 59, 0.92)),
+    #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-hero h1 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-hero p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-assigned-note {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+}
+
+@media (max-width: 760px) {
+  .dashboard-page .dashboard-hero {
+    margin-bottom: 12px !important;
   }
 
-  .app-layout.sidebar-closed .dashboard-action-list span {
-    font-size: 0.72rem !important;
+  .dashboard-page .dashboard-hero-content,
+  .dashboard-page .dashboard-hero > div {
+    min-height: auto !important;
+    border-radius: 20px !important;
+    padding: 18px !important;
+  }
+
+  .dashboard-page .dashboard-hero-content::before,
+  .dashboard-page .dashboard-hero > div::before {
+    right: 14px !important;
+    bottom: -34px !important;
+    width: 84px !important;
+    height: 84px !important;
+  }
+
+  .dashboard-page .dashboard-hero h1 {
+    font-size: 1.65rem !important;
+    line-height: 1 !important;
+  }
+
+  .dashboard-page .dashboard-hero p {
+    font-size: 0.82rem !important;
   }
 }

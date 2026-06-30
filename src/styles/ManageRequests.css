@@ -1939,3 +1939,755 @@ html[data-theme="dark"] .manage-request-row-actions {
   background: transparent !important;
 }
 
+/* =========================================================
+   MANAGE REQUESTS - DARK MODE + ICON/TABLE CLEANUP
+   Paste at the VERY BOTTOM of ManageRequests.css
+========================================================= */
+
+/* Page-safe dark variables */
+html[data-theme="dark"] .manage-requests-page {
+  --mr-surface: #111827 !important;
+  --mr-surface-soft: #182235 !important;
+  --mr-bg: #0f172a !important;
+  --mr-text: #f8fafc !important;
+  --mr-muted: #cbd5e1 !important;
+  --mr-border: rgba(148, 163, 184, 0.26) !important;
+}
+
+/* Remove unwanted rectangle wrapping the summary card group */
+.manage-summary-grid,
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Title card: make it readable in dark mode without black text rectangles */
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-content,
+html[data-theme="dark"] .manage-requests-page .manage-requests-header > div {
+  border: 1.8px solid rgba(148, 163, 184, 0.34) !important;
+  background:
+    radial-gradient(circle at 92% 95%, rgba(250, 204, 21, 0.30), transparent 22%),
+    radial-gradient(circle at 0% 10%, rgba(37, 99, 235, 0.24), transparent 36%),
+    linear-gradient(135deg, #111827, #182235 58%, #1e293b) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-text,
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-text h1,
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-text p {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-text h1 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-requests-header-text p {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+}
+
+/* Back button consistency in dark mode */
+html[data-theme="dark"] .manage-requests-page .manage-header-back-btn {
+  border: 1.8px solid rgba(191, 219, 254, 0.80) !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24) !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-header-back-btn:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* Summary cards: readable icons and text */
+.manage-summary-grid > div {
+  border-radius: 22px !important;
+  overflow: hidden !important;
+}
+
+.manage-summary-grid > div > span {
+  width: 40px !important;
+  height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 1rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Light mode icon colors */
+.manage-summary-grid > div:nth-child(1) > span,
+.manage-summary-grid > div:nth-child(3) > span,
+.manage-summary-grid > div:nth-child(4) > span {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.manage-summary-grid > div:nth-child(2) > span,
+.manage-summary-grid > div:nth-child(5) > span {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.manage-summary-grid > div:nth-child(6) > span {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.manage-summary-grid > div:nth-child(7) > span {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+/* Dark mode stat cards */
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div {
+  border: 1.6px solid rgba(148, 163, 184, 0.28) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div > span {
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(1) > span,
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(3) > span,
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(4) > span {
+  background: rgba(59, 130, 246, 0.24) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(2) > span,
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(5) > span {
+  background: rgba(250, 204, 21, 0.20) !important;
+  color: #fde68a !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(6) > span {
+  background: rgba(34, 197, 94, 0.22) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div:nth-child(7) > span {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid p {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+}
+
+/* Search/filter container: clean dark mode */
+html[data-theme="dark"] .manage-requests-page .manage-tools,
+html[data-theme="dark"] .manage-requests-page .manage-request-panel {
+  border: 1.8px solid rgba(148, 163, 184, 0.30) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+.manage-tools label,
+.manage-tools .qb-label,
+html[data-theme="dark"] .manage-requests-page .manage-tools label,
+html[data-theme="dark"] .manage-requests-page .manage-tools .qb-label {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-tools input,
+html[data-theme="dark"] .manage-requests-page .manage-tools select {
+  border: 1.5px solid rgba(148, 163, 184, 0.34) !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-tools input::placeholder {
+  color: #93a4bd !important;
+  -webkit-text-fill-color: #93a4bd !important;
+}
+
+/* Refresh button readable in light + dark mode */
+.manage-refresh-btn {
+  border: 1.8px solid #bfdbfe !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12) !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-weight: 950 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.manage-refresh-btn:hover:not(:disabled) {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-refresh-btn {
+  border: 1.8px solid rgba(96, 165, 250, 0.45) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.20) !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-refresh-btn:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-refresh-btn:disabled {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  opacity: 0.78 !important;
+  box-shadow: none !important;
+}
+
+/* Table header and rows */
+html[data-theme="dark"] .manage-requests-page .manage-request-table-header {
+  border: 1.5px solid rgba(148, 163, 184, 0.26) !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-table-header span {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-row {
+  border: 1.5px solid rgba(148, 163, 184, 0.24) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-row:hover {
+  border-color: rgba(96, 165, 250, 0.42) !important;
+  background: #172033 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-cell,
+html[data-theme="dark"] .manage-requests-page .manage-request-status-cell,
+html[data-theme="dark"] .manage-requests-page .manage-request-row-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-cell strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-item-cell span,
+html[data-theme="dark"] .manage-requests-page .manage-request-borrower-cell span {
+  color: #bfdbfe !important;
+  -webkit-text-fill-color: #bfdbfe !important;
+}
+
+/* Status pills: readable text in both modes */
+.manage-status-pill,
+.manage-priority-pill {
+  border: 0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.status-pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.status-approved {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.status-borrowed {
+  background: #ede9fe !important;
+  color: #6d28d9 !important;
+}
+
+.status-returned {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.status-rejected,
+.status-cancelled {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.status-overdue {
+  background: #fecaca !important;
+  color: #991b1b !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .status-pending {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .status-approved {
+  background: rgba(59, 130, 246, 0.24) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .status-borrowed {
+  background: rgba(168, 85, 247, 0.25) !important;
+  color: #e9d5ff !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .status-returned {
+  background: rgba(34, 197, 94, 0.22) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .status-rejected,
+html[data-theme="dark"] .manage-requests-page .status-cancelled,
+html[data-theme="dark"] .manage-requests-page .status-overdue {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #fecaca !important;
+}
+
+/* Action icons: no wrapper rectangle, only clean icon buttons */
+.manage-request-row-actions,
+.manage-request-row > .manage-request-row-actions,
+html[data-theme="dark"] .manage-requests-page .manage-request-row-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-row-actions .manage-action-icon-btn {
+  border: 1.5px solid rgba(148, 163, 184, 0.30) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-details {
+  background: rgba(59, 130, 246, 0.24) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-item {
+  background: rgba(148, 163, 184, 0.14) !important;
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-approve {
+  background: rgba(34, 197, 94, 0.20) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-reject {
+  background: rgba(239, 68, 68, 0.20) !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-release {
+  background: rgba(59, 130, 246, 0.24) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-action-icon-btn > span {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Load more row without rectangular outline */
+.manage-load-more-row,
+html[data-theme="dark"] .manage-requests-page .manage-load-more-row {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Details modal dark mode */
+html[data-theme="dark"] .manage-requests-page .manage-request-view-overlay {
+  background: rgba(2, 6, 23, 0.68) !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-view-modal {
+  border: 1.8px solid rgba(148, 163, 184, 0.30) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42) !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-view-grid > div,
+html[data-theme="dark"] .manage-requests-page .manage-request-view-purpose {
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  background: #182235 !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-view-grid span,
+html[data-theme="dark"] .manage-requests-page .manage-request-view-purpose span {
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-request-view-grid strong,
+html[data-theme="dark"] .manage-requests-page .manage-request-view-purpose p {
+  color: #ffffff !important;
+}
+/* =========================================================
+   MANAGE REQUESTS - DETAILS MODAL ABOVE SIDEBAR FIX
+   Paste at the VERY BOTTOM of ManageRequests.css
+   Works with ManageRequests.portal-details.jsx
+========================================================= */
+
+.manage-request-view-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483645 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow-y: auto !important;
+  padding: 24px !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.manage-request-view-modal {
+  position: relative !important;
+  z-index: 2147483646 !important;
+  width: min(920px, calc(100vw - 40px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow-y: auto !important;
+  border: 1.8px solid rgba(148, 163, 184, 0.34) !important;
+  border-radius: 28px !important;
+  background: #ffffff !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.36) !important;
+}
+
+/* Dark mode readable modal */
+html[data-theme="dark"] .manage-request-view-overlay {
+  background: rgba(2, 6, 23, 0.78) !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48) !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading,
+html[data-theme="dark"] .manage-request-view-modal .manage-request-view-status,
+html[data-theme="dark"] .manage-request-view-modal .manage-request-view-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid > div,
+html[data-theme="dark"] .manage-request-view-purpose {
+  border: 1.2px solid rgba(148, 163, 184, 0.24) !important;
+  background: #182235 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid span,
+html[data-theme="dark"] .manage-request-view-purpose span {
+  color: #bfdbfe !important;
+  -webkit-text-fill-color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid strong,
+html[data-theme="dark"] .manage-request-view-purpose p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Close button must stay visible above modal content */
+.manage-request-modal-close {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2147483647 !important;
+  float: right !important;
+  border: 0 !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-request-modal-close {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  -webkit-text-fill-color: #991b1b !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .manage-request-view-overlay {
+    padding: 14px !important;
+    place-items: end center !important;
+  }
+
+  .manage-request-view-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 22px !important;
+  }
+}
+/* =========================================================
+   MANAGE REQUESTS - DETAILS MODAL TRUE FRONT FIX
+   Paste at the VERY BOTTOM of ManageRequests.css
+
+   This fixes the case where the AppLayout sidebar/topbar still sits
+   above the Details modal when the sidebar is open.
+========================================================= */
+
+/* 1) Force the modal overlay and card above normal page layers */
+.manage-request-view-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: auto !important;
+  padding: 24px !important;
+  background: rgba(2, 6, 23, 0.78) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.manage-request-view-modal {
+  position: relative !important;
+  z-index: 2147483647 !important;
+  width: min(920px, calc(100vw - 40px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow-y: auto !important;
+}
+
+/* 2) While the Details modal exists, lower the AppLayout sidebar/topbar.
+   Chrome/Brave supports :has(), and this fixes the sidebar-over-modal issue. */
+body:has(.manage-request-view-overlay) :is(
+  .app-sidebar,
+  .sidebar,
+  .layout-sidebar,
+  .app-layout-sidebar,
+  .qb-sidebar,
+  .app-topbar,
+  .topbar,
+  .layout-topbar,
+  .app-header,
+  [class*="sidebar"],
+  [class*="topbar"]
+) {
+  z-index: 1 !important;
+}
+
+/* 3) Raise the page content layer above the sidebar while the modal is open.
+   This also fixes fixed-position modals trapped inside a transformed layout. */
+body:has(.manage-request-view-overlay) :is(
+  .app-main,
+  .app-main-content,
+  .app-content,
+  .app-page,
+  .app-page-content,
+  .layout-main,
+  .layout-content,
+  main
+) {
+  position: relative !important;
+  z-index: 2147483645 !important;
+  overflow: visible !important;
+}
+
+/* 4) Prevent the sidebar from being clickable while the modal is open. */
+body:has(.manage-request-view-overlay) :is(
+  .app-sidebar,
+  .sidebar,
+  .layout-sidebar,
+  .app-layout-sidebar,
+  .qb-sidebar,
+  [class*="sidebar"]
+) {
+  pointer-events: none !important;
+}
+
+/* 5) Keep modal text/cards readable in dark mode */
+html[data-theme="dark"] .manage-request-view-overlay {
+  background: rgba(2, 6, 23, 0.80) !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal {
+  border: 1.8px solid rgba(148, 163, 184, 0.34) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48) !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading,
+html[data-theme="dark"] .manage-request-view-modal .manage-request-view-status,
+html[data-theme="dark"] .manage-request-view-modal .manage-request-view-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .manage-request-view-modal .manage-section-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid > div,
+html[data-theme="dark"] .manage-request-view-purpose {
+  border: 1.2px solid rgba(148, 163, 184, 0.24) !important;
+  background: #182235 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid span,
+html[data-theme="dark"] .manage-request-view-purpose span {
+  color: #bfdbfe !important;
+  -webkit-text-fill-color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .manage-request-view-grid strong,
+html[data-theme="dark"] .manage-request-view-purpose p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* 6) Close button always on top */
+.manage-request-modal-close {
+  z-index: 2147483647 !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .manage-request-view-overlay {
+    padding: 14px !important;
+    place-items: end center !important;
+  }
+
+  .manage-request-view-modal {
+    width: 100% !important;
+    max-height: calc(100dvh - 28px) !important;
+    border-radius: 22px !important;
+  }
+}
+/* =========================================================
+   MANAGE REQUESTS - MODAL CLICK FIX
+   Paste at the VERY BOTTOM of ManageRequests.css,
+   below the previous true-front modal fix.
+========================================================= */
+
+/* The modal and everything inside it must be clickable */
+.manage-request-view-overlay,
+.manage-request-view-overlay *,
+.manage-request-view-modal,
+.manage-request-view-modal * {
+  pointer-events: auto !important;
+}
+
+/* Keep the overlay as the clickable backdrop */
+.manage-request-view-overlay {
+  z-index: 2147483646 !important;
+}
+
+/* Keep the modal content above its backdrop */
+.manage-request-view-modal {
+  position: relative !important;
+  z-index: 2147483647 !important;
+}
+
+/* Force modal buttons/links to receive clicks */
+.manage-request-view-modal button,
+.manage-request-view-modal a,
+.manage-request-view-actions,
+.manage-request-view-actions button,
+.manage-request-modal-close {
+  position: relative !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Do not let decorative layers block clicks */
+.manage-request-view-modal::before,
+.manage-request-view-modal::after,
+.manage-request-view-overlay::before,
+.manage-request-view-overlay::after {
+  pointer-events: none !important;
+}
+
+/* Sidebar should stay visually behind and not catch clicks while details is open */
+body:has(.manage-request-view-overlay) :is(
+  .app-sidebar,
+  .sidebar,
+  .layout-sidebar,
+  .app-layout-sidebar,
+  .qb-sidebar,
+  [class*="sidebar"]
+) {
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* But never disable the Manage Requests modal even if it is inside app content */
+body:has(.manage-request-view-overlay) .manage-request-view-overlay,
+body:has(.manage-request-view-overlay) .manage-request-view-overlay * {
+  pointer-events: auto !important;
+}

@@ -392,3 +392,129 @@
     width: 100% !important;
   }
 }
+/* =========================================================
+   CONFIRM ACTION MODAL - DARK MODE READABILITY FIX
+   Paste at the VERY BOTTOM of ConfirmActionModal.css
+========================================================= */
+
+/* Keep modal above everything, but make dark mode readable */
+html[data-theme="dark"] .confirm-action-backdrop {
+  background: rgba(2, 6, 23, 0.72) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Main modal card */
+html[data-theme="dark"] .confirm-action-card {
+  border: 1.8px solid rgba(148, 163, 184, 0.34) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at 92% 92%, rgba(250, 204, 21, 0.16), transparent 28%),
+    radial-gradient(circle at 90% 12%, rgba(239, 68, 68, 0.12), transparent 30%),
+    linear-gradient(135deg, #101827 0%, #111827 54%, #161f31 100%) !important;
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset !important;
+  color: #f8fafc !important;
+}
+
+/* Top accent line */
+html[data-theme="dark"] .confirm-action-card::before {
+  background: linear-gradient(90deg, #2563eb, #facc15, #ef4444) !important;
+}
+
+/* Remove any accidental inner rectangle/background from text wrappers */
+html[data-theme="dark"] .confirm-action-text,
+html[data-theme="dark"] .confirm-action-text p,
+html[data-theme="dark"] .confirm-action-text h2,
+html[data-theme="dark"] .confirm-action-text span,
+html[data-theme="dark"] .confirm-action-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Text colors */
+html[data-theme="dark"] .confirm-action-text p {
+  color: #a9b7cc !important;
+}
+
+html[data-theme="dark"] .confirm-action-text h2 {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .confirm-action-text span {
+  color: #dbeafe !important;
+  font-weight: 760 !important;
+}
+
+/* Icon */
+html[data-theme="dark"] .confirm-action-icon {
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  background: rgba(37, 99, 235, 0.20) !important;
+  color: #bfdbfe !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .confirm-action-icon-danger {
+  border-color: rgba(254, 202, 202, 0.26) !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #fecaca !important;
+}
+
+/* Buttons */
+html[data-theme="dark"] .confirm-action-cancel {
+  border: 1.8px solid rgba(226, 232, 240, 0.40) !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .confirm-action-cancel:hover:not(:disabled) {
+  background: #ffffff !important;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.26) !important;
+}
+
+html[data-theme="dark"] .confirm-action-confirm {
+  border: 1.8px solid rgba(96, 165, 250, 0.46) !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28) !important;
+}
+
+html[data-theme="dark"] .confirm-action-confirm-danger {
+  border: 1.8px solid rgba(254, 202, 202, 0.30) !important;
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px rgba(239, 68, 68, 0.28) !important;
+}
+
+html[data-theme="dark"] .confirm-action-actions button:disabled {
+  opacity: 0.62 !important;
+}
+
+/* Light mode cleanup: keep text readable if global styles interfere */
+.confirm-action-card .confirm-action-text h2 {
+  color: #0f172a !important;
+}
+
+.confirm-action-card .confirm-action-text span {
+  color: #475569 !important;
+}
+
+.confirm-action-card .confirm-action-text p {
+  color: #64748b !important;
+}
+
+html[data-theme="dark"] .confirm-action-card .confirm-action-text h2 {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .confirm-action-card .confirm-action-text span {
+  color: #dbeafe !important;
+}
+
+html[data-theme="dark"] .confirm-action-card .confirm-action-text p {
+  color: #a9b7cc !important;
+}

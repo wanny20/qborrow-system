@@ -2366,3 +2366,282 @@ html[data-theme="dark"] .return-page .return-empty {
     width: 100% !important;
   }
 }
+
+
+
+/* =========================================================
+   RETURN CONFIRMATION - FINAL DARK MODE TITLE + MANUAL FIND FIX
+   Paste at the VERY BOTTOM of ReturnConfirmation.css
+========================================================= */
+
+/* ---------- Title card readable in night mode ---------- */
+html[data-theme="dark"] .return-page .return-header-content,
+html[data-theme="dark"] .return-page .return-header > div {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(250, 204, 21, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(30, 64, 175, 0.38), rgba(15, 23, 42, 0.98) 48%, rgba(250, 204, 21, 0.12)) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-header-content::before,
+html[data-theme="dark"] .return-page .return-header-content::after,
+html[data-theme="dark"] .return-page .return-header > div::before,
+html[data-theme="dark"] .return-page .return-header > div::after {
+  pointer-events: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-header-text,
+html[data-theme="dark"] .return-page .return-header-text *,
+html[data-theme="dark"] .return-page .return-header h1,
+html[data-theme="dark"] .return-page .return-header p {
+  position: relative !important;
+  z-index: 3 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-header-text h1,
+html[data-theme="dark"] .return-page .return-header h1 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .return-page .return-header-text p,
+html[data-theme="dark"] .return-page .return-header p {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+  opacity: 1 !important;
+  font-weight: 800 !important;
+}
+
+/* Back button consistent and visible in dark mode */
+html[data-theme="dark"] .return-page .return-header-back-btn {
+  border: 1.8px solid rgba(203, 213, 225, 0.55) !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* ---------- Remove the unwanted rectangle around manual input + Find ---------- */
+.return-page .return-manual-form,
+.return-page .return-manual-row {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.return-page .return-manual-row::before,
+.return-page .return-manual-row::after,
+.return-page .return-manual-form::before,
+.return-page .return-manual-form::after {
+  display: none !important;
+}
+
+/* Keep the input clean as its own rounded field */
+.return-page .return-manual-row input {
+  min-height: 46px !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.45) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: none !important;
+  padding: 0 18px !important;
+}
+
+.return-page .return-manual-row input::placeholder {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.return-page .return-manual-row input:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14) !important;
+}
+
+/* Make Find a standalone pill, not inside a box */
+.return-page .return-manual-row .return-secondary-btn {
+  min-height: 46px !important;
+  border: 1.5px solid rgba(203, 213, 225, 0.75) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+  box-shadow: none !important;
+  font-weight: 900 !important;
+}
+
+.return-page .return-manual-row .return-secondary-btn:hover:not(:disabled) {
+  border-color: rgba(37, 99, 235, 0.45) !important;
+  background: #eff6ff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* ---------- Dark mode manual input + Find button ---------- */
+html[data-theme="dark"] .return-page .return-manual-row input {
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-manual-row input::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .return-page .return-manual-row input:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16) !important;
+}
+
+html[data-theme="dark"] .return-page .return-manual-row .return-secondary-btn {
+  border-color: rgba(203, 213, 225, 0.42) !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-manual-row .return-secondary-btn:hover:not(:disabled) {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+/* ---------- Keep main cards readable in dark mode ---------- */
+html[data-theme="dark"] .return-page .return-scanner-card,
+html[data-theme="dark"] .return-page .return-selected-card,
+html[data-theme="dark"] .return-page .return-queue-panel {
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-card-heading h2,
+html[data-theme="dark"] .return-page .return-section-heading h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .return-page .return-card-heading p,
+html[data-theme="dark"] .return-page .return-section-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Empty selected request panel */
+html[data-theme="dark"] .return-page .return-empty-selected {
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .return-page .return-empty-selected h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .return-page .return-empty-selected p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Mobile keeps the same clean no-rectangle manual row */
+@media (max-width: 760px) {
+  .return-page .return-manual-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .return-page .return-manual-row input,
+  .return-page .return-manual-row .return-secondary-btn {
+    width: 100% !important;
+    min-height: 40px !important;
+  }
+}
+
+
+
+/* =========================================================
+   RETURN CONFIRMATION - REMOVE MANUAL ROW RECTANGLE OUTLINE
+   Paste at the VERY BOTTOM of ReturnConfirmation.css
+========================================================= */
+
+/* This targets the exact wrapper around the input + Find button. */
+html body .app-page-content .return-page .return-scanner-card .return-manual-form .return-manual-row,
+html body .return-page .return-scanner-card .return-manual-form .return-manual-row,
+html[data-theme="dark"] body .app-page-content .return-page .return-scanner-card .return-manual-form .return-manual-row {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+}
+
+/* Kill any global AppLayout outline/border injected through pseudo-elements. */
+html body .app-page-content .return-page .return-scanner-card .return-manual-form .return-manual-row::before,
+html body .app-page-content .return-page .return-scanner-card .return-manual-form .return-manual-row::after,
+html body .return-page .return-scanner-card .return-manual-form .return-manual-row::before,
+html body .return-page .return-scanner-card .return-manual-form .return-manual-row::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Make only the input and Find button visible as separate pills. */
+html body .app-page-content .return-page .return-manual-row > input,
+html body .return-page .return-manual-row > input {
+  border: 1.5px solid rgba(148, 163, 184, 0.45) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+html[data-theme="dark"] body .app-page-content .return-page .return-manual-row > input,
+html[data-theme="dark"] body .return-page .return-manual-row > input {
+  border: 1.5px solid rgba(148, 163, 184, 0.42) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html body .app-page-content .return-page .return-manual-row > .return-secondary-btn,
+html body .return-page .return-manual-row > .return-secondary-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.7) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+
+html[data-theme="dark"] body .app-page-content .return-page .return-manual-row > .return-secondary-btn,
+html[data-theme="dark"] body .return-page .return-manual-row > .return-secondary-btn {
+  border: 1.5px solid rgba(203, 213, 225, 0.42) !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}

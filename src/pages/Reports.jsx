@@ -174,9 +174,56 @@ function getRequestCategoryName(request) {
     return today > expectedDate;
   }
 
+  function getComparableDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+      return formatDateForInput(value) || value;
+    }
+
+    if (value?.toMillis) {
+      return formatDateForInput(value.toMillis());
+    }
+
+    if (value?.seconds) {
+      return formatDateForInput(value.seconds * 1000);
+    }
+
+    return formatDateForInput(value);
+  }
+
+  function isReturnedLate(request) {
+    if (request.approvalStatus !== "Returned") {
+      return false;
+    }
+
+    const expectedDateKey = getComparableDateKey(request.expectedReturnDate);
+    const actualDateKey = getComparableDateKey(request.actualReturnDate);
+
+    if (!expectedDateKey || !actualDateKey) {
+      return false;
+    }
+
+    return actualDateKey > expectedDateKey;
+  }
+
   function getRequestStatusLabel(request) {
     if (checkOverdue(request)) return "Overdue";
+
+    if (request.approvalStatus === "Returned") {
+      return isReturnedLate(request) ? "Returned Late" : "Returned On Time";
+    }
+
     return request.approvalStatus || "Unknown";
+  }
+
+  function getRequestStatusClass(request) {
+    const statusLabel = getRequestStatusLabel(request);
+
+    return String(statusLabel || "Unknown")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
   function getCreatedTime(record) {
@@ -442,9 +489,12 @@ const reportStatistics = [
 
       const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
 
+      const reportStatusLabel = getRequestStatusLabel(request);
+
       const matchesStatus =
         statusFilter === "All" ||
         request.approvalStatus === statusFilter ||
+        reportStatusLabel === statusFilter ||
         (statusFilter === "Overdue" && checkOverdue(request));
 
       return matchesSearch && matchesStatus;
@@ -1219,9 +1269,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         <span>{viewingHistoryRequest.itemCode || viewingHistoryRequest.itemId || "No code"}</span>
 
         <strong
-          className={`reports-status-pill status-${String(
-            getRequestStatusLabel(viewingHistoryRequest)
-          ).toLowerCase()}`}
+          className={`reports-status-pill status-${getRequestStatusClass(
+            viewingHistoryRequest
+          )}`}
         >
           {getRequestStatusLabel(viewingHistoryRequest)}
         </strong>
@@ -1887,6 +1937,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <option value="Approved">Approved</option>
       <option value="Borrowed">Borrowed</option>
       <option value="Returned">Returned</option>
+      <option value="Returned On Time">Returned On Time</option>
+      <option value="Returned Late">Returned Late</option>
       <option value="Rejected">Rejected</option>
       <option value="Cancelled">Cancelled</option>
       <option value="Overdue">Overdue</option>
@@ -1955,9 +2007,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
 
       <div className="reports-history-table-status">
         <strong
-          className={`reports-status-pill status-${String(
-            getRequestStatusLabel(request)
-          ).toLowerCase()}`}
+          className={`reports-status-pill status-${getRequestStatusClass(
+            request
+          )}`}
         >
           {getRequestStatusLabel(request)}
         </strong>

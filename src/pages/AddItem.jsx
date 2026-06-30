@@ -26,7 +26,6 @@ function AddItem() {
   const [categories, setCategories] = useState([]);
 
   const [itemName, setItemName] = useState("");
-  const [itemCode, setItemCode] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [condition, setCondition] = useState("Good");
@@ -269,7 +268,6 @@ function AddItem() {
     revokePreview(imagePreview);
 
     setItemName("");
-    setItemCode("");
     setDescription("");
     setCondition("Good");
     setAvailability("Available");

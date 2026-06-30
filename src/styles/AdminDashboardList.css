@@ -1207,3 +1207,586 @@
     width: 100% !important;
   }
 }
+
+
+/* =========================================================
+   ADMIN DASHBOARD LIST - DARK MODE CARD OPTIMIZATION
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* Keep this page from inheriting light card backgrounds in night mode */
+html[data-theme="dark"] body .app-page-content .admin-list-page,
+html[data-theme="dark"] body .admin-list-page {
+  color: #f8fafc !important;
+}
+
+/* Main cards: title, search, count, table panel, loading, empty */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header-content,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-tools > div:first-child,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-count-card,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-panel,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-loading-card,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-empty,
+html[data-theme="dark"] body .admin-list-page .admin-list-header-content,
+html[data-theme="dark"] body .admin-list-page .admin-list-tools > div:first-child,
+html[data-theme="dark"] body .admin-list-page .admin-list-count-card,
+html[data-theme="dark"] body .admin-list-page .admin-list-panel,
+html[data-theme="dark"] body .admin-list-page .admin-list-loading-card,
+html[data-theme="dark"] body .admin-list-page .admin-list-empty {
+  border-color: rgba(203, 213, 225, 0.32) !important;
+  background:
+    radial-gradient(circle at 95% 15%, rgba(250, 204, 21, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.96)) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+/* Title card text visibility */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header-text h1,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header-text h2,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header h1,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header h2,
+html[data-theme="dark"] body .admin-list-page .admin-list-header-text h1,
+html[data-theme="dark"] body .admin-list-page .admin-list-header-text h2,
+html[data-theme="dark"] body .admin-list-page .admin-list-header h1,
+html[data-theme="dark"] body .admin-list-page .admin-list-header h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header-text p,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header p,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-loading-card p,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-empty p,
+html[data-theme="dark"] body .admin-list-page .admin-list-header-text p,
+html[data-theme="dark"] body .admin-list-page .admin-list-header p,
+html[data-theme="dark"] body .admin-list-page .admin-list-loading-card p,
+html[data-theme="dark"] body .admin-list-page .admin-list-empty p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Assigned category note should look like a pill, not a boxed label */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-assigned-note,
+html[data-theme="dark"] body .admin-list-page .admin-list-assigned-note {
+  border: 0 !important;
+  outline: 0 !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  color: #bfdbfe !important;
+  box-shadow: none !important;
+}
+
+/* Search field */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-tools label,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-tools .qb-label,
+html[data-theme="dark"] body .admin-list-page .admin-list-tools label,
+html[data-theme="dark"] body .admin-list-page .admin-list-tools .qb-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-tools input,
+html[data-theme="dark"] body .admin-list-page .admin-list-tools input {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-tools input::placeholder,
+html[data-theme="dark"] body .admin-list-page .admin-list-tools input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+/* Count card */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-count-card span,
+html[data-theme="dark"] body .admin-list-page .admin-list-count-card span {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-count-card strong,
+html[data-theme="dark"] body .admin-list-page .admin-list-count-card strong {
+  color: #ffffff !important;
+}
+
+/* Table header + rows */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-header,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-header {
+  border-color: rgba(203, 213, 225, 0.22) !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-header span,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-header span {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-row,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-row {
+  border-color: rgba(203, 213, 225, 0.24) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-row:hover,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-row:hover {
+  border-color: rgba(96, 165, 250, 0.58) !important;
+  background: #172033 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-cell,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-cell {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-cell strong,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-main-cell strong,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-borrower-cell strong,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-cell strong,
+html[data-theme="dark"] body .admin-list-page .admin-list-main-cell strong,
+html[data-theme="dark"] body .admin-list-page .admin-list-borrower-cell strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-cell span,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-main-cell > span,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-borrower-cell > span,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-main-cell p,
+html[data-theme="dark"] body .admin-list-page .admin-list-compact-cell span,
+html[data-theme="dark"] body .admin-list-page .admin-list-main-cell > span,
+html[data-theme="dark"] body .admin-list-page .admin-list-borrower-cell > span,
+html[data-theme="dark"] body .admin-list-page .admin-list-main-cell p {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* Remove inner rectangular cell outlines on tablet/mobile cards */
+@media (max-width: 1180px) {
+  html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-compact-cell,
+  html[data-theme="dark"] body .admin-list-page .admin-list-compact-cell {
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 4px 0 !important;
+  }
+}
+
+/* Buttons */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-primary-btn,
+html[data-theme="dark"] body .admin-list-page .admin-list-primary-btn {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-secondary-btn,
+html[data-theme="dark"] body .admin-list-page .admin-list-secondary-btn {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-header-back-btn,
+html[data-theme="dark"] body .admin-list-page .admin-list-header-back-btn {
+  border: 2px solid rgba(203, 213, 225, 0.55) !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-primary-btn:hover,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-secondary-btn:hover,
+html[data-theme="dark"] body .admin-list-page .admin-list-primary-btn:hover,
+html[data-theme="dark"] body .admin-list-page .admin-list-secondary-btn:hover {
+  transform: translateY(-1px) !important;
+}
+
+/* Status pills: readable in dark mode */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-pill,
+html[data-theme="dark"] body .admin-list-page .admin-list-pill {
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-available,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-approved,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-returned,
+html[data-theme="dark"] body .admin-list-page .status-available,
+html[data-theme="dark"] body .admin-list-page .status-approved,
+html[data-theme="dark"] body .admin-list-page .status-returned {
+  background: rgba(34, 197, 94, 0.18) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-reserved,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-pending,
+html[data-theme="dark"] body .admin-list-page .status-reserved,
+html[data-theme="dark"] body .admin-list-page .status-pending {
+  background: rgba(250, 204, 21, 0.18) !important;
+  color: #fde68a !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-borrowed,
+html[data-theme="dark"] body .admin-list-page .status-borrowed {
+  background: rgba(96, 165, 250, 0.2) !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-overdue,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-damaged,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-lost,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-rejected,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-cancelled,
+html[data-theme="dark"] body .admin-list-page .status-overdue,
+html[data-theme="dark"] body .admin-list-page .status-damaged,
+html[data-theme="dark"] body .admin-list-page .status-lost,
+html[data-theme="dark"] body .admin-list-page .status-rejected,
+html[data-theme="dark"] body .admin-list-page .status-cancelled {
+  background: rgba(248, 113, 113, 0.18) !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-unavailable,
+html[data-theme="dark"] body .app-page-content .admin-list-page .status-unknown,
+html[data-theme="dark"] body .admin-list-page .status-unavailable,
+html[data-theme="dark"] body .admin-list-page .status-unknown {
+  background: rgba(148, 163, 184, 0.18) !important;
+  color: #cbd5e1 !important;
+}
+
+/* Modal dark mode */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-backdrop,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-backdrop {
+  background: rgba(2, 6, 23, 0.72) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-card,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-card {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-heading h2,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-heading h2 {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-heading > span,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-heading p,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-heading > span,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-heading p {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-grid div,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-grid div {
+  border-color: rgba(203, 213, 225, 0.2) !important;
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-grid span,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-grid span {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-grid strong,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-grid strong {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-modal-close,
+html[data-theme="dark"] body .admin-list-page .admin-list-modal-close {
+  border: 0 !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  box-shadow: none !important;
+}
+
+
+
+/* =========================================================
+   ADMIN DASHBOARD LIST - ICON ACTION BUTTONS
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+.admin-list-page .admin-list-compact-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+.admin-list-page .admin-list-icon-btn {
+  position: relative !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.26) !important;
+  border-radius: 13px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  color: #1e293b !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+.admin-list-page .admin-list-icon-btn span {
+  display: grid !important;
+  place-items: center !important;
+  color: currentColor !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.95rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.admin-list-page .admin-list-icon-btn:hover,
+.admin-list-page .admin-list-icon-btn:focus-visible {
+  transform: translateY(-1px) !important;
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.14) !important;
+  outline: none !important;
+}
+
+.admin-list-page .admin-list-icon-primary {
+  border-color: rgba(37, 99, 235, 0.42) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.admin-list-page .admin-list-icon-primary:hover,
+.admin-list-page .admin-list-icon-primary:focus-visible {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* Hover label / tooltip */
+.admin-list-page .admin-list-icon-btn::after {
+  content: attr(data-tooltip);
+  position: absolute !important;
+  left: 50% !important;
+  bottom: calc(100% + 9px) !important;
+  z-index: 80 !important;
+  min-width: max-content !important;
+  max-width: 170px !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: translate(-50%, 6px) scale(0.98) !important;
+  border: 1px solid rgba(15, 23, 42, 0.14) !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18) !important;
+  color: #ffffff !important;
+  padding: 7px 10px !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease !important;
+}
+
+.admin-list-page .admin-list-icon-btn::before {
+  content: "";
+  position: absolute !important;
+  left: 50% !important;
+  bottom: calc(100% + 4px) !important;
+  z-index: 79 !important;
+  width: 9px !important;
+  height: 9px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) rotate(45deg) !important;
+  background: #0f172a !important;
+  transition: opacity 140ms ease !important;
+}
+
+.admin-list-page .admin-list-icon-btn:hover::after,
+.admin-list-page .admin-list-icon-btn:hover::before,
+.admin-list-page .admin-list-icon-btn:focus-visible::after,
+.admin-list-page .admin-list-icon-btn:focus-visible::before {
+  opacity: 1 !important;
+}
+
+.admin-list-page .admin-list-icon-btn:hover::after,
+.admin-list-page .admin-list-icon-btn:focus-visible::after {
+  transform: translate(-50%, 0) scale(1) !important;
+}
+
+/* Let tooltips show above rows/cards */
+.admin-list-page .admin-list-panel,
+.admin-list-page .admin-list-compact-grid,
+.admin-list-page .admin-list-compact-row,
+.admin-list-page .admin-list-compact-actions {
+  overflow: visible !important;
+}
+
+/* Dark mode icon actions */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn {
+  border-color: rgba(203, 213, 225, 0.26) !important;
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn:hover,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn:focus-visible,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn:hover,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn:focus-visible {
+  border-color: rgba(96, 165, 250, 0.65) !important;
+  background: #24324a !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-primary,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-primary {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn::after,
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn::before,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::before {
+  background: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-icon-btn::after,
+html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
+  border-color: rgba(203, 213, 225, 0.24) !important;
+  color: #0f172a !important;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* Mobile: keep actions compact, not full-width text buttons */
+@media (max-width: 1180px) {
+  .admin-list-page .admin-list-compact-actions {
+    display: flex !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    border-radius: 14px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   ADMIN DASHBOARD LIST - ACTIONS COLUMN ALIGNMENT FIX
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* Use one shared column template for header and rows */
+.admin-list-page .admin-list-compact-header.item-table,
+.admin-list-page .admin-list-compact-row.item-table {
+  grid-template-columns:
+    minmax(260px, 1.55fr)
+    minmax(150px, 0.9fr)
+    minmax(120px, 0.7fr)
+    minmax(150px, 0.8fr)
+    190px !important;
+}
+
+.admin-list-page .admin-list-compact-header.request-table,
+.admin-list-page .admin-list-compact-row.request-table {
+  grid-template-columns:
+    minmax(240px, 1.35fr)
+    minmax(210px, 1.05fr)
+    minmax(150px, 0.8fr)
+    minmax(125px, 0.65fr)
+    minmax(135px, 0.7fr)
+    190px !important;
+}
+
+/* Center the Actions header exactly above the icons */
+.admin-list-page .admin-list-compact-header.item-table span:last-child,
+.admin-list-page .admin-list-compact-header.request-table span:last-child {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Keep icon group centered inside the same Actions column */
+.admin-list-page .admin-list-compact-actions {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+  align-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+/* Prevent the action column from being pushed by button widths */
+.admin-list-page .admin-list-compact-actions .admin-list-icon-btn {
+  flex: 0 0 40px !important;
+}
+
+/* Make all non-action header labels keep their normal left alignment */
+.admin-list-page .admin-list-compact-header.item-table span:not(:last-child),
+.admin-list-page .admin-list-compact-header.request-table span:not(:last-child) {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* Tablet/mobile keeps icons aligned and readable */
+@media (max-width: 1180px) {
+  .admin-list-page .admin-list-compact-header.item-table,
+  .admin-list-page .admin-list-compact-row.item-table,
+  .admin-list-page .admin-list-compact-header.request-table,
+  .admin-list-page .admin-list-compact-row.request-table {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-list-page .admin-list-compact-header.item-table span:last-child,
+  .admin-list-page .admin-list-compact-header.request-table span:last-child {
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+
+  .admin-list-page .admin-list-compact-actions {
+    justify-content: flex-start !important;
+  }
+}
