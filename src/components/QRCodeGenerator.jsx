@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
-import { useToast } from "./ToastProvider.jsx";
+import { useToast } from "./ToastContext.jsx";
 import "../styles/QRCodeGenerator.css";
 
 function QRCodeGenerator({
@@ -13,6 +13,7 @@ function QRCodeGenerator({
   qrSize = 150,
   barcodeHeight = 80,
   compact = false,
+  hideActions = false,
 }) {
   const qrCanvasRef = useRef(null);
   const barcodeCanvasRef = useRef(null);
@@ -22,26 +23,27 @@ function QRCodeGenerator({
   const [statusMessage, setStatusMessage] = useState("");
   const [hasGenerated, setHasGenerated] = useState(false);
 
+  const shouldShowActions = !hideActions;
+
   function showActionError(shortMessage, error) {
-  const detailedMessage = error?.message
-    ? `${shortMessage}: ${error.message}`
-    : shortMessage;
+    const detailedMessage = error?.message
+      ? `${shortMessage}: ${error.message}`
+      : shortMessage;
 
-  console.error(shortMessage, error);
-  setStatusMessage(detailedMessage);
-  showToast(shortMessage, "error");
-}
+    console.error(shortMessage, error);
+    setStatusMessage(detailedMessage);
+    showToast(shortMessage, "error");
+  }
 
-function showBlockedAction(message) {
-  setStatusMessage(message);
-  showToast(message, "error");
-}
+  function showBlockedAction(message) {
+    setStatusMessage(message);
+    showToast(message, "error");
+  }
 
-function showActionSuccess(message) {
-  setStatusMessage("");
-  showToast(message, "success");
-}
-
+  function showActionSuccess(message) {
+    setStatusMessage("");
+    showToast(message, "success");
+  }
 
   const finalQrValue = useMemo(() => {
     if (qrValue) return qrValue;
@@ -92,18 +94,20 @@ function showActionSuccess(message) {
         }
 
         if (barcodeCanvasRef.current) {
-            JsBarcode(barcodeCanvasRef.current, finalBarcodeValue, {
-              format: "CODE128",
-              width: compact ? 1.6 : 2.4,
-              height: compact ? Math.max(barcodeHeight, 64) : Math.max(barcodeHeight, 90),
-              displayValue: !compact,
-              font: "monospace",
-              fontSize: compact ? 12 : 18,
-              textMargin: compact ? 6 : 10,
-              margin: compact ? 14 : 28,
-              lineColor: "#000000",
-              background: "#FFFFFF",
-            });
+          JsBarcode(barcodeCanvasRef.current, finalBarcodeValue, {
+            format: "CODE128",
+            width: compact ? 1.6 : 2.4,
+            height: compact
+              ? Math.max(barcodeHeight, 64)
+              : Math.max(barcodeHeight, 90),
+            displayValue: !compact,
+            font: "monospace",
+            fontSize: compact ? 12 : 18,
+            textMargin: compact ? 6 : 10,
+            margin: compact ? 14 : 28,
+            lineColor: "#000000",
+            background: "#FFFFFF",
+          });
         }
 
         setHasGenerated(true);
@@ -116,6 +120,8 @@ function showActionSuccess(message) {
   }, [finalQrValue, finalBarcodeValue, qrSize, barcodeHeight, compact]);
 
   function downloadCanvas(canvasRef, filename, successMessage) {
+    if (!shouldShowActions) return;
+
     if (!canvasRef.current || !hasGenerated) {
       showBlockedAction("Code is not ready yet. Please wait and try again.");
       return;
@@ -154,10 +160,12 @@ function showActionSuccess(message) {
   }
 
   function handlePrintLabel() {
+    if (!shouldShowActions) return;
+
     if (!qrCanvasRef.current || !barcodeCanvasRef.current || !hasGenerated) {
-  showBlockedAction("Code is not ready yet. Please wait and try again.");
-  return;
-}
+      showBlockedAction("Code is not ready yet. Please wait and try again.");
+      return;
+    }
 
     const qrImage = qrCanvasRef.current.toDataURL("image/png");
     const barcodeImage = barcodeCanvasRef.current.toDataURL("image/png");
@@ -249,7 +257,11 @@ function showActionSuccess(message) {
   }
 
   return (
-    <div className={`code-generator-box ${compact ? "compact" : ""}`}>
+    <div
+      className={`code-generator-box ${compact ? "compact" : ""} ${
+        hideActions ? "hide-actions" : ""
+      }`}
+    >
       {!compact && (
         <div className="code-generator-header">
           <div>
@@ -279,9 +291,11 @@ function showActionSuccess(message) {
             <canvas ref={qrCanvasRef}></canvas>
           </div>
 
-          <button type="button" onClick={handleDownloadQR}>
-            Download QR
-          </button>
+          {shouldShowActions && (
+            <button type="button" onClick={handleDownloadQR}>
+              Download QR
+            </button>
+          )}
         </div>
 
         <div className="barcode-area">
@@ -294,13 +308,15 @@ function showActionSuccess(message) {
             <canvas ref={barcodeCanvasRef}></canvas>
           </div>
 
-          <button type="button" onClick={handleDownloadBarcode}>
-            Download Barcode
-          </button>
-         </div>
+          {shouldShowActions && (
+            <button type="button" onClick={handleDownloadBarcode}>
+              Download Barcode
+            </button>
+          )}
+        </div>
       </div>
 
-      {compact && (
+      {compact && shouldShowActions && (
         <div className="code-generator-compact-actions">
           <button
             type="button"
@@ -312,20 +328,18 @@ function showActionSuccess(message) {
         </div>
       )}
 
-      <div className="code-generator-footer">
-        {!compact && (
+      {!compact && shouldShowActions && (
+        <div className="code-generator-footer">
           <button type="button" onClick={handlePrintLabel}>
             Print Label
           </button>
-        )}
 
-        {!compact && (
           <div>
             <span>QR Value</span>
             <p>{finalQrValue || "No QR value"}</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

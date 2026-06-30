@@ -1,480 +1,841 @@
-.code-generator-box {
-  width: 100%;
-  border: 2px solid var(--qb-border);
-  border-radius: 24px;
-  background: var(--qb-surface);
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-  padding: 16px;
-  color: var(--qb-foreground);
-}
-
-.code-generator-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.code-generator-header span,
-.code-generator-footer span,
-.code-area-title span {
-  display: block;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.code-generator-header h3 {
-  margin: 6px 0 0;
-  font-family: var(--qb-heading-font);
-  font-size: 1.25rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
-}
-
-.code-generator-header p {
-  margin: 5px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.82rem;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
-.code-generator-header strong {
-  flex: 0 0 auto;
-  border: 2px solid var(--qb-border);
-  border-radius: var(--qb-radius-full);
-  background: var(--qb-quaternary);
-  box-shadow: 3px 3px 0 0 var(--qb-border);
-  padding: 6px 10px;
-  font-family: var(--qb-heading-font);
-  font-size: 0.68rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.code-generator-status {
-  margin-bottom: 14px;
-  border: 2px solid var(--qb-border);
-  border-radius: 18px;
-  background: rgba(239, 68, 68, 0.12);
-  box-shadow: 3px 3px 0 0 var(--qb-danger);
-  padding: 10px 12px;
-  font-size: 0.82rem;
-  font-weight: 900;
-}
-
-.code-generator-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-}
-
-.qr-code-area,
-.barcode-area {
-  border: 2px solid var(--qb-border);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 12px 12px, rgba(30, 41, 59, 0.12) 2px, transparent 2.5px),
-    var(--qb-bg);
-  background-size: 18px 18px;
-  padding: 14px;
-}
-
-.code-area-title {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.code-area-title p {
-  margin: 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-align: right;
-}
-
-.code-canvas-shell {
-  display: grid;
-  place-items: center;
-  min-height: 150px;
-  overflow: hidden;
-  border: 2px solid var(--qb-border);
-  border-radius: 18px;
-  background: #ffffff;
-  padding: 12px;
-}
-
-.qr-shell canvas {
-  width: 130px !important;
-  height: 130px !important;
-}
-
-.barcode-shell {
-  min-height: 96px;
-}
-
-.barcode-shell canvas {
-  max-width: 100%;
-  height: auto !important;
-}
-
-.qr-code-area button,
-.barcode-area button,
-.code-generator-footer button {
-  width: 100%;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 12px;
-  border: 2px solid var(--qb-border);
-  border-radius: var(--qb-radius-full);
-  background: var(--qb-surface);
-  box-shadow: 3px 3px 0 0 var(--qb-border);
-  color: var(--qb-foreground);
-  padding: 0 14px;
-  font-family: var(--qb-heading-font);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition:
-    transform 220ms var(--qb-ease-bounce),
-    box-shadow 220ms var(--qb-ease-bounce),
-    background 180ms ease;
-}
-
-.qr-code-area button:hover,
-.barcode-area button:hover,
-.code-generator-footer button:hover {
-  background: var(--qb-tertiary);
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-}
-
-.qr-code-area button:active,
-.barcode-area button:active,
-.code-generator-footer button:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 0 var(--qb-border);
-}
-
-.code-generator-footer {
-  display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
-  gap: 12px;
-  align-items: stretch;
-  margin-top: 14px;
-}
-
-.code-generator-footer button {
-  margin-top: 0;
-  background: var(--qb-accent);
-  color: #ffffff;
-}
-
-.code-generator-footer div {
-  min-width: 0;
-  border: 2px solid var(--qb-border);
-  border-radius: 18px;
-  background: var(--qb-bg);
-  padding: 10px 12px;
-}
-
-.code-generator-footer p {
-  margin: 5px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.76rem;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
-@media (min-width: 900px) {
-  .code-generator-grid {
-    grid-template-columns: 0.9fr 1.1fr;
-  }
-}
-
-@media (max-width: 520px) {
   .code-generator-box {
+    width: 100%;
+    border: 2px solid var(--qb-border);
+    border-radius: 24px;
+    background: var(--qb-surface);
+    box-shadow: 5px 5px 0 0 var(--qb-border);
+    padding: 16px;
+    color: var(--qb-foreground);
+  }
+
+  .code-generator-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .code-generator-header span,
+  .code-generator-footer span,
+  .code-area-title span {
+    display: block;
+    color: var(--qb-muted-foreground);
+    font-family: var(--qb-heading-font);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .code-generator-header h3 {
+    margin: 6px 0 0;
+    font-family: var(--qb-heading-font);
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  .code-generator-header p {
+    margin: 5px 0 0;
+    color: var(--qb-muted-foreground);
+    font-size: 0.82rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .code-generator-header strong {
+    flex: 0 0 auto;
+    border: 2px solid var(--qb-border);
+    border-radius: var(--qb-radius-full);
+    background: var(--qb-quaternary);
+    box-shadow: 3px 3px 0 0 var(--qb-border);
+    padding: 6px 10px;
+    font-family: var(--qb-heading-font);
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .code-generator-status {
+    margin-bottom: 14px;
+    border: 2px solid var(--qb-border);
+    border-radius: 18px;
+    background: rgba(239, 68, 68, 0.12);
+    box-shadow: 3px 3px 0 0 var(--qb-danger);
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .code-generator-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .qr-code-area,
+  .barcode-area {
+    border: 2px solid var(--qb-border);
     border-radius: 20px;
+    background:
+      radial-gradient(circle at 12px 12px, rgba(30, 41, 59, 0.12) 2px, transparent 2.5px),
+      var(--qb-bg);
+    background-size: 18px 18px;
     padding: 14px;
   }
 
-  .code-generator-header,
   .code-area-title {
-    flex-direction: column;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
   }
 
   .code-area-title p {
-    text-align: left;
+    margin: 0;
+    color: var(--qb-muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  .code-canvas-shell {
+    display: grid;
+    place-items: center;
+    min-height: 150px;
+    overflow: hidden;
+    border: 2px solid var(--qb-border);
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 12px;
+  }
+
+  .qr-shell canvas {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  .barcode-shell {
+    min-height: 96px;
+  }
+
+  .barcode-shell canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+
+  .qr-code-area button,
+  .barcode-area button,
+  .code-generator-footer button {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    border: 2px solid var(--qb-border);
+    border-radius: var(--qb-radius-full);
+    background: var(--qb-surface);
+    box-shadow: 3px 3px 0 0 var(--qb-border);
+    color: var(--qb-foreground);
+    padding: 0 14px;
+    font-family: var(--qb-heading-font);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition:
+      transform 220ms var(--qb-ease-bounce),
+      box-shadow 220ms var(--qb-ease-bounce),
+      background 180ms ease;
+  }
+
+  .qr-code-area button:hover,
+  .barcode-area button:hover,
+  .code-generator-footer button:hover {
+    background: var(--qb-tertiary);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 0 var(--qb-border);
+  }
+
+  .qr-code-area button:active,
+  .barcode-area button:active,
+  .code-generator-footer button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 var(--qb-border);
   }
 
   .code-generator-footer {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 12px;
+    align-items: stretch;
+    margin-top: 14px;
   }
-}
-.code-generator-box.compact {
-  border: 2px solid var(--qb-border);
-  border-radius: 18px;
-  background: #ffffff;
-  padding: 12px;
-  box-shadow: none;
-}
 
-.code-generator-box.compact .code-generator-grid {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
+  .code-generator-footer button {
+    margin-top: 0;
+    background: var(--qb-accent);
+    color: #ffffff;
+  }
 
-.code-generator-box.compact .qr-code-area,
-.code-generator-box.compact .barcode-area {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+  .code-generator-footer div {
+    min-width: 0;
+    border: 2px solid var(--qb-border);
+    border-radius: 18px;
+    background: var(--qb-bg);
+    padding: 10px 12px;
+  }
 
-.code-generator-box.compact .code-area-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+  .code-generator-footer p {
+    margin: 5px 0 0;
+    color: var(--qb-muted-foreground);
+    font-size: 0.76rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
 
-.code-generator-box.compact .code-area-title p {
-  display: none;
-}
+  @media (min-width: 900px) {
+    .code-generator-grid {
+      grid-template-columns: 0.9fr 1.1fr;
+    }
+  }
 
-.code-generator-box.compact .code-canvas-shell {
-  border: 2px solid var(--qb-border);
-  border-radius: 14px;
-  background: #fff;
-  padding: 8px;
-  overflow: hidden;
-}
+  @media (max-width: 520px) {
+    .code-generator-box {
+      border-radius: 20px;
+      padding: 14px;
+    }
 
-.code-generator-box.compact .qr-shell {
-  width: fit-content;
-}
+    .code-generator-header,
+    .code-area-title {
+      flex-direction: column;
+    }
 
-.code-generator-box.compact .barcode-shell canvas {
-  width: 100% !important;
-  height: auto !important;
-}
+    .code-area-title p {
+      text-align: left;
+    }
 
-.code-generator-box.compact button {
-  min-height: 38px;
-  border: 2px solid var(--qb-border);
-  border-radius: 9999px;
-  background: #fffdf5;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
+    .code-generator-footer {
+      grid-template-columns: 1fr;
+    }
+  }
+  .code-generator-box.compact {
+    border: 2px solid var(--qb-border);
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 12px;
+    box-shadow: none;
+  }
 
-.code-generator-box.compact .code-generator-footer {
-  display: none;
-}
-
-@media (max-width: 760px) {
   .code-generator-box.compact .code-generator-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
   }
-}
-/* =========================================================
-   ITEM DETAILS COMPACT QR / BARCODE POLISH
+
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .code-generator-box.compact .code-area-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .code-generator-box.compact .code-area-title p {
+    display: none;
+  }
+
+  .code-generator-box.compact .code-canvas-shell {
+    border: 2px solid var(--qb-border);
+    border-radius: 14px;
+    background: #fff;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  .code-generator-box.compact .qr-shell {
+    width: fit-content;
+  }
+
+  .code-generator-box.compact .barcode-shell canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .code-generator-box.compact button {
+    min-height: 38px;
+    border: 2px solid var(--qb-border);
+    border-radius: 9999px;
+    background: #fffdf5;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .code-generator-box.compact .code-generator-footer {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .code-generator-box.compact .code-generator-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* =========================================================
+    ITEM DETAILS COMPACT QR / BARCODE POLISH
+  ========================================================= */
+
+  .code-generator-box.compact {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .code-generator-box.compact .code-generator-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
+    min-width: 0 !important;
+    display: grid !important;
+    gap: 10px !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 20px !important;
+    background:
+      radial-gradient(circle at top right, rgba(251, 191, 36, 0.18), transparent 38%),
+      #ffffff !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+    padding: 14px !important;
+  }
+
+  .code-generator-box.compact .code-area-title {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .code-generator-box.compact .code-area-title span {
+    width: fit-content !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 999px !important;
+    background: var(--qb-quaternary) !important;
+    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
+    padding: 5px 10px !important;
+    color: var(--qb-foreground) !important;
+    font-family: var(--qb-heading-font) !important;
+    font-size: 0.66rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
+  }
+
+  .code-generator-box.compact .code-canvas-shell {
+    width: 100% !important;
+    min-height: 150px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    border: 2px dashed rgba(30, 41, 59, 0.45) !important;
+    border-radius: 18px !important;
+    background:
+      radial-gradient(circle, rgba(30, 41, 59, 0.1) 1px, transparent 1.5px),
+      #fffef8 !important;
+    background-size: 18px 18px !important;
+    padding: 14px !important;
+  }
+
+  .code-generator-box.compact .qr-shell canvas {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell {
+    min-height: 150px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell canvas {
+    width: 100% !important;
+    max-width: 190px !important;
+    height: auto !important;
+  }
+
+  .code-generator-box.compact button {
+    width: 100% !important;
+    height: 42px !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
+    color: var(--qb-foreground) !important;
+    font-family: var(--qb-heading-font) !important;
+    font-size: 0.68rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+  }
+
+  .code-generator-box.compact button:hover {
+    transform: translate(-1px, -1px) !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+  }
+
+  .code-generator-box.compact .code-generator-footer,
+  .code-generator-box.compact .code-generator-header {
+    display: none !important;
+  }
+
+  @media (max-width: 900px) {
+    .code-generator-box.compact .code-generator-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+  /* =========================================================
+    COMPACT PRINT LABEL BUTTON
+  ========================================================= */
+
+  .code-generator-box.compact .code-generator-compact-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 14px !important;
+  }
+
+  .code-generator-box.compact .code-generator-print-label-btn {
+    width: min(260px, 100%) !important;
+    height: 46px !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 999px !important;
+    background: var(--qb-accent) !important;
+    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+    color: var(--qb-foreground) !important;
+    font-family: var(--qb-heading-font) !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+  }
+
+  .code-generator-box.compact .code-generator-print-label-btn:hover {
+    transform: translate(-1px, -1px) !important;
+    box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  }
+  /* =========================================================
+    STANDALONE COMPACT QR / BARCODE CARDS
+  ========================================================= */
+
+  .code-generator-box.compact {
+    overflow: visible !important;
+  }
+
+  .code-generator-box.compact .code-generator-grid {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 22px !important;
+    background:
+      radial-gradient(circle at top right, rgba(251, 191, 36, 0.2), transparent 40%),
+      #ffffff !important;
+    box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+    padding: 16px !important;
+  }
+
+  .code-generator-box.compact .code-generator-compact-actions {
+    margin-top: 16px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .code-generator-box.compact .code-generator-print-label-btn {
+    width: min(280px, 100%) !important;
+    background: var(--qb-accent) !important;
+  }
+  /* =========================================================
+   QR CODE GENERATOR - COMPACT ONE COLUMN LAYOUT
 ========================================================= */
 
 .code-generator-box.compact {
   width: 100% !important;
-  max-width: 100% !important;
   overflow: visible !important;
   border: 0 !important;
-  border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
 }
 
+/* QR and Barcode stacked in one column */
 .code-generator-box.compact .code-generator-grid {
   display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 14px !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
   width: 100% !important;
 }
 
+/* Compact QR / Barcode cards */
 .code-generator-box.compact .qr-code-area,
 .code-generator-box.compact .barcode-area {
-  min-width: 0 !important;
   display: grid !important;
-  gap: 10px !important;
-  border: 2px solid var(--qb-border) !important;
-  border-radius: 20px !important;
+  grid-template-columns: 90px minmax(0, 1fr) 180px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 118px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.28) !important;
+  border-radius: 18px !important;
   background:
-    radial-gradient(circle at top right, rgba(251, 191, 36, 0.18), transparent 38%),
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.18), transparent 38%),
     #ffffff !important;
-  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
-  padding: 14px !important;
+  box-shadow: none !important;
+  padding: 12px !important;
 }
 
+/* Label */
 .code-generator-box.compact .code-area-title {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
+  margin: 0 !important;
 }
 
 .code-generator-box.compact .code-area-title span {
   width: fit-content !important;
-  border: 2px solid var(--qb-border) !important;
+  border: 0 !important;
   border-radius: 999px !important;
-  background: var(--qb-quaternary) !important;
-  box-shadow: 2px 2px 0 0 var(--qb-border) !important;
-  padding: 5px 10px !important;
-  color: var(--qb-foreground) !important;
-  font-family: var(--qb-heading-font) !important;
-  font-size: 0.66rem !important;
+  background: #34d399 !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+  padding: 7px 12px !important;
+  font-size: 0.68rem !important;
   font-weight: 900 !important;
-  line-height: 1 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
 }
 
+/* QR / Barcode preview */
 .code-generator-box.compact .code-canvas-shell {
   width: 100% !important;
-  min-height: 150px !important;
+  min-height: 92px !important;
+  border: 1.5px dashed rgba(30, 41, 59, 0.4) !important;
+  border-radius: 16px !important;
+  background:
+    radial-gradient(circle, rgba(30, 41, 59, 0.08) 1px, transparent 1.5px),
+    #fffef8 !important;
+  background-size: 16px 16px !important;
+  padding: 10px !important;
   display: grid !important;
   place-items: center !important;
-  overflow: hidden !important;
-  border: 2px dashed rgba(30, 41, 59, 0.45) !important;
-  border-radius: 18px !important;
-  background:
-    radial-gradient(circle, rgba(30, 41, 59, 0.1) 1px, transparent 1.5px),
-    #fffef8 !important;
-  background-size: 18px 18px !important;
-  padding: 14px !important;
 }
 
 .code-generator-box.compact .qr-shell canvas {
-  width: 120px !important;
-  height: 120px !important;
+  width: 92px !important;
+  height: 92px !important;
 }
 
 .code-generator-box.compact .barcode-shell {
-  min-height: 150px !important;
+  min-height: 92px !important;
 }
 
 .code-generator-box.compact .barcode-shell canvas {
   width: 100% !important;
-  max-width: 190px !important;
+  max-width: 220px !important;
   height: auto !important;
 }
 
-.code-generator-box.compact button {
+/* Download buttons */
+.code-generator-box.compact .qr-code-area button,
+.code-generator-box.compact .barcode-area button {
   width: 100% !important;
-  height: 42px !important;
-  border: 2px solid var(--qb-border) !important;
+  min-height: 40px !important;
+  margin-top: 0 !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.28) !important;
   border-radius: 999px !important;
   background: #ffffff !important;
-  box-shadow: 3px 3px 0 0 var(--qb-border) !important;
-  color: var(--qb-foreground) !important;
-  font-family: var(--qb-heading-font) !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
   font-size: 0.68rem !important;
   font-weight: 900 !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
 }
 
-.code-generator-box.compact button:hover {
-  transform: translate(-1px, -1px) !important;
-  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
+/* Print Label button */
+.code-generator-box.compact .code-generator-compact-actions {
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 12px !important;
 }
 
-.code-generator-box.compact .code-generator-footer,
-.code-generator-box.compact .code-generator-header {
-  display: none !important;
+.code-generator-box.compact .code-generator-print-label-btn {
+  width: min(320px, 100%) !important;
+  min-height: 44px !important;
+  border: 1.5px solid #1e293b !important;
+  border-radius: 999px !important;
+  background: #facc15 !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+  font-size: 0.74rem !important;
+  font-weight: 900 !important;
 }
 
-@media (max-width: 900px) {
-  .code-generator-box.compact .code-generator-grid {
+/* Dark mode */
+html[data-theme="dark"] .code-generator-box.compact .qr-code-area,
+html[data-theme="dark"] .code-generator-box.compact .barcode-area {
+  border-color: rgba(203, 213, 225, 0.26) !important;
+  background: rgba(30, 41, 59, 0.9) !important;
+}
+
+html[data-theme="dark"] .code-generator-box.compact .code-canvas-shell {
+  border-color: rgba(203, 213, 225, 0.28) !important;
+  background: #ffffff !important;
+}
+
+html[data-theme="dark"] .code-generator-box.compact .qr-code-area button,
+html[data-theme="dark"] .code-generator-box.compact .barcode-area button {
+  border-color: rgba(203, 213, 225, 0.26) !important;
+  background: rgba(15, 23, 42, 0.92) !important;
+  color: #f8fafc !important;
+}
+
+/* Mobile: stack each QR/barcode row internally */
+@media (max-width: 760px) {
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
     grid-template-columns: 1fr !important;
+  }
+
+  .code-generator-box.compact .code-canvas-shell {
+    min-height: 120px !important;
   }
 }
 /* =========================================================
-   COMPACT PRINT LABEL BUTTON
+   QR GENERATOR - COMPACT FOR SIDE-BY-SIDE ITEM DETAILS
+========================================================= */
+
+@media (min-width: 1181px) {
+  .code-generator-box.compact .code-generator-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+  }
+
+  .code-generator-box.compact .code-canvas-shell {
+    min-height: 120px !important;
+    padding: 9px !important;
+  }
+
+  .code-generator-box.compact .qr-shell canvas {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell {
+    min-height: 120px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell canvas {
+    max-width: 190px !important;
+  }
+
+  .code-generator-box.compact .qr-code-area button,
+  .code-generator-box.compact .barcode-area button {
+    min-height: 36px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .code-generator-box.compact .code-generator-print-label-btn {
+    min-height: 40px !important;
+    width: min(260px, 100%) !important;
+    font-size: 0.68rem !important;
+  }
+
+  .code-generator-box.compact .code-generator-compact-actions {
+    margin-top: 10px !important;
+  }
+}
+/* =========================================================
+   FINAL QR GENERATOR COMPACT DESKTOP LAYOUT
+========================================================= */
+
+@media (min-width: 1100px) {
+  .code-generator-box.compact {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .code-generator-box.compact .code-generator-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .code-generator-box.compact .qr-code-area,
+  .code-generator-box.compact .barcode-area {
+    display: grid !important;
+    grid-template-columns: 60px minmax(0, 1fr) 120px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: 72px !important;
+    padding: 8px !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+  }
+
+  .code-generator-box.compact .code-area-title {
+    margin: 0 !important;
+  }
+
+  .code-generator-box.compact .code-area-title span {
+    padding: 5px 9px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .code-generator-box.compact .code-canvas-shell {
+    min-height: 66px !important;
+    padding: 6px !important;
+    border-radius: 12px !important;
+  }
+
+  .code-generator-box.compact .qr-shell canvas {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell {
+    min-height: 66px !important;
+  }
+
+  .code-generator-box.compact .barcode-shell canvas {
+    max-width: 170px !important;
+    height: auto !important;
+  }
+
+  .code-generator-box.compact .qr-code-area button,
+  .code-generator-box.compact .barcode-area button {
+    min-height: 32px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    font-size: 0.54rem !important;
+    padding: 0 8px !important;
+  }
+
+  .code-generator-box.compact .code-generator-compact-actions {
+    margin-top: 8px !important;
+  }
+
+  .code-generator-box.compact .code-generator-print-label-btn {
+    width: min(220px, 100%) !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    font-size: 0.58rem !important;
+  }
+}
+/* =========================================================
+   QR GENERATOR - PRINT LABEL BUTTON POLISH
 ========================================================= */
 
 .code-generator-box.compact .code-generator-compact-actions {
   width: 100% !important;
   display: flex !important;
   justify-content: center !important;
-  margin-top: 14px !important;
+  margin-top: 12px !important;
 }
 
 .code-generator-box.compact .code-generator-print-label-btn {
-  width: min(260px, 100%) !important;
-  height: 46px !important;
-  border: 2px solid var(--qb-border) !important;
+  width: min(240px, 100%) !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #1e293b !important;
   border-radius: 999px !important;
-  background: var(--qb-accent) !important;
-  box-shadow: 4px 4px 0 0 var(--qb-border) !important;
-  color: var(--qb-foreground) !important;
-  font-family: var(--qb-heading-font) !important;
-  font-size: 0.78rem !important;
+  background: #facc15 !important;
+  box-shadow: 0 10px 22px rgba(250, 204, 21, 0.22) !important;
+  color: #0f172a !important;
+  padding: 0 18px !important;
+  text-align: center !important;
+  font-size: 0.68rem !important;
   font-weight: 900 !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
+  letter-spacing: 0.04em !important;
 }
 
 .code-generator-box.compact .code-generator-print-label-btn:hover {
-  transform: translate(-1px, -1px) !important;
-  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 14px 28px rgba(250, 204, 21, 0.28) !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .code-generator-box.compact .code-generator-print-label-btn {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #facc15 !important;
+  color: #0f172a !important;
 }
 /* =========================================================
-   STANDALONE COMPACT QR / BARCODE CARDS
+   QR GENERATOR - BORROWER VIEW: HIDE DOWNLOAD / PRINT ACTIONS
+   Paste this at the VERY BOTTOM of QRCodeGenerator.css
 ========================================================= */
 
-.code-generator-box.compact {
-  overflow: visible !important;
+.code-generator-box.hide-actions .qr-code-area button,
+.code-generator-box.hide-actions .barcode-area button,
+.code-generator-box.hide-actions .code-generator-compact-actions,
+.code-generator-box.hide-actions .code-generator-footer {
+  display: none !important;
 }
 
-.code-generator-box.compact .code-generator-grid {
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-  overflow: visible !important;
+.code-generator-box.compact.hide-actions .qr-code-area,
+.code-generator-box.compact.hide-actions .barcode-area {
+  grid-template-columns: 60px minmax(0, 1fr) !important;
 }
 
-.code-generator-box.compact .qr-code-area,
-.code-generator-box.compact .barcode-area {
-  border: 2px solid var(--qb-border) !important;
-  border-radius: 22px !important;
-  background:
-    radial-gradient(circle at top right, rgba(251, 191, 36, 0.2), transparent 40%),
-    #ffffff !important;
-  box-shadow: 5px 5px 0 0 var(--qb-border) !important;
-  padding: 16px !important;
+.code-generator-box.compact.hide-actions .code-canvas-shell {
+  min-height: 74px !important;
 }
 
-.code-generator-box.compact .code-generator-compact-actions {
-  margin-top: 16px !important;
-  display: flex !important;
-  justify-content: center !important;
+.code-generator-box.compact.hide-actions .qr-shell canvas {
+  width: 68px !important;
+  height: 68px !important;
 }
 
-.code-generator-box.compact .code-generator-print-label-btn {
-  width: min(280px, 100%) !important;
-  background: var(--qb-accent) !important;
+.code-generator-box.compact.hide-actions .barcode-shell canvas {
+  max-width: 220px !important;
+}
+
+@media (max-width: 760px) {
+  .code-generator-box.compact.hide-actions .qr-code-area,
+  .code-generator-box.compact.hide-actions .barcode-area {
+    grid-template-columns: 1fr !important;
+  }
+
+  .code-generator-box.compact.hide-actions .code-canvas-shell {
+    min-height: 110px !important;
+  }
 }

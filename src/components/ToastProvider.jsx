@@ -1,13 +1,6 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
+import { ToastContext } from "./ToastContext.jsx";
 import "../styles/Toast.css";
-
-const ToastContext = createContext(null);
 
 function createToastId() {
   if (typeof window !== "undefined" && window.crypto?.randomUUID) {
@@ -15,6 +8,13 @@ function createToastId() {
   }
 
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getToastIcon(type) {
+  if (type === "error") return "!";
+  if (type === "warning") return "!";
+  if (type === "info") return "i";
+  return "✓";
 }
 
 export function ToastProvider({ children }) {
@@ -29,13 +29,16 @@ export function ToastProvider({ children }) {
   const showToast = useCallback(
     (message, type = "success", duration = 3000) => {
       const id = createToastId();
+      const safeType = ["success", "error", "warning", "info"].includes(type)
+        ? type
+        : "success";
 
       setToasts((previousToasts) => [
         ...previousToasts,
         {
           id,
           message,
-          type,
+          type: safeType,
         },
       ]);
 
@@ -52,14 +55,14 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      <div className="qb-toast-container" aria-live="polite">
+      <div className="qb-toast-container" aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => (
           <div
             className={`qb-toast qb-toast-${toast.type}`}
             key={toast.id}
             role="status"
           >
-            <span>{toast.type === "success" ? "✓" : "!"}</span>
+            <span>{getToastIcon(toast.type)}</span>
             <p>{toast.message}</p>
             <button
               type="button"
@@ -75,12 +78,4 @@ export function ToastProvider({ children }) {
   );
 }
 
-export function useToast() {
-  const context = useContext(ToastContext);
-
-  if (!context) {
-    throw new Error("useToast must be used inside ToastProvider");
-  }
-
-  return context;
-}
+export default ToastProvider;

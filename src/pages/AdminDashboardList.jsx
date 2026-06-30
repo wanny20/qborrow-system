@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/AdminDashboardList.css";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 
 function AdminDashboardList() {
   const { listType } = useParams();

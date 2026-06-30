@@ -1,16 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import "../styles/ItemDetails.css";
-
 
 function ItemDetails() {
   const { id } = useParams();
@@ -25,21 +19,21 @@ function ItemDetails() {
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
 
-const isBorrower = userData?.role === "borrower";
+  const isBorrower = userData?.role === "borrower";
 
-function showActionError(shortMessage, error) {
-  const detailedMessage = error?.message
-    ? `${shortMessage}: ${error.message}`
-    : shortMessage;
+  function showActionError(shortMessage, error) {
+    const detailedMessage = error?.message
+      ? `${shortMessage}: ${error.message}`
+      : shortMessage;
 
-  setStatusMessage(detailedMessage);
-  showToast(shortMessage, "error");
-}
+    setStatusMessage(detailedMessage);
+    showToast(shortMessage, "error");
+  }
 
-function showBlockedAction(message) {
-  setStatusMessage(message);
-  showToast(message, "error");
-}
+  function showBlockedAction(message) {
+    setStatusMessage(message);
+    showToast(message, "error");
+  }
 
   function getCategoryName(targetItem = item) {
     return (
@@ -124,15 +118,13 @@ function showBlockedAction(message) {
 
       setItem(null);
       showBlockedAction("Item not found.");
-
-      } catch (error) {
-        showActionError("Failed to load item", error);
-        setItem(null);
-      } finally {
+    } catch (error) {
+      showActionError("Failed to load item", error);
+      setItem(null);
+    } finally {
       setLoading(false);
     }
   }
-
 
   useEffect(() => {
     fetchItem();
@@ -173,34 +165,34 @@ function showBlockedAction(message) {
     );
   }
 
-const canBorrow = isBorrower && item.availability === "Available";
+  const canBorrow = isBorrower && item.availability === "Available";
 
   return (
     <div className="item-details-page">
-<section className="item-details-header item-details-header-compact">
-  <div className="item-details-header-content">
-    <div className="item-details-header-text">
-      <span>{getItemCode(item)}</span>
+      <section className="item-details-header item-details-header-compact">
+        <div className="item-details-header-content">
+          <div className="item-details-header-text">
+            <span>{getItemCode(item)}</span>
 
-      <h2>{item.itemName || "Untitled Item"}</h2>
+            <h2>{item.itemName || "Untitled Item"}</h2>
 
-      <p>
-        Review item information, availability, condition, and scan codes in one
-        clean view.
-      </p>
-    </div>
+            <p>
+              Review item information, availability, condition, and scan codes in
+              one clean view.
+            </p>
+          </div>
 
-<div className="item-details-header-actions item-details-header-actions-compact">
-  <button
-    type="button"
-    className="item-details-secondary-btn"
-    onClick={() => navigate("/items")}
-  >
-    Back to Items
-  </button>
-</div>
-  </div>
-</section>
+          <div className="item-details-header-actions item-details-header-actions-compact">
+            <button
+              type="button"
+              className="item-details-secondary-btn"
+              onClick={() => navigate("/items")}
+            >
+              Back to Items
+            </button>
+          </div>
+        </div>
+      </section>
 
       <section className="item-details-layout">
         <article className="item-details-main-card">
@@ -280,12 +272,12 @@ const canBorrow = isBorrower && item.availability === "Available";
                   </p>
                 </div>
               ) : (
-                <div className="item-details-warning">
-<strong>Admin View</strong>
-<p>
-  Admins can review item information and use release or return workflows
-  from the scan shortcuts.
-</p>
+                <div className="item-details-warning item-details-info-note">
+                  <strong>Admin View</strong>
+                  <p>
+                    Admins can review item information and use release or return
+                    workflows from the scan shortcuts.
+                  </p>
                 </div>
               )}
             </div>
@@ -299,16 +291,15 @@ const canBorrow = isBorrower && item.availability === "Available";
           </div>
 
           <div className="item-details-qr-box">
-              <QRCodeGenerator
-                itemId={item.id}
-                itemName={item.itemName}
-                itemCode={getItemCode(item)}
-                qrValue={item.qrValue}
-                barcodeValue={item.barcodeValue}
-                qrSize={120}
-                barcodeHeight={54}
-                compact
-              />
+            <QRCodeGenerator
+              itemId={item.id}
+              itemName={item.itemName}
+              itemCode={item.itemCode}
+              qrValue={item.qrValue}
+              barcodeValue={item.barcodeValue}
+              compact
+              hideActions={isBorrower}
+            />
           </div>
 
           <div className="item-details-scan-values">
@@ -322,8 +313,6 @@ const canBorrow = isBorrower && item.availability === "Available";
               <p>{item.barcodeValue || item.itemCode || item.id}</p>
             </div>
           </div>
-
-
         </aside>
       </section>
     </div>

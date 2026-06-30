@@ -15,7 +15,7 @@ import {
 } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import "../styles/EditItem.css";
 
 function EditItem() {
@@ -409,7 +409,7 @@ showBlockedAction("You cannot move this item to an unassigned category.");
 return;
     }
 
-    const finalItemCode = itemCode.trim() || originalItem?.itemCode || itemId;
+    const finalItemCode = originalItem?.itemCode || itemCode || itemId;
     const finalImageUrl = await uploadItemImage(finalItemCode);
     const itemRef = doc(db, "items", itemId);
 
@@ -673,25 +673,26 @@ onChange={(e) => {
   )}
 </div>
 
-              <div className="edit-item-field">
+              <div className="edit-item-field edit-item-code-field">
                 <label className="qb-label" htmlFor="item-code">
                   Item Code
                 </label>
 
-                <input
+                <div
                   id="item-code"
-                  type="text"
-                  value={itemCode}
-                 onChange={(e) => {
-  markFormChanged();
-  setItemCode(e.target.value);
-}}
-                  disabled={submitting}
-                  placeholder="Example: IT-12345"
-                />
+                  className="edit-item-fixed-code-display"
+                  aria-label="Fixed item code"
+                >
+                  <span>{itemCode || originalItem?.itemCode || itemId}</span>
+                </div>
+
+                <p>
+                  Item code is fixed and cannot be edited because it is used for
+                  QR, barcode, borrowing records, and item tracking.
+                </p>
               </div>
 
-              <div className="edit-item-field">
+              <div className="edit-item-field edit-item-description-field">
                 <label className="qb-label" htmlFor="description">
                   Description
                 </label>
@@ -798,7 +799,7 @@ onChange={(e) => {
                 </div>
               </div>
 
-              <div className="edit-item-field">
+              <div className="edit-item-field edit-item-image-field">
                 <label className="qb-label" htmlFor="item-image">
                   Replace Item Image
                 </label>

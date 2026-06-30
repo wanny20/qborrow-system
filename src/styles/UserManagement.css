@@ -2528,3 +2528,2375 @@ html[data-theme="dark"] .user-empty {
     min-width: 0;
   }
 }
+
+/* =========================================================
+   QBORROW MODERN REDESIGN OVERRIDES
+   Blue + Yellow + White SaaS polish
+========================================================= */
+
+.user-management-page {
+  --user-blue: #2563eb;
+  --user-blue-dark: #1d4ed8;
+  --user-blue-soft: #eff6ff;
+  --user-yellow: #facc15;
+  --user-yellow-soft: #fef9c3;
+  --user-surface: #ffffff;
+  --user-bg: #f8fafc;
+  --user-text: #0f172a;
+  --user-muted: #64748b;
+  --user-border: rgba(37, 99, 235, 0.14);
+  --user-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  --user-shadow-soft: 0 10px 28px rgba(15, 23, 42, 0.06);
+  gap: 16px;
+  color: var(--user-text);
+}
+
+.user-management-page *,
+.user-management-page *::before,
+.user-management-page *::after {
+  box-sizing: border-box;
+}
+
+.user-management-loading-card,
+.user-management-header-content,
+.user-summary-grid > div,
+.user-list-card,
+.user-create-card,
+.user-admin-card,
+.user-tools,
+.user-card,
+.user-table-header,
+.user-empty,
+.user-view-modal,
+.user-edit-modal,
+.user-unsaved-confirm-card,
+.user-management-status,
+.user-category-box,
+.user-borrower-details-box,
+.user-csv-template,
+.user-upload-panel,
+.user-import-guide-card,
+.user-category-table,
+.user-csv-preview,
+.user-import-results {
+  border: 1px solid var(--user-border) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: var(--user-shadow-soft) !important;
+}
+
+.user-management-loading-card,
+.user-management-header-content,
+.user-list-card,
+.user-create-card,
+.user-admin-card,
+.user-view-modal,
+.user-edit-modal,
+.user-unsaved-confirm-card {
+  border-radius: 28px !important;
+}
+
+.user-management-header,
+.user-management-header-compact {
+  display: block !important;
+}
+
+.user-management-header-content {
+  min-height: 132px;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.42), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #eff6ff 52%, #dbeafe 100%) !important;
+  box-shadow: var(--user-shadow) !important;
+  padding: 26px 28px !important;
+}
+
+.user-management-header-content::after {
+  right: -36px !important;
+  bottom: -48px !important;
+  width: 150px !important;
+  height: 150px !important;
+  border: 22px solid rgba(250, 204, 21, 0.28) !important;
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+.user-management-header-text h1,
+.user-management-header h1 {
+  margin: 0 0 8px !important;
+  color: var(--user-text) !important;
+  font-size: clamp(1.8rem, 4vw, 3rem) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.user-management-header-text p,
+.user-management-header p {
+  max-width: 830px !important;
+  color: var(--user-muted) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.55 !important;
+}
+
+.user-primary-btn,
+.user-secondary-btn,
+.user-refresh-btn,
+.user-warning-btn,
+.user-danger-btn,
+.user-delete-btn,
+.user-view-btn,
+.user-management-header-back-btn,
+.user-tool-dashboard-btn,
+.user-category-toggle-btn {
+  border: 0 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08) !important;
+  min-height: 40px;
+  padding: 0 14px;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+}
+
+.user-primary-btn {
+  background: linear-gradient(135deg, var(--user-blue), var(--user-blue-dark)) !important;
+  color: #ffffff !important;
+}
+
+.user-secondary-btn,
+.user-refresh-btn,
+.user-view-btn,
+.user-management-header-back-btn,
+.user-tool-dashboard-btn,
+.user-category-toggle-btn {
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  background: #ffffff !important;
+  color: var(--user-blue-dark) !important;
+}
+
+.user-warning-btn {
+  background: var(--user-yellow-soft) !important;
+  color: #854d0e !important;
+}
+
+.user-danger-btn,
+.user-delete-btn {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+.user-primary-btn:hover:not(:disabled),
+.user-secondary-btn:hover:not(:disabled),
+.user-refresh-btn:hover:not(:disabled),
+.user-warning-btn:hover:not(:disabled),
+.user-danger-btn:hover:not(:disabled),
+.user-delete-btn:hover:not(:disabled),
+.user-view-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.11) !important;
+}
+
+.user-summary-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.user-summary-grid > div {
+  position: relative;
+  min-height: 100px !important;
+  overflow: hidden;
+  border-radius: 24px !important;
+  padding: 16px !important;
+}
+
+.user-summary-grid > div::after {
+  content: "";
+  position: absolute;
+  right: -24px;
+  bottom: -24px;
+  width: 78px;
+  height: 78px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.07);
+}
+
+.user-summary-grid > div:nth-child(2)::after,
+.user-summary-grid > div:nth-child(3)::after {
+  background: rgba(250, 204, 21, 0.18);
+}
+
+.user-summary-grid span {
+  width: 34px !important;
+  height: 34px !important;
+  border: 0 !important;
+  background: var(--user-blue-soft) !important;
+  color: var(--user-blue) !important;
+}
+
+.user-summary-grid > div:nth-child(3) span {
+  background: var(--user-yellow-soft) !important;
+  color: #a16207 !important;
+}
+
+.user-summary-grid h3 {
+  margin-top: 10px !important;
+  font-size: 1.7rem !important;
+  letter-spacing: -0.05em !important;
+}
+
+.user-summary-grid p {
+  color: var(--user-muted) !important;
+  font-size: 0.66rem !important;
+}
+
+.user-list-card,
+.user-create-card,
+.user-admin-card {
+  padding: 18px !important;
+}
+
+.user-section-heading h2 {
+  color: var(--user-text) !important;
+  font-size: 1.3rem !important;
+}
+
+.user-section-heading p,
+.user-small-note {
+  color: var(--user-muted) !important;
+}
+
+.user-tools {
+  grid-template-columns: minmax(0, 1fr) 210px 126px !important;
+  gap: 12px !important;
+  border-radius: 22px !important;
+  background: var(--user-bg) !important;
+  padding: 12px !important;
+}
+
+.user-field input,
+.user-field select,
+.user-field textarea,
+.user-tools input,
+.user-tools select {
+  min-height: 44px !important;
+  border: 1px solid rgba(37, 99, 235, 0.18) !important;
+  border-radius: 16px !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+  font-size: 0.84rem !important;
+}
+
+.user-field textarea {
+  padding: 12px !important;
+}
+
+.user-field input:focus,
+.user-field select:focus,
+.user-field textarea:focus,
+.user-tools input:focus,
+.user-tools select:focus {
+  border-color: var(--user-blue) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+}
+
+.user-field input.input-error,
+.user-field select.input-error,
+.user-field textarea.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+.field-error-message {
+  color: #dc2626 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+}
+
+.user-table-header {
+  border-radius: 18px !important;
+  background: var(--user-bg) !important;
+  box-shadow: none !important;
+}
+
+.user-card {
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--user-shadow) !important;
+}
+
+.user-card-topline strong,
+.role-borrower,
+.role-categoryAdmin,
+.role-superAdmin {
+  border: 0 !important;
+  border-radius: 999px !important;
+}
+
+.role-borrower {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.role-categoryAdmin {
+  background: var(--user-yellow-soft) !important;
+  color: #854d0e !important;
+}
+
+.role-superAdmin {
+  background: var(--user-blue) !important;
+  color: #ffffff !important;
+}
+
+.user-table-cell strong,
+.user-card h3 {
+  color: var(--user-text) !important;
+}
+
+.user-card-topline > span,
+.user-table-header span,
+.user-table-cell span {
+  color: var(--user-muted) !important;
+}
+
+.user-actions button,
+.user-card .user-view-btn {
+  min-height: 26px !important;
+  height: 26px !important;
+  box-shadow: none !important;
+  font-size: 0.48rem !important;
+}
+
+.user-load-more-row {
+  border-top: 1px dashed rgba(37, 99, 235, 0.18) !important;
+}
+
+.user-category-box,
+.user-borrower-details-box,
+.user-csv-template,
+.user-upload-panel,
+.user-import-guide-card {
+  border-style: solid !important;
+  border-radius: 22px !important;
+  background: var(--user-bg) !important;
+}
+
+.user-category-grid,
+.user-borrower-details-grid,
+.user-view-grid {
+  gap: 10px !important;
+}
+
+.user-view-overlay,
+.user-unsaved-confirm-backdrop {
+  background: rgba(15, 23, 42, 0.52) !important;
+  backdrop-filter: blur(8px);
+}
+
+.user-view-modal,
+.user-edit-modal,
+.user-unsaved-confirm-card {
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22) !important;
+}
+
+.user-modal-close-btn {
+  border: 0 !important;
+  background: #fee2e2 !important;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1) !important;
+}
+
+.user-modal-hero,
+.user-view-grid > div,
+.user-view-note,
+.user-edit-panel,
+.user-suspension-note,
+.user-info-grid > div,
+.user-category-table-wrap,
+.user-csv-format-panel,
+.user-csv-preview,
+.user-import-results {
+  border: 1px solid var(--user-border) !important;
+  border-radius: 18px !important;
+  background: var(--user-bg) !important;
+  box-shadow: none !important;
+}
+
+.user-management-status {
+  border-radius: 18px !important;
+  font-family: Inter, system-ui, sans-serif !important;
+}
+
+.user-management-status-success {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.user-management-status-error {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+@media (max-width: 1180px) {
+  .user-management-header-content,
+  .user-tools {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-management-header-back-btn,
+  .user-refresh-btn {
+    width: 100% !important;
+  }
+
+  .user-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .user-table-header {
+    display: none !important;
+  }
+
+  .user-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas: none !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+
+  .user-card h3,
+  .user-card-topline,
+  .user-table-cells,
+  .user-actions {
+    grid-area: auto !important;
+  }
+
+  .user-table-cells {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .user-table-cell {
+    border: 1px solid var(--user-border) !important;
+    border-radius: 14px !important;
+    background: var(--user-bg) !important;
+    padding: 8px !important;
+  }
+
+  .user-table-cell span {
+    display: block !important;
+    margin-bottom: 4px;
+    font-size: 0.54rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .user-table-cell strong {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .user-actions {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .user-actions button,
+  .user-card .user-view-btn {
+    min-height: 36px !important;
+    height: 36px !important;
+    font-size: 0.58rem !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-management-page {
+    gap: 10px !important;
+  }
+
+  .user-management-header-content,
+  .user-list-card,
+  .user-create-card,
+  .user-admin-card {
+    border-radius: 18px !important;
+    padding: 12px !important;
+  }
+
+  .user-management-header-content {
+    min-height: auto !important;
+    gap: 10px !important;
+  }
+
+  .user-management-header-content::after {
+    width: 82px !important;
+    height: 82px !important;
+    right: -28px !important;
+    bottom: -36px !important;
+    border-width: 14px !important;
+  }
+
+  .user-management-header-text h1,
+  .user-management-header h1 {
+    font-size: 1.14rem !important;
+    line-height: 1 !important;
+  }
+
+  .user-management-header-text p,
+  .user-management-header p {
+    display: -webkit-box;
+    font-size: 0.68rem !important;
+    line-height: 1.3 !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .user-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .user-summary-grid > div {
+    min-height: 68px !important;
+    border-radius: 16px !important;
+    padding: 9px !important;
+  }
+
+  .user-summary-grid span {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .user-summary-grid h3 {
+    margin-top: 5px !important;
+    font-size: 1rem !important;
+  }
+
+  .user-summary-grid p {
+    margin-top: 2px !important;
+    font-size: 0.42rem !important;
+  }
+
+  .user-tools {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 7px !important;
+    padding: 8px !important;
+    border-radius: 18px !important;
+  }
+
+  .user-tools > div:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .user-tools label,
+  .user-tools .qb-label {
+    display: none !important;
+  }
+
+  .user-tools input,
+  .user-tools select {
+    min-height: 34px !important;
+    height: 34px !important;
+    border-radius: 999px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .user-refresh-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .user-section-heading h2 {
+    font-size: 1rem !important;
+  }
+
+  .user-section-heading p {
+    font-size: 0.64rem !important;
+  }
+
+  .user-table-cells,
+  .user-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-card h3 {
+    font-size: 0.92rem !important;
+  }
+
+  .user-card-topline > span {
+    font-size: 0.62rem !important;
+    white-space: normal !important;
+  }
+
+  .user-view-modal,
+  .user-edit-modal,
+  .user-unsaved-confirm-card {
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+
+  .user-view-grid,
+  .user-borrower-details-grid,
+  .user-category-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-view-actions,
+  .user-edit-modal-actions,
+  .user-csv-actions,
+  .user-unsaved-confirm-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .user-view-actions button,
+  .user-edit-modal-actions button,
+  .user-csv-actions button,
+  .user-unsaved-confirm-actions button {
+    width: 100% !important;
+  }
+}
+
+html[data-theme="dark"] .user-management-loading-card,
+html[data-theme="dark"] .user-management-header-content,
+html[data-theme="dark"] .user-list-card,
+html[data-theme="dark"] .user-create-card,
+html[data-theme="dark"] .user-admin-card,
+html[data-theme="dark"] .user-summary-grid > div,
+html[data-theme="dark"] .user-card,
+html[data-theme="dark"] .user-view-modal,
+html[data-theme="dark"] .user-edit-modal,
+html[data-theme="dark"] .user-unsaved-confirm-card {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #e2e8f0 !important;
+}
+
+
+/* =========================================================
+   FINAL USER MANAGEMENT TABLE + CLEAN ICON ACTIONS
+   User requested: rounded card outline, table layout, icon actions
+========================================================= */
+
+.user-management-page {
+  --user-ink: #1f2937;
+  --user-soft-line: #dbe7f7;
+  --user-row-line: #e2e8f0;
+  --user-soft-bg: #f8fbff;
+}
+
+.user-management-header-content {
+  border: 3px solid var(--user-ink) !important;
+  border-radius: 32px !important;
+  box-shadow: 8px 8px 0 rgba(15, 23, 42, 0.12) !important;
+}
+
+.user-list-card {
+  border: 3px solid var(--user-ink) !important;
+  border-radius: 32px !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 8px 8px 0 rgba(15, 23, 42, 0.10) !important;
+  padding: 18px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.user-tools {
+  border: 1px solid var(--user-soft-line) !important;
+  border-radius: 24px !important;
+  background: var(--user-soft-bg) !important;
+  box-shadow: none !important;
+}
+
+.user-table-header,
+.user-table-grid .user-card {
+  grid-template-columns:
+    minmax(135px, 1fr)
+    minmax(210px, 1.32fr)
+    minmax(90px, 0.68fr)
+    minmax(130px, 0.9fr)
+    minmax(100px, 0.72fr)
+    minmax(86px, 0.62fr)
+    minmax(210px, 1fr) !important;
+}
+
+.user-table-header {
+  min-width: 1060px !important;
+  display: grid !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  border: 1px solid var(--user-soft-line) !important;
+  border-radius: 18px 18px 0 0 !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+  padding: 12px 14px !important;
+}
+
+.user-table-header span {
+  color: #64748b !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.64rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.user-table-grid {
+  min-width: 1060px !important;
+  display: grid !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--user-soft-line) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 18px 18px !important;
+  background: #ffffff !important;
+}
+
+.user-table-grid .user-card {
+  min-width: 100% !important;
+  min-height: 68px !important;
+  display: grid !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 12px !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--user-row-line) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  padding: 12px 14px !important;
+  transform: none !important;
+}
+
+.user-table-grid .user-card:last-child {
+  border-bottom: 0 !important;
+}
+
+.user-table-grid .user-card:hover {
+  background: #f8fbff !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.user-table-grid .user-card::before,
+.user-table-grid .user-card::after {
+  display: none !important;
+}
+
+.user-table-grid .user-card h3 {
+  grid-area: name !important;
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-table-grid .user-card-topline {
+  grid-area: identity !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 5px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.user-table-grid .user-card-topline > span {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: #64748b !important;
+  font-size: 0.72rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+  text-transform: none !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-table-grid .user-card-topline strong {
+  width: fit-content !important;
+  min-height: 22px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  padding: 0 9px !important;
+  font-size: 0.58rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.user-table-cells {
+  display: contents !important;
+}
+
+.user-table-cell {
+  min-width: 0 !important;
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.user-table-contact { grid-area: contact !important; }
+.user-table-category { grid-area: category !important; }
+.user-table-created { grid-area: created !important; }
+.user-table-status { grid-area: status !important; }
+
+.user-table-cell span {
+  display: none !important;
+}
+
+.user-table-cell strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: #0f172a !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.user-table-grid .user-info-grid,
+.user-table-grid .user-suspension-note {
+  display: none !important;
+}
+
+.user-table-grid .user-actions {
+  grid-area: actions !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.user-table-grid .user-actions > * {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.user-table-grid .user-actions .user-icon-action,
+.user-table-grid .user-card .user-icon-action,
+.user-table-grid .user-actions button.user-icon-action,
+.user-table-grid .user-card .user-view-btn.user-icon-action {
+  position: relative !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 34px !important;
+  overflow: visible !important;
+  border: 1px solid #dbeafe !important;
+  outline: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  text-indent: 0 !important;
+}
+
+.user-icon-action .user-action-symbol {
+  display: grid !important;
+  place-items: center !important;
+  color: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.user-icon-action .user-action-label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+}
+
+.user-action-view,
+.user-action-edit {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+.user-action-borrow {
+  background: #fef9c3 !important;
+  color: #854d0e !important;
+}
+
+.user-action-account,
+.user-action-reset,
+.user-action-delete {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+.user-action-borrow.user-primary-btn,
+.user-action-account.user-secondary-btn {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.user-icon-action::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 50;
+  min-width: max-content;
+  max-width: 170px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+  padding: 6px 9px;
+  font-size: 0.66rem;
+  font-weight: 850;
+  line-height: 1;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.user-icon-action:hover::after,
+.user-icon-action:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.user-card-editing {
+  grid-template-areas:
+    "name identity contact category created status actions"
+    "edit edit edit edit edit edit edit" !important;
+}
+
+.user-table-grid .user-edit-panel {
+  grid-area: edit !important;
+  margin-top: 10px !important;
+  border: 1px solid var(--user-soft-line) !important;
+  border-radius: 18px !important;
+  background: var(--user-soft-bg) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1180px) {
+  .user-table-header,
+  .user-table-grid {
+    min-width: 980px !important;
+  }
+
+  .user-table-header,
+  .user-table-grid .user-card {
+    grid-template-columns:
+      minmax(120px, 1fr)
+      minmax(190px, 1.2fr)
+      80px
+      minmax(110px, 0.8fr)
+      92px
+      78px
+      198px !important;
+  }
+}
+
+@media (max-width: 920px) {
+  .user-table-header {
+    display: none !important;
+  }
+
+  .user-table-grid {
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    gap: 10px !important;
+    background: transparent !important;
+  }
+
+  .user-table-grid .user-card {
+    min-width: 0 !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "name"
+      "identity"
+      "cells"
+      "actions" !important;
+    gap: 10px !important;
+    border: 1.5px solid var(--user-soft-line) !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .user-table-cells {
+    grid-area: cells !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .user-table-cell {
+    border: 1px solid var(--user-soft-line) !important;
+    border-radius: 14px !important;
+    background: var(--user-soft-bg) !important;
+    padding: 9px !important;
+  }
+
+  .user-table-cell span {
+    display: block !important;
+    margin-bottom: 4px !important;
+    color: #64748b !important;
+    font-size: 0.58rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+  }
+
+  .user-table-cell strong {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .user-table-grid .user-actions {
+    grid-area: actions !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .user-table-cells {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+html[data-theme="dark"] .user-management-page {
+  --user-ink: #334155;
+  --user-soft-line: rgba(148, 163, 184, 0.22);
+  --user-row-line: rgba(148, 163, 184, 0.16);
+  --user-soft-bg: #172033;
+}
+
+html[data-theme="dark"] .user-management-header-content,
+html[data-theme="dark"] .user-list-card,
+html[data-theme="dark"] .user-table-grid,
+html[data-theme="dark"] .user-table-grid .user-card,
+html[data-theme="dark"] .user-table-header,
+html[data-theme="dark"] .user-tools {
+  background: rgba(15, 23, 42, 0.94) !important;
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] .user-table-grid .user-card:hover {
+  background: #111c2e !important;
+}
+
+html[data-theme="dark"] .user-table-grid .user-card h3,
+html[data-theme="dark"] .user-table-cell strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-table-grid .user-card-topline > span,
+html[data-theme="dark"] .user-table-header span {
+  color: #94a3b8 !important;
+}
+/* =========================================================
+   FINAL FIX: KEEP MAIN USER CARD OUTLINE,
+   REMOVE ONLY LOAD MORE RECTANGLE WRAPPER
+========================================================= */
+
+/* Keep the good big rounded outline */
+.user-management-page .user-list-card {
+  border: 3px solid var(--user-ink, #1f2937) !important;
+  border-radius: 32px !important;
+  box-shadow: 8px 8px 0 rgba(15, 23, 42, 0.10) !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Remove only the ugly rectangle around Load More */
+.user-management-page .user-list-card .user-load-more-row {
+  all: unset !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin-top: 16px !important;
+  padding-top: 10px !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Make sure no pseudo outline appears */
+.user-management-page .user-list-card .user-load-more-row::before,
+.user-management-page .user-list-card .user-load-more-row::after {
+  display: none !important;
+  content: none !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep only the button visible */
+.user-management-page .user-list-card .user-load-more-row .user-secondary-btn {
+  width: min(280px, 100%) !important;
+  min-height: 44px !important;
+  border: 2px solid var(--user-ink, #1f2937) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+}
+/* =========================================================
+   USER DETAILS / EDIT MODAL FINAL FIX
+   - modal overlaps sidebar
+   - remove role/status rectangle outline
+   - stronger close buttons
+========================================================= */
+
+/* Let the user modal escape the app content area */
+body:has(.user-view-overlay) .app-layout,
+body:has(.user-view-overlay) .app-main-content,
+body:has(.user-view-overlay) .app-page-content {
+  overflow: visible !important;
+}
+
+/* Put sidebar behind modal while modal is open */
+body:has(.user-view-overlay) .app-sidebar {
+  z-index: 1 !important;
+}
+
+/* Prevent page scrolling behind the modal */
+html:has(.user-view-overlay),
+body:has(.user-view-overlay) {
+  overflow: hidden !important;
+}
+
+/* Full screen overlay, including over sidebar */
+.user-view-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  background: rgba(15, 23, 42, 0.56) !important;
+  backdrop-filter: blur(9px) !important;
+  -webkit-backdrop-filter: blur(9px) !important;
+}
+
+/* Modal card above everything */
+.user-view-modal,
+.user-edit-modal {
+  position: relative !important;
+  z-index: 2147483001 !important;
+  width: min(920px, calc(100vw - 48px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow-y: auto !important;
+  border: 0 !important;
+  border-radius: 34px !important;
+  background: #ffffff !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.32) !important;
+}
+
+/* Remove the ugly rectangle around BORROWER / ACTIVE */
+.user-view-modal .user-view-role-row {
+  width: fit-content !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin: 12px 0 20px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.user-view-modal .user-view-role-row::before,
+.user-view-modal .user-view-role-row::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Keep pills, but remove hard outlines */
+.user-view-modal .user-view-role-row strong,
+.user-view-modal .user-view-role-row span {
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  padding: 0 16px !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.user-view-modal .user-view-role-row .role-borrower {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.user-view-modal .user-view-role-row .role-categoryAdmin {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.user-view-modal .user-view-role-row .role-superAdmin {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.user-view-modal .user-view-role-row span {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+
+/* Make top close button more obvious */
+.user-view-modal > .user-modal-close-btn {
+  position: absolute !important;
+  top: 22px !important;
+  right: 22px !important;
+  z-index: 5 !important;
+  min-width: 112px !important;
+  min-height: 46px !important;
+  border: 2px solid #991b1b !important;
+  border-radius: 999px !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.18) !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.user-view-modal > .user-modal-close-btn:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Make bottom close button match better */
+.user-view-modal .user-view-actions .user-secondary-btn {
+  min-width: 150px !important;
+  min-height: 48px !important;
+  border: 2px solid #1f2937 !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.16) !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+}
+/* =========================================================
+   EDIT USER MODAL CLEANUP
+   Remove ugly rectangular section outlines only
+========================================================= */
+
+/* Remove hard section boxes around Edit Role and Edit Borrower Details */
+.user-edit-modal fieldset,
+.user-edit-modal .user-edit-section,
+.user-edit-modal .user-edit-form-section,
+.user-edit-modal .user-edit-role-section,
+.user-edit-modal .user-edit-borrower-section,
+.user-edit-modal .user-edit-borrower-details,
+.user-edit-modal .user-edit-details-section,
+.user-edit-modal .user-edit-card,
+.user-edit-modal .edit-user-section {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Keep the modal itself clean */
+.user-edit-modal {
+  border: 0 !important;
+  border-radius: 34px !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.32) !important;
+}
+
+/* Keep inputs visible but not harsh */
+.user-edit-modal input,
+.user-edit-modal select,
+.user-edit-modal textarea {
+  border: 1.5px solid #cfe0f7 !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
+
+/* Remove weird rectangle around the role/email pills */
+.user-edit-modal .user-view-role-row,
+.user-edit-modal .user-edit-role-row,
+.user-edit-modal .user-modal-role-row,
+.user-edit-modal .user-edit-pills {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Make edit close button more visible */
+.user-edit-modal > .user-modal-close-btn,
+.user-edit-modal .user-modal-close-btn {
+  min-width: 112px !important;
+  min-height: 46px !important;
+  border: 2px solid #991b1b !important;
+  border-radius: 999px !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.18) !important;
+  font-size: 0.78rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+.user-edit-modal > .user-modal-close-btn:hover,
+.user-edit-modal .user-modal-close-btn:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+/* =========================================================
+   FINAL EDIT USER MODAL FIX
+   Removes ugly inner outlines + compact modal + visible actions
+========================================================= */
+
+/* Make confirm/discard modal always appear above edit modal */
+.confirm-action-backdrop {
+  z-index: 2147483646 !important;
+}
+
+.confirm-action-card {
+  position: relative !important;
+  z-index: 2147483647 !important;
+}
+
+/* Edit modal shell */
+.user-view-overlay:has(.user-edit-modal) {
+  z-index: 999999 !important;
+  padding: 18px !important;
+  align-items: center !important;
+}
+
+.user-view-modal.user-edit-modal {
+  width: min(1080px, calc(100vw - 38px)) !important;
+  max-height: calc(100dvh - 38px) !important;
+  overflow-y: auto !important;
+  border: 0 !important;
+  border-radius: 30px !important;
+  background: #ffffff !important;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.34) !important;
+  padding: 18px 22px 16px !important;
+}
+
+/* Hide the top close button if it still exists */
+.user-edit-modal > .user-modal-close-btn {
+  display: none !important;
+}
+
+/* Compact heading */
+.user-edit-modal .user-section-heading {
+  margin: 0 0 10px !important;
+}
+
+.user-edit-modal .user-section-heading h2 {
+  font-size: 1.35rem !important;
+  line-height: 1 !important;
+}
+
+.user-edit-modal .user-section-heading p {
+  margin-top: 5px !important;
+  font-size: 0.76rem !important;
+}
+
+/* Clean role/email pills row */
+.user-edit-modal .user-view-role-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 0 0 12px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.user-edit-modal .user-view-role-row strong,
+.user-edit-modal .user-view-role-row span {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+}
+
+/* Remove the big ugly outline around Edit Role */
+.user-edit-modal .user-edit-panel-modal {
+  display: grid !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Remove any accidental outline on the first edit role field */
+.user-edit-modal .user-edit-panel-modal > .user-field:first-child {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Remove the big ugly outline around Edit Borrower Details */
+.user-edit-modal .user-borrower-details-box,
+.user-edit-modal .user-borrower-details-box.compact,
+.user-edit-modal .user-category-box,
+.user-edit-modal .user-category-box.compact {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Make the borrower details label smaller, not boxed */
+.user-edit-modal .user-borrower-details-box > span,
+.user-edit-modal .user-category-box > span {
+  display: block !important;
+  margin: 2px 0 8px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #64748b !important;
+  font-size: 0.66rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* Compact input grid */
+.user-edit-modal .user-borrower-details-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.user-edit-modal .user-field {
+  gap: 5px !important;
+  margin-bottom: 0 !important;
+}
+
+.user-edit-modal .qb-label {
+  margin-bottom: 0 !important;
+  font-size: 0.66rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.user-edit-modal input,
+.user-edit-modal select {
+  min-height: 40px !important;
+  border: 1.5px solid #cfe0f7 !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  padding: 0 12px !important;
+  font-size: 0.78rem !important;
+}
+
+/* Keep bottom buttons visible and compact */
+.user-edit-modal .user-edit-modal-actions {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 5 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  margin: 12px -22px -16px !important;
+  padding: 12px 22px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.user-edit-modal .user-edit-modal-actions button {
+  width: auto !important;
+  min-width: 150px !important;
+  min-height: 42px !important;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+}
+
+/* Better cancel button */
+.user-edit-modal .user-edit-modal-actions .user-secondary-btn {
+  border: 2px solid #172033 !important;
+  background: #ffffff !important;
+  color: #172033 !important;
+}
+
+/* Better save button */
+.user-edit-modal .user-edit-modal-actions .user-primary-btn {
+  border: 2px solid #172033 !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Dark mode cleanup */
+html[data-theme="dark"] .user-view-modal.user-edit-modal {
+  background: #111827 !important;
+}
+
+html[data-theme="dark"] .user-edit-modal .user-edit-modal-actions {
+  border-top-color: rgba(148, 163, 184, 0.22) !important;
+  background: rgba(17, 24, 39, 0.96) !important;
+}
+
+html[data-theme="dark"] .user-edit-modal input,
+html[data-theme="dark"] .user-edit-modal select {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+/* Smaller screens */
+@media (max-width: 900px) {
+  .user-edit-modal .user-borrower-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .user-view-modal.user-edit-modal {
+    width: calc(100vw - 22px) !important;
+    max-height: calc(100dvh - 22px) !important;
+    padding: 16px !important;
+  }
+
+  .user-edit-modal .user-borrower-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-edit-modal .user-edit-modal-actions {
+    margin: 12px -16px -16px !important;
+    padding: 12px 16px !important;
+    flex-direction: column-reverse !important;
+  }
+
+  .user-edit-modal .user-edit-modal-actions button {
+    width: 100% !important;
+  }
+}
+/* =========================================================
+   CREATE USER COMPACT PAGE FIX
+   Makes Add New User page shorter and less scroll-heavy
+========================================================= */
+
+.user-create-card.user-tool-active {
+  width: 100% !important;
+  max-width: 100% !important;
+  border: 3px solid #172033 !important;
+  border-radius: 28px !important;
+  background: #ffffff !important;
+  box-shadow: 0 12px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 20px 24px 22px !important;
+  overflow: visible !important;
+}
+
+/* Compact header */
+.user-create-card .user-modal-hero {
+  min-height: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 92% 85%, rgba(250, 204, 21, 0.32), transparent 18%),
+    linear-gradient(135deg, #ffffff 0%, #eff6ff 100%) !important;
+  box-shadow: none !important;
+  padding: 16px 20px !important;
+  margin-bottom: 18px !important;
+}
+
+.user-create-card .user-modal-hero::after,
+.user-create-card .user-modal-hero::before {
+  display: none !important;
+}
+
+.user-create-card .user-modal-hero-text h2 {
+  margin: 0 0 6px !important;
+  font-size: clamp(1.55rem, 2.2vw, 2rem) !important;
+  line-height: 1 !important;
+}
+
+.user-create-card .user-modal-hero-text p {
+  max-width: 880px !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  line-height: 1.35 !important;
+}
+
+/* Hide old top-left close/back button if it exists */
+.user-create-card > .user-modal-close-btn {
+  display: none !important;
+}
+
+/* Compact form grid */
+.user-create-card form {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px 16px !important;
+  align-items: start !important;
+}
+
+/* First 4 required fields fit in one row on wide screens */
+.user-create-card form > .user-field:nth-of-type(1),
+.user-create-card form > .user-field:nth-of-type(2),
+.user-create-card form > .user-field:nth-of-type(3),
+.user-create-card form > .user-field:nth-of-type(4) {
+  grid-column: span 1 !important;
+}
+
+/* Borrower details section becomes compact */
+.user-create-card .user-borrower-details,
+.user-create-card .user-borrower-details-box,
+.user-create-card .user-borrower-details-grid,
+.user-create-card .user-category-grid {
+  grid-column: 1 / -1 !important;
+}
+
+/* If borrower detail wrapper exists, remove heavy spacing */
+.user-create-card .user-borrower-details,
+.user-create-card .user-borrower-details-box {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 2px 0 0 !important;
+}
+
+/* Borrower detail fields */
+.user-create-card .user-borrower-details-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px 14px !important;
+}
+
+/* General field compact spacing */
+.user-create-card .user-field {
+  margin-bottom: 0 !important;
+  gap: 5px !important;
+}
+
+.user-create-card .qb-label {
+  margin-bottom: 3px !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.1em !important;
+}
+
+.user-create-card .user-field input,
+.user-create-card .user-field select,
+.user-create-card .user-field textarea {
+  min-height: 42px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 0 12px !important;
+  font-size: 0.82rem !important;
+}
+
+.user-create-card .user-field textarea {
+  min-height: 76px !important;
+  padding: 10px 12px !important;
+}
+
+/* Category admin assigned categories area */
+.user-create-card .user-category-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Error messages stay compact */
+.user-create-card .field-error-message {
+  margin-top: 4px !important;
+  font-size: 0.68rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Submit / action row */
+.user-create-card .user-create-actions,
+.user-create-card .user-form-actions {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  margin-top: 4px !important;
+}
+
+/* If buttons are direct children near the bottom */
+.user-create-card form > button,
+.user-create-card form > .user-primary-btn,
+.user-create-card form > .user-secondary-btn {
+  min-height: 44px !important;
+  border-radius: 999px !important;
+  padding: 0 22px !important;
+}
+
+/* Desktop height optimization */
+@media (min-width: 1100px) {
+  .user-management-page:has(.user-create-card.user-tool-active) {
+    gap: 12px !important;
+  }
+
+  .user-management-page:has(.user-create-card.user-tool-active) .user-summary-grid,
+  .user-management-page:has(.user-create-card.user-tool-active) .user-list-card,
+  .user-management-page:has(.user-create-card.user-tool-active) .user-management-header {
+    display: none !important;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 1200px) {
+  .user-create-card form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .user-create-card .user-borrower-details-grid,
+  .user-create-card .user-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .user-create-card form > .user-field:nth-of-type(1),
+  .user-create-card form > .user-field:nth-of-type(2),
+  .user-create-card form > .user-field:nth-of-type(3),
+  .user-create-card form > .user-field:nth-of-type(4) {
+    grid-column: span 1 !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .user-create-card.user-tool-active {
+    padding: 16px !important;
+    border-radius: 24px !important;
+  }
+
+  .user-create-card .user-modal-hero {
+    grid-template-columns: 1fr !important;
+    padding: 15px !important;
+  }
+
+  .user-create-card .user-tool-dashboard-btn {
+    width: 100% !important;
+  }
+
+  .user-create-card form,
+  .user-create-card .user-borrower-details-grid,
+  .user-create-card .user-category-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .user-create-card.user-tool-active {
+  background: #0f172a !important;
+  border-color: rgba(226, 232, 240, 0.55) !important;
+}
+
+html[data-theme="dark"] .user-create-card .user-modal-hero {
+  background:
+    radial-gradient(circle at 92% 85%, rgba(250, 204, 21, 0.14), transparent 18%),
+    #111827 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html[data-theme="dark"] .user-create-card .user-field input,
+html[data-theme="dark"] .user-create-card .user-field select,
+html[data-theme="dark"] .user-create-card .user-field textarea {
+  background: #0b1220 !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: #f8fafc !important;
+}
+/* =========================================================
+   MANAGE ITEM CATEGORIES POLISH
+   Remove excess rectangle outline + icon delete button
+========================================================= */
+
+/* Remove the big rectangle outline around Hide/View Categories */
+.user-tool-active .user-category-toggle-row {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 10px 0 14px !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+/* Keep only a clean rounded button */
+.user-tool-active .user-category-toggle-btn {
+  width: fit-content !important;
+  min-width: 220px !important;
+  max-width: 100% !important;
+  min-height: 44px !important;
+  border: 2px solid #172033 !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  box-shadow: 0 6px 0 rgba(15, 23, 42, 0.12) !important;
+  color: #2563eb !important;
+  padding: 0 24px !important;
+  font-size: 0.8rem !important;
+  font-weight: 900 !important;
+}
+
+.user-tool-active .user-category-toggle-btn:hover {
+  background: #eff6ff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Make category table cleaner */
+.user-tool-active .user-category-table-wrap {
+  border: 1px solid #cfe0ff !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
+
+.user-tool-active .user-category-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+.user-tool-active .user-category-table th,
+.user-tool-active .user-category-table td {
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+
+.user-tool-active .user-category-table tbody tr {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.user-tool-active .user-category-table tbody tr:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Delete action as icon button */
+.user-tool-active .user-category-table td:last-child {
+  text-align: center !important;
+  overflow: visible !important;
+}
+
+.user-tool-active .user-category-table td:last-child button {
+  position: relative !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 14px !important;
+  background: #fee2e2 !important;
+  box-shadow: none !important;
+  color: #b91c1c !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+}
+
+/* Delete icon */
+.user-tool-active .user-category-table td:last-child button::before {
+  content: "🗑" !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+/* Locked icon when disabled */
+.user-tool-active .user-category-table td:last-child button:disabled {
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:disabled::before {
+  content: "🔒" !important;
+}
+
+/* Hover tooltip */
+.user-tool-active .user-category-table td:last-child button::after {
+  content: "Delete category" !important;
+  position: absolute !important;
+  right: 50% !important;
+  bottom: calc(100% + 10px) !important;
+  z-index: 50 !important;
+  transform: translateX(50%) translateY(4px) !important;
+  width: max-content !important;
+  max-width: 180px !important;
+  border-radius: 999px !important;
+  background: #172033 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18) !important;
+  padding: 7px 10px !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 160ms ease, transform 160ms ease !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:disabled::after {
+  content: "Category in use" !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:hover::after {
+  opacity: 1 !important;
+  transform: translateX(50%) translateY(0) !important;
+}
+
+/* Button hover */
+.user-tool-active .user-category-table td:last-child button:hover:not(:disabled) {
+  background: #fecaca !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .user-tool-active .user-category-toggle-btn {
+  background: #111827 !important;
+  border-color: rgba(226, 232, 240, 0.55) !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table-wrap {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table tbody tr {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table td:last-child button:disabled {
+  background: #172033 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+/* =========================================================
+   FINAL FIX - CATEGORY TABLE + ACTION TOOLTIP
+   Restores table layout and keeps tooltip visible
+========================================================= */
+
+/* Restore the category table container */
+.user-tool-active .user-category-table-wrap {
+  width: 100% !important;
+  max-height: 340px !important;
+  overflow: auto !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Keep table stable */
+.user-tool-active .user-category-table {
+  width: 100% !important;
+  min-width: 760px !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: initial !important;
+}
+
+.user-tool-active .user-category-table thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  background: #f8fbff !important;
+}
+
+/* Restore normal table behavior */
+.user-tool-active .user-category-table tbody,
+.user-tool-active .user-category-table tr,
+.user-tool-active .user-category-table td {
+  overflow: initial !important;
+}
+
+/* Give action column enough room */
+.user-tool-active .user-category-table th:last-child,
+.user-tool-active .user-category-table td:last-child {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  text-align: center !important;
+  position: relative !important;
+}
+
+/* Clean icon button */
+.user-tool-active .user-category-table td:last-child button {
+  position: relative !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  overflow: visible !important;
+  z-index: 2 !important;
+}
+
+/* Tooltip goes LEFT, but stays inside the table area */
+.user-tool-active .user-category-table td:last-child button::after {
+  content: "Delete category" !important;
+  position: absolute !important;
+  top: 50% !important;
+  right: calc(100% + 8px) !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: translateY(-50%) translateX(4px) !important;
+  width: max-content !important;
+  max-width: 150px !important;
+  border-radius: 999px !important;
+  background: #172033 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18) !important;
+  padding: 7px 10px !important;
+  font-size: 0.66rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 999 !important;
+  transition: opacity 160ms ease, transform 160ms ease !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:disabled::after {
+  content: "Category in use" !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:hover::after {
+  opacity: 1 !important;
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Prevent the tooltip from appearing on the very top row behind the header */
+.user-tool-active .user-category-table tbody tr:first-child td:last-child button::after {
+  top: calc(100% + 8px) !important;
+  right: 50% !important;
+  transform: translateX(50%) translateY(-4px) !important;
+}
+
+.user-tool-active .user-category-table tbody tr:first-child td:last-child button:hover::after {
+  transform: translateX(50%) translateY(0) !important;
+}
+
+/* Dark mode compatibility */
+html[data-theme="dark"] .user-tool-active .user-category-table-wrap {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table thead {
+  background: #111827 !important;
+}
+/* =========================================================
+   FINAL FIX - IMPORT CSV COMPACT PAGE
+========================================================= */
+
+.user-tool-active .user-import-polish-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+.user-tool-active .user-import-guide-card,
+.user-tool-active .user-csv-format-panel,
+.user-tool-active .user-upload-panel,
+.user-tool-active .user-import-notes {
+  padding: 12px 14px !important;
+  border-radius: 22px !important;
+  box-shadow: none !important;
+}
+
+.user-tool-active .user-import-guide-card p,
+.user-tool-active .user-csv-format-panel p,
+.user-tool-active .user-upload-panel p,
+.user-tool-active .user-import-notes li {
+  font-size: 0.72rem !important;
+  line-height: 1.3 !important;
+}
+
+.user-tool-active .user-csv-header-grid {
+  gap: 6px !important;
+  margin-top: 8px !important;
+}
+
+.user-tool-active .user-csv-header-grid span {
+  min-height: 24px !important;
+  padding: 0 10px !important;
+  font-size: 0.54rem !important;
+}
+
+/* Remove rectangle outline on Upload Borrower CSV title */
+.user-tool-active .user-upload-panel-heading {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 10px !important;
+}
+
+.user-tool-active .user-upload-panel-heading strong,
+.user-tool-active .user-upload-panel-heading p {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Compact upload controls */
+.user-tool-active .user-upload-panel .user-field {
+  margin-bottom: 10px !important;
+}
+
+.user-tool-active .user-upload-panel input[type="file"] {
+  min-height: 46px !important;
+  padding: 10px 14px !important;
+}
+
+.user-tool-active .user-csv-actions {
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.user-tool-active .user-csv-actions button {
+  min-height: 42px !important;
+}
+
+/* Reduce huge page spacing */
+.user-tool-active .user-modal-hero {
+  min-height: 96px !important;
+  padding: 16px 24px !important;
+  margin-bottom: 12px !important;
+}
+
+.user-tool-active .user-modal-hero h2 {
+  font-size: clamp(1.45rem, 2vw, 2rem) !important;
+}
+
+.user-tool-active .user-modal-hero p {
+  font-size: 0.82rem !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 1180px) {
+  .user-tool-active .user-import-polish-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================================================
+   FINAL FIX - CREATE USER ASSIGNED CATEGORIES LAYOUT
+========================================================= */
+
+/* Make Assigned Categories take the full row */
+.user-create-card.user-tool-active form > .user-category-box {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 4px !important;
+  padding: 14px !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Clean title */
+.user-create-card.user-tool-active form > .user-category-box > span {
+  display: block !important;
+  margin-bottom: 12px !important;
+  color: #64748b !important;
+  font-size: 0.7rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* Make category choices clean horizontal cards */
+.user-create-card.user-tool-active .user-category-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+/* Fix each checkbox label */
+.user-create-card.user-tool-active .user-category-grid label {
+  min-width: 0 !important;
+  min-height: 48px !important;
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 1px solid #cfe0ff !important;
+  border-radius: 16px !important;
+  background: #f8fbff !important;
+  box-shadow: none !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+.user-create-card.user-tool-active .user-category-grid label:hover {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Fix checkbox size */
+.user-create-card.user-tool-active .user-category-grid input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  margin: 0 !important;
+  accent-color: #2563eb !important;
+}
+
+/* Fix long category names */
+.user-create-card.user-tool-active .user-category-grid label span {
+  min-width: 0 !important;
+  display: block !important;
+  overflow: hidden !important;
+  color: #0f172a !important;
+  font-size: 0.78rem !important;
+  font-weight: 850 !important;
+  line-height: 1.25 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Highlight selected category */
+.user-create-card.user-tool-active .user-category-grid label:has(input:checked) {
+  border-color: #2563eb !important;
+  background: #dbeafe !important;
+}
+
+/* Keep create button clean after categories */
+.user-create-card.user-tool-active form > .user-primary-btn {
+  grid-column: 1 / -1 !important;
+  width: min(360px, 100%) !important;
+  justify-self: center !important;
+  margin-top: 6px !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .user-create-card.user-tool-active form > .user-category-box {
+  background: #111827 !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid label {
+  background: #172033 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid label:hover,
+html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid label:has(input:checked) {
+  background: #1e3a8a !important;
+  border-color: #60a5fa !important;
+}
+
+html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid label span {
+  color: #f8fafc !important;
+}

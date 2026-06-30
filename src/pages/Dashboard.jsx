@@ -9,7 +9,7 @@ import {
 } from "firebase/firestore";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import "../styles/Dashboard.css";
 
 const emptyDashboardCounts = {
@@ -43,6 +43,12 @@ function Dashboard() {
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
   const isAdmin = isSuperAdmin || isCategoryAdmin;
+
+  const dashboardRoleLabel = isSuperAdmin
+    ? "Super Admin"
+    : isCategoryAdmin
+      ? "Category Admin"
+      : "Borrower";
 
   function showActionError(shortMessage, error) {
   console.error(shortMessage, error);
@@ -663,27 +669,36 @@ const adminUrgentAlerts = [
         </div>
       )}
 
-<section className="dashboard-hero">
-  <div>
-    <h1>Welcome, {userData?.fullName || "User"}</h1>
-          <p>
-            {isAdmin
-              ? "Here is a quick overview of inventory, requests, and items that need attention."
-              : "Browse items, scan QR codes, and track your borrowing requests from one place."}
-          </p>
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-content">
+          <div className="dashboard-hero-copy">
+            <p className="dashboard-eyebrow">{dashboardRoleLabel} Dashboard</p>
+            <h1>Welcome, {userData?.fullName || "User"}</h1>
+            <p>
+              {isAdmin
+                ? "Monitor inventory, requests, releases, returns, and records that need attention."
+                : "Browse available items, scan QR codes, and track your borrowing requests from one place."}
+            </p>
 
-          {isCategoryAdmin && (
-            <div className="dashboard-assigned-note">
-              Assigned:{" "}
-              {Array.isArray(userData?.assignedCategories) &&
-              userData.assignedCategories.length > 0
-                ? userData.assignedCategories.join(", ")
-                : "No assigned categories"}
-            </div>
-          )}
+            {isCategoryAdmin && (
+              <div className="dashboard-assigned-note">
+                Assigned:{" "}
+                {Array.isArray(userData?.assignedCategories) &&
+                userData.assignedCategories.length > 0
+                  ? userData.assignedCategories.join(", ")
+                  : "No assigned categories"}
+              </div>
+            )}
+          </div>
+
+          <div className="dashboard-hero-summary" aria-hidden="true">
+            <span>{isAdmin ? "Admin Control" : "Borrower Portal"}</span>
+            <strong>{isAdmin ? pendingRequestsValue : myBorrowedRequests.length}</strong>
+            <p>{isAdmin ? "Pending Requests" : "Borrowed Items"}</p>
+          </div>
         </div>
       </section>
-      
+
       <section className="dashboard-stats-grid">
         {(isAdmin ? adminStats : borrowerStats).map((stat) => (
           <button

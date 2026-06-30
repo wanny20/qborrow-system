@@ -9,14 +9,20 @@ import {
   deleteDoc,
   serverTimestamp,
   arrayUnion,
+  query,
+  orderBy,
+  limit as firestoreLimit,
+  startAfter,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/Notifications.css";
 
 const NOTIFICATIONS_PAGE_SIZE = 10;
+const NOTIFICATIONS_FETCH_BATCH_SIZE = 25;
+const MAX_NOTIFICATION_FETCH_LOOPS = 8;
 
 function Notifications() {
   const navigate = useNavigate();
@@ -33,13 +39,18 @@ function Notifications() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [filter, setFilter] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [visibleNotificationCount, setVisibleNotificationCount] = useState(
-    NOTIFICATIONS_PAGE_SIZE
-  );
+  const [lastVisibleNotificationDoc, setLastVisibleNotificationDoc] =
+    useState(null);
+  const [hasMoreNotificationPages, setHasMoreNotificationPages] =
+    useState(true);
+  const [loadingMoreNotifications, setLoadingMoreNotifications] =
+    useState(false);
 const [statusMessage, setStatusMessage] = useState("");
 const [statusType, setStatusType] = useState("");
 const [selectedNotification, setSelectedNotification] = useState(null);
 const notificationActionLockRef = useRef("");
+const notificationFetchRequestRef = useRef(0);
+const initialNotificationsLoadedRef = useRef(false);
 const [confirmAction, setConfirmAction] = useState(null);
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
@@ -181,8 +192,8 @@ async function runConfirmAction() {
     return false;
   }
 
-  function isNotificationRead(notification) {
-    const uid = currentUser?.uid;
+  function isNotificationReadForUser(notification, user) {
+    const uid = user?.uid;
 
     if (!uid) return false;
 
@@ -196,6 +207,50 @@ async function runConfirmAction() {
 
     return notification.status === "Read";
   }
+
+  function isNotificationRead(notification) {
+    return isNotificationReadForUser(notification, currentUser);
+  }
+
+  function doesNotificationMatchSearch(notification, activeSearchTerm) {
+    const cleanedSearchTerm = normalizeText(activeSearchTerm);
+
+    if (!cleanedSearchTerm) return true;
+
+    const searchableText = `
+      ${notification.title || ""}
+      ${notification.message || ""}
+      ${notification.targetRole || ""}
+      ${notification.categoryId || ""}
+      ${notification.categoryName || ""}
+      ${notification.status || ""}
+    `.toLowerCase();
+
+    return searchableText.includes(cleanedSearchTerm);
+  }
+
+  function doesNotificationMatchFilter(notification, activeFilter, user) {
+    const read = isNotificationReadForUser(notification, user);
+
+    return (
+      activeFilter === "All" ||
+      (activeFilter === "Unread" && !read) ||
+      (activeFilter === "Read" && read)
+    );
+  }
+
+  function doesNotificationMatchActiveView(
+    notification,
+    activeFilter,
+    activeSearchTerm,
+    user
+  ) {
+    return (
+      doesNotificationMatchFilter(notification, activeFilter, user) &&
+      doesNotificationMatchSearch(notification, activeSearchTerm)
+    );
+  }
+
   function isNotificationDeletedForUser(notification, user) {
   if (!user) return false;
 
@@ -234,26 +289,132 @@ async function runConfirmAction() {
   }
 
 async function fetchNotifications(user, userData, options = {}) {
-  const { showSuccessToast = false } = options;
+  const {
+    reset = false,
+    showSuccessToast = false,
+    loadMore = false,
+    filterOverride,
+    searchOverride,
+  } = options;
 
-  setLoading(true);
+  if (loadMore && !hasMoreNotificationPages) return;
+
+  const activeFilter = filterOverride ?? filter;
+  const activeSearchTerm = searchOverride ?? searchTerm;
+
+  notificationFetchRequestRef.current += 1;
+  const requestId = notificationFetchRequestRef.current;
+
+  if (loadMore) {
+    setLoadingMoreNotifications(true);
+  } else {
+    setLoading(true);
+  }
 
   try {
-    const querySnapshot = await getDocs(collection(db, "notifications"));
+    let cursorDocument = reset ? null : lastVisibleNotificationDoc;
+    let nextCursorDocument = cursorDocument;
+    let reachedEnd = false;
+    let fetchLoopCount = 0;
+    let matchedVisibleCount = 0;
 
-    const notificationData = querySnapshot.docs
-      .map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }))
-      .filter(
-        (notification) =>
-          canSeeNotification(notification, userData, user) &&
-          !isNotificationDeletedForUser(notification, user)
-      )
-      .sort((a, b) => getNotificationTime(b) - getNotificationTime(a));
+    const knownNotificationIds = new Set(
+      loadMore && !reset ? notifications.map((notification) => notification.id) : []
+    );
 
-    setNotifications(notificationData);
+    const nextVisibleNotifications = [];
+
+    while (
+      matchedVisibleCount < NOTIFICATIONS_PAGE_SIZE &&
+      !reachedEnd &&
+      fetchLoopCount < MAX_NOTIFICATION_FETCH_LOOPS
+    ) {
+      const notificationQueryConstraints = [orderBy("createdAt", "desc")];
+
+      if (nextCursorDocument) {
+        notificationQueryConstraints.push(startAfter(nextCursorDocument));
+      }
+
+      notificationQueryConstraints.push(
+        firestoreLimit(NOTIFICATIONS_FETCH_BATCH_SIZE)
+      );
+
+      const notificationsQuery = query(
+        collection(db, "notifications"),
+        ...notificationQueryConstraints
+      );
+
+      const querySnapshot = await getDocs(notificationsQuery);
+
+      if (querySnapshot.empty) {
+        reachedEnd = true;
+        break;
+      }
+
+      const fetchedDocs = querySnapshot.docs;
+      nextCursorDocument = fetchedDocs[fetchedDocs.length - 1];
+
+      if (fetchedDocs.length < NOTIFICATIONS_FETCH_BATCH_SIZE) {
+        reachedEnd = true;
+      }
+
+      const visibleBatch = fetchedDocs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter(
+          (notification) =>
+            canSeeNotification(notification, userData, user) &&
+            !isNotificationDeletedForUser(notification, user)
+        )
+        .filter((notification) => {
+          if (knownNotificationIds.has(notification.id)) return false;
+
+          knownNotificationIds.add(notification.id);
+          return true;
+        });
+
+      nextVisibleNotifications.push(...visibleBatch);
+
+      matchedVisibleCount += visibleBatch.filter((notification) =>
+        doesNotificationMatchActiveView(
+          notification,
+          activeFilter,
+          activeSearchTerm,
+          user
+        )
+      ).length;
+
+      fetchLoopCount += 1;
+    }
+
+    if (requestId !== notificationFetchRequestRef.current) {
+      return;
+    }
+
+    setNotifications((previousNotifications) => {
+      if (reset || !loadMore) {
+        return nextVisibleNotifications.sort(
+          (a, b) => getNotificationTime(b) - getNotificationTime(a)
+        );
+      }
+
+      const notificationMap = new Map();
+
+      [...previousNotifications, ...nextVisibleNotifications].forEach(
+        (notification) => {
+          notificationMap.set(notification.id, notification);
+        }
+      );
+
+      return Array.from(notificationMap.values()).sort(
+        (a, b) => getNotificationTime(b) - getNotificationTime(a)
+      );
+    });
+
+    setLastVisibleNotificationDoc(nextCursorDocument);
+    setHasMoreNotificationPages(!reachedEnd);
 
     if (showSuccessToast) {
       showToast("Notifications refreshed", "success");
@@ -261,7 +422,15 @@ async function fetchNotifications(user, userData, options = {}) {
   } catch (error) {
     showActionError("Failed to load notifications", error);
   } finally {
-    setLoading(false);
+    if (requestId !== notificationFetchRequestRef.current) {
+      return;
+    }
+
+    if (loadMore) {
+      setLoadingMoreNotifications(false);
+    } else {
+      setLoading(false);
+    }
   }
 }
 
@@ -514,7 +683,13 @@ async function handleDeleteAllNotifications() {
       try {
         const loadedUserData = await loadUserData(user);
         setCurrentUserData(loadedUserData);
-        await fetchNotifications(user, loadedUserData);
+        await fetchNotifications(user, loadedUserData, {
+          reset: true,
+          filterOverride: filter,
+          searchOverride: searchTerm,
+        });
+
+        initialNotificationsLoadedRef.current = true;
       } catch (error) {
         showActionError("Failed to load notification page", error);
         setLoading(false);
@@ -524,35 +699,34 @@ async function handleDeleteAllNotifications() {
     return () => unsubscribe();
   }, [navigate, outletContext?.userData]);
 
+useEffect(() => {
+  if (!initialNotificationsLoadedRef.current || !currentUser || !currentUserData) {
+    return undefined;
+  }
+
+  const debounceTimer = window.setTimeout(() => {
+    fetchNotifications(currentUser, currentUserData, {
+      reset: true,
+      filterOverride: filter,
+      searchOverride: searchTerm,
+    });
+  }, 300);
+
+  return () => window.clearTimeout(debounceTimer);
+}, [filter, searchTerm, currentUser, currentUserData]);
+
 const filteredNotifications = useMemo(() => {
   return notifications
-    .filter((notification) => {
-      const read = isNotificationRead(notification);
-
-      const matchesFilter =
-        filter === "All" ||
-        (filter === "Unread" && !read) ||
-        (filter === "Read" && read);
-
-      const searchableText = `
-        ${notification.title || ""}
-        ${notification.message || ""}
-        ${notification.targetRole || ""}
-        ${notification.categoryId || ""}
-        ${notification.categoryName || ""}
-        ${notification.status || ""}
-      `.toLowerCase();
-
-      const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
-
-      return matchesFilter && matchesSearch;
-    })
+    .filter((notification) =>
+      doesNotificationMatchActiveView(
+        notification,
+        filter,
+        searchTerm,
+        currentUser
+      )
+    )
     .sort((a, b) => getNotificationTime(b) - getNotificationTime(a));
 }, [notifications, filter, searchTerm, currentUser]);
-
-useEffect(() => {
-  setVisibleNotificationCount(NOTIFICATIONS_PAGE_SIZE);
-}, [filter, searchTerm]);
 
   const stats = useMemo(
     () => ({
@@ -572,22 +746,31 @@ useEffect(() => {
     }),
     [notifications, currentUser]
   );
-  const displayedNotifications = filteredNotifications.slice(
-  0,
-  visibleNotificationCount
-);
+  const displayedNotifications = filteredNotifications;
 
-const hasMoreNotifications =
-  visibleNotificationCount < filteredNotifications.length;
+  const canLoadMoreNotifications =
+    hasMoreNotificationPages && !loadingMoreNotifications;
 
-function handleLoadMoreNotifications() {
-  setVisibleNotificationCount((currentCount) =>
-    Math.min(
-      currentCount + NOTIFICATIONS_PAGE_SIZE,
-      filteredNotifications.length
-    )
-  );
-}
+  const summaryScopeLabel = hasMoreNotificationPages
+    ? "Loaded so far"
+    : "Full total";
+
+  const summaryHelperText = hasMoreNotificationPages
+    ? "Load more to continue counting history."
+    : "All available history is loaded.";
+
+  function handleLoadMoreNotifications() {
+    if (!currentUser || !currentUserData) {
+      showBlockedAction("Please login first.");
+      return;
+    }
+
+    fetchNotifications(currentUser, currentUserData, {
+      loadMore: true,
+      filterOverride: filter,
+      searchOverride: searchTerm,
+    });
+  }
 
   if (loading) {
     return (
@@ -736,25 +919,29 @@ return (
         <div>
           <span>Σ</span>
           <h3>{stats.total}</h3>
-          <p>Total</p>
+          <p>{summaryScopeLabel}</p>
+          <small>Total notifications in the current loaded set.</small>
         </div>
 
         <div>
           <span>!</span>
           <h3>{stats.unread}</h3>
-          <p>Unread</p>
+          <p>{hasMoreNotificationPages ? "Loaded Unread" : "Total Unread"}</p>
+          <small>{summaryHelperText}</small>
         </div>
 
         <div>
           <span>✓</span>
           <h3>{stats.read}</h3>
-          <p>Read</p>
+          <p>{hasMoreNotificationPages ? "Loaded Read" : "Total Read"}</p>
+          <small>{summaryHelperText}</small>
         </div>
 
         <div>
           <span>⚙</span>
           <h3>{stats.admin}</h3>
-          <p>Admin Alerts</p>
+          <p>{hasMoreNotificationPages ? "Loaded Admin" : "Total Admin"}</p>
+          <small>{summaryHelperText}</small>
         </div>
       </section>
 
@@ -796,7 +983,10 @@ return (
             currentUser &&
             currentUserData &&
             fetchNotifications(currentUser, currentUserData, {
+              reset: true,
               showSuccessToast: true,
+              filterOverride: filter,
+              searchOverride: searchTerm,
             })
           }
           disabled={isNotificationActionBusy()}
@@ -810,8 +1000,11 @@ return (
   <div>
     <h2>Notification List</h2>
     <p>
-      Showing {displayedNotifications.length} of {filteredNotifications.length} matched notification
-      {filteredNotifications.length === 1 ? "" : "s"}.
+      Showing {displayedNotifications.length} matched notification
+      {filteredNotifications.length === 1 ? "" : "s"} from {notifications.length} loaded record
+      {notifications.length === 1 ? "" : "s"}. {hasMoreNotificationPages
+        ? "The summary cards count loaded records only. Use Load More to continue the full history."
+        : "All available history is loaded, so the summary cards now show full totals."}
     </p>
   </div>
 
@@ -831,7 +1024,7 @@ return (
       onClick={handleDeleteAllNotifications}
       disabled={isNotificationActionBusy()}
     >
-      {actionLoadingId === "delete-all" ? "Deleting..." : "Delete All"}
+      {actionLoadingId === "delete-all" ? "Deleting..." : "Delete Visible"}
     </button>
   </div>
 </div>
@@ -843,66 +1036,99 @@ return (
             <p>There are no notifications matching this filter.</p>
           </div>
         ) : (
- <div className="notifications-list">
-  {displayedNotifications.map((notification) => {
-    const read = isNotificationRead(notification);
+          <div className="notifications-table-wrap">
+            <table className="notifications-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Notification</th>
+                  <th>Target</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-    return (
-      <article
-        className={`notification-row ${read ? "read" : "unread"}`}
-        key={notification.id}
-      >
-        <div className="notification-row-main">
-          <div className="notification-row-titleline">
-            <div>
-              <span className="notification-date">
-                {formatDate(notification)}
-              </span>
+              <tbody>
+                {displayedNotifications.map((notification) => {
+                  const read = isNotificationRead(notification);
 
-              <h3>{notification.title || "Untitled Notification"}</h3>
-            </div>
+                  return (
+                    <tr
+                      className={`notification-table-row ${read ? "read" : "unread"}`}
+                      key={notification.id}
+                    >
+                      <td data-label="Date">
+                        <span className="notification-table-date">
+                          {formatDate(notification)}
+                        </span>
+                      </td>
 
-            <strong className={read ? "read" : "unread"}>
-              {read ? "Read" : "Unread"}
-            </strong>
+                      <td data-label="Notification">
+                        <div className="notification-table-message">
+                          <strong>{notification.title || "Untitled Notification"}</strong>
+                          <span>{notification.message || "No message provided."}</span>
+                        </div>
+                      </td>
+
+                      <td data-label="Target">
+                        <span className="notification-table-chip">
+                          {notification.targetRole || "General"}
+                        </span>
+                      </td>
+
+                      <td data-label="Category">
+                        <span className="notification-table-chip">
+                          {notification.categoryName || notification.categoryId || "None"}
+                        </span>
+                      </td>
+
+                      <td data-label="Status">
+                        <span
+                          className={`notification-table-status ${read ? "read" : "unread"}`}
+                        >
+                          {read ? "Read" : "Unread"}
+                        </span>
+                      </td>
+
+                      <td data-label="Action">
+                        <div className="notification-table-actions">
+                          <button
+                            type="button"
+                            className="notification-icon-btn"
+                            data-tooltip="Open"
+                            title="Open"
+                            aria-label="Open notification"
+                            onClick={() => handleOpenNotification(notification)}
+                            disabled={isNotificationActionBusy()}
+                          >
+                            {actionLoadingId === `open-${notification.id}` ? "…" : "↗"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-
-          <p>{notification.message || "No message provided."}</p>
-
-          <div className="notification-meta-row">
-            {notification.targetRole && <span>{notification.targetRole}</span>}
-
-            {notification.categoryId && (
-              <span>{notification.categoryName || notification.categoryId}</span>
-            )}
-          </div>
-        </div>
-
-        <div className="notification-actions">
-<button
-  type="button"
-  className="notifications-primary-btn"
-  onClick={() => handleOpenNotification(notification)}
-  disabled={isNotificationActionBusy()}
->
-  {actionLoadingId === `open-${notification.id}` ? "Opening..." : "Open"}
-</button>
-        </div>
-      </article>
-    );
-  })}
-</div>
         )}
 
-        {hasMoreNotifications && (
+        {hasMoreNotificationPages && (
           <div className="notifications-load-more-row">
             <button
               type="button"
               className="notifications-refresh-btn"
               onClick={handleLoadMoreNotifications}
-              disabled={isNotificationActionBusy()}
+              disabled={isNotificationActionBusy() || !canLoadMoreNotifications}
             >
-              Load More Notifications
+              {loadingMoreNotifications
+                ? "Loading More..."
+                : filter === "Read"
+                ? "Load More Read Notifications"
+                : filter === "Unread"
+                ? "Load More Unread Notifications"
+                : "Load More Notifications"}
             </button>
           </div>
         )}
