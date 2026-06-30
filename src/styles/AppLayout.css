@@ -2929,3 +2929,162 @@ html[data-theme="dark"] .app-page-content :where(
   position: relative !important;
   z-index: 1000002 !important;
 }
+
+/* =========================================================
+   FINAL PROFILE MENU / PROFILE PILL DARK MODE FIX
+   Paste this at the VERY BOTTOM of AppLayout.css
+========================================================= */
+
+html[data-theme="dark"] .app-profile-menu-wrap {
+  z-index: 99999 !important;
+}
+
+/* Top-right profile button */
+html[data-theme="dark"] .app-profile-pill {
+  border: 1.5px solid rgba(147, 197, 253, 0.35) !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.28), transparent 38%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98)) !important;
+  color: #f8fafc !important;
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme="dark"] .app-profile-pill:hover,
+html[data-theme="dark"] .app-profile-pill.profile-open {
+  border-color: rgba(147, 197, 253, 0.68) !important;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.38), transparent 42%),
+    linear-gradient(135deg, rgba(30, 41, 59, 1), rgba(15, 23, 42, 1)) !important;
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.32),
+    0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* Avatar / initials */
+html[data-theme="dark"] .app-profile-pill-avatar {
+  border: 2px solid rgba(219, 234, 254, 0.72) !important;
+  background:
+    linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24) !important;
+}
+
+html[data-theme="dark"] .app-profile-pill-avatar img {
+  border-radius: inherit !important;
+}
+
+/* Name, role, arrow */
+html[data-theme="dark"] .app-profile-pill-text strong {
+  color: #f8fafc !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .app-profile-pill-text span {
+  color: #cbd5e1 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .app-profile-pill-text i {
+  background: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16) !important;
+}
+
+html[data-theme="dark"] .app-profile-pill-arrow {
+  color: #bfdbfe !important;
+}
+
+/* Dropdown card */
+html[data-theme="dark"] .app-profile-menu {
+  border: 1.5px solid rgba(147, 197, 253, 0.28) !important;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(250, 204, 21, 0.1), transparent 30%),
+    linear-gradient(180deg, #172033 0%, #0f172a 100%) !important;
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .app-profile-menu::before {
+  border-top-color: rgba(147, 197, 253, 0.28) !important;
+  border-left-color: rgba(147, 197, 253, 0.28) !important;
+  background: #172033 !important;
+}
+
+/* Dropdown header */
+html[data-theme="dark"] .app-profile-menu-header {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.22), transparent 38%),
+    rgba(15, 23, 42, 0.62) !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-header strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-header span {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-header p {
+  border: 1px solid rgba(147, 197, 253, 0.22) !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  color: #bfdbfe !important;
+  box-shadow: none !important;
+}
+
+/* Dropdown items */
+html[data-theme="dark"] .app-profile-menu-item {
+  background: transparent !important;
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item span {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item strong {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item:hover {
+  background: rgba(37, 99, 235, 0.16) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item:hover span,
+html[data-theme="dark"] .app-profile-menu-item:hover strong {
+  color: #ffffff !important;
+}
+
+/* Logout item */
+html[data-theme="dark"] .app-profile-menu-item.logout,
+html[data-theme="dark"] .app-profile-menu-item.logout span,
+html[data-theme="dark"] .app-profile-menu-item.logout strong {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item.logout:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+
+html[data-theme="dark"] .app-profile-menu-item.logout:hover,
+html[data-theme="dark"] .app-profile-menu-item.logout:hover span,
+html[data-theme="dark"] .app-profile-menu-item.logout:hover strong {
+  color: #fecaca !important;
+}
+
+/* Mobile profile icon stays readable */
+@media (max-width: 820px) {
+  html[data-theme="dark"] .app-profile-pill {
+    border-color: rgba(147, 197, 253, 0.42) !important;
+  }
+
+  html[data-theme="dark"] .app-profile-menu {
+    right: 0 !important;
+  }
+}
+  

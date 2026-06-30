@@ -55,10 +55,10 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
   });
 
   const [openSidebarGroups, setOpenSidebarGroups] = useState({
-    dashboard: true,
-    borrower: true,
-    admin: true,
-    userManagement: true,
+    dashboard: false,
+    borrower: false,
+    admin: false,
+    userManagement: false,
   });
 
   const [showSuspendedAlert, setShowSuspendedAlert] = useState(false);
@@ -658,6 +658,18 @@ const unsubscribe = onSnapshot(
     };
   }, []);
 
+function resetPublicPagesToLightTheme() {
+  if (typeof document === "undefined") return;
+
+  /*
+    Keep the user's saved QBorrow theme in localStorage, but reset the actual
+    document theme when AppLayout is no longer active. This prevents public
+    pages like Landing and Login from inheriting the dashboard dark mode after
+    logout.
+  */
+  document.documentElement.setAttribute("data-theme", "light");
+}
+
     useEffect(() => {
       const savedTheme =
         localStorage.getItem("qborrowTheme") || userData?.themeMode || "light";
@@ -666,6 +678,12 @@ const unsubscribe = onSnapshot(
       document.documentElement.setAttribute("data-theme", savedTheme);
       localStorage.setItem("qborrowTheme", savedTheme);
     }, [userData?.themeMode]);
+
+  useEffect(() => {
+    return () => {
+      resetPublicPagesToLightTheme();
+    };
+  }, []);
 
   useEffect(() => {
     if (!userData?.uid) return;
@@ -898,6 +916,7 @@ async function confirmLogout() {
 
   try {
     await signOut(auth);
+    resetPublicPagesToLightTheme();
     setShowLogoutConfirm(false);
     navigate("/");
   } catch (error) {
