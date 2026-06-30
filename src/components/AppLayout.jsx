@@ -13,7 +13,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import "../styles/AppLayout.css";
 
 function AppLayout() {
@@ -45,6 +45,21 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
 
   const [adminBorrowRequestAlerts, setAdminBorrowRequestAlerts] = useState([]);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const [themeMode, setThemeMode] = useState(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+
+    return localStorage.getItem("qborrowTheme") || "light";
+  });
+
+  const [openSidebarGroups, setOpenSidebarGroups] = useState({
+    dashboard: true,
+    borrower: true,
+    admin: true,
+    userManagement: true,
+  });
 
   const [showSuspendedAlert, setShowSuspendedAlert] = useState(false);
 
@@ -647,6 +662,7 @@ const unsubscribe = onSnapshot(
       const savedTheme =
         localStorage.getItem("qborrowTheme") || userData?.themeMode || "light";
 
+      setThemeMode(savedTheme);
       document.documentElement.setAttribute("data-theme", savedTheme);
       localStorage.setItem("qborrowTheme", savedTheme);
     }, [userData?.themeMode]);
@@ -850,6 +866,14 @@ useEffect(() => {
   setProfileDropdownOpen(false);
 }, [location.pathname]);
 
+function handleToggleTheme() {
+  const nextTheme = themeMode === "dark" ? "light" : "dark";
+
+  setThemeMode(nextTheme);
+  document.documentElement.setAttribute("data-theme", nextTheme);
+  localStorage.setItem("qborrowTheme", nextTheme);
+}
+
 function handleLogout() {
   if (loggingOut) return;
 
@@ -973,15 +997,26 @@ async function confirmLogout() {
   },
 ];
 
-function renderNavLink(link) {
+function toggleSidebarGroup(groupName) {
+  setOpenSidebarGroups((previousGroups) => ({
+    ...previousGroups,
+    [groupName]: !previousGroups[groupName],
+  }));
+}
+
+function isSidebarLinkActive(link) {
   const currentFullPath = `${location.pathname}${location.search || ""}`;
   const isQueryLink = link.path.includes("?");
 
-  const isActive = isQueryLink
+  return isQueryLink
     ? currentFullPath === link.path
     : link.path === "/user-management"
     ? location.pathname === "/user-management" && !location.search
     : activeSidebarPath === link.path;
+}
+
+function renderNavLink(link) {
+  const isActive = isSidebarLinkActive(link);
 
   return (
     <button
@@ -1007,6 +1042,41 @@ function renderNavLink(link) {
 
       <span className="app-nav-text">{link.label}</span>
     </button>
+  );
+}
+
+function renderSidebarGroup({ groupName, title, icon, links }) {
+  const isOpen = openSidebarGroups[groupName] !== false;
+  const hasActiveChild = links.some(isSidebarLinkActive);
+
+  return (
+    <section
+      className={`app-nav-group app-sidebar-section ${
+        isOpen ? "open" : "closed"
+      } ${hasActiveChild ? "active" : ""}`}
+      key={groupName}
+    >
+      <button
+        type="button"
+        className="app-nav-parent-link app-sidebar-section-toggle"
+        onClick={() => toggleSidebarGroup(groupName)}
+        aria-expanded={isOpen}
+      >
+        <span className="app-nav-icon app-nav-group-icon">
+          <span>{icon}</span>
+        </span>
+
+        <span className="app-nav-text">{title}</span>
+
+        <span className="app-nav-chevron" aria-hidden="true"></span>
+      </button>
+
+      {isOpen && (
+        <div className="app-nav-submenu app-sidebar-section-list">
+          {links.map(renderNavLink)}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -1056,38 +1126,39 @@ function renderNavLink(link) {
         </div>
 
         <nav className="app-sidebar-nav" aria-label="Application navigation">
-          <p className="app-nav-label">Main Menu</p>
-          {sharedLinks.map(renderNavLink)}
+          {renderSidebarGroup({
+            groupName: "dashboard",
+            title: "Dashboard",
+            icon: "⌂",
+            links: sharedLinks,
+          })}
 
-          {isBorrower && (
-            <>
-              <p className="app-nav-label">Borrower Menu</p>
-              {borrowerLinks.map(renderNavLink)}
-            </>
-          )}
+          {isBorrower &&
+            renderSidebarGroup({
+              groupName: "borrower",
+              title: "Borrowing",
+              icon: "◇",
+              links: borrowerLinks,
+            })}
 
-          {isAdmin && (
-            <>
-              <p className="app-nav-label">Admin Menu</p>
-              {adminLinks.map(renderNavLink)}
-            </>
-          )}
+          {isAdmin &&
+            renderSidebarGroup({
+              groupName: "admin",
+              title: "Admin Menu",
+              icon: "⚙",
+              links: adminLinks,
+            })}
 
-{isSuperAdmin && (
-  <>
-    <p className="app-nav-label">Super Admin</p>
-    {superAdminLinks.map(renderNavLink)}
-  </>
-)}
+          {isSuperAdmin &&
+            renderSidebarGroup({
+              groupName: "userManagement",
+              title: "User Management",
+              icon: "◎",
+              links: superAdminLinks,
+            })}
         </nav>
 
-        <button type="button" className="app-logout-btn" onClick={handleLogout}>
-          <span className="app-nav-icon">
-            <img src="/icons/logout.png" alt="" />
-          </span>
-          <span>Logout</span>
-        </button>
-      </aside>
+              </aside>
 
 {sidebarOpen && (
   <button
@@ -1275,7 +1346,7 @@ function renderNavLink(link) {
         </h2>
 
         <span>
-          You cannot submit new borrow requests {getSuspendedUntilLabel()}.
+          You cannot submit new borrow requests until {getSuspendedUntilLabel()}.
         </span>
       </div>
 
@@ -1478,6 +1549,16 @@ function renderNavLink(link) {
       </div>
     </div>
   )}
+
+  <button
+    type="button"
+    className="app-topbar-theme-toggle"
+    onClick={handleToggleTheme}
+    aria-label={themeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    title={themeMode === "dark" ? "Light mode" : "Dark mode"}
+  >
+    <span aria-hidden="true">{themeMode === "dark" ? "☀" : "☾"}</span>
+  </button>
 
   <button
     type="button"

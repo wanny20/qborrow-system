@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase/firebaseConfig";
 import "../styles/LandingPage.css";
 
 const qrFilledCells = new Set([
@@ -22,7 +22,7 @@ const featureCards = [
     title: "QR and Barcode Ready",
     description:
       "Identify school items instantly during release and return using QR code or barcode scanning.",
-    tone: "violet",
+    tone: "blue",
   },
   {
     number: "02",
@@ -30,7 +30,7 @@ const featureCards = [
     title: "Cleaner Request Flow",
     description:
       "Borrowers submit requests with purpose and expected return dates while admins control approvals.",
-    tone: "pink",
+    tone: "yellow",
   },
   {
     number: "03",
@@ -38,7 +38,7 @@ const featureCards = [
     title: "Live Item Accountability",
     description:
       "Monitor available, reserved, borrowed, returned, damaged, lost, and overdue items in one place.",
-    tone: "yellow",
+    tone: "white",
   },
 ];
 
@@ -54,105 +54,107 @@ function LandingPage() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
 
-useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-  const unsubscribe = onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      if (isMounted) {
-        setCheckingSession(false);
-      }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        if (isMounted) {
+          setCheckingSession(false);
+        }
 
-      return;
-    }
-
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!isMounted) return;
-
-      if (!userSnap.exists()) {
-        setCheckingSession(false);
         return;
       }
 
-      const userData = userSnap.data();
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
 
-      if (
-        userData.termsAccepted !== true ||
-        userData.mustChangePassword === true
-      ) {
-        navigate("/force-password-change", { replace: true });
-        return;
+        if (!isMounted) return;
+
+        if (!userSnap.exists()) {
+          setCheckingSession(false);
+          return;
+        }
+
+        const userData = userSnap.data();
+
+        if (
+          userData.termsAccepted !== true ||
+          userData.mustChangePassword === true
+        ) {
+          navigate("/force-password-change", { replace: true });
+          return;
+        }
+
+        navigate("/dashboard", { replace: true });
+      } catch (error) {
+        console.error("Landing session check error:", error);
+
+        if (isMounted) {
+          setCheckingSession(false);
+        }
       }
+    });
 
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Landing session check error:", error);
-
-      if (isMounted) {
-        setCheckingSession(false);
-      }
-    }
-  });
-
-  return () => {
-    isMounted = false;
-    unsubscribe();
-  };
-}, [navigate]);
-
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [navigate]);
 
   function goToLogin() {
     setIsLeaving(true);
 
     setTimeout(() => {
       navigate("/login");
-    }, 650);
+    }, 520);
   }
-if (checkingSession) {
-  return null;
-}
+
+  if (checkingSession) {
+    return (
+      <main className="landing-session-check">
+        <section className="landing-session-card">
+          <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+          <h1>Checking session...</h1>
+          <p>Please wait while QBorrow verifies your account.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className={`landing-page qb-page ${isLeaving ? "landing-exit" : ""}`}>
-      <div className="landing-confetti landing-confetti-one" aria-hidden="true"></div>
-      <div className="landing-confetti landing-confetti-two" aria-hidden="true"></div>
-      <div className="landing-confetti landing-confetti-three" aria-hidden="true"></div>
-      <div className="landing-confetti landing-confetti-four" aria-hidden="true"></div>
-      <div className="landing-dot-grid landing-dot-left" aria-hidden="true"></div>
-      <div className="landing-dot-grid landing-dot-right" aria-hidden="true"></div>
+      <nav className="landing-navbar" aria-label="Main navigation">
+        <button
+          type="button"
+          className="landing-brand"
+          onClick={() => navigate("/")}
+          aria-label="Go to QBorrow home"
+        >
+          <span className="landing-brand-mark">
+            <img src="/qborrow-logo.png" alt="" />
+          </span>
+          <span>QBorrow</span>
+        </button>
 
-<nav className="landing-navbar" aria-label="Main navigation">
-  <button
-    type="button"
-    className="landing-brand"
-    onClick={() => navigate("/")}
-    aria-label="Go to QBorrow home"
-  >
-    <span className="landing-brand-mark">
-      <img src="/qborrow-logo.png" alt="" />
-    </span>
-    <span>QBorrow</span>
-  </button>
+        <div className="landing-nav-links" aria-label="Landing page sections">
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#about">About</a>
+        </div>
 
-  <div className="landing-nav-links" aria-label="Landing page sections">
-    <a href="#home">Home</a>
-    <a href="#features">Features</a>
-    <a href="#workflow">Workflow</a>
-    <a href="#about">About</a>
-  </div>
-  <button
-  type="button"
-  className="landing-nav-cta"
-  onClick={goToLogin}
->
-  Log In
-</button>
-</nav>
+        <button
+          type="button"
+          className="landing-nav-cta"
+          onClick={goToLogin}
+        >
+          Log In
+        </button>
+      </nav>
 
-<section className="landing-shell qb-container" aria-label="QBorrow landing page">
-
+      <section className="landing-shell qb-container" aria-label="QBorrow landing page">
         <section className="landing-hero" id="home">
           <div className="landing-hero-copy">
             <p className="qb-kicker landing-kicker">
@@ -171,7 +173,7 @@ if (checkingSession) {
             <p className="landing-description">
               QBorrow helps schools and organizations manage item borrowing,
               QR scanning, return tracking, availability, due dates, and item
-              accountability in one playful but professional digital platform.
+              accountability in one professional digital platform.
             </p>
 
             <div className="landing-actions">

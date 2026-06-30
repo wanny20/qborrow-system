@@ -1,5 +1,5 @@
 /* =========================================================
-   GLOBAL TOAST NOTIFICATIONS
+   QBORROW TOAST NOTIFICATIONS - FIXED LAYOUT
 ========================================================= */
 
 .qb-toast-container {
@@ -7,94 +7,145 @@
   top: 86px;
   right: 22px;
   z-index: 100000;
-  display: grid;
-  gap: 10px;
   width: min(360px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   pointer-events: none;
 }
 
 .qb-toast {
   pointer-events: auto;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 30px;
+  width: 100%;
+  min-height: 64px;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  border: 2px solid var(--qb-border);
+  gap: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-left: 6px solid #2563eb;
   border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-  padding: 10px;
-  animation: qbToastIn 260ms ease both;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+  padding: 12px 12px 12px 14px;
+  animation: qbToastIn 220ms ease both;
 }
 
 .qb-toast-success {
-  background:
-    linear-gradient(135deg, rgba(52, 211, 153, 0.2), #ffffff 55%);
+  border-left-color: #2563eb;
 }
 
 .qb-toast-error {
-  background:
-    linear-gradient(135deg, rgba(248, 113, 113, 0.2), #ffffff 55%);
+  border-left-color: #dc2626;
+}
+
+.qb-toast-warning {
+  border-left-color: #facc15;
+}
+
+.qb-toast-info {
+  border-left-color: #2563eb;
 }
 
 .qb-toast > span {
-  width: 34px;
-  height: 34px;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-quaternary);
-  color: var(--qb-foreground);
-  font-family: var(--qb-heading-font);
-  font-weight: 900;
-}
-
-.qb-toast-error > span {
-  background: var(--qb-secondary);
-}
-
-.qb-toast p {
-  margin: 0;
-  color: var(--qb-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.78rem;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.qb-toast button {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: #ffffff;
-  color: var(--qb-foreground);
+  border-radius: 14px;
+  background: #2563eb;
+  color: #ffffff;
   font-family: var(--qb-heading-font);
   font-size: 1rem;
   font-weight: 900;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24);
+}
+
+.qb-toast-error > span {
+  background: #dc2626;
+  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.22);
+}
+
+.qb-toast-warning > span {
+  background: #facc15;
+  color: #111827;
+  box-shadow: 0 10px 24px rgba(250, 204, 21, 0.26);
+}
+
+.qb-toast p {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: #111827;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.qb-toast button {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 1.1rem;
+  font-weight: 900;
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.qb-toast button:hover {
+  background: #f1f5f9;
+  transform: scale(1.04);
 }
 
 @keyframes qbToastIn {
   from {
     opacity: 0;
-    transform: translate(14px, -6px) scale(0.98);
+    transform: translateX(16px) scale(0.98);
   }
 
   to {
     opacity: 1;
-    transform: translate(0, 0) scale(1);
+    transform: translateX(0) scale(1);
   }
 }
 
 @media (max-width: 640px) {
   .qb-toast-container {
     top: 76px;
-    right: 12px;
     left: 12px;
+    right: 12px;
     width: auto;
+  }
+
+  .qb-toast {
+    min-height: 58px;
+    border-radius: 16px;
+    padding: 10px;
+  }
+
+  .qb-toast > span {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+  }
+
+  .qb-toast p {
+    font-size: 0.78rem;
+  }
+
+  .qb-toast button {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
   }
 }

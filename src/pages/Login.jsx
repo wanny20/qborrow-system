@@ -10,7 +10,7 @@ import {
 import { auth, db } from "../firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 import "../styles/Login.css";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 
 function Login() {
   const navigate = useNavigate();

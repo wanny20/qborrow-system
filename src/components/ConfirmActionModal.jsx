@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "../styles/ConfirmActionModal.css";
 
 function ConfirmActionModal({
@@ -30,7 +31,7 @@ function ConfirmActionModal({
 
   if (!open) return null;
 
-  return (
+  const modalContent = (
     <div
       className="confirm-action-backdrop"
       role="dialog"
@@ -57,7 +58,7 @@ function ConfirmActionModal({
         </div>
 
         <div className="confirm-action-text">
-          <p>Confirmation Required</p>
+          <p>{danger ? "Needs Careful Review" : "Confirmation Required"}</p>
 
           <h2 id="confirm-action-title">{title}</h2>
 
@@ -90,6 +91,8 @@ function ConfirmActionModal({
       </section>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 export default ConfirmActionModal;

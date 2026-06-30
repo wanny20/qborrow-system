@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import "../styles/Reports.css";
 const REPORTS_HISTORY_PAGE_SIZE = 10;
 
@@ -159,7 +159,7 @@ function getRequestCategoryName(request) {
   }
 
   function checkOverdue(request) {
-    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+    if (request.approvalStatus !== "Borrowed") {
       return false;
     }
 
@@ -381,10 +381,10 @@ const visibleRequests = useMemo(() => {
       request.approvalStatus === "Cancelled"
   );
 
-  const activeRequestTotal = approvedRequests.length + borrowedRequests.length;
+  const activeRequestTotal = borrowedRequests.length;
 
 const returnableRequestTotal =
-  approvedRequests.length + borrowedRequests.length + returnedRequests.length;
+  borrowedRequests.length + returnedRequests.length;
 
 const reportStatistics = [
   {
@@ -403,14 +403,14 @@ const reportStatistics = [
     detail: `${damagedLostItems.length} of ${visibleItems.length} visible items are damaged or lost.`,
   },
   {
-    label: "Overdue Active Rate",
+    label: "Overdue Borrowed Rate",
     value: getPercentage(overdueRequests.length, activeRequestTotal),
-    detail: `${overdueRequests.length} of ${activeRequestTotal} active requests are overdue.`,
+    detail: `${overdueRequests.length} of ${activeRequestTotal} borrowed requests are overdue.`,
   },
   {
     label: "Return Completion Rate",
     value: getPercentage(returnedRequests.length, returnableRequestTotal),
-    detail: `${returnedRequests.length} of ${returnableRequestTotal} release/return records are completed.`,
+    detail: `${returnedRequests.length} of ${returnableRequestTotal} borrowed/returned records are completed.`,
   },
   {
     label: "Closed Request Rate",
@@ -856,8 +856,7 @@ const requestStatusChartTotal =
   approvedRequests.length +
   borrowedRequests.length +
   returnedRequests.length +
-  closedRequests.length +
-  overdueRequests.length;
+  closedRequests.length;
 
 const requestStatusChart = [
   {
@@ -1819,7 +1818,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <div className="reports-section-heading">
             <div>
               <h2>Overdue Items</h2>
-              <p>Approved or borrowed requests past expected return date.</p>
+              <p>Borrowed requests past expected return date.</p>
             </div>
           </div>
 

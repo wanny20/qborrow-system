@@ -13,11 +13,17 @@ function ProtectedRoute({ children, allowedRoles }) {
   const [userData, setUserData] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setChecking(true);
+      if (isMounted) {
+        setChecking(true);
+      }
 
       try {
         if (!firebaseUser) {
+          if (!isMounted) return;
+
           setCurrentUser(null);
           setUserData(null);
           return;
@@ -25,6 +31,8 @@ function ProtectedRoute({ children, allowedRoles }) {
 
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
+
+        if (!isMounted) return;
 
         if (!userSnap.exists()) {
           setCurrentUser(firebaseUser);
@@ -41,25 +49,45 @@ function ProtectedRoute({ children, allowedRoles }) {
         });
       } catch (error) {
         console.error("Protected route error:", error);
+
+        if (!isMounted) return;
+
         setCurrentUser(null);
         setUserData(null);
       } finally {
-        setChecking(false);
+        if (isMounted) {
+          setChecking(false);
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   if (checking) {
     return (
-      <div className="protected-route-loading">
-        <div className="protected-route-card">
-          <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-          <h2>Checking access...</h2>
-          <p>Verifying your QBorrow account and role permissions.</p>
-        </div>
-      </div>
+      <main className="protected-route-loading" aria-label="Checking access">
+        <section className="protected-route-card">
+          <div className="protected-route-logo-wrap">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+          </div>
+
+          <div className="protected-route-copy">
+            <p>Secure Access Check</p>
+            <h2>Checking access...</h2>
+            <span>Verifying your QBorrow account and role permissions.</span>
+          </div>
+
+          <div className="protected-route-progress" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </section>
+      </main>
     );
   }
 
@@ -70,23 +98,25 @@ function ProtectedRoute({ children, allowedRoles }) {
   if (!userData?.role) {
     return <Navigate to="/login" replace />;
   }
-const isForcePasswordPage = location.pathname === "/force-password-change";
 
-const needsFirstTimeSetup =
-  userData?.termsAccepted !== true || userData?.mustChangePassword === true;
+  const isForcePasswordPage = location.pathname === "/force-password-change";
 
-if (needsFirstTimeSetup && !isForcePasswordPage) {
-  return <Navigate to="/force-password-change" replace />;
+  const needsFirstTimeSetup =
+    userData?.termsAccepted !== true || userData?.mustChangePassword === true;
+
+  if (needsFirstTimeSetup && !isForcePasswordPage) {
+    return <Navigate to="/force-password-change" replace />;
+  }
+
+  if (!needsFirstTimeSetup && isForcePasswordPage) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 }
 
-if (!needsFirstTimeSetup && isForcePasswordPage) {
-  return <Navigate to="/dashboard" replace />;
-}
-
-if (allowedRoles?.length && !allowedRoles.includes(userData.role)) {
-  return <Navigate to="/dashboard" replace />;
-}
-
-return children;
-}
 export default ProtectedRoute;

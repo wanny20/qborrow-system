@@ -1,8 +1,32 @@
+/* =========================================================
+   QBORROW ITEM DETAILS
+   Modern blue / yellow / white SaaS redesign
+========================================================= */
+
 .item-details-page {
+  --item-primary: var(--qb-primary, #2563eb);
+  --item-primary-dark: var(--qb-primary-dark, #1d4ed8);
+  --item-primary-soft: var(--qb-primary-soft, #dbeafe);
+  --item-accent: var(--qb-accent, #facc15);
+  --item-accent-soft: var(--qb-accent-soft, #fef9c3);
+  --item-bg: var(--qb-bg, #f4f8ff);
+  --item-surface: var(--qb-surface, #ffffff);
+  --item-surface-soft: var(--qb-surface-soft, #f8fafc);
+  --item-text: var(--qb-text, var(--qb-foreground, #0f172a));
+  --item-muted: var(--qb-muted, var(--qb-muted-foreground, #64748b));
+  --item-border: var(--qb-border, #e2e8f0);
+  --item-success: var(--qb-success, #16a34a);
+  --item-warning: var(--qb-warning, #f59e0b);
+  --item-danger: var(--qb-danger, #dc2626);
+  --item-info: var(--qb-info, #0284c7);
+
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  color: var(--qb-foreground);
+  color: var(--item-text);
+  overflow-x: hidden;
 }
 
 .item-details-page *,
@@ -11,23 +35,36 @@
   box-sizing: border-box;
 }
 
-/* Loading / Empty */
+/* =========================
+   Loading / Empty
+========================= */
 
 .item-details-loading {
-  min-height: calc(100vh - 140px);
+  min-height: calc(100dvh - 140px);
   display: grid;
   place-items: center;
+  padding: 24px;
 }
 
 .item-details-loading-card,
 .item-details-empty {
-  width: min(420px, 100%);
-  border: 2px solid var(--qb-border);
-  border-radius: 24px;
-  background: #ffffff;
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-  padding: 28px;
+  width: min(440px, 100%);
+  border: 1px solid var(--item-border);
+  border-radius: 28px;
+  background: var(--item-surface);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  padding: 34px;
   text-align: center;
+}
+
+.item-details-empty {
+  width: min(620px, 100%);
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  margin-inline: auto;
 }
 
 .item-details-loading-card img,
@@ -35,840 +72,1395 @@
   width: 72px;
   height: 72px;
   object-fit: contain;
-  margin-bottom: 14px;
+  margin-inline: auto;
 }
 
 .item-details-loading-card h2,
 .item-details-empty h1 {
-  margin: 0;
-  font-family: var(--qb-heading-font);
-  font-size: 1.45rem;
-  font-weight: 900;
+  margin: 8px 0 0;
+  color: var(--item-text);
+  font-size: clamp(1.3rem, 3vw, 1.85rem);
+  font-weight: 850;
+  letter-spacing: -0.04em;
 }
 
 .item-details-loading-card p,
 .item-details-empty p {
-  margin: 8px 0 16px;
-  color: var(--qb-muted-foreground);
-  font-weight: 700;
+  margin: 4px 0 0;
+  color: var(--item-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
-/* Header */
+/* =========================
+   Header
+========================= */
 
-.item-details-header {
+.item-details-header-compact {
+  display: block;
+}
+
+.item-details-header-content {
   position: relative;
-  overflow: hidden;
+  min-height: 128px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 18px;
-  align-items: start;
-  border: 2px solid var(--qb-border);
-  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 28px;
   background:
-    linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(251, 191, 36, 0.16)),
-    #ffffff;
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-  padding: 22px 26px;
+    radial-gradient(circle at 88% 18%, rgba(250, 204, 21, 0.22), transparent 26%),
+    linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+  box-shadow: 0 18px 45px rgba(37, 99, 235, 0.09);
+  padding: 24px 28px;
 }
 
-.item-details-header::after {
+.item-details-header-content::before {
   content: "";
   position: absolute;
-  right: 34px;
-  bottom: -38px;
-  width: 104px;
-  height: 104px;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-tertiary);
+  inset: auto -48px -70px auto;
+  width: 190px;
+  height: 190px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
 }
 
-.item-details-header > div:first-child {
-  position: relative;
-  z-index: 1;
-  min-width: 0;
+.item-details-header-content::after {
+  content: "";
+  position: absolute;
+  right: 28px;
+  top: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: var(--item-accent);
+  box-shadow: 0 14px 30px rgba(250, 204, 21, 0.28);
+  transform: rotate(12deg);
 }
 
-.item-details-header h1 {
-  margin: 10px 0 8px;
-  max-width: 950px;
-  font-family: var(--qb-heading-font);
-  font-size: clamp(2rem, 4vw, 3.3rem);
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
-}
-
-.item-details-header p {
-  max-width: 780px;
-  margin: 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.95rem;
-  font-weight: 650;
-  line-height: 1.55;
-}
-
+.item-details-header-text,
 .item-details-header-actions {
   position: relative;
   z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
+  min-width: 0;
 }
 
-/* Buttons */
+.item-details-header-text > span {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: var(--item-primary-soft);
+  color: var(--item-primary-dark);
+  padding: 7px 12px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.item-details-header-text h2 {
+  max-width: 860px;
+  margin: 0;
+  color: var(--item-text);
+  font-size: clamp(1.65rem, 3.2vw, 2.55rem);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
+}
+
+.item-details-header-text p {
+  max-width: 760px;
+  margin: 10px 0 0;
+  color: var(--item-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* =========================
+   Buttons
+========================= */
 
 .item-details-primary-btn,
-.item-details-secondary-btn,
-.item-details-danger-btn,
-.item-details-admin-shortcuts button {
-  min-height: 40px;
+.item-details-secondary-btn {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--qb-border);
+  gap: 8px;
+  border: 0;
   border-radius: 999px;
-  box-shadow: 3px 3px 0 0 var(--qb-border);
-  padding: 0 14px;
-  font-family: var(--qb-heading-font);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  padding: 0 18px;
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-align: center;
+  cursor: pointer;
   transition:
-    transform 180ms var(--qb-ease-bounce),
-    box-shadow 180ms var(--qb-ease-bounce);
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
 }
 
 .item-details-primary-btn {
-  background: var(--qb-accent);
+  background: var(--item-primary);
   color: #ffffff;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25);
 }
 
-.item-details-secondary-btn,
-.item-details-admin-shortcuts button {
-  background: #ffffff;
-  color: var(--qb-foreground);
+.item-details-primary-btn:hover {
+  background: var(--item-primary-dark);
+  transform: translateY(-1px);
 }
 
-.item-details-danger-btn {
-  background: var(--qb-secondary);
-  color: var(--qb-foreground);
+.item-details-secondary-btn {
+  border: 1px solid var(--item-border);
+  background: var(--item-surface);
+  color: var(--item-text);
 }
 
-.item-details-primary-btn:hover,
-.item-details-secondary-btn:hover,
-.item-details-danger-btn:hover:not(:disabled),
-.item-details-admin-shortcuts button:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 0 var(--qb-border);
+.item-details-secondary-btn:hover {
+  border-color: #bfdbfe;
+  background: var(--item-primary-soft);
+  transform: translateY(-1px);
 }
 
-.item-details-danger-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-/* Layout */
+/* =========================
+   Layout
+========================= */
 
 .item-details-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
   gap: 18px;
   align-items: start;
 }
 
 .item-details-main-card,
 .item-details-side-card {
-  min-width: 0;
-  border: 2px solid var(--qb-border);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 5px 5px 0 0 var(--qb-border);
-  padding: 18px;
+  border: 1px solid var(--item-border);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
 }
-
-/* Main Card */
 
 .item-details-main-card {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
+  grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+  gap: 22px;
+  padding: 22px;
+}
+
+.item-details-side-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
 }
 
 .item-details-image-panel {
-  width: 100%;
-  height: clamp(260px, 36vw, 390px);
-  border: 2px solid var(--qb-border);
-  border-radius: 20px;
-  overflow: hidden;
+  min-height: clamp(260px, 30vw, 420px);
   display: grid;
   place-items: center;
+  overflow: hidden;
+  border: 1px solid #dbeafe;
+  border-radius: 24px;
   background:
-    radial-gradient(rgba(30, 41, 59, 0.1) 1px, transparent 1px),
-    #f8fafc;
-  background-size: 10px 10px;
+    radial-gradient(circle at 20% 16%, rgba(250, 204, 21, 0.18), transparent 24%),
+    linear-gradient(135deg, #ffffff, #eff6ff);
 }
 
 .item-details-image-panel img {
-  width: 100%;
-  height: 100%;
+  width: 92%;
+  height: 92%;
   object-fit: contain;
 }
 
 .item-details-placeholder {
-  width: 110px;
-  height: 110px;
+  width: 92px;
+  height: 92px;
   display: grid;
   place-items: center;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-accent);
-  box-shadow: 5px 5px 0 0 var(--qb-border);
+  border-radius: 28px;
+  background: var(--item-primary);
   color: #ffffff;
-  font-family: var(--qb-heading-font);
-  font-size: 3rem;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
+  font-size: 2.5rem;
   font-weight: 900;
+  text-transform: uppercase;
 }
 
 .item-details-info-panel {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .item-details-topline {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .item-details-topline > span:first-child {
-  min-width: 0;
-  max-width: 65%;
-  overflow: hidden;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--item-surface-soft);
+  color: var(--item-muted);
+  padding: 0 11px;
   font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.07em;
-  text-overflow: ellipsis;
+  font-weight: 850;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .item-details-info-panel h2 {
-  margin: 12px 0 0;
-  font-family: var(--qb-heading-font);
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  margin: 0;
+  color: var(--item-text);
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
   font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  line-height: 1.03;
+  letter-spacing: -0.055em;
+  overflow-wrap: anywhere;
 }
 
 .item-details-description {
   margin: 12px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.55;
+  color: var(--item-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
-.item-details-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.item-details-meta-grid > div {
-  min-width: 0;
-  border: 2px solid var(--qb-border);
-  border-radius: 18px;
-  background: var(--qb-bg);
-  padding: 12px;
-}
-
-.item-details-meta-grid span {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.66rem;
-  font-weight: 900;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.item-details-meta-grid strong {
-  display: block;
-  overflow-wrap: anywhere;
-  color: var(--qb-foreground);
-  font-size: 0.9rem;
-  font-weight: 900;
-}
-
-.item-details-action-panel {
-  margin-top: 18px;
-}
-
-/* Warning */
-
-.item-details-warning {
-  width: 100%;
-  border: 2px dashed var(--qb-border);
-  border-radius: 18px;
-  background: var(--qb-bg);
-  padding: 12px;
-}
-
-.item-details-warning strong {
-  display: block;
-  font-family: var(--qb-heading-font);
-  font-size: 0.9rem;
-  font-weight: 900;
-}
-
-.item-details-warning p {
-  margin: 5px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.84rem;
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.item-details-warning span {
-  color: var(--qb-foreground);
-  font-weight: 900;
-}
-
-/* Pills */
+/* =========================
+   Pills / Meta
+========================= */
 
 .item-details-pill,
 .item-details-inline-pill {
   width: fit-content;
-  display: inline-flex !important;
+  min-height: 30px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 28px;
-  border: 2px solid var(--qb-border);
   border-radius: 999px;
-  padding: 0 10px;
-  font-size: 0.65rem !important;
-  font-weight: 900 !important;
-  text-transform: uppercase;
+  padding: 6px 11px;
+  font-size: 0.74rem;
+  font-weight: 850;
+  line-height: 1;
   white-space: nowrap;
-  background: #ffffff;
 }
 
-.item-details-pill::before,
-.item-details-inline-pill::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  margin-right: 7px;
-  border: 2px solid var(--qb-border);
-  border-radius: 50%;
-  background: currentColor;
+.item-details-inline-pill {
+  min-height: 28px;
+  margin-top: 6px;
+  padding-inline: 10px;
 }
 
 .availability-available,
 .condition-good {
-  background: #d1fae5;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .availability-reserved,
 .condition-fair {
-  background: #fef3c7;
+  background: var(--item-accent-soft);
+  color: #854d0e;
 }
 
 .availability-borrowed {
-  background: #dbeafe;
+  background: #ede9fe;
+  color: #6d28d9;
 }
 
 .availability-damaged,
-.condition-damaged {
-  background: #fecaca;
-}
-
+.condition-damaged,
 .availability-lost,
 .condition-lost {
-  background: #fbcfe8;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .availability-unavailable,
 .condition-unknown {
-  background: #e5e7eb;
+  background: #e2e8f0;
+  color: #475569;
 }
 
-/* QR / Barcode Card */
-
-.item-details-side-card {
+.item-details-meta-grid,
+.item-details-scan-values {
   display: grid;
-  grid-template-columns: minmax(260px, 430px) minmax(0, 1fr);
-  gap: 16px;
-  overflow: hidden;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.item-details-qr-header {
-  grid-column: 1 / -1;
+.item-details-meta-grid {
+  margin-top: 18px;
 }
+
+.item-details-meta-grid > div,
+.item-details-scan-values > div {
+  min-width: 0;
+  border: 1px solid var(--item-border);
+  border-radius: 18px;
+  background: var(--item-surface-soft);
+  padding: 14px;
+}
+
+.item-details-meta-grid span,
+.item-details-scan-values span {
+  display: block;
+  color: var(--item-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.item-details-meta-grid strong,
+.item-details-scan-values p {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--item-text);
+  font-size: 0.9rem;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.item-details-action-panel {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.item-details-warning {
+  border: 1px solid #fde68a;
+  border-radius: 20px;
+  background: #fffbeb;
+  padding: 16px;
+}
+
+.item-details-info-note {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.item-details-warning strong {
+  display: block;
+  color: var(--item-text);
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.item-details-warning p {
+  margin: 6px 0 0;
+  color: var(--item-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.item-details-warning span {
+  color: var(--item-text);
+  font-weight: 900;
+}
+
+/* =========================
+   QR / Barcode
+========================= */
 
 .item-details-qr-header span {
   display: block;
-  font-family: var(--qb-heading-font);
-  font-size: 1.45rem;
+  color: var(--item-text);
+  font-size: 1.2rem;
   font-weight: 900;
   letter-spacing: -0.03em;
 }
 
 .item-details-qr-header p {
   margin: 6px 0 0;
-  color: var(--qb-muted-foreground);
-  font-size: 0.86rem;
-  font-weight: 700;
-  line-height: 1.45;
+  color: var(--item-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 
 .item-details-qr-box {
-  min-width: 0;
-  max-height: 390px;
-  overflow: auto;
-  border: 2px dashed var(--qb-border);
-  border-radius: 18px;
-  background: var(--qb-bg);
-  padding: 12px;
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px solid #dbeafe;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(250, 204, 21, 0.14), transparent 28%),
+    #ffffff;
+  padding: 16px;
+  overflow: hidden;
 }
 
-.item-details-qr-box * {
-  max-width: 100% !important;
-  box-sizing: border-box;
-}
-
+.item-details-qr-box img,
 .item-details-qr-box canvas,
-.item-details-qr-box svg,
-.item-details-qr-box img {
+.item-details-qr-box svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.item-details-scan-values {
+  grid-template-columns: 1fr;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 1180px) {
+  .item-details-layout,
+  .item-details-main-card {
+    grid-template-columns: 1fr;
+  }
+
+  .item-details-side-card {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1fr);
+  }
+
+  .item-details-scan-values {
+    align-content: start;
+  }
+}
+
+@media (max-width: 820px) {
+  .item-details-page {
+    gap: 14px;
+  }
+
+  .item-details-header-content,
+  .item-details-main-card,
+  .item-details-side-card {
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .item-details-header-content,
+  .item-details-side-card {
+    grid-template-columns: 1fr;
+  }
+
+  .item-details-header-content {
+    min-height: auto;
+    gap: 14px;
+  }
+
+  .item-details-header-content::after {
+    right: 16px;
+    top: 16px;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+  }
+
+  .item-details-header-text h2 {
+    max-width: calc(100% - 42px);
+    font-size: clamp(1.35rem, 7vw, 1.9rem);
+  }
+
+  .item-details-header-text p {
+    font-size: 0.86rem;
+  }
+
+  .item-details-secondary-btn,
+  .item-details-primary-btn {
+    width: 100%;
+  }
+
+  .item-details-image-panel {
+    min-height: 240px;
+  }
+
+  .item-details-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .item-details-side-card {
+    display: flex;
+  }
+}
+
+@media (max-width: 520px) {
+  .item-details-page {
+    gap: 12px;
+  }
+
+  .item-details-header-content,
+  .item-details-main-card,
+  .item-details-side-card,
+  .item-details-loading-card,
+  .item-details-empty {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .item-details-header-text > span {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    font-size: 0.62rem;
+  }
+
+  .item-details-header-text h2 {
+    font-size: 1.3rem;
+  }
+
+  .item-details-header-text p,
+  .item-details-description,
+  .item-details-warning p,
+  .item-details-qr-header p {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .item-details-image-panel {
+    min-height: 210px;
+    border-radius: 18px;
+  }
+
+  .item-details-info-panel h2 {
+    font-size: 1.25rem;
+  }
+
+  .item-details-topline > span:first-child,
+  .item-details-pill,
+  .item-details-inline-pill {
+    font-size: 0.64rem;
+  }
+
+  .item-details-meta-grid > div,
+  .item-details-scan-values > div {
+    border-radius: 14px;
+    padding: 11px;
+  }
+
+  .item-details-meta-grid span,
+  .item-details-scan-values span {
+    font-size: 0.62rem;
+  }
+
+  .item-details-meta-grid strong,
+  .item-details-scan-values p {
+    font-size: 0.78rem;
+  }
+
+  .item-details-qr-box {
+    min-height: 190px;
+    border-radius: 18px;
+  }
+}
+
+/* =========================
+   Dark Mode Compatibility
+========================= */
+
+html[data-theme="dark"] .item-details-loading-card,
+html[data-theme="dark"] .item-details-empty,
+html[data-theme="dark"] .item-details-header-content,
+html[data-theme="dark"] .item-details-main-card,
+html[data-theme="dark"] .item-details-side-card {
+  background-color: var(--qb-surface, #111827);
+  color: var(--qb-foreground, #f8fafc);
+}
+
+html[data-theme="dark"] .item-details-meta-grid > div,
+html[data-theme="dark"] .item-details-scan-values > div,
+html[data-theme="dark"] .item-details-warning,
+html[data-theme="dark"] .item-details-qr-box,
+html[data-theme="dark"] .item-details-image-panel {
+  background-color: var(--qb-bg, #0f172a);
+}
+
+
+/* =========================================================
+   FINAL ITEM DETAILS CLEAN LAYOUT
+   Removes unnecessary inner outlines caused by global card strokes
+========================================================= */
+
+/* General page */
+.item-details-page {
+  gap: 16px !important;
+}
+
+/* Main outlined cards only */
+.app-page-content .item-details-header-content,
+.app-page-content .item-details-main-card,
+.app-page-content .item-details-side-card {
+  border: 2px solid #1e293b !important;
+  border-radius: 28px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 10px 0 rgba(30, 41, 59, 0.08) !important;
+  overflow: hidden !important;
+}
+
+/* Header */
+.app-page-content .item-details-header-content {
+  min-height: 110px !important;
+  padding: 20px 26px !important;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(250, 204, 21, 0.22), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.9)) !important;
+}
+
+.app-page-content .item-details-header-content::before,
+.app-page-content .item-details-header-content::after {
+  box-shadow: none !important;
+}
+
+.app-page-content .item-details-header-text,
+.app-page-content .item-details-header-actions {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-page-content .item-details-header-text h2 {
+  font-size: clamp(1.55rem, 2.7vw, 2.25rem) !important;
+  line-height: 1 !important;
+}
+
+.app-page-content .item-details-header-text p {
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+}
+
+/* Main content compact layout */
+.app-page-content .item-details-layout {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+
+.app-page-content .item-details-main-card {
+  display: grid !important;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 18px !important;
+  padding: 18px !important;
+}
+
+/* Image / QR preview panel */
+.app-page-content .item-details-image-panel {
+  min-height: 250px !important;
+  max-height: 310px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.36) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(250, 204, 21, 0.14), transparent 24%),
+    linear-gradient(135deg, #ffffff, #eff6ff) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.app-page-content .item-details-image-panel img {
+  width: 92% !important;
+  height: 92% !important;
+  object-fit: contain !important;
+}
+
+/* REMOVE the ugly rectangle around item info panel */
+.app-page-content .item-details-main-card > .item-details-info-panel,
+.app-page-content .item-details-info-panel,
+.app-page-content .item-details-info-panel *,
+.app-page-content .item-details-topline,
+.app-page-content .item-details-action-panel,
+.app-page-content .item-details-action-panel > div {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Text wrappers must never be card-outlined */
+.app-page-content .item-details-info-panel,
+.app-page-content .item-details-topline,
+.app-page-content .item-details-action-panel {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.app-page-content .item-details-info-panel {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.app-page-content .item-details-info-panel h2 {
+  margin-top: 8px !important;
+  font-size: clamp(1.45rem, 2.35vw, 2rem) !important;
+  line-height: 1.05 !important;
+}
+
+.app-page-content .item-details-description {
+  margin-top: 8px !important;
+  font-size: 0.86rem !important;
+  line-height: 1.45 !important;
+}
+
+/* Meta cards: light outline only */
+.app-page-content .item-details-meta-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+}
+
+.app-page-content .item-details-meta-grid > div {
+  min-height: 74px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.28) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+  padding: 10px 11px !important;
+}
+
+.app-page-content .item-details-meta-grid span {
+  font-size: 0.62rem !important;
+  line-height: 1.2 !important;
+}
+
+.app-page-content .item-details-meta-grid strong {
+  font-size: 0.82rem !important;
+  line-height: 1.3 !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Admin view note: only one soft card, no outer rectangle */
+.app-page-content .item-details-warning,
+.app-page-content .item-details-info-note {
+  border: 1.5px solid rgba(37, 99, 235, 0.22) !important;
+  border-radius: 18px !important;
+  background: #eff6ff !important;
+  box-shadow: none !important;
+  padding: 12px 14px !important;
+}
+
+/* QR / Barcode section */
+.app-page-content .item-details-side-card {
+  display: grid !important;
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 16px !important;
+  padding: 18px !important;
+}
+
+.app-page-content .item-details-qr-header,
+.app-page-content .item-details-scan-values {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-page-content .item-details-qr-header span {
+  font-size: 1.25rem !important;
+}
+
+.app-page-content .item-details-qr-header p {
+  font-size: 0.84rem !important;
+  line-height: 1.45 !important;
+}
+
+.app-page-content .item-details-scan-values {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.app-page-content .item-details-scan-values > div {
+  border: 1.5px solid rgba(30, 41, 59, 0.24) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+  padding: 11px 12px !important;
+}
+
+.app-page-content .item-details-scan-values p {
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* QR generator area: only one clean outer panel */
+.app-page-content .item-details-qr-box {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+  min-height: 230px !important;
+  border: 1.5px solid rgba(30, 41, 59, 0.28) !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  padding: 14px !important;
+  overflow: visible !important;
+}
+
+/* Remove accidental global outlines INSIDE QR generator */
+.app-page-content .item-details-qr-box :where(
+  [class*="-row"],
+  [class*="-panel"],
+  [class*="-box"],
+  [class*="-wrapper"],
+  [class*="-container"]
+) {
+  box-shadow: none !important;
+}
+
+/* Do not add borders to QR generator text wrappers */
+.app-page-content .item-details-qr-box :where(
+  [class*="-row"],
+  [class*="-wrapper"],
+  [class*="-container"]
+) {
+  outline: 0 !important;
+}
+
+/* Keep QR/barcode visual previews inside their space */
+.app-page-content .item-details-qr-box img,
+.app-page-content .item-details-qr-box canvas,
+.app-page-content .item-details-qr-box svg {
   max-width: 100% !important;
   height: auto !important;
 }
 
-.item-details-scan-values {
-  min-width: 0;
-  display: grid;
-  align-content: start;
-  gap: 10px;
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+html[data-theme="dark"] .app-page-content .item-details-header-content,
+html[data-theme="dark"] .app-page-content .item-details-main-card,
+html[data-theme="dark"] .app-page-content .item-details-side-card {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: rgba(15, 23, 42, 0.96) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28) !important;
 }
 
-.item-details-scan-values > div {
-  min-width: 0;
-  border: 2px solid var(--qb-border);
-  border-radius: 16px;
-  background: #ffffff;
-  padding: 12px;
+html[data-theme="dark"] .app-page-content .item-details-info-panel,
+html[data-theme="dark"] .app-page-content .item-details-topline,
+html[data-theme="dark"] .app-page-content .item-details-action-panel,
+html[data-theme="dark"] .app-page-content .item-details-qr-header,
+html[data-theme="dark"] .app-page-content .item-details-scan-values {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.item-details-scan-values span {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--qb-muted-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.64rem;
-  font-weight: 900;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+html[data-theme="dark"] .app-page-content .item-details-image-panel,
+html[data-theme="dark"] .app-page-content .item-details-meta-grid > div,
+html[data-theme="dark"] .app-page-content .item-details-scan-values > div,
+html[data-theme="dark"] .app-page-content .item-details-qr-box,
+html[data-theme="dark"] .app-page-content .item-details-warning,
+html[data-theme="dark"] .app-page-content .item-details-info-note {
+  border-color: rgba(203, 213, 225, 0.26) !important;
+  background: rgba(30, 41, 59, 0.9) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
 }
 
-.item-details-scan-values p {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: var(--qb-foreground);
-  font-size: 0.82rem;
-  font-weight: 900;
-  line-height: 1.45;
+html[data-theme="dark"] .app-page-content .item-details-header-text h2,
+html[data-theme="dark"] .app-page-content .item-details-info-panel h2,
+html[data-theme="dark"] .app-page-content .item-details-qr-header span,
+html[data-theme="dark"] .app-page-content .item-details-meta-grid strong,
+html[data-theme="dark"] .app-page-content .item-details-scan-values p {
+  color: #f8fafc !important;
 }
 
-.item-details-admin-shortcuts {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+html[data-theme="dark"] .app-page-content .item-details-header-text p,
+html[data-theme="dark"] .app-page-content .item-details-description,
+html[data-theme="dark"] .app-page-content .item-details-qr-header p,
+html[data-theme="dark"] .app-page-content .item-details-meta-grid span,
+html[data-theme="dark"] .app-page-content .item-details-scan-values span {
+  color: #cbd5e1 !important;
 }
 
-.item-details-admin-shortcuts button:nth-child(1) {
-  background: var(--qb-tertiary);
-}
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-.item-details-admin-shortcuts button:nth-child(2) {
-  background: var(--qb-quaternary);
-}
-
-/* Responsive */
-
-@media (max-width: 1100px) {
-  .item-details-header,
-  .item-details-main-card,
-  .item-details-side-card {
-    grid-template-columns: 1fr;
+@media (max-width: 1180px) {
+  .app-page-content .item-details-main-card,
+  .app-page-content .item-details-side-card {
+    grid-template-columns: 1fr !important;
   }
 
-  .item-details-header-actions {
-    justify-content: flex-start;
+  .app-page-content .item-details-qr-box {
+    grid-column: auto !important;
+    grid-row: auto !important;
   }
 
-  .item-details-image-panel {
-    height: 300px;
+  .app-page-content .item-details-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
 @media (max-width: 760px) {
-  .item-details-header,
-  .item-details-main-card,
+  .app-page-content .item-details-header-content,
+  .app-page-content .item-details-main-card,
+  .app-page-content .item-details-side-card {
+    border-radius: 20px !important;
+    padding: 14px !important;
+  }
+
+  .app-page-content .item-details-meta-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-page-content .item-details-image-panel,
+  .app-page-content .item-details-qr-box {
+    min-height: 210px !important;
+  }
+}
+
+/* =========================================================
+   ITEM DETAILS - FIX HIDDEN PRINT LABEL BUTTON
+========================================================= */
+
+/* Allow the Print Label button to show */
+.item-details-side-card {
+  overflow: visible !important;
+  padding-bottom: 28px !important;
+}
+
+/* Give the QR/Barcode area enough height for its buttons */
+.item-details-qr-box {
+  overflow: visible !important;
+  min-height: 360px !important;
+  padding-bottom: 24px !important;
+}
+
+/* Make QR generator content fit nicely */
+.item-details-qr-box > * {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Fix any button below the QR/barcode cards */
+.item-details-qr-box button,
+.item-details-qr-box .qr-print-btn,
+.item-details-qr-box .print-label-btn,
+.item-details-qr-box [class*="print"],
+.item-details-qr-box [class*="label"] {
+  position: relative !important;
+  z-index: 5 !important;
+  margin-top: 14px !important;
+}
+
+/* Mobile cleanup */
+@media (max-width: 760px) {
+  .item-details-qr-box {
+    min-height: auto !important;
+    padding-bottom: 18px !important;
+  }
+
   .item-details-side-card {
-    border-radius: 20px;
-    padding: 16px;
+    padding-bottom: 18px !important;
   }
+}/* =========================================================
+   ITEM DETAILS - RESTORE PRINT LABEL BUTTON SAFELY
+   Let QRCodeGenerator control its own internal layout
+========================================================= */
 
-  .item-details-header-actions {
-    flex-direction: column;
-  }
+/* Outer QR / Barcode section stays as a card */
+.item-details-side-card {
+  overflow: visible !important;
+  padding-bottom: 22px !important;
+}
 
-  .item-details-header-actions button,
-  .item-details-action-panel button {
-    width: 100%;
-  }
+/* Do NOT clip QRCodeGenerator content */
+.item-details-qr-box {
+  display: block !important;
+  place-items: unset !important;
+  overflow: visible !important;
+  min-height: auto !important;
+  max-height: none !important;
+  height: auto !important;
+  padding: 16px !important;
+}
 
-  .item-details-topline {
-    flex-direction: column;
-  }
+/* Let the QR generator stretch naturally */
+.item-details-qr-box > * {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+}
 
-  .item-details-meta-grid {
-    grid-template-columns: 1fr;
-  }
+/* Force any QR generator button back into view */
+.item-details-qr-box button,
+.item-details-qr-box a,
+.item-details-qr-box [class*="print"],
+.item-details-qr-box [class*="label"],
+.item-details-qr-box [class*="download"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline-flex !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
 
-  .item-details-image-panel {
-    height: 240px;
+/* If Print Label is a full-width bottom action */
+.item-details-qr-box [class*="print"],
+.item-details-qr-box [class*="label"] {
+  margin-top: 14px !important;
+}
+
+/* Prevent the button from being pushed under the card */
+.item-details-qr-box :where(
+  [class*="actions"],
+  [class*="footer"],
+  [class*="controls"]
+) {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  margin-top: 14px !important;
+  padding-bottom: 2px !important;
+}
+
+/* Keep QR and barcode images responsive */
+.item-details-qr-box img,
+.item-details-qr-box canvas,
+.item-details-qr-box svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+/* =========================================================
+   ITEM DETAILS - QR / BARCODE SECTION ONE COLUMN
+========================================================= */
+
+.item-details-side-card {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  padding: 18px !important;
+  overflow: visible !important;
+}
+
+.item-details-qr-header,
+.item-details-scan-values,
+.item-details-qr-box {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+.item-details-qr-header {
+  margin-bottom: 0 !important;
+}
+
+.item-details-scan-values {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.item-details-qr-box {
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 14px !important;
+}
+
+@media (max-width: 760px) {
+  .item-details-scan-values {
+    grid-template-columns: 1fr !important;
   }
 }
 /* =========================================================
-   FINAL ITEM DETAILS MOBILE RESPONSIVE FIX
-   Paste at the very bottom of ItemDetails.css
+   ITEM DETAILS - FIT INFO CARD + QR CARD IN ONE ROW
 ========================================================= */
 
-.item-details-page {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.item-details-page * {
-  box-sizing: border-box;
-}
-
-.item-details-header,
-.item-details-layout,
-.item-details-main-card,
-.item-details-side-card,
-.item-details-info-panel,
-.item-details-qr-box {
-  max-width: 100%;
-}
-
-/* Tablet cleanup */
-@media (max-width: 1100px) {
-  .item-details-header,
-  .item-details-main-card,
-  .item-details-side-card {
-    grid-template-columns: 1fr !important;
-  }
-
-  .item-details-header-actions {
-    justify-content: flex-start !important;
-  }
-
-  .item-details-image-panel {
-    height: 300px !important;
-  }
-}
-
-/* Phone layout */
-@media (max-width: 760px) {
-  .item-details-page {
-    gap: 12px !important;
-  }
-
-  .item-details-header,
-  .item-details-main-card,
-  .item-details-side-card {
-    border-radius: 18px !important;
-    padding: 14px !important;
-    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
-  }
-
-  .item-details-header::after {
-    width: 56px !important;
-    height: 56px !important;
-    right: 14px !important;
-    bottom: -22px !important;
-    opacity: 0.75 !important;
-  }
-
-  .item-details-header h1 {
-    max-width: calc(100% - 54px) !important;
-    font-size: clamp(1.35rem, 7.5vw, 2rem) !important;
-    line-height: 1 !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  .item-details-header p {
-    font-size: 0.78rem !important;
-    line-height: 1.45 !important;
-  }
-
-  .item-details-header-actions {
+@media (min-width: 1181px) {
+  .item-details-layout {
     display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
+    grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr) !important;
+    gap: 16px !important;
+    align-items: start !important;
   }
 
-  .item-details-primary-btn,
-  .item-details-secondary-btn,
-  .item-details-danger-btn,
-  .item-details-admin-shortcuts button {
-    width: 100% !important;
-    min-height: 40px !important;
-    font-size: 0.6rem !important;
-    padding: 0 12px !important;
-    box-shadow: 2px 2px 0 0 var(--qb-border) !important;
-    white-space: normal !important;
-    text-align: center !important;
-  }
-
-  /* Main item card */
+  /* Left item information card */
   .item-details-main-card {
-    gap: 12px !important;
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 16px !important;
+    min-height: 0 !important;
   }
 
   .item-details-image-panel {
-    height: 220px !important;
-    border-radius: 15px !important;
-  }
-
-  .item-details-image-panel img {
-    object-fit: contain !important;
-  }
-
-  .item-details-placeholder {
-    width: 78px !important;
-    height: 78px !important;
-    font-size: 2rem !important;
-    box-shadow: 3px 3px 0 0 var(--qb-border) !important;
-  }
-
-  .item-details-topline {
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    flex-wrap: wrap !important;
-    gap: 7px !important;
-  }
-
-  .item-details-topline > span:first-child {
-    max-width: 100% !important;
-    width: 100% !important;
-    font-size: 0.56rem !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  .item-details-pill,
-  .item-details-inline-pill {
-    min-height: 25px !important;
-    padding: 0 8px !important;
-    font-size: 0.52rem !important;
-    white-space: normal !important;
-  }
-
-  .item-details-pill::before,
-  .item-details-inline-pill::before {
-    width: 7px !important;
-    height: 7px !important;
-    margin-right: 6px !important;
+    min-height: 220px !important;
+    max-height: 250px !important;
   }
 
   .item-details-info-panel h2 {
-    margin-top: 8px !important;
-    font-size: 1.35rem !important;
-    line-height: 1.05 !important;
-    overflow-wrap: anywhere !important;
+    font-size: clamp(1.3rem, 2vw, 1.75rem) !important;
+    margin-top: 6px !important;
   }
 
   .item-details-description {
-    margin-top: 8px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.82rem !important;
     line-height: 1.4 !important;
   }
 
   .item-details-meta-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
     margin-top: 12px !important;
   }
 
   .item-details-meta-grid > div {
-    border-radius: 14px !important;
-    padding: 9px !important;
+    min-height: 66px !important;
+    padding: 9px 10px !important;
   }
 
-  .item-details-meta-grid span {
-    font-size: 0.52rem !important;
+  .item-details-warning,
+  .item-details-info-note {
+    margin-top: 10px !important;
+    padding: 10px 12px !important;
   }
 
-  .item-details-meta-grid strong {
-    font-size: 0.72rem !important;
-    line-height: 1.25 !important;
-  }
-
-  .item-details-action-panel {
-    margin-top: 12px !important;
-  }
-
-  .item-details-warning {
-    border-radius: 15px !important;
-    padding: 10px !important;
-  }
-
-  .item-details-warning strong {
-    font-size: 0.82rem !important;
-  }
-
-  .item-details-warning p {
-    font-size: 0.7rem !important;
+  .item-details-warning p,
+  .item-details-info-note p {
+    font-size: 0.78rem !important;
     line-height: 1.35 !important;
   }
 
-  /* QR / Barcode card */
+  /* Right QR / Barcode card */
   .item-details-side-card {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    padding: 16px !important;
+    min-height: 0 !important;
+  }
+
+  .item-details-qr-header {
+    margin: 0 !important;
   }
 
   .item-details-qr-header span {
     font-size: 1.15rem !important;
-    line-height: 1.05 !important;
   }
 
   .item-details-qr-header p {
-    font-size: 0.72rem !important;
-    line-height: 1.4 !important;
-  }
-
-  .item-details-qr-box {
-    max-height: none !important;
-    border-radius: 15px !important;
-    padding: 10px !important;
-    overflow-x: auto !important;
-  }
-
-  .item-details-qr-box canvas,
-  .item-details-qr-box svg,
-  .item-details-qr-box img {
-    max-width: 100% !important;
-    height: auto !important;
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
   }
 
   .item-details-scan-values {
+    grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
   }
 
   .item-details-scan-values > div {
-    border-radius: 14px !important;
-    padding: 9px !important;
-  }
-
-  .item-details-scan-values span {
-    font-size: 0.52rem !important;
+    padding: 9px 10px !important;
   }
 
   .item-details-scan-values p {
     font-size: 0.7rem !important;
-    line-height: 1.35 !important;
-    overflow-wrap: anywhere !important;
+    line-height: 1.3 !important;
   }
 
-  .item-details-admin-shortcuts {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-  }
-
-  /* Empty state */
-  .item-details-empty {
-    width: 100% !important;
-    border-radius: 18px !important;
-    padding: 20px !important;
-    box-shadow: 4px 4px 0 0 var(--qb-border) !important;
-  }
-
-  .item-details-empty img {
-    width: 58px !important;
-    height: 58px !important;
-  }
-
-  .item-details-empty h1 {
-    font-size: 1.2rem !important;
-  }
-
-  .item-details-empty p {
-    font-size: 0.76rem !important;
-    line-height: 1.35 !important;
+  .item-details-qr-box {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    padding: 12px !important;
   }
 }
 
-/* Small phones */
-@media (max-width: 440px) {
-  .item-details-header,
-  .item-details-main-card,
-  .item-details-side-card {
-    padding: 12px !important;
-  }
-
-  .item-details-image-panel {
-    height: 190px !important;
-  }
-
-  .item-details-info-panel h2 {
-    font-size: 1.2rem !important;
-  }
-
-  .item-details-header h1 {
-    font-size: clamp(1.25rem, 7.5vw, 1.7rem) !important;
+/* Medium screens: stack normally so it does not squeeze */
+@media (max-width: 1180px) {
+  .item-details-layout {
+    grid-template-columns: 1fr !important;
   }
 }
 /* =========================================================
-   CLEAN QR / BARCODE SECTION - NO OUTER DOTTED BOX
+   FINAL ITEM DETAILS LAYOUT
+   Desktop: Item info + QR/Barcode fit in one row
 ========================================================= */
 
-.item-details-qr-box {
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  max-height: none !important;
+@media (min-width: 1100px) {
+  .app-page-content .item-details-page {
+    max-width: 1500px !important;
+    margin: 0 auto !important;
+    gap: 12px !important;
+  }
+
+  .app-page-content .item-details-header-content {
+    min-height: 86px !important;
+    padding: 16px 22px !important;
+    border-radius: 24px !important;
+  }
+
+  .app-page-content .item-details-header-text h2 {
+    font-size: clamp(1.35rem, 2vw, 1.9rem) !important;
+  }
+
+  .app-page-content .item-details-header-text p {
+    font-size: 0.78rem !important;
+  }
+
+  /* THIS is the important fix */
+  .app-page-content .item-details-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.95fr) minmax(390px, 0.75fr) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+  }
+
+  /* Left card */
+  .app-page-content .item-details-main-card {
+    grid-template-columns: 210px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 14px !important;
+    min-height: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .app-page-content .item-details-image-panel {
+    min-height: 210px !important;
+    max-height: 240px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-page-content .item-details-info-panel h2 {
+    font-size: clamp(1.25rem, 1.7vw, 1.7rem) !important;
+    margin-top: 6px !important;
+  }
+
+  .app-page-content .item-details-description {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+    margin-top: 6px !important;
+  }
+
+  .app-page-content .item-details-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    margin-top: 10px !important;
+  }
+
+  .app-page-content .item-details-meta-grid > div {
+    min-height: 58px !important;
+    padding: 8px 9px !important;
+    border-radius: 14px !important;
+  }
+
+  .app-page-content .item-details-meta-grid span {
+    font-size: 0.56rem !important;
+  }
+
+  .app-page-content .item-details-meta-grid strong {
+    font-size: 0.74rem !important;
+  }
+
+  .app-page-content .item-details-warning,
+  .app-page-content .item-details-info-note {
+    margin-top: 8px !important;
+    padding: 9px 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .app-page-content .item-details-warning h3,
+  .app-page-content .item-details-info-note h3 {
+    font-size: 0.86rem !important;
+  }
+
+  .app-page-content .item-details-warning p,
+  .app-page-content .item-details-info-note p {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Right QR / Barcode card */
+  .app-page-content .item-details-side-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+    padding: 14px !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+  }
+
+  .app-page-content .item-details-qr-header span {
+    font-size: 1rem !important;
+  }
+
+  .app-page-content .item-details-qr-header p {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .app-page-content .item-details-scan-values {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .app-page-content .item-details-scan-values > div {
+    padding: 8px 9px !important;
+    border-radius: 13px !important;
+  }
+
+  .app-page-content .item-details-scan-values span {
+    font-size: 0.56rem !important;
+  }
+
+  .app-page-content .item-details-scan-values p {
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .app-page-content .item-details-qr-box {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    padding: 10px !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+}
+/* =========================================================
+   ITEM DETAILS - ADMIN VIEW POSITION FIX
+========================================================= */
+
+/* Keep item info content near the top instead of awkwardly pushed down */
+.app-page-content .item-details-info-panel {
+  justify-content: flex-start !important;
 }
 
-.item-details-side-card {
-  align-self: start !important;
+/* Admin View note should sit right under the item details */
+.app-page-content .item-details-action-panel {
+  margin-top: 12px !important;
+  align-self: stretch !important;
 }
 
-.item-details-scan-values {
-  margin-top: 18px !important;
+.app-page-content .item-details-warning,
+.app-page-content .item-details-info-note,
+.app-page-content .item-details-action-panel > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-top: 0 !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
 }
 
-.item-details-admin-shortcuts {
-  display: none !important;
+.app-page-content .item-details-warning h3,
+.app-page-content .item-details-info-note h3 {
+  margin: 0 0 6px !important;
+  font-size: 0.9rem !important;
+}
+
+.app-page-content .item-details-warning p,
+.app-page-content .item-details-info-note p {
+  margin: 0 !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
 }

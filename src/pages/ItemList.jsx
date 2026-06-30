@@ -15,7 +15,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { db, auth } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ItemList.css";
 
@@ -671,73 +671,119 @@ return (
             <p>Try changing your search or filter.</p>
           </div>
         ) : isAdmin ? (
-          <div className="inventory-admin-list">
-            {filteredItems.map((item) => (
-              <article className="inventory-admin-row" key={item.id}>
-                <div className="inventory-admin-image">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.itemName || "Item"} />
-                  ) : (
-                    <span>{(item.itemName || "I").charAt(0)}</span>
-                  )}
-                </div>
+          <div className="inventory-admin-table-wrap">
+            <table className="inventory-admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">Item</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Condition</th>
+                  <th scope="col">Availability</th>
+                  <th scope="col">Max Days</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
 
-                <div className="inventory-admin-info">
-                  <span>{getItemCode(item)}</span>
-                  <h3>{item.itemName || "Untitled Item"}</h3>
-                  <p>{item.description || "No description yet."}</p>
+              <tbody>
+                {filteredItems.map((item) => (
+                  <tr key={item.id}>
+                    <td data-label="Item">
+                      <div className="inventory-table-item">
+                        <div className="inventory-table-image">
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.itemName || "Item"} />
+                          ) : (
+                            <span>{(item.itemName || "I").charAt(0)}</span>
+                          )}
+                        </div>
 
-                  <div className="inventory-meta-row">
-                    <span>{getItemCategoryName(item)}</span>
+                        <div className="inventory-table-item-info">
+                          <span>{getItemCode(item)}</span>
+                          <strong>{item.itemName || "Untitled Item"}</strong>
+                          <p>{item.description || "No description yet."}</p>
+                        </div>
+                      </div>
+                    </td>
 
-                    <span
-                      className={`condition-pill ${getConditionClass(
-                        item.condition
-                      )}`}
-                    >
-                      {item.condition || "Unknown"}
-                    </span>
+                    <td data-label="Category">
+                      <span className="inventory-table-category">
+                        {getItemCategoryName(item)}
+                      </span>
+                    </td>
 
-                    <span
-                      className={`availability-pill ${getAvailabilityClass(
-                        item.availability
-                      )}`}
-                    >
-                      {item.availability || "Unavailable"}
-                    </span>
-                  </div>
-                </div>
+                    <td data-label="Condition">
+                      <span
+                        className={`condition-pill ${getConditionClass(
+                          item.condition
+                        )}`}
+                      >
+                        {item.condition || "Unknown"}
+                      </span>
+                    </td>
 
-                <div className="inventory-admin-actions">
-<button
-  type="button"
-  className="view-btn"
-  onClick={() => navigate(`/item/${item.id}`)}
-  disabled={isDeleteBusy()}
->
-  View
-</button>
+                    <td data-label="Availability">
+                      <span
+                        className={`availability-pill ${getAvailabilityClass(
+                          item.availability
+                        )}`}
+                      >
+                        {item.availability || "Unavailable"}
+                      </span>
+                    </td>
 
-<button
-  type="button"
-  className="edit-btn"
-  onClick={() => navigate(`/edit-item?id=${item.id}`)}
-  disabled={isDeleteBusy()}
->
-  Edit
-</button>
+                    <td data-label="Max Days">
+                      <span className="inventory-table-days">
+                        {item.maxBorrowDays ? `${item.maxBorrowDays}d` : "—"}
+                      </span>
+                    </td>
 
-<button
-  type="button"
-  className="delete-btn"
-  onClick={() => handleDeleteItem(item)}
-  disabled={isDeleteBusy()}
->
-  {deletingId === item.id ? "Deleting..." : "Delete"}
-</button>
-                </div>
-              </article>
-            ))}
+                    <td data-label="Actions">
+                      <div className="inventory-table-actions">
+                        <button
+                          type="button"
+                          className="inventory-icon-action view-btn"
+                          onClick={() => navigate(`/item/${item.id}`)}
+                          disabled={isDeleteBusy()}
+                          aria-label={`View ${item.itemName || "item"}`}
+                          data-tooltip="View"
+                        >
+                          <span aria-hidden="true">👁</span>
+                          <span className="inventory-action-text">View</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="inventory-icon-action edit-btn"
+                          onClick={() => navigate(`/edit-item?id=${item.id}`)}
+                          disabled={isDeleteBusy()}
+                          aria-label={`Edit ${item.itemName || "item"}`}
+                          data-tooltip="Edit"
+                        >
+                          <span aria-hidden="true">✎</span>
+                          <span className="inventory-action-text">Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="inventory-icon-action delete-btn"
+                          onClick={() => handleDeleteItem(item)}
+                          disabled={isDeleteBusy()}
+                          aria-label={`Delete ${item.itemName || "item"}`}
+                          data-tooltip={deletingId === item.id ? "Deleting" : "Delete"}
+                        >
+                          <span aria-hidden="true">
+                            {deletingId === item.id ? "…" : "🗑"}
+                          </span>
+                          <span className="inventory-action-text">
+                            {deletingId === item.id ? "Deleting..." : "Delete"}
+                          </span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="inventory-grid">

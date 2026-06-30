@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, secondaryAuth, functions } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/UserManagement.css";
 
@@ -2336,14 +2336,6 @@ onChange={(e) => {
     activeUserTool === "categories" ? "user-tool-active" : ""
   }`}
 >
-  <button
-    type="button"
-    className="user-modal-close-btn"
-    onClick={closeUserToolModal}
-    aria-label="Close Categories modal"
-  >
-    Close
-  </button>
 
 <div className="user-modal-hero">
   <div className="user-modal-hero-text">
@@ -2886,72 +2878,98 @@ Showing {filteredUsers.length} of {users.length} loaded account
                           <p>{user.suspensionReason}</p>
                         </div>
                       )}
-<div className="user-actions">
-  <>
-    <button
-      type="button"
-      className="user-view-btn"
-      onClick={() => setViewingUser(user)}
-    >
-      View
-    </button>
+<div className="user-actions" aria-label={`Actions for ${user.fullName || user.email || "user"}`}>
+  <button
+    type="button"
+    className="user-view-btn user-icon-action user-action-view"
+    onClick={() => setViewingUser(user)}
+    aria-label={`View ${user.fullName || user.email || "user"}`}
+    title="View"
+    data-tooltip="View"
+  >
+    <span className="user-action-symbol" aria-hidden="true">i</span>
+    <span className="user-action-label">View</span>
+  </button>
 
-    <button
-      type="button"
-      className="user-secondary-btn"
-      onClick={() => startEditingUser(user)}
-    >
-      Edit
-    </button>
+  <button
+    type="button"
+    className="user-secondary-btn user-icon-action user-action-edit"
+    onClick={() => startEditingUser(user)}
+    aria-label={`Edit ${user.fullName || user.email || "user"}`}
+    title="Edit"
+    data-tooltip="Edit"
+  >
+    <span className="user-action-symbol" aria-hidden="true">✎</span>
+    <span className="user-action-label">Edit</span>
+  </button>
 
-    <button
-      type="button"
-      className={
-        user.canBorrow === false ? "user-primary-btn" : "user-warning-btn"
-      }
-      onClick={() => handleToggleBorrowing(user)}
-      disabled={updatingId === user.id || user.isActive === false}
-    >
+  <button
+    type="button"
+    className={`${
+      user.canBorrow === false ? "user-primary-btn" : "user-warning-btn"
+    } user-icon-action user-action-borrow`}
+    onClick={() => handleToggleBorrowing(user)}
+    disabled={updatingId === user.id || user.isActive === false}
+    aria-label={user.canBorrow === false ? "Enable borrowing" : "Disable borrowing"}
+    title={user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
+    data-tooltip={user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
+  >
+    <span className="user-action-symbol" aria-hidden="true">{user.canBorrow === false ? "✓" : "⊘"}</span>
+    <span className="user-action-label">
       {user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
-    </button>
+    </span>
+  </button>
 
-    <button
-      type="button"
-      className={
-        user.isActive === false ? "user-secondary-btn" : "user-danger-btn"
-      }
-      onClick={() => handleToggleAccountStatus(user)}
-      disabled={
-        updatingId === user.id ||
-        user.role === "superAdmin" ||
-        currentAdmin?.uid === user.id
-      }
-    >
+  <button
+    type="button"
+    className={`${
+      user.isActive === false ? "user-secondary-btn" : "user-danger-btn"
+    } user-icon-action user-action-account`}
+    onClick={() => handleToggleAccountStatus(user)}
+    disabled={
+      updatingId === user.id ||
+      user.role === "superAdmin" ||
+      currentAdmin?.uid === user.id
+    }
+    aria-label={user.isActive === false ? "Enable account" : "Disable account"}
+    title={user.isActive === false ? "Enable Account" : "Disable Account"}
+    data-tooltip={user.isActive === false ? "Enable Account" : "Disable Account"}
+  >
+    <span className="user-action-symbol" aria-hidden="true">⏻</span>
+    <span className="user-action-label">
       {user.isActive === false ? "Enable Account" : "Disable Account"}
-    </button>
+    </span>
+  </button>
 
-    <button
-      type="button"
-      className="user-danger-btn"
-      onClick={() => handleResetSuspension(user)}
-      disabled={updatingId === user.id || user.isActive === false}
-    >
-      Reset
-    </button>
+  <button
+    type="button"
+    className="user-danger-btn user-icon-action user-action-reset"
+    onClick={() => handleResetSuspension(user)}
+    disabled={updatingId === user.id || user.isActive === false}
+    aria-label="Reset suspension"
+    title="Reset"
+    data-tooltip="Reset"
+  >
+    <span className="user-action-symbol" aria-hidden="true">↺</span>
+    <span className="user-action-label">Reset</span>
+  </button>
 
-    <button
-      type="button"
-      className="user-delete-btn"
-      onClick={() => handleDeleteUser(user)}
-      disabled={
-        updatingId === user.id ||
-        user.role === "superAdmin" ||
-        currentAdmin?.uid === user.id
-      }
-    >
-      {updatingId === user.id ? "Deleting..." : "Delete"}
-    </button>
-  </>
+  <button
+    type="button"
+    className="user-delete-btn user-icon-action user-action-delete"
+    onClick={() => handleDeleteUser(user)}
+    disabled={
+      updatingId === user.id ||
+      user.role === "superAdmin" ||
+      currentAdmin?.uid === user.id
+    }
+    aria-label="Delete user"
+    title="Delete"
+    data-tooltip={updatingId === user.id ? "Deleting" : "Delete"}
+  >
+    <span className="user-action-symbol" aria-hidden="true">{updatingId === user.id ? "…" : "×"}</span>
+    <span className="user-action-label">{updatingId === user.id ? "Deleting" : "Delete"}</span>
+  </button>
 </div>
                     </article>
                   );

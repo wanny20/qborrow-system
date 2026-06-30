@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "../styles/ImageCropModal.css";
-import { useToast } from "./ToastProvider.jsx";
+import { useToast } from "./ToastContext.jsx";
 
 function ImageCropModal({
   file,
@@ -20,25 +21,24 @@ function ImageCropModal({
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
   const [processing, setProcessing] = useState(false);
+  const [cropBoxSize, setCropBoxSize] = useState(300);
 
-  const [cropBoxSize, setCropBoxSize] = useState(320);
+  useEffect(() => {
+    function updateCropBoxSize() {
+      const availableWidth = window.innerWidth - 64;
+      const availableHeight = window.innerHeight - 330;
+      const nextSize = Math.min(300, Math.max(220, availableWidth, Math.min(availableHeight, availableWidth)));
 
-useEffect(() => {
-  function updateCropBoxSize() {
-    const availableWidth = window.innerWidth - 72;
-    const nextSize = Math.min(320, Math.max(240, availableWidth));
+      setCropBoxSize(nextSize);
+    }
 
-    setCropBoxSize(nextSize);
-  }
+    updateCropBoxSize();
+    window.addEventListener("resize", updateCropBoxSize);
 
-  updateCropBoxSize();
-
-  window.addEventListener("resize", updateCropBoxSize);
-
-  return () => {
-    window.removeEventListener("resize", updateCropBoxSize);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("resize", updateCropBoxSize);
+    };
+  }, []);
 
   useEffect(() => {
     if (!file) return;
@@ -51,6 +51,17 @@ useEffect(() => {
 
     return () => {
       URL.revokeObjectURL(objectUrl);
+    };
+  }, [file]);
+
+  useEffect(() => {
+    if (!file) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, [file]);
 
@@ -96,9 +107,9 @@ useEffect(() => {
   }, [cropData.maxOffsetX, cropData.maxOffsetY]);
 
   function showActionError(shortMessage, error) {
-  console.error(shortMessage, error);
-  showToast(shortMessage, "error");
-}
+    console.error(shortMessage, error);
+    showToast(shortMessage, "error");
+  }
 
   function canvasToBlob(canvas, quality) {
     return new Promise((resolve) => {
@@ -138,15 +149,8 @@ useEffect(() => {
       ((cropData.displayHeight - cropBoxSize) / 2 - offsetY) /
       cropData.displayScale;
 
-    sourceX = Math.max(
-      0,
-      Math.min(sourceX, image.naturalWidth - sourceSize)
-    );
-
-    sourceY = Math.max(
-      0,
-      Math.min(sourceY, image.naturalHeight - sourceSize)
-    );
+    sourceX = Math.max(0, Math.min(sourceX, image.naturalWidth - sourceSize));
+    sourceY = Math.max(0, Math.min(sourceY, image.naturalHeight - sourceSize));
 
     context.drawImage(
       image,
@@ -209,16 +213,14 @@ useEffect(() => {
 
   if (!file) return null;
 
-  return (
+  const modalMarkup = (
     <div className="image-crop-backdrop" role="dialog" aria-modal="true">
       <div className="image-crop-modal">
         <div className="image-crop-header">
           <div>
-            <p className="qb-kicker">Manual Crop</p>
+            <p className="qb-kicker image-crop-kicker">Manual Crop</p>
             <h2>{title}</h2>
-            <span>
-              Move and zoom the image until the important part is centered.
-            </span>
+            <span>Move and zoom the image until the important part is centered.</span>
           </div>
 
           <button
@@ -226,6 +228,7 @@ useEffect(() => {
             className="image-crop-close-btn"
             onClick={onCancel}
             disabled={processing}
+            aria-label="Close crop modal"
           >
             ×
           </button>
@@ -301,8 +304,7 @@ useEffect(() => {
             </label>
 
             <div className="image-crop-tip">
-              Output: {outputSize}×{outputSize} JPEG, compressed for Firebase
-              Storage.
+              Output: {outputSize}×{outputSize} JPEG, compressed for Firebase Storage.
             </div>
           </div>
         </div>
@@ -329,6 +331,8 @@ useEffect(() => {
       </div>
     </div>
   );
+
+  return createPortal(modalMarkup, document.body);
 }
 
 export default ImageCropModal;

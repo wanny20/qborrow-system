@@ -17,7 +17,7 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ManageRequests.css";
 
@@ -202,7 +202,9 @@ function isRequestActionLoading(requestId, actionType) {
   }
 
   function isRequestOverdue(request) {
-    if (!["Approved", "Borrowed"].includes(request.approvalStatus)) {
+    // Important system rule:
+    // Approved means reserved only. Due date / overdue logic starts only after release.
+    if (request.approvalStatus !== "Borrowed") {
       return false;
     }
 
@@ -362,7 +364,8 @@ function getRequestQueryConstraints(
   }
 
   if (selectedStatus === "Overdue") {
-    constraints.push(where("approvalStatus", "in", ["Approved", "Borrowed"]));
+    // Approved requests are reserved but not released yet, so they are not overdue.
+    constraints.push(where("approvalStatus", "==", "Borrowed"));
     constraints.push(where("expectedReturnDate", "<", getTodayDateKey()));
 
     if (includeSort) {
@@ -910,7 +913,7 @@ return (
   <h1>Manage Requests</h1>
 
   <p>
-    Review borrower requests, approve available items, release approved
+    Review borrower requests, approve available items, release reserved
     items to borrowers, or reject requests that cannot proceed.
   </p>
 
@@ -1114,42 +1117,70 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
           <div className="manage-request-row-actions">
             <button
               type="button"
-              className="manage-view-btn"
+              className="manage-view-btn manage-action-icon-btn manage-action-details"
+              data-tooltip="Details"
+              title="Details"
+              aria-label="View request details"
               onClick={() => setViewingRequest(request)}
             >
-              Details
+              <span aria-hidden="true">i</span>
             </button>
 
             <button
               type="button"
-              className="manage-view-btn"
+              className="manage-view-btn manage-action-icon-btn manage-action-item"
+              data-tooltip="View Item"
+              title="View Item"
+              aria-label="View item"
               onClick={() => navigate(`/item/${request.itemId}`)}
             >
-              Item
+              <span aria-hidden="true">▣</span>
             </button>
 
             {request.approvalStatus === "Pending" && (
               <>
                 <button
                   type="button"
-                  className="manage-approve-btn"
+                  className="manage-approve-btn manage-action-icon-btn manage-action-approve"
+                  data-tooltip={
+                    isRequestActionLoading(request.id, "approve")
+                      ? "Approving..."
+                      : "Approve"
+                  }
+                  title={
+                    isRequestActionLoading(request.id, "approve")
+                      ? "Approving..."
+                      : "Approve"
+                  }
+                  aria-label="Approve request"
                   onClick={() => handleApproveRequest(request)}
                   disabled={hasActiveRequestAction()}
                 >
-                  {isRequestActionLoading(request.id, "approve")
-                    ? "Approving..."
-                    : "Approve"}
+                  <span aria-hidden="true">
+                    {isRequestActionLoading(request.id, "approve") ? "…" : "✓"}
+                  </span>
                 </button>
 
                 <button
                   type="button"
-                  className="manage-reject-btn"
+                  className="manage-reject-btn manage-action-icon-btn manage-action-reject"
+                  data-tooltip={
+                    isRequestActionLoading(request.id, "reject")
+                      ? "Rejecting..."
+                      : "Reject"
+                  }
+                  title={
+                    isRequestActionLoading(request.id, "reject")
+                      ? "Rejecting..."
+                      : "Reject"
+                  }
+                  aria-label="Reject request"
                   onClick={() => handleRejectRequest(request)}
                   disabled={hasActiveRequestAction()}
                 >
-                  {isRequestActionLoading(request.id, "reject")
-                    ? "Rejecting..."
-                    : "Reject"}
+                  <span aria-hidden="true">
+                    {isRequestActionLoading(request.id, "reject") ? "…" : "×"}
+                  </span>
                 </button>
               </>
             )}
@@ -1157,18 +1188,36 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
             {request.approvalStatus === "Approved" && (
               <button
                 type="button"
-                className="manage-release-btn"
+                className="manage-release-btn manage-action-icon-btn manage-action-release"
+                data-tooltip={
+                  isRequestActionLoading(request.id, "release")
+                    ? "Releasing..."
+                    : "Release"
+                }
+                title={
+                  isRequestActionLoading(request.id, "release")
+                    ? "Releasing..."
+                    : "Release"
+                }
+                aria-label="Release item"
                 onClick={() => handleReleaseRequest(request)}
                 disabled={hasActiveRequestAction()}
               >
-                {isRequestActionLoading(request.id, "release")
-                  ? "Releasing..."
-                  : "Release"}
+                <span aria-hidden="true">
+                  {isRequestActionLoading(request.id, "release") ? "…" : "↗"}
+                </span>
               </button>
             )}
 
             {!["Pending", "Approved"].includes(request.approvalStatus) && (
-              <span className="manage-no-action">Done</span>
+              <span
+                className="manage-no-action manage-action-icon-btn manage-action-done"
+                data-tooltip="No action needed"
+                title="No action needed"
+                aria-label="No action needed"
+              >
+                <span aria-hidden="true">✓</span>
+              </span>
             )}
           </div>
         </article>

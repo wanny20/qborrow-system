@@ -12,7 +12,7 @@ import {
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { db } from "../firebase/firebaseConfig";
 import "../styles/ScanQR.css";
-import { useToast } from "../components/ToastProvider.jsx";
+import { useToast } from "../components/ToastContext.jsx";
 
 function ScanQR() {
   const navigate = useNavigate();
@@ -494,6 +494,8 @@ async function restartScanner() {
 <section className="scan-header scan-header-compact">
   <div className="scan-header-content">
     <div className="scan-header-text">
+      <h1>Scan QR</h1>
+
       <p>
         Scan an item QR code or barcode to open its item details. Admins can
         continue to release and return workflows from this page.
