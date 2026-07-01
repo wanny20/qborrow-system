@@ -1825,3 +1825,648 @@ html[data-theme="dark"] .dashboard-page .dashboard-assigned-note {
     font-size: 0.58rem !important;
   }
 }
+
+
+
+/* =========================================================
+   DASHBOARD - MOBILE RESPONSIVE COMPACT FIX
+   Paste at the VERY BOTTOM of Dashboard.css
+   Goal:
+   - Remove Borrower Dashboard / role pill.
+   - Make title card smaller on small screens.
+   - Make stat cards stay in one horizontal row on mobile.
+   - Make Quick Actions and Available Items more compact.
+========================================================= */
+
+/* Remove role pill on all dashboard layouts */
+.dashboard-page .dashboard-eyebrow,
+.dashboard-page .qb-kicker,
+.dashboard-page .dashboard-hero-summary {
+  display: none !important;
+}
+
+/* Compact title card globally */
+.dashboard-page .dashboard-hero {
+  margin: 0 0 8px !important;
+}
+
+.dashboard-page .dashboard-hero-content,
+.dashboard-page .dashboard-hero > div {
+  min-height: 82px !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 6px !important;
+  border-radius: 22px !important;
+  padding: 14px 20px !important;
+}
+
+.dashboard-page .dashboard-hero h1 {
+  margin: 0 0 4px !important;
+  font-size: clamp(1.35rem, 2.2vw, 1.95rem) !important;
+  line-height: 1 !important;
+}
+
+.dashboard-page .dashboard-hero p {
+  margin: 0 !important;
+  max-width: 900px !important;
+  font-size: 0.78rem !important;
+  line-height: 1.25 !important;
+}
+
+.dashboard-page .dashboard-assigned-note {
+  margin-top: 6px !important;
+  padding: 4px 9px !important;
+  font-size: 0.6rem !important;
+}
+
+/* Mobile dashboard layout */
+@media (max-width: 760px) {
+  .dashboard-page {
+    gap: 9px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Smaller title card */
+  .dashboard-page .dashboard-hero {
+    margin-bottom: 6px !important;
+  }
+
+  .dashboard-page .dashboard-hero-content,
+  .dashboard-page .dashboard-hero > div {
+    min-height: 72px !important;
+    border-radius: 18px !important;
+    padding: 11px 13px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .dashboard-page .dashboard-hero h1 {
+    margin-bottom: 3px !important;
+    font-size: clamp(1.04rem, 5.6vw, 1.28rem) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  .dashboard-page .dashboard-hero p {
+    display: -webkit-box !important;
+    font-size: 0.62rem !important;
+    line-height: 1.18 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-page .dashboard-assigned-note {
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin-top: 5px !important;
+    padding: 3px 7px !important;
+    font-size: 0.52rem !important;
+    line-height: 1 !important;
+  }
+
+  .dashboard-page .dashboard-hero-content::before,
+  .dashboard-page .dashboard-hero > div::before {
+    right: -50px !important;
+    bottom: -70px !important;
+    width: 135px !important;
+    height: 135px !important;
+    opacity: 0.75 !important;
+  }
+
+  .dashboard-page .dashboard-hero-content::after,
+  .dashboard-page .dashboard-hero > div::after {
+    top: 12px !important;
+    right: 70px !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* Stat cards: one compact horizontal row instead of 3 rows */
+  .dashboard-page .dashboard-stats-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(120px, 128px) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 6px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-page .dashboard-stats-grid::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  .dashboard-page .dashboard-stats-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.28) !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    scroll-snap-align: start !important;
+    min-height: 82px !important;
+    border-radius: 15px !important;
+    padding: 9px 10px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .dashboard-page .dashboard-stat-label {
+    max-width: calc(100% - 34px) !important;
+    margin: 0 0 9px !important;
+    font-size: 0.52rem !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0.06em !important;
+  }
+
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: 1.38rem !important;
+    line-height: 0.92 !important;
+  }
+
+  .dashboard-page .dashboard-stat-hint {
+    left: 10px !important;
+    bottom: 8px !important;
+    font-size: 0.58rem !important;
+  }
+
+  .dashboard-page .dashboard-stat-card::before {
+    top: 9px !important;
+    right: 9px !important;
+    width: 31px !important;
+    height: 31px !important;
+    border-radius: 11px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card::after {
+    top: 17px !important;
+    right: 19px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Main dashboard panels stay stacked on phones, but become much more compact */
+  .dashboard-page .dashboard-main-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+  }
+
+  .dashboard-page .dashboard-panel,
+  .dashboard-page .dashboard-urgent-alerts {
+    border-radius: 18px !important;
+    padding: 11px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading h2,
+  .dashboard-page .dashboard-urgent-heading h2 {
+    font-size: 1rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading p,
+  .dashboard-page .dashboard-urgent-heading span {
+    margin-top: 3px !important;
+    font-size: 0.66rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Quick actions: one horizontal compact row */
+  .dashboard-page .dashboard-action-list {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(150px, 1fr) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 5px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-page .dashboard-action-list button {
+    min-height: 58px !important;
+    grid-template-columns: minmax(0, 1fr) 28px !important;
+    border-radius: 14px !important;
+    padding: 9px 10px !important;
+  }
+
+  .dashboard-page .dashboard-action-list strong {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .dashboard-page .dashboard-action-list span {
+    font-size: 0.6rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .dashboard-page .dashboard-action-list button > span:last-child {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Borrower available items: compact two-card horizontal row */
+  .dashboard-page .dashboard-search-input {
+    min-height: 36px !important;
+    margin-bottom: 8px !important;
+    border-radius: 12px !important;
+    padding: 0 11px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(160px, 1fr) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 5px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list article {
+    min-height: 82px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-radius: 14px !important;
+    padding: 9px !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list strong {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list span {
+    margin-top: 2px !important;
+    font-size: 0.6rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list article button {
+    min-height: 30px !important;
+    width: auto !important;
+    padding: 0 10px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .dashboard-page .dashboard-empty-state {
+    min-height: 90px !important;
+    border-radius: 14px !important;
+    padding: 16px 12px !important;
+  }
+
+  .dashboard-page .dashboard-empty-state p {
+    font-size: 0.68rem !important;
+  }
+}
+
+/* Very small phones like iPhone SE */
+@media (max-width: 390px) {
+  .dashboard-page .dashboard-stats-grid {
+    grid-auto-columns: minmax(112px, 118px) !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 78px !important;
+    padding: 8px 9px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: 1.25rem !important;
+  }
+
+  .dashboard-page .dashboard-action-list {
+    grid-auto-columns: minmax(142px, 1fr) !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list {
+    grid-auto-columns: minmax(148px, 1fr) !important;
+  }
+}
+
+/* Dark mode compatibility for mobile scrollbars/shadows */
+html[data-theme="dark"] .dashboard-page .dashboard-stats-grid::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .dashboard-page .dashboard-action-list::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .dashboard-page .dashboard-item-preview-list::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.32) !important;
+}
+
+@media (max-width: 760px) {
+  html[data-theme="dark"] .dashboard-page .dashboard-hero-content,
+  html[data-theme="dark"] .dashboard-page .dashboard-hero > div,
+  html[data-theme="dark"] .dashboard-page .dashboard-stat-card,
+  html[data-theme="dark"] .dashboard-page .dashboard-panel,
+  html[data-theme="dark"] .dashboard-page .dashboard-urgent-alerts {
+    box-shadow: none !important;
+  }
+}
+
+
+
+/* =========================================================
+   DASHBOARD - BORROWER MOBILE LIST LAYOUT FIX
+   Paste at the VERY BOTTOM of Dashboard.css
+   Goal:
+   - Force remove Borrower Dashboard / role pill.
+   - Make Quick Actions a compact vertical list on mobile.
+   - Make Available Items a compact vertical list on mobile.
+========================================================= */
+
+/* Force remove dashboard role pill everywhere */
+.dashboard-page .dashboard-hero .dashboard-eyebrow,
+.dashboard-page .dashboard-hero-content .dashboard-eyebrow,
+.dashboard-page .dashboard-hero-copy .dashboard-eyebrow,
+.dashboard-page .dashboard-eyebrow,
+.dashboard-page .qb-kicker {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  opacity: 0 !important;
+}
+
+/* Pull title up after removing the pill */
+.dashboard-page .dashboard-hero h1 {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 760px) {
+  /* Make title card even tighter after pill removal */
+  .dashboard-page .dashboard-hero-content,
+  .dashboard-page .dashboard-hero > div {
+    min-height: 64px !important;
+    padding: 10px 13px !important;
+  }
+
+  .dashboard-page .dashboard-hero h1 {
+    margin: 0 0 3px !important;
+    font-size: clamp(1rem, 5vw, 1.2rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .dashboard-page .dashboard-hero p {
+    font-size: 0.6rem !important;
+    line-height: 1.16 !important;
+  }
+
+  /* Quick Actions: compact list, not horizontal carousel */
+  .dashboard-page .dashboard-action-list {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: unset !important;
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-page .dashboard-action-list button {
+    min-height: 46px !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 26px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    border-radius: 14px !important;
+    padding: 8px 10px !important;
+  }
+
+  .dashboard-page .dashboard-action-list strong {
+    font-size: 0.72rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .dashboard-page .dashboard-action-list span {
+    margin-top: 2px !important;
+    font-size: 0.58rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .dashboard-page .dashboard-action-list button > span:last-child {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Available Items panel: compact header/button/search */
+  .dashboard-page .dashboard-search-heading,
+  .dashboard-page .dashboard-panel-heading.dashboard-search-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  .dashboard-page .dashboard-search-heading h2,
+  .dashboard-page .dashboard-panel-heading h2 {
+    font-size: 1rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .dashboard-page .dashboard-search-heading p,
+  .dashboard-page .dashboard-panel-heading p {
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .dashboard-page .dashboard-search-heading button {
+    width: auto !important;
+    min-width: 74px !important;
+    min-height: 30px !important;
+    border-radius: 999px !important;
+    padding: 0 11px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .dashboard-page .dashboard-search-input {
+    min-height: 34px !important;
+    margin: 0 0 8px !important;
+    border-radius: 12px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* Available Items: compact list, not horizontal carousel */
+  .dashboard-page .dashboard-item-preview-list {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: unset !important;
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list article {
+    min-height: 52px !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    border-radius: 14px !important;
+    padding: 8px 9px !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list strong {
+    font-size: 0.72rem !important;
+    line-height: 1.12 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list span {
+    margin-top: 2px !important;
+    font-size: 0.56rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list article button {
+    width: auto !important;
+    min-width: 50px !important;
+    min-height: 28px !important;
+    border-radius: 999px !important;
+    padding: 0 10px !important;
+    font-size: 0.58rem !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-page .dashboard-action-list button {
+    min-height: 44px !important;
+  }
+
+  .dashboard-page .dashboard-item-preview-list article {
+    min-height: 50px !important;
+  }
+}
+
+
+
+/* =========================================================
+   DASHBOARD - BORROWER CARD FIT / NO EMPTY SPACE FIX
+   Paste at the VERY BOTTOM of Dashboard.css
+   Goal:
+   - Borrower dashboard has 5 stat cards, so use 5 equal columns.
+   - Admin dashboard still keeps 6 equal columns.
+   - Quick Actions + Available Items panels fill the row cleanly.
+========================================================= */
+
+/* Desktop/tablet: when there are exactly 5 dashboard cards, make them fill the row */
+@media (min-width: 761px) {
+  .dashboard-page .dashboard-stats-grid:has(.dashboard-stat-card:nth-child(5):last-child) {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-page .dashboard-stats-grid:has(.dashboard-stat-card:nth-child(6):last-child) {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-page .dashboard-stats-grid {
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    width: 100% !important;
+  }
+
+  /* Make the two bottom panels split the space evenly */
+  .dashboard-page .dashboard-main-grid {
+    width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+  }
+
+  .dashboard-page .dashboard-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Mid-size screens: keep borrower cards clean before mobile mode */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .dashboard-page .dashboard-stats-grid:has(.dashboard-stat-card:nth-child(5):last-child) {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 104px !important;
+    padding: 13px 14px !important;
+  }
+
+  .dashboard-page .dashboard-stat-label {
+    font-size: 0.62rem !important;
+  }
+
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: 1.8rem !important;
+  }
+}
+
+/* Mobile: keep one horizontal stat row and make cards tighter */
+@media (max-width: 760px) {
+  .dashboard-page .dashboard-stats-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(116px, calc((100vw - 42px) / 3)) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 6px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    width: 100% !important;
+    min-height: 78px !important;
+    border-radius: 15px !important;
+    padding: 8px 9px !important;
+  }
+
+  .dashboard-page .dashboard-stat-label {
+    max-width: calc(100% - 32px) !important;
+    margin-bottom: 8px !important;
+    font-size: 0.5rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: 1.25rem !important;
+  }
+
+  .dashboard-page .dashboard-stat-hint {
+    left: 9px !important;
+    bottom: 7px !important;
+    font-size: 0.56rem !important;
+  }
+}
+
+/* Very wide screens: prevent huge blank-looking gaps by using full available width */
+@media (min-width: 1320px) {
+  .dashboard-page .dashboard-stats-grid:has(.dashboard-stat-card:nth-child(5):last-child) {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
