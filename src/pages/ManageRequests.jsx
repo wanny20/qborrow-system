@@ -84,6 +84,8 @@ function ManageRequests() {
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
+  const isAdmin =
+    userData?.role === "superAdmin" || userData?.role === "categoryAdmin";
   const actionLockRef = useRef("");
 
   function showStatus(message, type) {
@@ -262,6 +264,13 @@ async function autoRejectExpiredPendingRequests() {
     }))
     .filter((request) => {
       if (request.approvalStatus !== "Pending") return false;
+
+      /*
+        Category admins can only update requests inside their assigned
+        categories. Without this check, Firestore blocks the whole auto-reject
+        batch when one expired request belongs to another category.
+      */
+      if (!canCategoryAdminSeeRequest(request)) return false;
 
       const createdTime =
         request.createdAt?.toMillis?.() ||
@@ -808,6 +817,17 @@ async function handleRejectRequest(request) {
 }
 
 useEffect(() => {
+  if (!userData?.role) {
+    return;
+  }
+
+  if (!isAdmin) {
+    showBlockedAction("Only admins can access Manage Requests.");
+    setLoading(false);
+    navigate("/dashboard", { replace: true });
+    return;
+  }
+
   async function loadRequests() {
     try {
       await autoRejectExpiredPendingRequests();
