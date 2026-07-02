@@ -556,32 +556,97 @@ function validateCsvImportForm() {
 }
 
   function formatSuspendedUntil(value) {
-    if (!value) return "Not suspended";
+    const suspendedDate = getDateFromValue(value);
 
-    if (typeof value?.toDate === "function") {
-      return value.toDate().toLocaleDateString();
-    }
+    if (!suspendedDate) return "Not suspended";
 
-    if (typeof value === "string") {
-      return value || "Not suspended";
-    }
-
-    return "Not suspended";
+    return suspendedDate.toLocaleDateString();
   }
 
+ function getDateFromValue(value) {
+  if (!value) return null;
+
+  if (typeof value?.toDate === "function") {
+    return value.toDate();
+  }
+
+  if (value?.seconds) {
+    return new Date(value.seconds * 1000);
+  }
+
+  const parsedDate = new Date(value);
+
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
  function isUserSuspended(user) {
-  if (!user?.suspendedUntil) return false;
+  const suspendedDate = getDateFromValue(user?.suspendedUntil);
 
-  const suspendedDate =
-    typeof user.suspendedUntil?.toDate === "function"
-      ? user.suspendedUntil.toDate()
-      : new Date(user.suspendedUntil);
-
-  if (!suspendedDate || Number.isNaN(suspendedDate.getTime())) {
+  if (!suspendedDate) {
     return false;
   }
 
   return suspendedDate > new Date();
+}
+
+function formatSuspendedUntilDateTime(value) {
+  const suspendedDate = getDateFromValue(value);
+
+  if (!suspendedDate) return "Not suspended";
+
+  return suspendedDate.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function isTemporaryBorrowingRestriction(user) {
+  if (user?.role !== "borrower") return false;
+  if (user?.canBorrow !== false) return false;
+
+  const reason = String(user?.suspensionReason || "").toLowerCase();
+
+  return (
+    reason.includes("temporary borrowing restriction") ||
+    reason.includes("approved item") ||
+    reason.includes("claimed/released")
+  );
+}
+
+function shouldShowRestoreBorrowingAccess(user) {
+  return user?.role === "borrower" && user?.canBorrow === false;
+}
+
+function getBorrowingStatusLabel(user) {
+  if (user?.role !== "borrower") {
+    return user?.isActive === false ? "Account Disabled" : "Active";
+  }
+
+  if (isTemporaryBorrowingRestriction(user)) {
+    return "Temporarily Restricted";
+  }
+
+  if (user?.canBorrow === false) {
+    return "Borrowing Disabled";
+  }
+
+  if (isUserSuspended(user)) {
+    return "Suspended";
+  }
+
+  return "Active";
+}
+
+function getBorrowingStatusClass(user) {
+  const status = getBorrowingStatusLabel(user);
+
+  return String(status || "active")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
   function getRoleLabel(userRole) {
@@ -1308,6 +1373,49 @@ async function handleToggleBorrowing(user) {
         fetchData();
       } catch (error) {
         showActionError("Failed to update borrowing status", error);
+      } finally {
+        setUpdatingId("");
+      }
+    },
+  });
+}
+
+async function handleRestoreBorrowingAccess(user) {
+  openConfirmAction({
+    title: "Restore Borrowing Access?",
+    message: `Restore borrowing access for ${user.fullName || user.email}? This removes the temporary restriction without changing overdue count records.`,
+    confirmText: "Restore Access",
+    danger: false,
+    onConfirm: async () => {
+      setUpdatingId(user.id);
+      showStatus("", "");
+
+      try {
+        const userRef = doc(db, "users", user.id);
+
+        await updateDoc(userRef, {
+          canBorrow: true,
+          suspendedUntil: "",
+          suspensionReason: "",
+          updatedAt: serverTimestamp(),
+        });
+
+        showToast("Borrowing Access Restored", "success");
+
+        setViewingUser((previousUser) =>
+          previousUser?.id === user.id
+            ? {
+                ...previousUser,
+                canBorrow: true,
+                suspendedUntil: "",
+                suspensionReason: "",
+              }
+            : previousUser
+        );
+
+        fetchData();
+      } catch (error) {
+        showActionError("Failed to restore borrowing access", error);
       } finally {
         setUpdatingId("");
       }
@@ -2752,6 +2860,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
             </div>
           ) : (
             <>
+              <div className="user-table-scroll-area">
              <div className="user-table-header">
   <span>Name</span>
   <span>Email / Role</span>
@@ -2801,12 +2910,8 @@ Showing {filteredUsers.length} of {users.length} loaded account
 
   <div className="user-table-cell user-table-status">
     <span>Status</span>
-    <strong>
-      {user.canBorrow === false
-        ? "Disabled"
-        : isUserSuspended(user)
-        ? "Suspended"
-        : "Active"}
+    <strong className={`user-borrowing-status-text status-${getBorrowingStatusClass(user)}`}>
+      {getBorrowingStatusLabel(user)}
     </strong>
   </div>
 </div>
@@ -2943,15 +3048,29 @@ Showing {filteredUsers.length} of {users.length} loaded account
 
   <button
     type="button"
-    className="user-danger-btn user-icon-action user-action-reset"
-    onClick={() => handleResetSuspension(user)}
+    className={`${
+      shouldShowRestoreBorrowingAccess(user) ? "user-primary-btn" : "user-danger-btn"
+    } user-icon-action user-action-reset`}
+    onClick={() =>
+      shouldShowRestoreBorrowingAccess(user)
+        ? handleRestoreBorrowingAccess(user)
+        : handleResetSuspension(user)
+    }
     disabled={updatingId === user.id || user.isActive === false}
-    aria-label="Reset suspension"
-    title="Reset"
-    data-tooltip="Reset"
+    aria-label={
+      shouldShowRestoreBorrowingAccess(user)
+        ? "Restore borrowing access"
+        : "Reset suspension"
+    }
+    title={shouldShowRestoreBorrowingAccess(user) ? "Restore Access" : "Reset"}
+    data-tooltip={shouldShowRestoreBorrowingAccess(user) ? "Restore Access" : "Reset"}
   >
-    <span className="user-action-symbol" aria-hidden="true">↺</span>
-    <span className="user-action-label">Reset</span>
+    <span className="user-action-symbol" aria-hidden="true">
+      {shouldShowRestoreBorrowingAccess(user) ? "✓" : "↺"}
+    </span>
+    <span className="user-action-label">
+      {shouldShowRestoreBorrowingAccess(user) ? "Restore" : "Reset"}
+    </span>
   </button>
 
   <button
@@ -2974,6 +3093,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
                     </article>
                   );
                 })}
+              </div>
               </div>
 
               {hasMoreUsers && (
@@ -3276,12 +3396,8 @@ onClick={confirmDiscardEditChanges}
                   {getRoleLabel(viewingUser.role)}
                 </strong>
 
-                <span>
-                  {viewingUser.canBorrow === false
-                    ? "Borrowing Disabled"
-                    : isUserSuspended(viewingUser)
-                    ? "Suspended"
-                    : "Active"}
+                <span className={`user-borrowing-status-text status-${getBorrowingStatusClass(viewingUser)}`}>
+                  {getBorrowingStatusLabel(viewingUser)}
                 </span>
               </div>
 
@@ -3337,8 +3453,8 @@ onClick={confirmDiscardEditChanges}
                 </div>
 
                 <div>
-                  <span>Suspended Until</span>
-                  <strong>{formatSuspendedUntil(viewingUser.suspendedUntil)}</strong>
+                  <span>Restriction Ends</span>
+                  <strong>{formatSuspendedUntilDateTime(viewingUser.suspendedUntil)}</strong>
                 </div>
 
                 <div>
@@ -3349,12 +3465,35 @@ onClick={confirmDiscardEditChanges}
 
               {viewingUser.suspensionReason && (
                 <div className="user-view-note">
-                  <span>Suspension Reason</span>
+                  <span>Borrowing Restriction Reason</span>
                   <p>{viewingUser.suspensionReason}</p>
                 </div>
               )}
 
+              {shouldShowRestoreBorrowingAccess(viewingUser) && (
+                <div className="user-view-borrowing-banner">
+                  <strong>Manual restore available</strong>
+                  <p>
+                    Admins can restore borrowing access if the restriction was
+                    caused by a release or encoding mistake.
+                  </p>
+                </div>
+              )}
+
               <div className="user-view-actions">
+                {shouldShowRestoreBorrowingAccess(viewingUser) && (
+                  <button
+                    type="button"
+                    className="user-primary-btn"
+                    onClick={() => handleRestoreBorrowingAccess(viewingUser)}
+                    disabled={updatingId === viewingUser.id}
+                  >
+                    {updatingId === viewingUser.id
+                      ? "Restoring..."
+                      : "Restore Borrowing Access"}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="user-secondary-btn"

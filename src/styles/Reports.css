@@ -5548,3 +5548,1405 @@ html[data-theme="dark"] body .app-page-content .reports-page .reports-empty {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+
+/* =========================================================
+   REPORTS - MOBILE COMPACT LAYOUT + SIDEWAYS TABLE FINAL
+   Paste at the VERY BOTTOM of Reports.css
+
+   Fixes:
+   - Moves Back to Dashboard to the right side of the Reports title card.
+   - Makes report summary cards one horizontal scroll row on mobile.
+   - Makes request summary cards one horizontal scroll row on mobile.
+   - Keeps Borrowing History as a compact sideways-scroll table on mobile.
+========================================================= */
+
+/* ---------- Title card: back button on right ---------- */
+.reports-page .reports-header-content {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.reports-page .reports-header-actions {
+  width: auto !important;
+  min-width: 0 !important;
+  justify-self: end !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.reports-page .reports-header-back-btn {
+  width: auto !important;
+  min-width: 150px !important;
+  max-width: 190px !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  white-space: nowrap !important;
+}
+
+/* Stop tablet/mobile rule from stacking the header button */
+@media (max-width: 1040px) {
+  .reports-page .reports-header-content {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .reports-page .reports-header-actions,
+  .reports-page .reports-header-back-btn {
+    width: auto !important;
+  }
+}
+
+/* ---------- Compact summary cards as horizontal rows ---------- */
+@media (max-width: 760px) {
+  .reports-page {
+    gap: 9px !important;
+  }
+
+  .reports-page .reports-header-content {
+    min-height: 74px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    padding: 10px 11px !important;
+  }
+
+  .reports-page .reports-header-content::after {
+    right: -18px !important;
+    bottom: -34px !important;
+    width: 78px !important;
+    height: 78px !important;
+    opacity: 0.62 !important;
+  }
+
+  .reports-page .reports-header h1,
+  .reports-page .reports-header-text h1 {
+    max-width: none !important;
+    margin: 0 0 3px !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+  }
+
+  .reports-page .reports-header p,
+  .reports-page .reports-header-text p {
+    display: -webkit-box !important;
+    font-size: 0.52rem !important;
+    line-height: 1.14 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .reports-page .reports-assigned-note,
+  .reports-page .reports-date-range-note {
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin-top: 5px !important;
+    padding: 4px 7px !important;
+    border-radius: 999px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-header-actions {
+    justify-self: end !important;
+  }
+
+  .reports-page .reports-header-back-btn {
+    width: auto !important;
+    min-width: 88px !important;
+    max-width: 106px !important;
+    min-height: 31px !important;
+    padding: 0 7px !important;
+    border-radius: 999px !important;
+    font-size: 0.46rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  /* Export controls stay compact */
+  .reports-page .reports-control-export-panel {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .reports-page .reports-section-heading {
+    margin-bottom: 7px !important;
+  }
+
+  .reports-page .reports-section-heading h2 {
+    font-size: 0.98rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .reports-page .reports-section-heading p {
+    display: -webkit-box !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .reports-page .reports-export-control-grid {
+    gap: 6px !important;
+  }
+
+  .reports-page .reports-export-control-grid input,
+  .reports-page .reports-history-controls input,
+  .reports-page .reports-history-controls select {
+    min-height: 31px !important;
+    height: 31px !important;
+    border-radius: 999px !important;
+    font-size: 0.52rem !important;
+    padding: 0 9px !important;
+  }
+
+  .reports-page .reports-refresh-btn,
+  .reports-page .reports-print-btn,
+  .reports-page .reports-reset-date-btn,
+  .reports-page .reports-secondary-btn,
+  .reports-page .reports-clear-history-filter-btn {
+    min-height: 31px !important;
+    font-size: 0.46rem !important;
+    border-radius: 999px !important;
+    padding: 0 8px !important;
+  }
+
+  .reports-page .reports-export-grid {
+    gap: 6px !important;
+  }
+
+  /* Summary cards: one horizontal scroll row */
+  .reports-page .reports-summary-grid,
+  .reports-page .reports-request-summary {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: none !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 118px !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 0 6px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+  }
+
+  .reports-page .reports-summary-grid::-webkit-scrollbar,
+  .reports-page .reports-request-summary::-webkit-scrollbar {
+    height: 5px !important;
+  }
+
+  .reports-page .reports-summary-grid::-webkit-scrollbar-track,
+  .reports-page .reports-request-summary::-webkit-scrollbar-track {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.12) !important;
+  }
+
+  .reports-page .reports-summary-grid::-webkit-scrollbar-thumb,
+  .reports-page .reports-request-summary::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.42) !important;
+  }
+
+  .reports-page .reports-summary-grid > div,
+  .reports-page .reports-request-summary > div {
+    width: 118px !important;
+    min-width: 118px !important;
+    min-height: 84px !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+
+  .reports-page .reports-summary-grid span,
+  .reports-page .reports-request-summary span {
+    width: 27px !important;
+    height: 27px !important;
+    border-radius: 10px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .reports-page .reports-summary-grid h3,
+  .reports-page .reports-request-summary h3 {
+    margin-top: 7px !important;
+    font-size: 1.24rem !important;
+    line-height: 1 !important;
+  }
+
+  .reports-page .reports-summary-grid p,
+  .reports-page .reports-request-summary p {
+    margin-top: 3px !important;
+    font-size: 0.46rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-header-back-btn {
+    min-width: 80px !important;
+    max-width: 96px !important;
+    font-size: 0.42rem !important;
+  }
+
+  .reports-page .reports-summary-grid,
+  .reports-page .reports-request-summary {
+    grid-template-columns: none !important;
+    grid-auto-columns: 110px !important;
+  }
+
+  .reports-page .reports-summary-grid > div,
+  .reports-page .reports-request-summary > div {
+    width: 110px !important;
+    min-width: 110px !important;
+  }
+}
+
+/* ---------- Borrowing History: real sideways-scroll table on mobile ---------- */
+@media (max-width: 1040px) {
+  /* The panel should not clip the wider table */
+  .reports-page .reports-panel:has(.reports-history-table-grid) {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar {
+    height: 6px !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar-track {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.12) !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.45) !important;
+  }
+
+  .reports-page .reports-history-table-grid {
+    width: 980px !important;
+    min-width: 980px !important;
+    max-width: none !important;
+    display: grid !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+
+  .reports-page .reports-history-table-header {
+    display: grid !important;
+  }
+
+  .reports-page .reports-history-table-header,
+  .reports-page .reports-history-table-row {
+    width: 980px !important;
+    min-width: 980px !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns:
+      150px
+      158px
+      110px
+      92px
+      104px
+      150px
+      86px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .reports-page .reports-history-table-header {
+    border: 2px solid #1e293b !important;
+    border-radius: 13px !important;
+    background: #eff6ff !important;
+    padding: 7px 9px !important;
+    margin-bottom: 7px !important;
+  }
+
+  .reports-page .reports-history-table-header span {
+    display: block !important;
+    color: #64748b !important;
+    font-size: 0.48rem !important;
+    font-weight: 950 !important;
+    letter-spacing: 0.07em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-header span:last-child {
+    text-align: center !important;
+  }
+
+  .reports-page .reports-history-table-row {
+    min-height: 52px !important;
+    border: 2px solid #1e293b !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.06) !important;
+    padding: 7px 9px !important;
+    overflow: hidden !important;
+  }
+
+  /* Undo previous stacked mobile card layout */
+  .reports-page .reports-history-table-cell,
+  .reports-page .reports-history-table-status,
+  .reports-page .reports-history-table-actions {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: block !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    align-items: center !important;
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .reports-page .reports-history-table-status,
+  .reports-page .reports-history-table-actions {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .reports-page .reports-history-table-actions {
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  .reports-page .reports-history-table-cell::before,
+  .reports-page .reports-history-table-cell::after,
+  .reports-page .reports-history-table-actions::before,
+  .reports-page .reports-history-table-actions::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .reports-page .reports-history-table-cell span:not(.reports-status-pill),
+  .reports-page .reports-history-item-cell span,
+  .reports-page .reports-history-borrower-cell span {
+    display: block !important;
+    margin: 0 0 3px !important;
+    color: #64748b !important;
+    font-size: 0.48rem !important;
+    font-weight: 950 !important;
+    letter-spacing: 0.035em !important;
+    line-height: 1.05 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-cell strong {
+    display: block !important;
+    margin: 0 !important;
+    color: #0f172a !important;
+    font-size: 0.62rem !important;
+    font-weight: 950 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    overflow-wrap: normal !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-status .reports-status-pill {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 25px !important;
+    padding: 0 8px !important;
+    font-size: 0.46rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  .reports-page .reports-history-table-actions .reports-secondary-btn {
+    width: 78px !important;
+    min-width: 78px !important;
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-panel:has(.reports-history-table-grid) {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .reports-page .reports-history-table-grid,
+  .reports-page .reports-history-table-header,
+  .reports-page .reports-history-table-row {
+    width: 960px !important;
+    min-width: 960px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-history-table-grid,
+  .reports-page .reports-history-table-header,
+  .reports-page .reports-history-table-row {
+    width: 940px !important;
+    min-width: 940px !important;
+  }
+}
+
+/* Dark mode for mobile scroll tables/cards */
+html[data-theme="dark"] .reports-page .reports-summary-grid::-webkit-scrollbar-track,
+html[data-theme="dark"] .reports-page .reports-request-summary::-webkit-scrollbar-track,
+html[data-theme="dark"] .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10) !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-summary-grid::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .reports-page .reports-request-summary::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38) !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-header {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-header span,
+html[data-theme="dark"] .reports-page .reports-history-table-cell span:not(.reports-status-pill),
+html[data-theme="dark"] .reports-page .reports-history-item-cell span,
+html[data-theme="dark"] .reports-page .reports-history-borrower-cell span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-row {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+/* =========================================================
+   REPORTS TITLE CARD - MATCH RELEASE ITEM MOBILE HEADER
+   Fix: keep Back to Dashboard on the RIGHT side of title card
+========================================================= */
+
+.reports-page .reports-header-content {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 6px !important;
+}
+
+.reports-page .reports-header-text {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.reports-page .reports-header-actions {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+  align-self: center !important;
+  justify-self: end !important;
+  width: auto !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.reports-page .reports-header-back-btn {
+  width: auto !important;
+  min-width: 112px !important;
+  max-width: 132px !important;
+  min-height: 34px !important;
+  padding: 0 10px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-header {
+    margin-bottom: 10px !important;
+  }
+
+  .reports-page .reports-header-content {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    column-gap: 8px !important;
+    row-gap: 4px !important;
+    padding: 12px 12px !important;
+    min-height: 92px !important;
+  }
+
+  .reports-page .reports-header-text h1 {
+    margin: 0 0 4px !important;
+    font-size: 1.02rem !important;
+    line-height: 1.02 !important;
+  }
+
+  .reports-page .reports-header-text p {
+    margin: 0 !important;
+    font-size: 0.58rem !important;
+    line-height: 1.2 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .reports-page .reports-assigned-note,
+  .reports-page .reports-date-range-note {
+    margin-top: 5px !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    padding: 5px 10px !important;
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-header-actions {
+    grid-column: 2 !important;
+    grid-row: 1 / span 2 !important;
+    align-self: center !important;
+    justify-self: end !important;
+  }
+
+  .reports-page .reports-header-back-btn {
+    min-width: 102px !important;
+    max-width: 118px !important;
+    min-height: 31px !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+    border-radius: 999px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-header-content {
+    column-gap: 7px !important;
+    padding: 11px !important;
+  }
+
+  .reports-page .reports-header-text h1 {
+    font-size: 0.98rem !important;
+  }
+
+  .reports-page .reports-header-text p {
+    font-size: 0.54rem !important;
+  }
+
+  .reports-page .reports-header-back-btn {
+    min-width: 94px !important;
+    max-width: 108px !important;
+    min-height: 30px !important;
+    font-size: 0.44rem !important;
+  }
+}
+/* =========================================================
+   REPORTS MOBILE SUMMARY + STATISTICS OPTIMIZATION
+   - Top summary cards become 1-row horizontal scroll
+   - Request summary cards become 1-row horizontal scroll
+   - Statistics overview becomes cleaner compact horizontal cards
+========================================================= */
+
+@media (max-width: 760px) {
+  /* make summary card groups single-row and horizontally scrollable */
+  body .app-page-content .reports-page .reports-summary-grid,
+  body .app-page-content .reports-page .reports-request-summary {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 8px !important;
+    padding: 2px 2px 10px !important;
+    margin-bottom: 8px !important;
+    scrollbar-width: thin !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  body .app-page-content .reports-page .reports-summary-grid > div,
+  body .app-page-content .reports-page .reports-request-summary > div {
+    flex: 0 0 104px !important;
+    min-width: 104px !important;
+    max-width: 104px !important;
+    min-height: 82px !important;
+    scroll-snap-align: start !important;
+    margin: 0 !important;
+  }
+
+  body .app-page-content .reports-page .reports-summary-grid > div h3,
+  body .app-page-content .reports-page .reports-request-summary > div h3 {
+    font-size: 1.18rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .reports-page .reports-summary-grid > div p,
+  body .app-page-content .reports-page .reports-request-summary > div p {
+    font-size: 0.49rem !important;
+    line-height: 1.08 !important;
+  }
+
+  /* statistics overview: cleaner horizontally scrollable cards */
+  body .app-page-content .reports-page .reports-statistics-panel {
+    padding: 12px !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 10px !important;
+    padding: 2px 2px 6px !important;
+    margin-top: 8px !important;
+    scrollbar-width: thin !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    min-height: 118px !important;
+    border-radius: 16px !important;
+    padding: 11px !important;
+    scroll-snap-align: start !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.10) !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card-top {
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card h3 {
+    font-size: 0.80rem !important;
+    line-height: 1.08 !important;
+    margin: 0 !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card-top strong {
+    flex: 0 0 auto !important;
+    padding: 4px 8px !important;
+    border-radius: 999px !important;
+    font-size: 0.60rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-bar {
+    height: 6px !important;
+    margin-top: 8px !important;
+    border-radius: 999px !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card p {
+    margin-top: 8px !important;
+    font-size: 0.64rem !important;
+    line-height: 1.28 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  body .app-page-content .reports-page .reports-summary-grid > div,
+  body .app-page-content .reports-page .reports-request-summary > div {
+    flex-basis: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+  }
+
+  body .app-page-content .reports-page .reports-statistics-card {
+    flex-basis: 144px !important;
+    min-width: 144px !important;
+    max-width: 144px !important;
+  }
+}
+
+
+
+/* =========================================================
+   REPORTS - BORROWING HISTORY TABLE-ONLY SCROLL FINAL FIX
+   Requires Reports.jsx wrapper:
+   <div className="reports-history-table-scroll"> around only
+   .reports-history-table-header + .reports-history-table-grid.
+
+   Fix:
+   - Borrowing History title stays fixed.
+   - Showing text stays fixed.
+   - Search input, All Statuses dropdown, and Clear Filter stay fixed.
+   - Load More button stays fixed.
+   - Only the actual table header + rows scroll sideways.
+========================================================= */
+
+/* The Borrowing History panel/card itself must NOT be the horizontal scroller. */
+.reports-page .reports-panel:has(.reports-history-table-scroll),
+.reports-page .reports-panel:has(.reports-history-table-grid) {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* Keep title + showing text fixed. */
+.reports-page .reports-panel:has(.reports-history-table-scroll) > .reports-section-heading {
+  position: relative !important;
+  left: auto !important;
+  z-index: 5 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  display: block !important;
+  overflow: visible !important;
+  margin-bottom: 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.reports-page .reports-panel:has(.reports-history-table-scroll) > .reports-section-heading h2,
+.reports-page .reports-panel:has(.reports-history-table-scroll) > .reports-section-heading p {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: clip !important;
+}
+
+/* Keep search/dropdown/clear filter fixed and outside horizontal scrolling. */
+.reports-page .reports-panel:has(.reports-history-table-scroll) .reports-history-controls {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+}
+
+/* Keep Load More fixed and outside horizontal scrolling. */
+.reports-page .reports-panel:has(.reports-history-table-scroll) .reports-load-more-row {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* This is the ONLY horizontal scroll container for Borrowing History. */
+.reports-page .reports-history-table-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 0 0 8px !important;
+  margin-top: 4px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  position: relative !important;
+}
+
+/* Base table widths inside the scroll wrapper. */
+.reports-page .reports-history-table-scroll .reports-history-table-header,
+.reports-page .reports-history-table-scroll .reports-history-table-grid,
+.reports-page .reports-history-table-scroll .reports-history-table-row {
+  max-width: none !important;
+}
+
+/* Override old mobile rules that turned the whole panel into the scroller. */
+@media (max-width: 1040px) {
+  .reports-page .reports-panel:has(.reports-history-table-scroll),
+  .reports-page .reports-panel:has(.reports-history-table-grid) {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    scrollbar-width: auto !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-history-table-scroll)::-webkit-scrollbar,
+  .reports-page .reports-panel:has(.reports-history-table-grid)::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-header,
+  .reports-page .reports-history-table-scroll .reports-history-table-grid,
+  .reports-page .reports-history-table-scroll .reports-history-table-row {
+    width: 930px !important;
+    min-width: 930px !important;
+    max-width: none !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-header,
+  .reports-page .reports-history-table-scroll .reports-history-table-row {
+    display: grid !important;
+    grid-template-columns:
+      145px
+      165px
+      110px
+      92px
+      108px
+      150px
+      86px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-header {
+    border: 2px solid #1e293b !important;
+    border-radius: 13px !important;
+    background: #eff6ff !important;
+    padding: 7px 9px !important;
+    margin-bottom: 7px !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-header span {
+    display: block !important;
+    color: #64748b !important;
+    font-size: 0.48rem !important;
+    font-weight: 950 !important;
+    letter-spacing: 0.07em !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-grid {
+    display: grid !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-row {
+    min-height: 48px !important;
+    border: 2px solid #1e293b !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.09) !important;
+    padding: 7px 9px !important;
+    overflow: hidden !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-cell,
+  .reports-page .reports-history-table-scroll .reports-history-table-status,
+  .reports-page .reports-history-table-scroll .reports-history-table-actions {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-cell span,
+  .reports-page .reports-history-table-scroll .reports-history-item-cell span,
+  .reports-page .reports-history-table-scroll .reports-history-borrower-cell span {
+    display: block !important;
+    margin: 0 0 3px !important;
+    color: #64748b !important;
+    font-size: 0.42rem !important;
+    font-weight: 950 !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-cell strong {
+    display: block !important;
+    color: #0f172a !important;
+    font-size: 0.55rem !important;
+    font-weight: 950 !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    overflow-wrap: normal !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-status {
+    display: grid !important;
+    align-items: center !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-status .reports-status-pill {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 25px !important;
+    padding: 0 8px !important;
+    font-size: 0.45rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-actions {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-actions .reports-secondary-btn {
+    width: 78px !important;
+    min-width: 78px !important;
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-panel:has(.reports-history-table-scroll),
+  .reports-page .reports-panel:has(.reports-history-table-grid) {
+    padding: 10px !important;
+    border-radius: 18px !important;
+    overflow-x: hidden !important;
+  }
+
+  .reports-page .reports-history-table-scroll .reports-history-table-header,
+  .reports-page .reports-history-table-scroll .reports-history-table-grid,
+  .reports-page .reports-history-table-scroll .reports-history-table-row {
+    width: 900px !important;
+    min-width: 900px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-history-table-scroll .reports-history-table-header,
+  .reports-page .reports-history-table-scroll .reports-history-table-grid,
+  .reports-page .reports-history-table-scroll .reports-history-table-row {
+    width: 880px !important;
+    min-width: 880px !important;
+  }
+}
+
+/* Scrollbar should be on the table wrapper only. */
+.reports-page .reports-history-table-scroll::-webkit-scrollbar {
+  height: 7px !important;
+}
+
+.reports-page .reports-history-table-scroll::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.reports-page .reports-history-table-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.45) !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .reports-page .reports-panel:has(.reports-history-table-scroll) > .reports-section-heading,
+html[data-theme="dark"] .reports-page .reports-panel:has(.reports-history-table-grid) > .reports-section-heading {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-table-header {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-table-row {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-table-header span,
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-table-cell span,
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-item-cell span,
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-borrower-cell span {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll .reports-history-table-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10) !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38) !important;
+}
+
+
+
+/* =========================================================
+   REPORTS - BORROWING HISTORY DETAILS ICON BUTTON
+   Paste at the VERY BOTTOM of Reports.css
+
+   Fix:
+   - Changes Borrowing History Details button into a compact icon.
+   - Shows "View Details" on hover.
+   - Keeps the icon inside the Action column.
+========================================================= */
+
+.reports-page .reports-history-table-actions {
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 8 !important;
+}
+
+.reports-page .reports-history-table-row {
+  overflow: visible !important;
+}
+
+.reports-page .reports-history-table-row:hover {
+  position: relative !important;
+  z-index: 25 !important;
+}
+
+.reports-page .reports-history-icon-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 12px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.18) !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease !important;
+}
+
+.reports-page .reports-history-icon-btn span {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+}
+
+.reports-page .reports-history-icon-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  background: #1d4ed8 !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.2) !important;
+}
+
+.reports-page .reports-history-icon-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28) !important;
+  outline-offset: 3px !important;
+}
+
+/* Tooltip appears to the left so it does not get clipped at the right edge */
+.reports-page .reports-history-icon-btn::after {
+  content: attr(data-tooltip) !important;
+  position: absolute !important;
+  right: calc(100% + 10px) !important;
+  top: 50% !important;
+  transform: translateY(-50%) translateX(6px) !important;
+  z-index: 99999 !important;
+  min-width: max-content !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22) !important;
+  padding: 7px 10px !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease !important;
+}
+
+.reports-page .reports-history-icon-btn:hover::after,
+.reports-page .reports-history-icon-btn:focus-visible::after {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Hide only old Borrowing History text buttons if cached CSS/JS still leaves one in the action cell */
+.reports-page .reports-history-table-actions > .reports-secondary-btn {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-history-icon-btn {
+    width: 29px !important;
+    min-width: 29px !important;
+    max-width: 29px !important;
+    height: 29px !important;
+    min-height: 29px !important;
+    max-height: 29px !important;
+    border-radius: 10px !important;
+  }
+
+  .reports-page .reports-history-icon-btn span {
+    font-size: 0.78rem !important;
+  }
+
+  .reports-page .reports-history-icon-btn::after {
+    right: calc(100% + 8px) !important;
+    padding: 6px 9px !important;
+    font-size: 0.52rem !important;
+  }
+}
+
+html[data-theme="dark"] .reports-page .reports-history-icon-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-icon-btn:hover {
+  background: #1d4ed8 !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-history-icon-btn::after {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #020617 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+
+/* =========================================================
+   REPORTS - CATEGORY REPORT 1-ROW SIDE SCROLL
+   Paste at the VERY BOTTOM of Reports.css
+
+   Fix:
+   - Category Report cards become one horizontal row on mobile/tablet.
+   - Only the category cards scroll sideways.
+   - Category Report title/description stay fixed.
+   - Each category card is compact but keeps all admin data visible.
+========================================================= */
+
+/* Keep the Category Report panel itself fixed, not horizontally scrollable */
+.reports-page .reports-panel:has(.reports-category-grid) {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* Category grid is the only horizontal scroll area */
+.reports-page .reports-category-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+/* Desktop/tablet: allow a neat side-scroll row if space is tight */
+@media (max-width: 1180px) {
+  .reports-page .reports-category-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding: 2px 2px 10px !important;
+    margin-top: 8px !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  .reports-page .reports-category-card {
+    flex: 0 0 270px !important;
+    width: 270px !important;
+    min-width: 270px !important;
+    max-width: 270px !important;
+    min-height: 0 !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+/* Mobile: compact horizontal category cards */
+@media (max-width: 760px) {
+  .reports-page .reports-panel:has(.reports-category-grid) {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-category-grid) > .reports-section-heading {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin-bottom: 8px !important;
+    overflow: visible !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-category-grid) > .reports-section-heading h2 {
+    font-size: 1rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .reports-page .reports-panel:has(.reports-category-grid) > .reports-section-heading p {
+    margin-top: 3px !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .reports-page .reports-category-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    padding: 2px 2px 9px !important;
+    margin-top: 7px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  .reports-page .reports-category-card {
+    flex: 0 0 238px !important;
+    width: 238px !important;
+    min-width: 238px !important;
+    max-width: 238px !important;
+    min-height: 142px !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+    scroll-snap-align: start !important;
+  }
+
+  .reports-page .reports-category-card::after {
+    right: -18px !important;
+    top: -18px !important;
+    width: 58px !important;
+    height: 58px !important;
+    opacity: 0.55 !important;
+  }
+
+  .reports-page .reports-category-card h3 {
+    max-width: calc(100% - 34px) !important;
+    margin: 0 0 8px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.08 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reports-page .reports-category-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .reports-page .reports-category-stats div {
+    min-height: 35px !important;
+    border-radius: 10px !important;
+    padding: 6px 7px !important;
+  }
+
+  .reports-page .reports-category-stats span {
+    font-size: 0.42rem !important;
+    line-height: 1 !important;
+    letter-spacing: 0.055em !important;
+  }
+
+  .reports-page .reports-category-stats strong {
+    margin-top: 4px !important;
+    font-size: 0.68rem !important;
+    line-height: 1 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-category-card {
+    flex-basis: 226px !important;
+    width: 226px !important;
+    min-width: 226px !important;
+    max-width: 226px !important;
+  }
+}
+
+/* Scrollbar styling */
+.reports-page .reports-category-grid::-webkit-scrollbar {
+  height: 6px !important;
+}
+
+.reports-page .reports-category-grid::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.reports-page .reports-category-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.45) !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .reports-page .reports-category-grid::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10) !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-category-grid::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38) !important;
+}

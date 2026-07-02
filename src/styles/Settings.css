@@ -666,3 +666,427 @@ html[data-theme="dark"] .settings-secondary-btn {
     padding: 13px !important;
   }
 }
+
+
+
+/* =========================================================
+   SETTINGS - ROLE PILL + BUTTON TEXT VISIBILITY FIX
+   Paste at the VERY BOTTOM of Settings.css
+
+   Fixes:
+   - Makes the role pill under the profile name readable/visible.
+   - Makes Save Settings text black.
+   - Makes Change Password text black.
+========================================================= */
+
+/* Role pill under profile name */
+.settings-page .settings-profile-preview p {
+  width: fit-content !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 6px 0 !important;
+  border: 1px solid rgba(15, 23, 42, 0.14) !important;
+  border-radius: 999px !important;
+  background: #facc15 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  box-shadow: none !important;
+  padding: 4px 10px !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  opacity: 1 !important;
+}
+
+/* Save Settings button text */
+.settings-page .settings-profile-card .settings-primary-btn {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  text-shadow: none !important;
+}
+
+/* Change Password button text */
+.settings-page .settings-password-card .settings-secondary-btn {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  text-shadow: none !important;
+}
+
+/* Keep button text readable during loading/disabled states */
+.settings-page .settings-profile-card .settings-primary-btn:disabled,
+.settings-page .settings-password-card .settings-secondary-btn:disabled {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  opacity: 0.7 !important;
+}
+
+/* Dark mode still keeps the role pill readable */
+html[data-theme="dark"] .settings-page .settings-profile-preview p {
+  border-color: rgba(250, 204, 21, 0.35) !important;
+  background: #facc15 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Dark mode button text stays black as requested */
+html[data-theme="dark"] .settings-page .settings-profile-card .settings-primary-btn,
+html[data-theme="dark"] .settings-page .settings-password-card .settings-secondary-btn,
+html[data-theme="dark"] .settings-page .settings-profile-card .settings-primary-btn:disabled,
+html[data-theme="dark"] .settings-page .settings-password-card .settings-secondary-btn:disabled {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+
+
+/* =========================================================
+   BORROWING STATUS CARD - PROFILE SETTINGS
+========================================================= */
+
+.settings-profile-card {
+  grid-column: 1;
+  grid-row: span 2;
+}
+
+.settings-password-card {
+  grid-column: 2;
+}
+
+.settings-borrowing-status-card {
+  grid-column: 2;
+  display: grid;
+  gap: 12px;
+}
+
+.settings-borrowing-status-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 2px solid var(--settings-border);
+  border-radius: 18px;
+  background: var(--settings-bg);
+  padding: 12px;
+}
+
+.settings-borrowing-status-main span {
+  color: var(--settings-muted);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-borrowing-status-main strong {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--settings-border);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 12px;
+  color: var(--settings-text);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.settings-borrowing-status-card.status-success .settings-borrowing-status-main strong {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.settings-borrowing-status-card.status-warning .settings-borrowing-status-main strong {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.settings-borrowing-status-card.status-danger .settings-borrowing-status-main strong {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+.settings-borrowing-status-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-borrowing-status-grid > div {
+  border: 1px solid var(--settings-soft-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 11px;
+}
+
+.settings-borrowing-status-grid span {
+  display: block;
+  color: var(--settings-muted);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-borrowing-status-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--settings-text);
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.settings-borrowing-status-note {
+  margin: 0;
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--settings-muted);
+  padding: 11px 12px;
+  font-size: 0.76rem;
+  font-weight: 780;
+  line-height: 1.45;
+}
+
+html[data-theme="dark"] .settings-borrowing-status-grid > div,
+html[data-theme="dark"] .settings-borrowing-status-main strong {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+@media (max-width: 980px) {
+  .settings-profile-card,
+  .settings-password-card,
+  .settings-borrowing-status-card {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+
+
+/* =========================================================
+   PROFESSIONAL MY PROFILE LAYOUT FIX
+   Keeps the top Settings header unchanged.
+========================================================= */
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.settings-card {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.10);
+}
+
+/* Put Profile first as a clean full-width main card */
+.settings-profile-card {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+}
+
+/* Place the two support cards below the profile card */
+.settings-borrowing-status-card {
+  grid-column: 1 / span 5 !important;
+  grid-row: auto !important;
+}
+
+.settings-password-card {
+  grid-column: 6 / -1 !important;
+  grid-row: auto !important;
+}
+
+/* Make profile less bulky and more dashboard-like */
+.settings-profile-card .settings-section-heading {
+  margin-bottom: 10px;
+}
+
+.settings-profile-preview {
+  grid-template-columns: 64px minmax(0, 1fr);
+  min-height: 96px;
+  border: 1.5px solid rgba(37, 99, 235, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.16), transparent 36%),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.94)),
+    var(--settings-bg);
+  padding: 12px;
+}
+
+.settings-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
+}
+
+.settings-avatar span {
+  font-size: 1.55rem;
+}
+
+.settings-profile-preview h3 {
+  font-size: 1.02rem;
+}
+
+.settings-profile-preview p {
+  margin: 5px 0;
+  padding: 4px 10px;
+  font-size: 0.56rem;
+}
+
+.settings-profile-preview span {
+  font-size: 0.72rem;
+}
+
+/* Four neat fields on desktop */
+.settings-profile-fields-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1.15fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.settings-field {
+  margin-bottom: 0;
+}
+
+.settings-field input {
+  min-height: 44px;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  border-radius: 16px;
+  font-size: 0.78rem;
+}
+
+.settings-field input[type="file"] {
+  min-height: 44px;
+  padding: 9px 10px;
+}
+
+.settings-page .settings-profile-card .settings-primary-btn {
+  margin-top: 14px;
+}
+
+/* Borrowing status card: cleaner and less oversized */
+.settings-borrowing-status-card {
+  gap: 10px;
+}
+
+.settings-borrowing-status-card .settings-section-heading {
+  margin-bottom: 2px;
+}
+
+.settings-borrowing-status-main {
+  min-height: 64px;
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(250, 204, 21, 0.08)),
+    var(--settings-bg);
+  padding: 12px 14px;
+}
+
+.settings-borrowing-status-main span {
+  font-size: 0.62rem;
+}
+
+.settings-borrowing-status-main strong {
+  min-height: 28px;
+  border-width: 1.5px;
+  font-size: 0.64rem;
+}
+
+.settings-borrowing-status-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.settings-borrowing-status-grid > div {
+  min-height: 68px;
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.settings-borrowing-status-note {
+  border: 1.5px solid rgba(37, 99, 235, 0.10);
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-size: 0.74rem;
+}
+
+/* Password card aligns nicely with the status card */
+.settings-password-card {
+  display: block !important;
+}
+
+.settings-password-card .settings-section-heading {
+  margin-bottom: 12px;
+}
+
+.settings-password-card .settings-secondary-btn {
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 0 !important;
+}
+
+/* Do not allow old responsive rules to force an awkward card layout */
+@media (max-width: 1120px) {
+  .settings-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .settings-profile-card,
+  .settings-borrowing-status-card,
+  .settings-password-card {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .settings-profile-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-password-card {
+    display: block !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .settings-card {
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  .settings-profile-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-profile-preview {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .settings-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+  }
+
+  .settings-borrowing-status-main {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .settings-borrowing-status-main strong {
+    width: fit-content;
+  }
+}

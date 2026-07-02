@@ -3010,3 +3010,1030 @@ html[data-theme="dark"] .inventory-page .inventory-header-text p {
   color: #cbd5e1 !important;
   -webkit-text-fill-color: #cbd5e1 !important;
 }
+
+
+
+/* =========================================================
+   VIEW ITEMS - COMPACT TITLE CARD + RIGHT BACK BUTTON
+   Paste at the VERY BOTTOM of ItemList.css
+   Goal:
+   - Keep the title card consistent with dashboard/header cards.
+   - Move Back to Dashboard to the right side of Available Items.
+   - Make title text compact, especially on mobile.
+========================================================= */
+
+/* Main title card: compact and consistent */
+.inventory-page .inventory-title-area,
+.inventory-page .inventory-title-area-compact {
+  min-height: 92px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 94% 36%, rgba(250, 204, 21, 0.30), transparent 28%),
+    linear-gradient(135deg, rgba(248, 251, 255, 0.98), rgba(255, 255, 255, 0.98) 55%, rgba(250, 204, 21, 0.10)),
+    #ffffff !important;
+  box-shadow: 6px 6px 0 rgba(15, 23, 42, 0.10) !important;
+  padding: 16px 22px !important;
+}
+
+.inventory-page .inventory-title-area::after {
+  right: 26px !important;
+  bottom: -40px !important;
+  width: 105px !important;
+  height: 105px !important;
+  opacity: 0.74 !important;
+}
+
+.inventory-page .inventory-header-text {
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.inventory-page .inventory-title-area h1,
+.inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+  margin: 0 0 5px !important;
+  color: #0f172a !important;
+  font-size: clamp(1.45rem, 2.4vw, 2rem) !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.inventory-page .inventory-title-area p,
+.inventory-page .inventory-title-area-compact .inventory-header-text p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: #64748b !important;
+  font-size: 0.82rem !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+.inventory-page .inventory-header-actions-compact {
+  width: auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.inventory-page .inventory-header-actions-compact .inventory-header-action-btn,
+.inventory-page .inventory-header-action-btn {
+  width: auto !important;
+  min-width: 154px !important;
+  min-height: 40px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 0 16px !important;
+  font-size: 0.76rem !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+/* Dark mode title card */
+html[data-theme="dark"] .inventory-page .inventory-title-area,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background:
+    radial-gradient(circle at 94% 36%, rgba(250, 204, 21, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98) 58%, rgba(30, 41, 59, 0.92)),
+    #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area h1,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-title-area p,
+html[data-theme="dark"] .inventory-page .inventory-title-area-compact .inventory-header-text p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-header-actions-compact .inventory-header-action-btn,
+html[data-theme="dark"] .inventory-page .inventory-header-action-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Mobile: keep button on the right side instead of full-width below */
+@media (max-width: 760px) {
+  .inventory-page {
+    gap: 10px !important;
+  }
+
+  .inventory-page .inventory-title-area,
+  .inventory-page .inventory-title-area-compact {
+    min-height: 72px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    padding: 11px 12px !important;
+  }
+
+  .inventory-page .inventory-title-area::after {
+    right: -22px !important;
+    bottom: -46px !important;
+    width: 92px !important;
+    height: 92px !important;
+    opacity: 0.62 !important;
+  }
+
+  .inventory-page .inventory-title-area h1,
+  .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+    max-width: none !important;
+    margin: 0 0 3px !important;
+    font-size: clamp(1.06rem, 5vw, 1.24rem) !important;
+    line-height: 1 !important;
+  }
+
+  .inventory-page .inventory-title-area p,
+  .inventory-page .inventory-title-area-compact .inventory-header-text p {
+    display: -webkit-box !important;
+    font-size: 0.6rem !important;
+    line-height: 1.16 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .inventory-page .inventory-header-actions-compact {
+    width: auto !important;
+    justify-content: flex-end !important;
+    align-self: center !important;
+  }
+
+  .inventory-page .inventory-header-actions-compact .inventory-header-action-btn,
+  .inventory-page .inventory-header-action-btn {
+    width: auto !important;
+    min-width: 104px !important;
+    max-width: 128px !important;
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    font-size: 0.58rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+}
+
+/* Extra small phones: keep it fitted */
+@media (max-width: 390px) {
+  .inventory-page .inventory-title-area,
+  .inventory-page .inventory-title-area-compact {
+    gap: 7px !important;
+    padding: 10px 11px !important;
+  }
+
+  .inventory-page .inventory-title-area h1,
+  .inventory-page .inventory-title-area-compact .inventory-header-text h1 {
+    font-size: 1.05rem !important;
+  }
+
+  .inventory-page .inventory-title-area p,
+  .inventory-page .inventory-title-area-compact .inventory-header-text p {
+    font-size: 0.58rem !important;
+  }
+
+  .inventory-page .inventory-header-actions-compact .inventory-header-action-btn,
+  .inventory-page .inventory-header-action-btn {
+    min-width: 96px !important;
+    max-width: 108px !important;
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 0.54rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   ITEM DETAILS - COMPACT MOBILE TITLE + COMPACT CARDS
+   Paste at the VERY BOTTOM of ItemList.css
+   Goal:
+   - Move Back to Items button to the right side of the title card.
+   - Make the item details title card compact and consistent.
+   - Reduce vertical space used by item details, QR/barcode, and scan value cards.
+========================================================= */
+
+/* Title card: compact system style */
+.item-details-page .item-details-header-content {
+  min-height: 88px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 94% 35%, rgba(250, 204, 21, 0.30), transparent 28%),
+    linear-gradient(135deg, rgba(248, 251, 255, 0.98), rgba(255, 255, 255, 0.98) 55%, rgba(250, 204, 21, 0.10)),
+    #ffffff !important;
+  box-shadow: 6px 6px 0 rgba(15, 23, 42, 0.10) !important;
+  padding: 15px 22px !important;
+}
+
+.item-details-page .item-details-header-content::after {
+  right: 26px !important;
+  bottom: -42px !important;
+  width: 104px !important;
+  height: 104px !important;
+  opacity: 0.72 !important;
+}
+
+.item-details-page .item-details-header-text {
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.item-details-page .item-details-header-text > span {
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin: 0 0 5px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  padding: 5px 9px !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.item-details-page .item-details-header-text h2 {
+  max-width: 100% !important;
+  margin: 0 0 5px !important;
+  color: #0f172a !important;
+  font-size: clamp(1.35rem, 2.35vw, 1.9rem) !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.item-details-page .item-details-header-text p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: #64748b !important;
+  font-size: 0.8rem !important;
+  font-weight: 750 !important;
+  line-height: 1.28 !important;
+}
+
+/* Header buttons on the right */
+.item-details-page .item-details-header-actions-compact {
+  width: auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.item-details-page .item-details-header-actions-compact button,
+.item-details-page .item-details-header-back-btn,
+.item-details-page .item-details-back-btn {
+  width: auto !important;
+  min-width: 128px !important;
+  min-height: 38px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 0 15px !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+/* Compact main layout/cards */
+.item-details-page {
+  gap: 10px !important;
+}
+
+.item-details-page .item-details-layout {
+  gap: 12px !important;
+}
+
+.item-details-page .item-details-main-card,
+.item-details-page .item-details-side-card {
+  border: 2px solid #1e293b !important;
+  border-radius: 24px !important;
+  background: #ffffff !important;
+  box-shadow: 6px 6px 0 rgba(15, 23, 42, 0.08) !important;
+  padding: 14px !important;
+}
+
+/* Compact top item details card */
+.item-details-page .item-details-main-card {
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) !important;
+  gap: 14px !important;
+}
+
+.item-details-page .item-details-image-panel {
+  height: clamp(190px, 22vw, 260px) !important;
+  border-radius: 18px !important;
+}
+
+.item-details-page .item-details-info-panel h2 {
+  margin-top: 6px !important;
+  font-size: clamp(1.18rem, 2vw, 1.55rem) !important;
+  line-height: 1.05 !important;
+}
+
+.item-details-page .item-details-description {
+  display: -webkit-box !important;
+  margin-top: 6px !important;
+  font-size: 0.76rem !important;
+  line-height: 1.35 !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+.item-details-page .item-details-topline {
+  gap: 6px !important;
+  margin-bottom: 6px !important;
+}
+
+/* Compact item meta boxes */
+.item-details-page .item-details-meta-grid {
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+.item-details-page .item-details-meta-grid > div,
+.item-details-page .item-details-scan-values > div {
+  border-radius: 14px !important;
+  padding: 9px 10px !important;
+}
+
+.item-details-page .item-details-meta-grid span,
+.item-details-page .item-details-scan-values span {
+  font-size: 0.56rem !important;
+  line-height: 1.1 !important;
+}
+
+.item-details-page .item-details-meta-grid strong,
+.item-details-page .item-details-scan-values p {
+  margin-top: 4px !important;
+  font-size: 0.72rem !important;
+  line-height: 1.22 !important;
+}
+
+.item-details-page .item-details-action-panel {
+  margin-top: 10px !important;
+}
+
+.item-details-page .borrow-btn {
+  min-height: 38px !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+}
+
+/* Compact QR/barcode card */
+.item-details-page .item-details-side-card {
+  grid-template-columns: minmax(220px, 310px) minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+
+.item-details-page .item-details-qr-header span {
+  font-size: 1.08rem !important;
+  line-height: 1.05 !important;
+}
+
+.item-details-page .item-details-qr-header p {
+  margin-top: 4px !important;
+  font-size: 0.74rem !important;
+  line-height: 1.3 !important;
+}
+
+.item-details-page .item-details-qr-box {
+  max-height: 240px !important;
+  border-radius: 16px !important;
+  padding: 10px !important;
+}
+
+.item-details-page .item-details-scan-values {
+  gap: 8px !important;
+}
+
+/* Compact QRCodeGenerator if rendered inside this page */
+.item-details-page .code-generator-box,
+.item-details-page .code-generator-box.compact {
+  border-radius: 18px !important;
+  padding: 10px !important;
+}
+
+.item-details-page .code-generator-grid {
+  gap: 10px !important;
+}
+
+.item-details-page .code-generator-panel,
+.item-details-page .qr-code-area,
+.item-details-page .barcode-area {
+  border-radius: 16px !important;
+  padding: 10px !important;
+}
+
+.item-details-page .qr-code-area canvas,
+.item-details-page .qr-code-area svg,
+.item-details-page .qr-code-area img {
+  max-width: 132px !important;
+  max-height: 132px !important;
+}
+
+.item-details-page .barcode-area canvas,
+.item-details-page .barcode-area svg,
+.item-details-page .barcode-area img {
+  max-width: 230px !important;
+  max-height: 86px !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .item-details-page .item-details-header-content,
+html[data-theme="dark"] .item-details-page .item-details-main-card,
+html[data-theme="dark"] .item-details-page .item-details-side-card {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background-color: #111827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-header-content {
+  background:
+    radial-gradient(circle at 94% 35%, rgba(250, 204, 21, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98) 58%, rgba(30, 41, 59, 0.92)),
+    #0f172a !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-header-text > span {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-header-text h2,
+html[data-theme="dark"] .item-details-page .item-details-info-panel h2,
+html[data-theme="dark"] .item-details-page .item-details-qr-header span {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-header-text p,
+html[data-theme="dark"] .item-details-page .item-details-description,
+html[data-theme="dark"] .item-details-page .item-details-qr-header p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-header-actions-compact button,
+html[data-theme="dark"] .item-details-page .item-details-header-back-btn,
+html[data-theme="dark"] .item-details-page .item-details-back-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-meta-grid > div,
+html[data-theme="dark"] .item-details-page .item-details-scan-values > div {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #152033 !important;
+}
+
+/* Mobile item details layout */
+@media (max-width: 760px) {
+  .item-details-page {
+    gap: 9px !important;
+  }
+
+  .item-details-page .item-details-header-content {
+    min-height: 72px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    padding: 11px 12px !important;
+  }
+
+  .item-details-page .item-details-header-content::after {
+    right: -22px !important;
+    bottom: -46px !important;
+    width: 92px !important;
+    height: 92px !important;
+    opacity: 0.62 !important;
+  }
+
+  .item-details-page .item-details-header-text > span {
+    margin-bottom: 4px !important;
+    padding: 4px 8px !important;
+    font-size: 0.52rem !important;
+  }
+
+  .item-details-page .item-details-header-text h2 {
+    max-width: none !important;
+    margin-bottom: 3px !important;
+    font-size: clamp(1.04rem, 5.4vw, 1.24rem) !important;
+    line-height: 1 !important;
+  }
+
+  .item-details-page .item-details-header-text p {
+    display: -webkit-box !important;
+    font-size: 0.6rem !important;
+    line-height: 1.16 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .item-details-page .item-details-header-actions-compact {
+    width: auto !important;
+    justify-content: flex-end !important;
+    align-self: center !important;
+  }
+
+  .item-details-page .item-details-header-actions-compact button,
+  .item-details-page .item-details-header-back-btn,
+  .item-details-page .item-details-back-btn {
+    width: auto !important;
+    min-width: 86px !important;
+    max-width: 112px !important;
+    min-height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 0.54rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .item-details-page .item-details-main-card,
+  .item-details-page .item-details-side-card {
+    border-radius: 18px !important;
+    padding: 11px !important;
+  }
+
+  .item-details-page .item-details-main-card {
+    grid-template-columns: 100px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+
+  .item-details-page .item-details-image-panel {
+    height: 104px !important;
+    border-radius: 14px !important;
+  }
+
+  .item-details-page .item-details-info-panel h2 {
+    font-size: 0.98rem !important;
+  }
+
+  .item-details-page .item-details-description {
+    font-size: 0.66rem !important;
+    line-height: 1.25 !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .item-details-page .item-details-main-card .item-details-meta-grid,
+  .item-details-page .item-details-action-panel {
+    grid-column: 1 / -1 !important;
+  }
+
+  .item-details-page .item-details-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .item-details-page .item-details-meta-grid > div,
+  .item-details-page .item-details-scan-values > div {
+    border-radius: 13px !important;
+    padding: 8px 9px !important;
+  }
+
+  .item-details-page .borrow-btn {
+    width: 100% !important;
+    min-height: 36px !important;
+  }
+
+  .item-details-page .item-details-side-card {
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+  }
+
+  .item-details-page .item-details-qr-header span {
+    font-size: 1rem !important;
+  }
+
+  .item-details-page .item-details-qr-header p {
+    font-size: 0.66rem !important;
+  }
+
+  .item-details-page .item-details-qr-box {
+    max-height: none !important;
+    padding: 8px !important;
+  }
+
+  .item-details-page .code-generator-box,
+  .item-details-page .code-generator-box.compact {
+    padding: 8px !important;
+    border-radius: 16px !important;
+  }
+
+  .item-details-page .code-generator-grid {
+    gap: 8px !important;
+  }
+
+  .item-details-page .qr-code-area canvas,
+  .item-details-page .qr-code-area svg,
+  .item-details-page .qr-code-area img {
+    max-width: 108px !important;
+    max-height: 108px !important;
+  }
+
+  .item-details-page .barcode-area canvas,
+  .item-details-page .barcode-area svg,
+  .item-details-page .barcode-area img {
+    max-width: 210px !important;
+    max-height: 72px !important;
+  }
+}
+
+/* iPhone SE / very small phones */
+@media (max-width: 400px) {
+  .item-details-page .item-details-main-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .item-details-page .item-details-image-panel {
+    height: 142px !important;
+  }
+
+  .item-details-page .item-details-meta-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .item-details-page .item-details-header-actions-compact button,
+  .item-details-page .item-details-header-back-btn,
+  .item-details-page .item-details-back-btn {
+    min-width: 82px !important;
+    max-width: 100px !important;
+    font-size: 0.5rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS - ADMIN MOBILE REAL TABLE + ONE-ROW SEARCH FIX
+   Paste at the VERY BOTTOM of ItemList.css
+
+   Fix:
+   - Admin item list stays as a compact sideways-scroll table on mobile.
+   - Search, Availability, and Category become one compact row.
+   - Prevents admin items from becoming huge stacked cards.
+========================================================= */
+
+.inventory-page .inventory-admin-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+.inventory-page .inventory-admin-table-wrap::-webkit-scrollbar {
+  height: 7px !important;
+}
+
+.inventory-page .inventory-admin-table-wrap::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.10) !important;
+}
+
+.inventory-page .inventory-admin-table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.42) !important;
+}
+
+/* Force the admin table to stay a real table */
+.inventory-page .inventory-admin-table {
+  width: 940px !important;
+  min-width: 940px !important;
+  max-width: none !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.inventory-page .inventory-admin-table thead {
+  display: table-header-group !important;
+}
+
+.inventory-page .inventory-admin-table tbody {
+  display: table-row-group !important;
+}
+
+.inventory-page .inventory-admin-table thead tr,
+.inventory-page .inventory-admin-table tbody tr {
+  display: table-row !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.inventory-page .inventory-admin-table th,
+.inventory-page .inventory-admin-table td {
+  display: table-cell !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+}
+
+.inventory-page .inventory-admin-table thead th {
+  height: 38px !important;
+  padding: 0 9px !important;
+  border-bottom: 1.5px solid #1e293b !important;
+  background: #eff6ff !important;
+  color: #64748b !important;
+  font-size: 0.52rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1 !important;
+  text-align: left !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.inventory-page .inventory-admin-table tbody td {
+  height: 52px !important;
+  padding: 6px 9px !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  text-align: left !important;
+}
+
+.inventory-page .inventory-admin-table tbody td::before {
+  display: none !important;
+  content: none !important;
+}
+
+.inventory-page .inventory-table-item {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 7px !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.inventory-page .inventory-table-image {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 10px !important;
+}
+
+.inventory-page .inventory-table-image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.inventory-page .inventory-table-item-info,
+.inventory-page .inventory-table-actions {
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.inventory-page .inventory-table-item-info span,
+.inventory-page .inventory-table-item-code {
+  display: block !important;
+  max-width: 100% !important;
+  color: #64748b !important;
+  font-size: 0.46rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.inventory-page .inventory-table-item-info strong,
+.inventory-page .inventory-table-item-info h3,
+.inventory-page .inventory-table-item-name {
+  display: block !important;
+  max-width: 100% !important;
+  color: #0f172a !important;
+  font-size: 0.62rem !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.inventory-page .inventory-admin-table .availability-pill,
+.inventory-page .inventory-admin-table .condition-pill,
+.inventory-page .inventory-admin-table .inventory-pill {
+  min-height: 21px !important;
+  max-width: 100% !important;
+  border-radius: 999px !important;
+  padding: 4px 7px !important;
+  font-size: 0.46rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.inventory-page .inventory-table-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+}
+
+.inventory-page .inventory-icon-action {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+}
+
+.inventory-page .inventory-action-text {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  /* Search, availability, category in one compact row */
+  .inventory-page .inventory-tools {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 88px 88px !important;
+    gap: 6px !important;
+    align-items: center !important;
+    border-radius: 18px !important;
+    padding: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .inventory-page .inventory-search,
+  .inventory-page .inventory-filter {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .inventory-page .inventory-tools label,
+  .inventory-page .inventory-tools .qb-label {
+    display: none !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    border-radius: 999px !important;
+    padding: 0 9px !important;
+    font-size: 0.48rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .inventory-page .inventory-filter select {
+    padding-right: 18px !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Undo any old mobile card conversion */
+  .inventory-page .inventory-admin-table-wrap {
+    display: block !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+
+  .inventory-page .inventory-admin-table {
+    width: 940px !important;
+    min-width: 940px !important;
+  }
+
+  .inventory-page .inventory-admin-table thead {
+    display: table-header-group !important;
+  }
+
+  .inventory-page .inventory-admin-table tbody {
+    display: table-row-group !important;
+  }
+
+  .inventory-page .inventory-admin-table thead tr,
+  .inventory-page .inventory-admin-table tbody tr {
+    display: table-row !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .inventory-page .inventory-admin-table thead th,
+  .inventory-page .inventory-admin-table tbody td {
+    display: table-cell !important;
+  }
+
+  .inventory-page .inventory-admin-table tbody td::before {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .inventory-page .inventory-tools {
+    grid-template-columns: minmax(0, 1fr) 80px 80px !important;
+    gap: 5px !important;
+    padding: 7px !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select {
+    height: 30px !important;
+    min-height: 30px !important;
+    font-size: 0.43rem !important;
+    padding-inline: 8px !important;
+  }
+
+  .inventory-page .inventory-admin-table {
+    width: 920px !important;
+    min-width: 920px !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .inventory-page .inventory-admin-table-wrap {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-admin-table thead th {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-admin-table tbody td {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-admin-table tbody tr:hover td {
+  background: #111827 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-table-item-info span,
+html[data-theme="dark"] .inventory-page .inventory-table-item-code {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .inventory-page .inventory-table-item-info strong,
+html[data-theme="dark"] .inventory-page .inventory-table-item-info h3,
+html[data-theme="dark"] .inventory-page .inventory-table-item-name {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}

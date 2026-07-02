@@ -235,6 +235,79 @@ function Settings() {
     return "Borrower";
   }
 
+  function getDateFromValue(value) {
+    if (!value) return null;
+
+    if (typeof value?.toDate === "function") {
+      return value.toDate();
+    }
+
+    if (value?.seconds) {
+      return new Date(value.seconds * 1000);
+    }
+
+    const parsedDate = new Date(value);
+
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+
+  function formatBorrowingDateTime(value) {
+    const date = getDateFromValue(value);
+
+    if (!date) return "No active restriction";
+
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function getBorrowingStatusInfo() {
+    if (userRecord?.role !== "borrower") {
+      return null;
+    }
+
+    const suspendedUntilDate = getDateFromValue(userRecord?.suspendedUntil);
+    const hasFutureRestriction =
+      suspendedUntilDate && suspendedUntilDate > new Date();
+    const reason = String(userRecord?.suspensionReason || "").trim();
+    const normalizedReason = reason.toLowerCase();
+
+    if (userRecord?.canBorrow === false || hasFutureRestriction) {
+      const isTemporaryRestriction =
+        normalizedReason.includes("temporary borrowing restriction") ||
+        normalizedReason.includes("approved item") ||
+        normalizedReason.includes("claimed/released");
+
+      return {
+        label: isTemporaryRestriction
+          ? "Temporarily Restricted"
+          : "Suspended",
+        tone: isTemporaryRestriction ? "warning" : "danger",
+        canBorrow: "No",
+        until: formatBorrowingDateTime(userRecord?.suspendedUntil),
+        reason:
+          reason ||
+          "Your borrowing access is currently restricted. Please contact the admin for assistance.",
+        detail: isTemporaryRestriction
+          ? "This is a short restriction. Admins can restore access early if this was caused by a release encoding mistake."
+          : "Borrowing access is restricted until the admin restores your account or the suspension period ends.",
+      };
+    }
+
+    return {
+      label: "Good Standing",
+      tone: "success",
+      canBorrow: "Yes",
+      until: "No active restriction",
+      reason: "No active borrowing restriction.",
+      detail: "You can submit borrow requests as long as items are available.",
+    };
+  }
+
   function getInitials(name, email) {
     const source = name || email || "User";
 
@@ -490,6 +563,8 @@ function Settings() {
     Object.values(profileFieldErrors).some(Boolean) ||
     Object.values(passwordFieldErrors).some(Boolean);
 
+  const borrowingStatusInfo = getBorrowingStatusInfo();
+
   if (loading) {
     return (
       <div className="settings-loading">
@@ -686,6 +761,39 @@ function Settings() {
             {savingProfile ? "Saving..." : "Save Settings"}
           </button>
         </form>
+
+        {borrowingStatusInfo && (
+          <section
+            className={`settings-card settings-borrowing-status-card status-${borrowingStatusInfo.tone}`}
+            aria-label="Borrowing status"
+          >
+            <div className="settings-section-heading">
+              <h2>Borrowing Status</h2>
+              <p>Check your borrowing access, restriction reason, and ending time.</p>
+            </div>
+
+            <div className="settings-borrowing-status-main">
+              <span>{borrowingStatusInfo.label}</span>
+              <strong>{borrowingStatusInfo.canBorrow}</strong>
+            </div>
+
+            <div className="settings-borrowing-status-grid">
+              <div>
+                <span>Restriction Ends</span>
+                <strong>{borrowingStatusInfo.until}</strong>
+              </div>
+
+              <div>
+                <span>Reason</span>
+                <strong>{borrowingStatusInfo.reason}</strong>
+              </div>
+            </div>
+
+            <p className="settings-borrowing-status-note">
+              {borrowingStatusInfo.detail}
+            </p>
+          </section>
+        )}
 
         <form
           className="settings-card settings-password-card"

@@ -38,6 +38,8 @@ function Dashboard() {
   const [dashboardCounts, setDashboardCounts] = useState(emptyDashboardCounts);
   const [borrowerSearch, setBorrowerSearch] = useState("");
   const [dismissedDueTodayAlert, setDismissedDueTodayAlert] = useState(false);
+  const [dismissedApprovedPickupAlert, setDismissedApprovedPickupAlert] =
+    useState(false);
 
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -142,7 +144,7 @@ function formatAutoRejectRemaining(request) {
   const remainingMs = getAutoRejectRemainingMs(request);
 
   if (remainingMs === null) return "No timer";
-  if (remainingMs <= 0) return "Ready to auto-reject";
+  if (remainingMs <= 0) return "Ready to expire";
 
   const totalMinutes = Math.ceil(remainingMs / 60000);
   const hours = Math.floor(totalMinutes / 60);
@@ -157,6 +159,62 @@ function isNearAutoReject(request) {
   const remainingMs = getAutoRejectRemainingMs(request);
 
   return remainingMs !== null && remainingMs <= NEAR_AUTO_REJECT_MS;
+}
+
+function getTimestampMs(value) {
+  if (!value) return 0;
+
+  if (typeof value?.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (value?.seconds) {
+    return value.seconds * 1000;
+  }
+
+  const parsedDate = new Date(value);
+  const parsedTime = parsedDate.getTime();
+
+  return Number.isNaN(parsedTime) ? 0 : parsedTime;
+}
+
+function getApprovedReleaseRemainingMs(request) {
+  if (request.approvalStatus !== "Approved") return null;
+
+  const approvedTime = getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+
+  if (!approvedTime) return null;
+
+  return AUTO_REJECT_MS - (Date.now() - approvedTime);
+}
+
+function formatApprovedReleaseRemaining(request) {
+  const remainingMs = getApprovedReleaseRemainingMs(request);
+
+  if (remainingMs === null) return "No release timer";
+  if (remainingMs <= 0) return "Release window expired";
+
+  const totalMinutes = Math.ceil(remainingMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours <= 0) return `${minutes}m left`;
+
+  return `${hours}h ${minutes}m left`;
+}
+
+function formatApprovedReleaseDeadline(request) {
+  const approvedTime = getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+
+  if (!approvedTime) return "No deadline";
+
+  return new Date(approvedTime + AUTO_REJECT_MS).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function isFacultyPriorityRequest(request) {
@@ -338,6 +396,36 @@ setRequests(mapSnapshot(allRequestsSnapshot));
     dueTodaySessionKey &&
     sessionStorage.getItem(dueTodaySessionKey) !== "true";
 
+  const myApprovedPickupRequests = myRequests
+    .filter((request) => {
+      const remainingMs = getApprovedReleaseRemainingMs(request);
+
+      return (
+        request.approvalStatus === "Approved" &&
+        remainingMs !== null &&
+        remainingMs > 0
+      );
+    })
+    .sort(
+      (a, b) =>
+        getApprovedReleaseRemainingMs(a) - getApprovedReleaseRemainingMs(b)
+    );
+
+  const priorityApprovedPickupRequest = myApprovedPickupRequests[0];
+
+  const approvedPickupSessionKey =
+    currentUser && priorityApprovedPickupRequest
+      ? `qborrowApprovedPickupDismissed-${currentUser.uid}-${priorityApprovedPickupRequest.id}`
+      : "";
+
+  const shouldShowApprovedPickupAlert =
+    isBorrower &&
+    priorityApprovedPickupRequest &&
+    !shouldShowDueTodayAlert &&
+    !dismissedApprovedPickupAlert &&
+    approvedPickupSessionKey &&
+    sessionStorage.getItem(approvedPickupSessionKey) !== "true";
+
   const availableItems = visibleItems.filter(
     (item) => item.availability === "Available"
   );
@@ -356,6 +444,22 @@ const nearAutoRejectRequests = pendingRequests.filter((request) =>
   isNearAutoReject(request)
 );
 
+const approvedRequestsAwaitingRelease = visibleRequests.filter(
+  (request) => request.approvalStatus === "Approved"
+);
+
+const nearReleaseExpireRequests = approvedRequestsAwaitingRelease.filter(
+  (request) => {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    return (
+      remainingMs !== null &&
+      remainingMs > 0 &&
+      remainingMs <= NEAR_AUTO_REJECT_MS
+    );
+  }
+);
+
 const adminUrgentAlerts = [
   {
     title: "Priority Faculty Requests",
@@ -366,12 +470,20 @@ const adminUrgentAlerts = [
     items: facultyPendingRequests.slice(0, 3),
   },
   {
-    title: "Near Auto-Reject",
+    title: "Near Auto-Expire",
     count: nearAutoRejectRequests.length,
-    description: "Pending requests close to the 24-hour auto-reject limit.",
+    description: "Pending requests close to the 24-hour auto-expire limit.",
     tone: "pink",
     path: "/manage-requests?status=Pending",
     items: nearAutoRejectRequests.slice(0, 3),
+  },
+  {
+    title: "Approved Awaiting Release",
+    count: nearReleaseExpireRequests.length,
+    description: "Approved requests close to the 24-hour release deadline.",
+    tone: "yellow",
+    path: "/release-item",
+    items: nearReleaseExpireRequests.slice(0, 3),
   },
   {
     title: "Overdue Borrowed Items",
@@ -588,6 +700,14 @@ const adminUrgentAlerts = [
     setDismissedDueTodayAlert(true);
   }
 
+  function handleDismissApprovedPickupAlert() {
+    if (approvedPickupSessionKey) {
+      sessionStorage.setItem(approvedPickupSessionKey, "true");
+    }
+
+    setDismissedApprovedPickupAlert(true);
+  }
+
   if (loading) {
     return (
       <div className="dashboard-loading">
@@ -661,6 +781,81 @@ const adminUrgentAlerts = [
                 type="button"
                 className="dashboard-due-primary"
                 onClick={handleDismissDueTodayAlert}
+              >
+                OK
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {shouldShowApprovedPickupAlert && (
+        <div className="dashboard-due-overlay" role="dialog" aria-modal="true">
+          <section className="dashboard-due-card">
+            <div className="dashboard-due-icon">✓</div>
+
+            <div>
+              <p className="qb-kicker">Item Ready for Claim</p>
+              <h2>Your request has been approved</h2>
+
+              <p>
+                Please claim the item within 24 hours so the admin can release
+                it. If it is not released within the window, the request will
+                expire and borrowing access may be temporarily restricted for
+                24 hours.
+              </p>
+            </div>
+
+            <div className="dashboard-due-item">
+              <span>Item</span>
+              <strong>
+                {priorityApprovedPickupRequest.itemName || "Untitled Item"}
+              </strong>
+            </div>
+
+            <div className="dashboard-due-grid">
+              <div>
+                <span>Item Code</span>
+                <strong>
+                  {priorityApprovedPickupRequest.itemCode ||
+                    priorityApprovedPickupRequest.itemId ||
+                    "N/A"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Time Left</span>
+                <strong>
+                  {formatApprovedReleaseRemaining(priorityApprovedPickupRequest)}
+                </strong>
+              </div>
+
+              <div>
+                <span>Release Deadline</span>
+                <strong>
+                  {formatApprovedReleaseDeadline(priorityApprovedPickupRequest)}
+                </strong>
+              </div>
+
+              <div>
+                <span>Approved Requests</span>
+                <strong>{myApprovedPickupRequests.length}</strong>
+              </div>
+            </div>
+
+            <div className="dashboard-due-actions">
+              <button
+                type="button"
+                className="dashboard-due-secondary"
+                onClick={() => navigate("/my-requests")}
+              >
+                View My Requests
+              </button>
+
+              <button
+                type="button"
+                className="dashboard-due-primary"
+                onClick={handleDismissApprovedPickupAlert}
               >
                 OK
               </button>

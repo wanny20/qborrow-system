@@ -20,6 +20,7 @@ import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/MyRequests.css";
 
 const REQUESTS_PAGE_SIZE = 10;
+const RELEASE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function MyRequests() {
   const navigate = useNavigate();
@@ -99,6 +100,49 @@ function MyRequests() {
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
   }
 
+  function getTimestampMs(value) {
+    if (!value) return 0;
+
+    if (typeof value?.toMillis === "function") {
+      return value.toMillis();
+    }
+
+    if (value?.seconds) {
+      return value.seconds * 1000;
+    }
+
+    const parsedDate = new Date(value);
+    const parsedTime = parsedDate.getTime();
+
+    return Number.isNaN(parsedTime) ? 0 : parsedTime;
+  }
+
+  function getApprovedReleaseRemainingMs(request) {
+    if (request.approvalStatus !== "Approved") return null;
+
+    const approvedTime =
+      getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+
+    if (!approvedTime) return null;
+
+    return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
+  }
+
+  function formatApprovedReleaseRemaining(request) {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    if (remainingMs === null) return "Awaiting Release";
+    if (remainingMs <= 0) return "Release Window Expired";
+
+    const totalMinutes = Math.ceil(remainingMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours <= 0) return `Claim in ${minutes}m`;
+
+    return `Claim in ${hours}h ${minutes}m`;
+  }
+
   function getCategoryName(request) {
     return (
       request.categoryName ||
@@ -109,6 +153,20 @@ function MyRequests() {
   }
 
   function getRequestClosedReason(request) {
+    if (request.approvalStatus === "Expired") {
+      const isApprovedPickupExpiry = Boolean(request.approvedAt);
+
+      if (request.expireReason) {
+        return isApprovedPickupExpiry
+          ? `${request.expireReason} Your borrowing access may be temporarily restricted for 24 hours. Contact an admin if this was a mistake.`
+          : request.expireReason;
+      }
+
+      return isApprovedPickupExpiry
+        ? "Your approved request expired because the item was not released within 24 hours. Your borrowing access may be temporarily restricted for 24 hours. Contact an admin if this was a mistake."
+        : "Your borrow request expired because the required action was not completed within 24 hours. You may submit a new request.";
+    }
+
     if (request.approvalStatus === "Rejected") {
       if (request.rejectReason) return request.rejectReason;
 
@@ -127,7 +185,7 @@ function MyRequests() {
   }
 
   function shouldShowClosedReason(request) {
-    return ["Rejected", "Cancelled"].includes(request.approvalStatus);
+    return ["Rejected", "Expired", "Cancelled"].includes(request.approvalStatus);
   }
 
   function getRequestTimingStatus(request) {
@@ -159,7 +217,7 @@ function MyRequests() {
     }
 
     if (request.approvalStatus === "Approved") {
-      return "Awaiting Release";
+      return formatApprovedReleaseRemaining(request);
     }
 
     return "N/A";
@@ -179,7 +237,7 @@ function MyRequests() {
     const constraints = [where("borrowerId", "==", userId)];
 
     if (status === "Closed") {
-      constraints.push(where("approvalStatus", "in", ["Rejected", "Cancelled"]));
+      constraints.push(where("approvalStatus", "in", ["Rejected", "Expired", "Cancelled"]));
     } else if (status !== "All") {
       constraints.push(where("approvalStatus", "==", status));
     }
@@ -360,6 +418,8 @@ function MyRequests() {
       ${getRequestTimingStatus(request)}
       ${request.returnCondition || ""}
       ${request.rejectReason || ""}
+      ${request.expireReason || ""}
+      ${request.autoExpired ? "expired automatic expiration" : ""}
       ${request.autoRejected ? "auto rejected automatic rejection" : ""}
     `.toLowerCase();
 
@@ -369,7 +429,7 @@ function MyRequests() {
       statusFilter === "All" ||
       request.approvalStatus === statusFilter ||
       (statusFilter === "Closed" &&
-        ["Rejected", "Cancelled"].includes(request.approvalStatus));
+        ["Rejected", "Expired", "Cancelled"].includes(request.approvalStatus));
 
     return matchesSearch && matchesStatus;
   });
@@ -472,9 +532,11 @@ function MyRequests() {
             {shouldShowClosedReason(selectedRequest) && (
               <div className="my-requests-closed-reason">
                 <span>
-                  {selectedRequest.autoRejected
-                    ? "Auto-Rejected Reason"
-                    : "Request Status Reason"}
+                  {selectedRequest.autoExpired
+                    ? "Expired Reason"
+                    : selectedRequest.autoRejected
+                      ? "Auto-Rejected Reason"
+                      : "Request Status Reason"}
                 </span>
                 <p>{getRequestClosedReason(selectedRequest)}</p>
               </div>
@@ -624,6 +686,7 @@ function MyRequests() {
             <option value="Approved">Approved</option>
             <option value="Borrowed">Borrowed</option>
             <option value="Returned">Returned</option>
+            <option value="Expired">Expired</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
             <option value="Closed">Closed</option>
@@ -702,7 +765,11 @@ function MyRequests() {
 
                     {shouldShowClosedReason(request) && (
                       <p>
-                        {request.autoRejected ? "Auto-Rejected: " : "Reason: "}
+                        {request.autoExpired
+                          ? "Expired: "
+                          : request.autoRejected
+                            ? "Auto-Rejected: "
+                            : "Reason: "}
                         {getRequestClosedReason(request)}
                       </p>
                     )}

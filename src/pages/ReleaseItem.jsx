@@ -12,6 +12,8 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  Timestamp,
+  runTransaction,
   query as firestoreQuery,
   where,
 } from "firebase/firestore";
@@ -19,6 +21,29 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ReleaseItem.css";
+
+const RELEASE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const TEMPORARY_BORROWING_RESTRICTION_MS = RELEASE_WINDOW_MS;
+const TEMPORARY_BORROWING_RESTRICTION_REASON =
+  "Temporary borrowing restriction for 24 hours because an approved item was not claimed/released within the allowed window.";
+
+
+function getTimestampMs(value) {
+  if (!value) return 0;
+
+  if (typeof value?.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (value?.seconds) {
+    return value.seconds * 1000;
+  }
+
+  const parsedDate = new Date(value);
+  const parsedTime = parsedDate.getTime();
+
+  return Number.isNaN(parsedTime) ? 0 : parsedTime;
+}
 
 function ReleaseItem() {
   const navigate = useNavigate();
@@ -336,6 +361,112 @@ async function restartReleaseScanner() {
     return userData?.uid || auth.currentUser?.uid || "";
   }
 
+  function getTodayDateKey() {
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
+  function getApprovedTime(request) {
+    return getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+  }
+
+  function getApprovedReleaseRemainingMs(request) {
+    if (request.approvalStatus !== "Approved") return null;
+
+    const approvedTime = getApprovedTime(request);
+
+    if (!approvedTime) return null;
+
+    return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
+  }
+
+  function isApprovedReleaseExpired(request) {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    return remainingMs !== null && remainingMs <= 0;
+  }
+
+  function formatApprovedReleaseRemaining(request) {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    if (remainingMs === null) return "No release timer";
+    if (remainingMs <= 0) return "Release window expired";
+
+    const totalMinutes = Math.ceil(remainingMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours <= 0) return `${minutes}m left`;
+
+    return `${hours}h ${minutes}m left`;
+  }
+
+  function formatApprovedReleaseDeadline(request) {
+    const approvedTime = getApprovedTime(request);
+
+    if (!approvedTime) return "No deadline";
+
+    return new Date(approvedTime + RELEASE_WINDOW_MS).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function parseDateKey(value) {
+    if (!value) return null;
+
+    const [year, month, day] = String(value).split("-").map(Number);
+
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  }
+
+  function formatDateKey(date) {
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
+  function addDaysToDateKey(dateKey, daysToAdd) {
+    const baseDate = parseDateKey(dateKey);
+
+    if (!baseDate) return dateKey;
+
+    baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+    return formatDateKey(baseDate);
+  }
+
+  function getRequestedBorrowDurationDays(request) {
+    const borrowDate = parseDateKey(request.borrowDate);
+    const expectedDate = parseDateKey(request.expectedReturnDate);
+
+    if (!borrowDate || !expectedDate) return 0;
+
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const durationDays = Math.round(
+      (expectedDate.getTime() - borrowDate.getTime()) / oneDayMs
+    );
+
+    return Math.max(durationDays, 0);
+  }
+
+  function getReleaseDateUpdate(request) {
+    const actualBorrowDate = getTodayDateKey();
+    const durationDays = getRequestedBorrowDurationDays(request);
+
+    return {
+      borrowDate: actualBorrowDate,
+      expectedReturnDate: addDaysToDateKey(actualBorrowDate, durationDays),
+    };
+  }
+
   function canCategoryAdminSeeRequest(request) {
     if (!isCategoryAdmin) return true;
 
@@ -352,12 +483,157 @@ async function restartReleaseScanner() {
     );
   }
 
+function getTemporaryRestrictionUntilDate() {
+  return new Date(Date.now() + TEMPORARY_BORROWING_RESTRICTION_MS);
+}
+
+function shouldApplyTemporaryBorrowingRestriction(
+  borrowerAccount,
+  restrictionUntilDate
+) {
+  if (!borrowerAccount) return false;
+
+  const existingSuspensionTime = getTimestampMs(borrowerAccount.suspendedUntil);
+  const restrictionUntilTime = restrictionUntilDate.getTime();
+
+  /*
+    Do not overwrite stronger restrictions:
+    - canBorrow false with no suspendedUntil means manual/indefinite restriction.
+    - suspendedUntil later than the new 24-hour window is stronger.
+  */
+  if (borrowerAccount.canBorrow === false && !existingSuspensionTime) {
+    return false;
+  }
+
+  if (
+    borrowerAccount.canBorrow === false &&
+    existingSuspensionTime >= restrictionUntilTime
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+async function notifyApprovedRequestExpired(request) {
+  await addDoc(collection(db, "notifications"), {
+    userId: request.borrowerId,
+    targetRole: "borrower",
+    categoryId: request.categoryId || "",
+    categoryName: request.categoryName || "",
+    title: "Approved Request Expired",
+    message: `Your approved request for ${
+      request.itemName || "this item"
+    } expired because the item was not released within 24 hours. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
+    status: "Unread",
+    createdAt: serverTimestamp(),
+    link: "/my-requests",
+  });
+}
+
+async function expireApprovedRequest(request) {
+  if (!request?.id) return null;
+
+  const requestRef = doc(db, "borrowRequests", request.id);
+  let expiredRequest = null;
+
+  await runTransaction(db, async (transaction) => {
+    const freshRequestSnap = await transaction.get(requestRef);
+
+    if (!freshRequestSnap.exists()) return;
+
+    const freshRequest = {
+      id: freshRequestSnap.id,
+      ...freshRequestSnap.data(),
+    };
+
+    if (freshRequest.approvalStatus !== "Approved") return;
+    if (!canCategoryAdminSeeRequest(freshRequest)) return;
+    if (!isApprovedReleaseExpired(freshRequest)) return;
+
+    const itemRef = freshRequest.itemId
+      ? doc(db, "items", freshRequest.itemId)
+      : null;
+    const itemSnap = itemRef ? await transaction.get(itemRef) : null;
+
+    const borrowerRef = freshRequest.borrowerId
+      ? doc(db, "users", freshRequest.borrowerId)
+      : null;
+    const borrowerSnap = borrowerRef ? await transaction.get(borrowerRef) : null;
+    const restrictionUntilDate = getTemporaryRestrictionUntilDate();
+
+    transaction.update(requestRef, {
+      approvalStatus: "Expired",
+      expireReason:
+        "Approved request expired because the item was not released within 24 hours.",
+      expiredAt: serverTimestamp(),
+      expiredBy: "system",
+      autoExpired: true,
+      updatedAt: serverTimestamp(),
+    });
+
+    if (itemRef && itemSnap?.exists() && itemSnap.data().availability === "Reserved") {
+      transaction.update(itemRef, {
+        availability: "Available",
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    if (
+      borrowerRef &&
+      borrowerSnap?.exists() &&
+      shouldApplyTemporaryBorrowingRestriction(
+        borrowerSnap.data(),
+        restrictionUntilDate
+      )
+    ) {
+      transaction.update(borrowerRef, {
+        canBorrow: false,
+        suspendedUntil: Timestamp.fromDate(restrictionUntilDate),
+        suspensionReason: TEMPORARY_BORROWING_RESTRICTION_REASON,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    expiredRequest = freshRequest;
+  });
+
+  if (expiredRequest) {
+    await notifyApprovedRequestExpired(expiredRequest);
+  }
+
+  return expiredRequest;
+}
+
+async function autoExpireApprovedRequests() {
+  const snapshot = await getDocs(collection(db, "borrowRequests"));
+
+  const expiredApprovedRequests = snapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((request) => {
+      return (
+        request.approvalStatus === "Approved" &&
+        canCategoryAdminSeeRequest(request) &&
+        isApprovedReleaseExpired(request)
+      );
+    });
+
+  await Promise.all(
+    expiredApprovedRequests.map((request) => expireApprovedRequest(request))
+  );
+}
+
 async function fetchApprovedRequests(options = {}) {
   const { showSuccessToast = false } = options;
 
   setLoading(true);
 
   try {
+    await autoExpireApprovedRequests();
+
     const approvedQuery = firestoreQuery(
       collection(db, "borrowRequests"),
       where("approvalStatus", "==", "Approved")
@@ -456,6 +732,16 @@ clearFieldError("manualItemId");
       return;
     }
 
+    if (isApprovedReleaseExpired(matchingRequest)) {
+      await expireApprovedRequest(matchingRequest);
+      setSelectedRequest(null);
+      await fetchApprovedRequests();
+      showBlockedAction(
+        "This approved request expired because it was not released within 24 hours."
+      );
+      return;
+    }
+
 setSelectedRequest(matchingRequest);
 setManualItemId(itemId);
 setFieldErrors({});
@@ -520,6 +806,18 @@ async function handleConfirmRelease() {
           return;
         }
 
+        if (isApprovedReleaseExpired(latestRequest)) {
+          await expireApprovedRequest(latestRequest);
+          showBlockedAction(
+            "This approved request expired because it was not released within 24 hours."
+          );
+
+          setSelectedRequest(null);
+          setManualItemId("");
+          await fetchApprovedRequests();
+          return;
+        }
+
         if (isCategoryAdmin && !canCategoryAdminSeeRequest(latestRequest)) {
           showBlockedAction("You are not allowed to release this category item.");
           return;
@@ -545,8 +843,12 @@ async function handleConfirmRelease() {
           return;
         }
 
+        const releaseDateUpdate = getReleaseDateUpdate(latestRequest);
+
         await updateDoc(requestRef, {
           approvalStatus: "Borrowed",
+          borrowDate: releaseDateUpdate.borrowDate,
+          expectedReturnDate: releaseDateUpdate.expectedReturnDate,
           releasedAt: serverTimestamp(),
           releasedBy: getAdminId(),
           updatedAt: serverTimestamp(),
@@ -562,7 +864,7 @@ async function handleConfirmRelease() {
           targetRole: "borrower",
           categoryId: getRequestCategoryId(latestRequest),
           title: "Item Released",
-          message: `${latestRequest.itemName} has been released to you. Please return it on or before ${latestRequest.expectedReturnDate}.`,
+          message: `${latestRequest.itemName} has been released to you. Your borrowing period starts today. Please return it on or before ${releaseDateUpdate.expectedReturnDate}.`,
           status: "Unread",
           createdAt: serverTimestamp(),
           link: "/my-requests",
@@ -582,8 +884,11 @@ async function handleConfirmRelease() {
 }
 
   useEffect(() => {
+    if (!userData?.role) return;
+
     fetchApprovedRequests();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData?.role, userData?.assignedCategories?.join("|")]);
 useEffect(() => {
   getCameraList().catch((error) => {
     console.log("Camera list error:", error);
@@ -773,6 +1078,14 @@ return (
                 <strong>{selectedRequest.approvalStatus}</strong>
               </div>
 
+              <div className="release-purpose-box">
+                <span>Release Window</span>
+                <p>
+                  {formatApprovedReleaseRemaining(selectedRequest)} · Deadline:{" "}
+                  {formatApprovedReleaseDeadline(selectedRequest)}
+                </p>
+              </div>
+
               <h3>{selectedRequest.itemName}</h3>
 
               <div className="release-info-grid">
@@ -797,6 +1110,16 @@ return (
                 <div>
                   <span>Expected Return</span>
                   <strong>{selectedRequest.expectedReturnDate}</strong>
+                </div>
+
+                <div>
+                  <span>Adjusted Borrow Date</span>
+                  <strong>{getReleaseDateUpdate(selectedRequest).borrowDate}</strong>
+                </div>
+
+                <div>
+                  <span>Adjusted Return Date</span>
+                  <strong>{getReleaseDateUpdate(selectedRequest).expectedReturnDate}</strong>
                 </div>
               </div>
 
@@ -895,6 +1218,11 @@ return (
 
         <div className="release-approved-status-cell">
           <span>{request.approvalStatus || "Approved"}</span>
+          <small
+            title={`Release deadline: ${formatApprovedReleaseDeadline(request)}`}
+          >
+            {formatApprovedReleaseRemaining(request)}
+          </small>
         </div>
 
         <div className="release-approved-actions">
@@ -903,6 +1231,14 @@ return (
             className="release-primary-btn"
             onClick={() => {
               if (releasing) return;
+
+              if (isApprovedReleaseExpired(request)) {
+                expireApprovedRequest(request).then(() => fetchApprovedRequests());
+                showBlockedAction(
+                  "This approved request expired because it was not released within 24 hours."
+                );
+                return;
+              }
 
               setSelectedRequest(request);
               setManualItemId(request.itemId);
