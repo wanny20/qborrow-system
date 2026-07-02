@@ -425,6 +425,7 @@ const visibleRequests = useMemo(() => {
   const closedRequests = visibleRequests.filter(
     (request) =>
       request.approvalStatus === "Rejected" ||
+      request.approvalStatus === "Expired" ||
       request.approvalStatus === "Cancelled"
   );
 
@@ -462,7 +463,7 @@ const reportStatistics = [
   {
     label: "Closed Request Rate",
     value: getPercentage(closedRequests.length, visibleRequests.length),
-    detail: `${closedRequests.length} of ${visibleRequests.length} requests are rejected or cancelled.`,
+    detail: `${closedRequests.length} of ${visibleRequests.length} requests are rejected, expired, or cancelled.`,
   },
 ];
 
@@ -1939,6 +1940,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <option value="Returned">Returned</option>
       <option value="Returned On Time">Returned On Time</option>
       <option value="Returned Late">Returned Late</option>
+      <option value="Expired">Expired</option>
       <option value="Rejected">Rejected</option>
       <option value="Cancelled">Cancelled</option>
       <option value="Overdue">Overdue</option>

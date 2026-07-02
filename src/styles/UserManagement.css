@@ -6615,3 +6615,958 @@ html[data-theme="dark"] .user-view-borrowing-banner {
     min-width: 0;
   }
 }
+
+
+
+/* =========================================================
+   USER MANAGEMENT TABLE ACTION OVERLAP FIX
+   Fixes status/action overlap in desktop and dark mode.
+   Actions now have enough column width and stay inside the table row.
+========================================================= */
+
+/* Keep the table itself scrollable instead of allowing buttons to spill out. */
+.user-management-page .user-table-scroll-area {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Desktop/tablet table width with enough space for 6 action icons. */
+@media (min-width: 761px) {
+  .user-management-page .user-table-scroll-area .user-table-header,
+  .user-management-page .user-table-scroll-area .user-table-grid,
+  .user-management-page .user-table-scroll-area .user-grid {
+    width: 1180px !important;
+    min-width: 1180px !important;
+    max-width: none !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-table-header {
+    grid-template-columns:
+      160px
+      210px
+      100px
+      140px
+      100px
+      150px
+      260px !important;
+    gap: 10px !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-card,
+  .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 1180px !important;
+    min-width: 1180px !important;
+    max-width: none !important;
+    grid-template-columns:
+      160px
+      210px
+      100px
+      140px
+      100px
+      150px
+      260px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 10px !important;
+    overflow: hidden !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-table-status {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-borrowing-status-text {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-actions {
+    grid-area: actions !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
+  .user-management-page .user-table-scroll-area .user-card .user-icon-action,
+  .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
+  .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    flex: 0 0 34px !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* Smaller screens still keep a compact horizontal table, but actions use 3x2 grid. */
+@media (max-width: 760px) {
+  .user-management-page .user-table-scroll-area .user-table-header,
+  .user-management-page .user-table-scroll-area .user-table-grid,
+  .user-management-page .user-table-scroll-area .user-grid,
+  .user-management-page .user-table-scroll-area .user-card,
+  .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 860px !important;
+    min-width: 860px !important;
+    max-width: none !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-table-header {
+    grid-template-columns:
+      120px
+      150px
+      78px
+      100px
+      82px
+      108px
+      170px !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-card,
+  .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    grid-template-columns:
+      120px
+      150px
+      78px
+      100px
+      82px
+      108px
+      170px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    overflow: hidden !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-borrowing-status-text {
+    max-width: 100% !important;
+    padding: 0 6px !important;
+    font-size: 0.42rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-actions {
+    width: 170px !important;
+    min-width: 170px !important;
+    max-width: 170px !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 34px) !important;
+    justify-content: start !important;
+    gap: 5px !important;
+    overflow: hidden !important;
+  }
+
+  .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
+  .user-management-page .user-table-scroll-area .user-card .user-icon-action,
+  .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
+  .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* Dark mode: keep active/restricted pills readable inside the wider status column. */
+html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-borrowing-status-text.status-active {
+  background: #dcfce7 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-borrowing-status-text.status-temporarily-restricted,
+html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-borrowing-status-text.status-account-disabled {
+  -webkit-text-fill-color: currentColor !important;
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT STATUS PILL READABILITY FIX
+   Centers text and keeps status readable in dark mode.
+========================================================= */
+
+.user-management-page .user-borrowing-status-text {
+  width: auto !important;
+  min-width: 72px !important;
+  max-width: 100% !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  border-radius: 999px !important;
+  padding: 0 10px !important;
+  font-size: 0.52rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.user-management-page .user-table-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+/* Status colors - light and dark readable */
+.user-management-page .user-borrowing-status-text.status-active {
+  background: #dcfce7 !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+.user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #854d0e !important;
+  -webkit-text-fill-color: #854d0e !important;
+}
+
+.user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+.user-management-page .user-borrowing-status-text.status-suspended,
+.user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+}
+
+/* Dark mode force readable pill text */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-active {
+  background: #bbf7d0 !important;
+  border-color: #86efac !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  border-color: #facc15 !important;
+  color: #422006 !important;
+  -webkit-text-fill-color: #422006 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fecaca !important;
+  border-color: #fca5a5 !important;
+  color: #450a0a !important;
+  -webkit-text-fill-color: #450a0a !important;
+}
+
+/* Long status text should stay readable inside the wider status column */
+.user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+  min-width: 128px !important;
+  padding-inline: 10px !important;
+}
+
+@media (max-width: 760px) {
+  .user-management-page .user-borrowing-status-text {
+    min-width: 62px !important;
+    min-height: 24px !important;
+    padding: 0 7px !important;
+    font-size: 0.42rem !important;
+  }
+
+  .user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+    min-width: 102px !important;
+  }
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT TABLE HEADER + DARK STATUS PILL FINAL FIX
+   Fixes awkward STATUS/ACTIONS labels and unreadable dark-mode status.
+========================================================= */
+
+/* Make the table header look like a clean header strip instead of floating labels. */
+.user-management-page .user-table-header {
+  min-height: 44px !important;
+  align-items: center !important;
+  border-radius: 18px 18px 10px 10px !important;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98)) !important;
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.20) !important;
+  box-shadow: none !important;
+}
+
+.user-management-page .user-table-header span {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  color: #64748b !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.62rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.09em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+/* Center only the STATUS and ACTIONS header labels to match their columns. */
+.user-management-page .user-table-header span:nth-child(6),
+.user-management-page .user-table-header span:nth-child(7) {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Make rows align better under the cleaner header. */
+.user-management-page .user-table-grid .user-card {
+  align-items: center !important;
+  border-color: rgba(37, 99, 235, 0.14) !important;
+}
+
+/* Status cell should center the pill perfectly in its column. */
+.user-management-page .user-table-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+/* Stronger status pill layout and readable text. */
+.user-management-page .user-borrowing-status-text {
+  min-width: 78px !important;
+  max-width: 140px !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  border: 2px solid transparent !important;
+  border-radius: 999px !important;
+  padding: 0 10px !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.54rem !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: none !important;
+}
+
+/* Wider pill for long status. */
+.user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+  min-width: 146px !important;
+  max-width: 146px !important;
+  font-size: 0.46rem !important;
+}
+
+/* Light mode status colors. */
+.user-management-page .user-borrowing-status-text.status-active {
+  background: #dcfce7 !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+.user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #854d0e !important;
+  -webkit-text-fill-color: #854d0e !important;
+}
+
+.user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+.user-management-page .user-borrowing-status-text.status-suspended,
+.user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+}
+
+/* Dark mode: cleaner header strip and visible labels. */
+html[data-theme="dark"] .user-management-page .user-table-header {
+  background:
+    linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.30) !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-header span {
+  color: #cbd5e1 !important;
+}
+
+/* Dark mode: force readable status text and better contrast. */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-active {
+  background: #86efac !important;
+  border-color: #4ade80 !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  border-color: #facc15 !important;
+  color: #422006 !important;
+  -webkit-text-fill-color: #422006 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fca5a5 !important;
+  border-color: #f87171 !important;
+  color: #450a0a !important;
+  -webkit-text-fill-color: #450a0a !important;
+}
+
+/* Actions column alignment so icon buttons match the centered header label. */
+.user-management-page .user-actions {
+  align-items: center !important;
+}
+
+/* Small table mode still stays readable. */
+@media (max-width: 760px) {
+  .user-management-page .user-table-header span {
+    font-size: 0.52rem !important;
+  }
+
+  .user-management-page .user-borrowing-status-text {
+    min-width: 68px !important;
+    max-width: 110px !important;
+    min-height: 24px !important;
+    padding: 0 7px !important;
+    font-size: 0.43rem !important;
+  }
+
+  .user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+    min-width: 108px !important;
+    max-width: 108px !important;
+    font-size: 0.36rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT STATUS COLUMN FINAL CLEANUP
+   Fixes dark-mode unreadable ACTIVE text, removes odd dot/mark,
+   and makes STATUS/ACTIONS header alignment cleaner.
+========================================================= */
+
+/* Cleaner table header strip */
+.user-management-page .user-table-header {
+  min-height: 46px !important;
+  align-items: center !important;
+  border-radius: 18px 18px 12px 12px !important;
+  background: #f8fafc !important;
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.22) !important;
+  box-shadow: none !important;
+}
+
+.user-management-page .user-table-header span {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  color: #64748b !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.6rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.user-management-page .user-table-header span:nth-child(6),
+.user-management-page .user-table-header span:nth-child(7) {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Center the status cell */
+.user-management-page .user-table-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+/* Hard reset for the status pill so old table strong rules cannot affect it */
+.user-management-page .user-table-status > strong.user-borrowing-status-text,
+.user-management-page .user-card .user-table-status > strong.user-borrowing-status-text,
+.user-management-page .user-table-grid .user-card .user-table-status > strong.user-borrowing-status-text {
+  width: fit-content !important;
+  min-width: 86px !important;
+  max-width: 160px !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  border: 2px solid transparent !important;
+  border-radius: 999px !important;
+  padding: 0 13px !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.54rem !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-shadow: none !important;
+  text-indent: 0 !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Remove any accidental dot/marker created by older pseudo styles */
+.user-management-page .user-table-status > strong.user-borrowing-status-text::before,
+.user-management-page .user-table-status > strong.user-borrowing-status-text::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Long status gets more room */
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-borrowing-disabled {
+  min-width: 170px !important;
+  max-width: 170px !important;
+  font-size: 0.45rem !important;
+  padding-inline: 12px !important;
+}
+
+/* Light mode readable colors */
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-active {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #14532d !important;
+  -webkit-text-fill-color: #14532d !important;
+}
+
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-temporarily-restricted {
+  background: #fef3c7 !important;
+  border-color: #facc15 !important;
+  color: #854d0e !important;
+  -webkit-text-fill-color: #854d0e !important;
+}
+
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-borrowing-disabled,
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-suspended,
+.user-management-page .user-table-status > strong.user-borrowing-status-text.status-account-disabled {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #7f1d1d !important;
+  -webkit-text-fill-color: #7f1d1d !important;
+}
+
+/* Dark mode header and status colors */
+html[data-theme="dark"] .user-management-page .user-table-header {
+  background: #111827 !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.34) !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-header span {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-status > strong.user-borrowing-status-text.status-active {
+  background: #bbf7d0 !important;
+  border-color: #22c55e !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-status > strong.user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  border-color: #f59e0b !important;
+  color: #422006 !important;
+  -webkit-text-fill-color: #422006 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-table-status > strong.user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-table-status > strong.user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-table-status > strong.user-borrowing-status-text.status-account-disabled {
+  background: #fca5a5 !important;
+  border-color: #ef4444 !important;
+  color: #450a0a !important;
+  -webkit-text-fill-color: #450a0a !important;
+}
+
+/* Keep row text rules from overriding the pill */
+html[data-theme="dark"] .user-management-page .user-table-cell strong:not(.user-borrowing-status-text) {
+  color: var(--qb-foreground, #f8fafc) !important;
+}
+
+/* Action column header and buttons align with the header label */
+.user-management-page .user-actions {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Mobile/tablet compact table */
+@media (max-width: 760px) {
+  .user-management-page .user-table-header span {
+    font-size: 0.5rem !important;
+  }
+
+  .user-management-page .user-table-status > strong.user-borrowing-status-text {
+    min-width: 72px !important;
+    max-width: 116px !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 0 8px !important;
+    font-size: 0.43rem !important;
+  }
+
+  .user-management-page .user-table-status > strong.user-borrowing-status-text.status-borrowing-disabled {
+    min-width: 116px !important;
+    max-width: 116px !important;
+    font-size: 0.34rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT DARK MODE STATUS TEXT - BLACK FORCE FIX
+   This must stay at the VERY BOTTOM of UserManagement.css.
+   Purpose: force the text inside the Status pill to black in dark mode.
+========================================================= */
+
+/* Reset the status cell so the pill is centered. */
+html[data-theme="dark"] .user-management-page .user-table-status,
+html[data-theme="dark"] .user-management-page .user-table-grid .user-card .user-table-status,
+html[data-theme="dark"] .user-management-page .user-table-cell.user-table-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+/* Force ALL status pill text to black in dark mode. */
+html[data-theme="dark"] .user-management-page .user-table-status .user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page .user-table-status strong.user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page .user-table-grid .user-card .user-table-status strong.user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page .user-table-cell.user-table-status strong.user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page strong.user-borrowing-status-text.status-active,
+html[data-theme="dark"] .user-management-page strong.user-borrowing-status-text.status-temporarily-restricted,
+html[data-theme="dark"] .user-management-page strong.user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page strong.user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page strong.user-borrowing-status-text.status-account-disabled {
+  width: fit-content !important;
+  min-width: 82px !important;
+  max-width: 170px !important;
+  min-height: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  border-radius: 999px !important;
+  padding: 0 12px !important;
+
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+  text-decoration: none !important;
+  text-indent: 0 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 0.52rem !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Remove any pseudo-dot/marker attached to the status pill. */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text::before,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text::after,
+html[data-theme="dark"] .user-management-page .user-table-status strong::before,
+html[data-theme="dark"] .user-management-page .user-table-status strong::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Keep dark mode backgrounds, but all pill text remains black. */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-active {
+  background: #bbf7d0 !important;
+  border: 2px solid #22c55e !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  border: 2px solid #f59e0b !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fca5a5 !important;
+  border: 2px solid #ef4444 !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Long status text gets enough room. */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+  min-width: 170px !important;
+  max-width: 170px !important;
+  font-size: 0.44rem !important;
+}
+
+/* Make sure header labels stay professional in dark mode. */
+html[data-theme="dark"] .user-management-page .user-table-header span:nth-child(6),
+html[data-theme="dark"] .user-management-page .user-table-header span:nth-child(7) {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Mobile compact version. */
+@media (max-width: 760px) {
+  html[data-theme="dark"] .user-management-page .user-borrowing-status-text {
+    min-width: 70px !important;
+    max-width: 120px !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    padding: 0 8px !important;
+    font-size: 0.42rem !important;
+  }
+
+  html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled {
+    min-width: 116px !important;
+    max-width: 116px !important;
+    font-size: 0.34rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   CREATE USER DOUBLE-CLICK SAFETY UI
+   Button becomes visibly locked while the account is being created.
+========================================================= */
+
+.user-create-submit-btn:disabled,
+.user-create-submit-btn[aria-busy="true"] {
+  pointer-events: none !important;
+  cursor: wait !important;
+  opacity: 0.72 !important;
+  transform: none !important;
+}
+
+
+
+/* =========================================================
+   USER MANAGEMENT ACTION TOOLTIP FIX
+   Prevents hover tooltip text from being cut inside action buttons.
+========================================================= */
+
+/* Allow the tooltip to escape the action button/table row. */
+.user-management-page .user-list-card,
+.user-management-page .user-table-grid,
+.user-management-page .user-table-grid .user-card,
+.user-management-page .user-actions,
+.user-management-page .user-table-grid .user-actions {
+  overflow: visible !important;
+}
+
+/* Keep horizontal table scrolling, but do not clip vertical hover tooltips. */
+.user-management-page .user-list-card {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-bottom: 26px !important;
+}
+
+/* Action buttons need visible overflow because their tooltip is attached to the button. */
+.user-management-page .user-actions .user-icon-action,
+.user-management-page .user-table-grid .user-actions .user-icon-action,
+.user-management-page .user-table-grid .user-actions button,
+.user-management-page .user-table-grid .user-view-btn {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 2 !important;
+}
+
+.user-management-page .user-actions .user-icon-action:hover,
+.user-management-page .user-table-grid .user-actions .user-icon-action:hover,
+.user-management-page .user-table-grid .user-actions button:hover,
+.user-management-page .user-table-grid .user-view-btn:hover {
+  z-index: 50 !important;
+}
+
+/* Rebuild the custom tooltip so the whole text is readable. */
+.user-management-page .user-icon-action[data-tooltip]::after,
+.user-management-page .user-view-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 99999;
+  width: max-content;
+  max-width: 190px;
+  transform: translateX(-50%) translateY(4px);
+  pointer-events: none;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+  padding: 7px 10px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms ease;
+}
+
+/* Small pointer under tooltip. */
+.user-management-page .user-icon-action[data-tooltip]::before,
+.user-management-page .user-view-btn[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 3px);
+  z-index: 99998;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  pointer-events: none;
+  background: #ffffff;
+  border-right: 1px solid rgba(15, 23, 42, 0.18);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 140ms ease,
+    visibility 140ms ease;
+}
+
+.user-management-page .user-icon-action[data-tooltip]:hover::after,
+.user-management-page .user-view-btn[data-tooltip]:hover::after,
+.user-management-page .user-icon-action[data-tooltip]:focus-visible::after,
+.user-management-page .user-view-btn[data-tooltip]:focus-visible::after,
+.user-management-page .user-icon-action[data-tooltip]:hover::before,
+.user-management-page .user-view-btn[data-tooltip]:hover::before,
+.user-management-page .user-icon-action[data-tooltip]:focus-visible::before,
+.user-management-page .user-view-btn[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.user-management-page .user-icon-action[data-tooltip]:hover::after,
+.user-management-page .user-view-btn[data-tooltip]:hover::after,
+.user-management-page .user-icon-action[data-tooltip]:focus-visible::after,
+.user-management-page .user-view-btn[data-tooltip]:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* First/last action buttons avoid clipping near the scroll edges. */
+.user-management-page .user-actions .user-icon-action:first-child::after,
+.user-management-page .user-actions .user-view-btn:first-child::after {
+  left: 0;
+  transform: translateX(0) translateY(4px);
+}
+
+.user-management-page .user-actions .user-icon-action:first-child:hover::after,
+.user-management-page .user-actions .user-view-btn:first-child:hover::after,
+.user-management-page .user-actions .user-icon-action:first-child:focus-visible::after,
+.user-management-page .user-actions .user-view-btn:first-child:focus-visible::after {
+  transform: translateX(0) translateY(0);
+}
+
+.user-management-page .user-actions .user-icon-action:last-child::after,
+.user-management-page .user-actions .user-view-btn:last-child::after {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(4px);
+}
+
+.user-management-page .user-actions .user-icon-action:last-child:hover::after,
+.user-management-page .user-actions .user-view-btn:last-child:hover::after,
+.user-management-page .user-actions .user-icon-action:last-child:focus-visible::after,
+.user-management-page .user-actions .user-view-btn:last-child:focus-visible::after {
+  transform: translateX(0) translateY(0);
+}
+
+html[data-theme="dark"] .user-management-page .user-icon-action[data-tooltip]::after,
+html[data-theme="dark"] .user-management-page .user-view-btn[data-tooltip]::after,
+html[data-theme="dark"] .user-management-page .user-icon-action[data-tooltip]::before,
+html[data-theme="dark"] .user-management-page .user-view-btn[data-tooltip]::before {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.30);
+}
+
+@media (max-width: 760px) {
+  .user-management-page .user-icon-action[data-tooltip]::after,
+  .user-management-page .user-view-btn[data-tooltip]::after {
+    max-width: 150px;
+    padding: 6px 8px;
+    font-size: 0.64rem;
+  }
+}
+  

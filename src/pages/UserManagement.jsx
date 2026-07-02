@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
@@ -38,6 +38,7 @@ const {
 } = outletContext;
 const { showToast } = useToast();
 const [searchParams, setSearchParams] = useSearchParams();
+const createUserSubmitLockRef = useRef(false);
 
 
   const [users, setUsers] = useState([]);
@@ -1046,78 +1047,83 @@ function resetCreateForm() {
 
 async function handleCreateUser(e) {
   e.preventDefault();
+
+  if (creating || createUserSubmitLockRef.current) {
+    return;
+  }
+
+  createUserSubmitLockRef.current = true;
+  setCreating(true);
   showStatus("", "");
 
-const isValid = validateCreateUserForm();
+  try {
+    const isValid = validateCreateUserForm();
 
-if (!isValid) {
-  return;
-}
+    if (!isValid) {
+      return;
+    }
 
-const duplicateError = await getCreateDuplicateError();
+    const duplicateError = await getCreateDuplicateError();
 
-if (duplicateError) {
-  showStatus(duplicateError, "error");
-  return;
-}
+    if (duplicateError) {
+      showStatus(duplicateError, "error");
+      return;
+    }
 
-setCreating(true);
+    const userCredential = await createUserWithEmailAndPassword(
+      secondaryAuth,
+      email.trim().toLowerCase(),
+      temporaryPassword
+    );
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        secondaryAuth,
-        email.trim().toLowerCase(),
-        temporaryPassword
+    const newUser = userCredential.user;
+
+    await setDoc(doc(db, "users", newUser.uid), {
+      fullName: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      role,
+      assignedCategories: role === "categoryAdmin" ? assignedCategories : [],
+      ...getBorrowerDetailsPayload(role),
+      overdueCount: 0,
+      suspendedUntil: "",
+      suspensionReason: "",
+      canBorrow: true,
+      isActive: true,
+      termsAccepted: false,
+      termsAcceptedAt: "",
+      termsVersion: "1.0",
+      mustChangePassword: true,
+      passwordChangedAt: "",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    await signOut(secondaryAuth);
+
+    showToast("Successfully Created", "success");
+    resetCreateForm();
+    await fetchData();
+  } catch (error) {
+    if (error.code === "auth/email-already-in-use") {
+      showStatus(
+        "This email is already registered. Please use a different email address.",
+        "error"
       );
 
-      const newUser = userCredential.user;
+      setCreateFieldErrors((previousErrors) => ({
+        ...previousErrors,
+        email: "This email is already registered.",
+      }));
 
-      await setDoc(doc(db, "users", newUser.uid), {
-        fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        role,
-        assignedCategories: role === "categoryAdmin" ? assignedCategories : [],
-        ...getBorrowerDetailsPayload(role),
-        overdueCount: 0,
-        suspendedUntil: "",
-        suspensionReason: "",
-        canBorrow: true,
-        isActive: true,
-        termsAccepted: false,
-        termsAcceptedAt: "",
-        termsVersion: "1.0",
-        mustChangePassword: true,
-        passwordChangedAt: "",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      await signOut(secondaryAuth);
-
-        showToast("Successfully Created", "success");
-        resetCreateForm();
-        fetchData();
-
-    } catch (error) {
-      if (error.code === "auth/email-already-in-use") {
-  showStatus(
-    "This email is already registered. Please use a different email address.",
-    "error"
-  );
-
-  setCreateFieldErrors((previousErrors) => ({
-    ...previousErrors,
-    email: "This email is already registered.",
-  }));
-
-  return;
-}
-
-showActionError("Failed to create user", error);
-    } finally {
-      setCreating(false);
+      return;
     }
+
+    showActionError("Failed to create user", error);
+  } finally {
+    createUserSubmitLockRef.current = false;
+    setCreating(false);
   }
+}
 
 async function handleSeedCategories() {
   openConfirmAction({
@@ -2431,8 +2437,10 @@ onChange={(e) => {
 
               <button
                 type="submit"
-                className="user-primary-btn"
+                className="user-primary-btn user-create-submit-btn"
                 disabled={creating}
+                aria-disabled={creating}
+                aria-busy={creating}
               >
                 {creating ? "Creating..." : "Create User"}
               </button>
