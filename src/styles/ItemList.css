@@ -2870,3 +2870,1000 @@ html[data-theme="dark"] .inventory-page .inventory-meta-row > span {
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24) !important;
   }
 }
+
+
+
+/* =========================================================
+   ITEM DETAILS DARK MODE PILL READABILITY FIX
+   Fixes item code, availability/status, condition, and meta pills.
+========================================================= */
+
+/* Remove any dark inherited block behind title/header texts */
+html[data-theme="dark"] .item-details-page .item-details-header-text,
+html[data-theme="dark"] .item-details-page .item-details-header-text *,
+html[data-theme="dark"] .item-details-page .item-details-header-actions-compact {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Header item code pill */
+html[data-theme="dark"] .item-details-page .item-details-header-text > span {
+  width: fit-content !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 34px !important;
+  border: 2px solid rgba(147, 197, 253, 0.55) !important;
+  border-radius: 999px !important;
+  background: #dbeafe !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  padding: 0 16px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Main item code and top status pills */
+html[data-theme="dark"] .item-details-page .item-details-topline > span,
+html[data-theme="dark"] .item-details-page .item-details-topline .availability-pill,
+html[data-theme="dark"] .item-details-page .item-details-topline .condition-pill,
+html[data-theme="dark"] .item-details-page .item-details-topline .inventory-table-category,
+html[data-theme="dark"] .item-details-page .item-details-topline .inventory-table-days {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+/* Item code pill beside the status */
+html[data-theme="dark"] .item-details-page .item-details-topline > span:first-child {
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid rgba(147, 197, 253, 0.40) !important;
+  border-radius: 999px !important;
+  background: #dbeafe !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  padding: 0 14px !important;
+  font-weight: 950 !important;
+}
+
+/* Availability/status pills */
+html[data-theme="dark"] .item-details-page .availability-pill.available,
+html[data-theme="dark"] .item-details-page .condition-pill.good {
+  background: #bbf7d0 !important;
+  border: 2px solid #22c55e !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .availability-pill.reserved,
+html[data-theme="dark"] .item-details-page .condition-pill.fair {
+  background: #fde68a !important;
+  border: 2px solid #f59e0b !important;
+  color: #422006 !important;
+  -webkit-text-fill-color: #422006 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .availability-pill.borrowed {
+  background: #ddd6fe !important;
+  border: 2px solid #8b5cf6 !important;
+  color: #2e1065 !important;
+  -webkit-text-fill-color: #2e1065 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .availability-pill.damaged,
+html[data-theme="dark"] .item-details-page .condition-pill.damaged,
+html[data-theme="dark"] .item-details-page .availability-pill.lost,
+html[data-theme="dark"] .item-details-page .condition-pill.lost,
+html[data-theme="dark"] .item-details-page .availability-pill.unavailable,
+html[data-theme="dark"] .item-details-page .condition-pill.unknown {
+  background: #fecaca !important;
+  border: 2px solid #ef4444 !important;
+  color: #450a0a !important;
+  -webkit-text-fill-color: #450a0a !important;
+  text-shadow: none !important;
+}
+
+/* Force all text inside status/condition pills to stay readable */
+html[data-theme="dark"] .item-details-page .availability-pill *,
+html[data-theme="dark"] .item-details-page .condition-pill * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* Meta cards should have readable labels and values */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid > div,
+html[data-theme="dark"] .item-details-page .item-details-scan-values > div {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #111827 !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span,
+html[data-theme="dark"] .item-details-page .item-details-scan-values span {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong,
+html[data-theme="dark"] .item-details-page .item-details-scan-values p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+/* Item title and description */
+html[data-theme="dark"] .item-details-page .item-details-info-panel h2,
+html[data-theme="dark"] .item-details-page .item-details-header-text h2,
+html[data-theme="dark"] .item-details-page .item-details-qr-header span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="dark"] .item-details-page .item-details-description,
+html[data-theme="dark"] .item-details-page .item-details-header-text p,
+html[data-theme="dark"] .item-details-page .item-details-qr-header p {
+  color: #dbeafe !important;
+  -webkit-text-fill-color: #dbeafe !important;
+}
+
+/* Admin view box readability */
+html[data-theme="dark"] .item-details-page .item-details-warning,
+html[data-theme="dark"] .item-details-page .item-details-action-panel,
+html[data-theme="dark"] .item-details-page [class*="admin"] {
+  color: #f8fafc;
+}
+
+/* Download/print buttons in QR panel */
+html[data-theme="dark"] .item-details-page .item-details-side-card button,
+html[data-theme="dark"] .item-details-page .item-details-header-actions-compact button {
+  color: #f8fafc;
+  -webkit-text-fill-color: #f8fafc;
+}
+
+/* Keep yellow primary print label readable */
+html[data-theme="dark"] .item-details-page .item-details-side-card .inventory-refresh-btn,
+html[data-theme="dark"] .item-details-page .item-details-side-card .inventory-add-btn,
+html[data-theme="dark"] .item-details-page .item-details-side-card .borrow-btn {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+
+
+/* =========================================================
+   ITEM DETAILS META CONDITION PILL FINAL FIX
+   Fixes condition/status pills inside meta cards in dark mode.
+========================================================= */
+
+/* The condition pill inside the meta grid was inheriting white text.
+   Force the pill and every child/text inside it to use readable dark text. */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill.good,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill.available,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill.good,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill.available,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.condition-pill.good,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.availability-pill.available {
+  background: #bbf7d0 !important;
+  border: 2px solid #22c55e !important;
+  color: #052e16 !important;
+  -webkit-text-fill-color: #052e16 !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Fair / reserved inside meta cards */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill.fair,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill.reserved,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill.fair,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill.reserved,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.condition-pill.fair,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.availability-pill.reserved {
+  background: #fde68a !important;
+  border: 2px solid #f59e0b !important;
+  color: #422006 !important;
+  -webkit-text-fill-color: #422006 !important;
+  text-shadow: none !important;
+}
+
+/* Damaged / lost / unavailable / unknown inside meta cards */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill.damaged,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill.lost,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill.unknown,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill.damaged,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill.lost,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill.unavailable,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill.damaged,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill.lost,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill.unknown,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill.damaged,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill.lost,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill.unavailable {
+  background: #fecaca !important;
+  border: 2px solid #ef4444 !important;
+  color: #450a0a !important;
+  -webkit-text-fill-color: #450a0a !important;
+  text-shadow: none !important;
+}
+
+/* Override the meta strong rule that was turning all values white. */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.condition-pill,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid strong.availability-pill,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.condition-pill,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid span.availability-pill {
+  width: fit-content !important;
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  padding: 0 14px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: capitalize !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* Any nested text inside those pills follows the pill color. */
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .condition-pill *,
+html[data-theme="dark"] .item-details-page .item-details-meta-grid .availability-pill * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+
+
+/* =========================================================
+   FORCE BLACK TEXT ON ITEM DETAILS CONDITION PILL
+   Keep this at the VERY BOTTOM of ItemList.css.
+========================================================= */
+
+/* Strongest override for the Good condition pill in Item Details dark mode */
+html[data-theme="dark"] body .item-details-page .condition-pill.good,
+html[data-theme="dark"] body .item-details-page strong.condition-pill.good,
+html[data-theme="dark"] body .item-details-page span.condition-pill.good,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid .condition-pill.good,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid strong.condition-pill.good,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid span.condition-pill.good {
+  background: #bbf7d0 !important;
+  border: 2px solid #22c55e !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* If the pill has nested text/span inside, force that text black too */
+html[data-theme="dark"] body .item-details-page .condition-pill.good *,
+html[data-theme="dark"] body .item-details-page strong.condition-pill.good *,
+html[data-theme="dark"] body .item-details-page span.condition-pill.good *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid .condition-pill.good *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid strong.condition-pill.good *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid span.condition-pill.good * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* If the condition pill is wrapped by a strong/span value element, force wrapper text black too */
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid strong:has(.condition-pill.good),
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid span:has(.condition-pill.good),
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid div:has(.condition-pill.good) .condition-pill.good {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* Same readable black text for top status/condition pills */
+html[data-theme="dark"] body .item-details-page .availability-pill.available,
+html[data-theme="dark"] body .item-details-page strong.availability-pill.available,
+html[data-theme="dark"] body .item-details-page span.availability-pill.available {
+  background: #bbf7d0 !important;
+  border: 2px solid #22c55e !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+
+
+/* =========================================================
+   FINAL HARD FIX - ITEM DETAILS CONDITION VALUE BLACK TEXT
+   The condition value is inside the 3rd meta card, so this
+   targets that exact card even if the JSX does not put the
+   condition-pill class on the value element.
+========================================================= */
+
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > strong,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > p,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > span:not(:first-child),
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) .condition-pill,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) .condition-pill.good,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) strong.condition-pill,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) span.condition-pill {
+  width: fit-content !important;
+  min-width: 64px !important;
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #22c55e !important;
+  border-radius: 999px !important;
+  background: #bbf7d0 !important;
+  padding: 0 14px !important;
+
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+/* Force any inner text inside the condition value to black too */
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > strong *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > p *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) .condition-pill *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) strong.condition-pill *,
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) span.condition-pill * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* Keep the CONDITION label itself light, not green */
+html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:nth-child(3) > span:first-child {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: auto !important;
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+/* Safety: if the browser supports :has(), also target the card by its CONDITION label */
+@supports selector(:has(*)) {
+  html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:has(> span:first-child) > strong.condition-pill.good,
+  html[data-theme="dark"] body .item-details-page .item-details-meta-grid > div:has(.condition-pill.good) .condition-pill.good {
+    background: #bbf7d0 !important;
+    border: 2px solid #22c55e !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    text-shadow: none !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS CATEGORY ADMIN FIXED CATEGORY WIDTH
+   Makes the fixed category pill match the Category dropdown width
+   used by super admin and centers the text.
+========================================================= */
+
+/* Desktop/tablet: same full width as the Category dropdown column */
+.inventory-page .inventory-tools .inventory-fixed-category-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 18px !important;
+  padding: 0 14px !important;
+  text-align: center !important;
+}
+
+.inventory-page .inventory-tools .inventory-fixed-category-card strong {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  font-size: 0.88rem !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Keep the parent filter column equal to the normal dropdown column */
+.inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+  width: 100% !important;
+  min-width: 180px !important;
+}
+
+/* Dark mode text stays centered and readable */
+html[data-theme="dark"] .inventory-page .inventory-tools .inventory-fixed-category-card,
+html[data-theme="dark"] .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+  text-align: center !important;
+}
+
+/* Mobile: category chip should still match the dropdown width, not shrink */
+@media (max-width: 760px) {
+  .inventory-page .inventory-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(118px, 178px) !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    min-width: 118px !important;
+    max-width: 178px !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    border-radius: 999px !important;
+    padding: 0 12px !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+    font-size: 0.72rem !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .inventory-page .inventory-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(108px, 156px) !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    min-width: 108px !important;
+    max-width: 156px !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+    font-size: 0.68rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS MOBILE HEADER + FILTER ROW FIX
+   Compact title card, Back button beside title, and search filters
+   in one horizontal row on mobile.
+========================================================= */
+
+@media (max-width: 760px) {
+  /* Compact title card: text left, Back button right */
+  .inventory-page .inventory-title-area,
+  .inventory-page .inventory-title-area-compact,
+  .app-page-content .inventory-page .inventory-title-area,
+  .app-page-content .inventory-page .inventory-title-area-compact {
+    min-height: 104px !important;
+    height: auto !important;
+    max-height: none !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    border-radius: 18px !important;
+    padding: 12px 12px !important;
+  }
+
+  .inventory-page .inventory-header-text,
+  .app-page-content .inventory-page .inventory-header-text {
+    min-width: 0 !important;
+    display: grid !important;
+    align-content: center !important;
+    gap: 4px !important;
+  }
+
+  .inventory-page .inventory-header-text h1,
+  .app-page-content .inventory-page .inventory-header-text h1 {
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: 1.18rem !important;
+    line-height: 0.98 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .inventory-page .inventory-header-text p,
+  .app-page-content .inventory-page .inventory-header-text p {
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: 0.58rem !important;
+    line-height: 1.18 !important;
+  }
+
+  .inventory-page .inventory-assigned-note,
+  .app-page-content .inventory-page .inventory-assigned-note {
+    width: fit-content !important;
+    max-width: 150px !important;
+    min-height: 20px !important;
+    margin-top: 2px !important;
+    padding: 3px 8px !important;
+    border-radius: 999px !important;
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .inventory-page .inventory-header-actions-compact,
+  .app-page-content .inventory-page .inventory-header-actions-compact {
+    width: auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    align-self: center !important;
+  }
+
+  .inventory-page .inventory-header-action-btn,
+  .app-page-content .inventory-page .inventory-header-action-btn {
+    width: auto !important;
+    min-width: 112px !important;
+    max-width: 132px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.56rem !important;
+    white-space: nowrap !important;
+  }
+
+  .inventory-page .inventory-title-area::after,
+  .inventory-page .inventory-title-area-compact::after,
+  .app-page-content .inventory-page .inventory-title-area::after,
+  .app-page-content .inventory-page .inventory-title-area-compact::after {
+    width: 54px !important;
+    height: 54px !important;
+    right: 8px !important;
+    bottom: -20px !important;
+  }
+
+  /* Search/filter card: one horizontal row with all controls */
+  .inventory-page .inventory-tools,
+  .app-page-content .inventory-page .inventory-tools {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 7px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x proximity !important;
+    border-radius: 18px !important;
+    padding: 10px !important;
+  }
+
+  .inventory-page .inventory-tools::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .inventory-page .inventory-tools::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .inventory-page .inventory-tools::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.32);
+  }
+
+  .inventory-page .inventory-search,
+  .inventory-page .inventory-filter,
+  .app-page-content .inventory-page .inventory-search,
+  .app-page-content .inventory-page .inventory-filter {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    gap: 0 !important;
+    scroll-snap-align: start !important;
+  }
+
+  .inventory-page .inventory-search,
+  .app-page-content .inventory-page .inventory-search {
+    width: 190px !important;
+    grid-column: auto !important;
+  }
+
+  .inventory-page .inventory-filter,
+  .app-page-content .inventory-page .inventory-filter {
+    width: 126px !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    width: 112px !important;
+    min-width: 112px !important;
+    max-width: 112px !important;
+  }
+
+  .inventory-page .inventory-search .qb-label,
+  .inventory-page .inventory-filter .qb-label,
+  .app-page-content .inventory-page .inventory-search .qb-label,
+  .app-page-content .inventory-page .inventory-filter .qb-label {
+    display: none !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select,
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    font-size: 0.58rem !important;
+    line-height: 1 !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-search input {
+    padding: 0 10px !important;
+  }
+
+  .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-filter select {
+    padding: 0 28px 0 10px !important;
+    background-position:
+      calc(100% - 15px) 14px,
+      calc(100% - 10px) 14px,
+      0 0 !important;
+    background-size:
+      5px 5px,
+      5px 5px,
+      100% 100% !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 0 10px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card strong,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 0.58rem !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .inventory-page .inventory-search,
+  .app-page-content .inventory-page .inventory-search {
+    width: 176px !important;
+  }
+
+  .inventory-page .inventory-filter,
+  .app-page-content .inventory-page .inventory-filter {
+    width: 118px !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    width: 104px !important;
+    min-width: 104px !important;
+    max-width: 104px !important;
+  }
+
+  .inventory-page .inventory-header-action-btn,
+  .app-page-content .inventory-page .inventory-header-action-btn {
+    min-width: 104px !important;
+    max-width: 118px !important;
+    font-size: 0.52rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS MOBILE SEARCH CARD COMPACT NON-SCROLL
+   Search, availability, and category stay in one compact row
+   without horizontal scrolling.
+========================================================= */
+
+@media (max-width: 760px) {
+  /* Override previous horizontal-scroll search row */
+  .inventory-page .inventory-tools,
+  .app-page-content .inventory-page .inventory-tools {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 104px 76px !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    padding: 9px !important;
+    border-radius: 18px !important;
+    scroll-snap-type: none !important;
+  }
+
+  .inventory-page .inventory-tools::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .inventory-page .inventory-search,
+  .inventory-page .inventory-filter,
+  .app-page-content .inventory-page .inventory-search,
+  .app-page-content .inventory-page .inventory-filter {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: initial !important;
+    grid-column: auto !important;
+    display: block !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .inventory-page .inventory-search .qb-label,
+  .inventory-page .inventory-filter .qb-label,
+  .app-page-content .inventory-page .inventory-search .qb-label,
+  .app-page-content .inventory-page .inventory-filter .qb-label {
+    display: none !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select,
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    border-radius: 999px !important;
+    font-size: 0.52rem !important;
+    line-height: 1 !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-search input {
+    padding: 0 8px !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-filter select {
+    padding: 0 24px 0 8px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    background-position:
+      calc(100% - 13px) 13px,
+      calc(100% - 8px) 13px,
+      0 0 !important;
+    background-size:
+      5px 5px,
+      5px 5px,
+      100% 100% !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    min-width: 0 !important;
+    padding: 0 7px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card strong,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    font-size: 0.52rem !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .inventory-page .inventory-tools,
+  .app-page-content .inventory-page .inventory-tools {
+    grid-template-columns: minmax(0, 1fr) 98px 70px !important;
+    gap: 5px !important;
+    padding: 8px !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select,
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    height: 30px !important;
+    min-height: 30px !important;
+    font-size: 0.48rem !important;
+  }
+
+  .inventory-page .inventory-tools .inventory-fixed-category-card strong,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card strong {
+    font-size: 0.48rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .inventory-page .inventory-tools,
+  .app-page-content .inventory-page .inventory-tools {
+    grid-template-columns: minmax(0, 1fr) 92px 64px !important;
+    gap: 4px !important;
+  }
+
+  .inventory-page .inventory-search input,
+  .inventory-page .inventory-filter select,
+  .inventory-page .inventory-tools .inventory-fixed-category-card,
+  .app-page-content .inventory-page .inventory-search input,
+  .app-page-content .inventory-page .inventory-filter select,
+  .app-page-content .inventory-page .inventory-tools .inventory-fixed-category-card {
+    font-size: 0.44rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS MOBILE - HIDE DUPLICATE FIXED CATEGORY PILL
+   Category admin already sees "Assigned categories: Sports" in
+   the title card, so hide the duplicate Sports pill in filters
+   on mobile only.
+========================================================= */
+
+@media (max-width: 760px) {
+  /* Hide only the fixed category pill, not the real category dropdown. */
+  .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools .inventory-filter:has(.inventory-fixed-category-card) {
+    display: none !important;
+  }
+
+  /* With fixed category hidden, keep search + availability in one compact row. */
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) {
+    grid-template-columns: minmax(0, 1fr) 118px !important;
+    gap: 7px !important;
+  }
+
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search,
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) {
+    grid-template-columns: minmax(0, 1fr) 108px !important;
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) {
+    grid-template-columns: minmax(0, 1fr) 100px !important;
+    gap: 5px !important;
+  }
+}
+
+
+
+/* =========================================================
+   VIEW ITEMS MOBILE AVAILABILITY DROPDOWN SPACING FIX
+   Fixes the All Availability dropdown being too wide/tight.
+========================================================= */
+
+@media (max-width: 760px) {
+  /* Make the search card breathe and prevent the dropdown from touching the edge */
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) {
+    grid-template-columns: minmax(0, 1fr) 112px !important;
+    gap: 6px !important;
+    padding: 9px 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* Availability filter column */
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) {
+    width: 112px !important;
+    min-width: 0 !important;
+    max-width: 112px !important;
+    justify-self: end !important;
+  }
+
+  /* Override the old min-width:178px rule that made the dropdown overflow */
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) select,
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) select {
+    width: 112px !important;
+    min-width: 0 !important;
+    max-width: 112px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 22px 0 9px !important;
+    border-radius: 999px !important;
+    font-size: 0.50rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis !important;
+    background-position:
+      calc(100% - 13px) 13px,
+      calc(100% - 8px) 13px,
+      0 0 !important;
+    background-size:
+      5px 5px,
+      5px 5px,
+      100% 100% !important;
+  }
+
+  /* Search input gets the remaining space without pushing the dropdown */
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search,
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search input,
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-search input {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 0.50rem !important;
+    padding: 0 9px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) {
+    grid-template-columns: minmax(0, 1fr) 104px !important;
+    gap: 5px !important;
+    padding: 8px !important;
+  }
+
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)),
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)),
+  .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) select,
+  .app-page-content .inventory-page .inventory-tools:has(.inventory-fixed-category-card) .inventory-filter:not(:has(.inventory-fixed-category-card)) select {
+    width: 104px !important;
+    max-width: 104px !important;
+  }
+}
