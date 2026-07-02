@@ -286,6 +286,7 @@ allow update: if isOwner(userId) &&
       function validAdminRequestUpdate() {
         return validApproveUpdate() ||
           validRejectUpdate() ||
+          validExpireUpdate() ||
           validReleaseUpdate() ||
           validReturnUpdate();
       }
@@ -314,11 +315,26 @@ allow update: if isOwner(userId) &&
           ]);
       }
 
+      function validExpireUpdate() {
+        return resource.data.approvalStatus in ["Pending", "Approved"] &&
+          request.resource.data.approvalStatus == "Expired" &&
+          hasOnlyChangedFields([
+            "approvalStatus",
+            "expiredAt",
+            "expiredBy",
+            "expireReason",
+            "autoExpired",
+            "updatedAt"
+          ]);
+      }
+
       function validReleaseUpdate() {
         return resource.data.approvalStatus == "Approved" &&
           request.resource.data.approvalStatus == "Borrowed" &&
           hasOnlyChangedFields([
             "approvalStatus",
+            "borrowDate",
+            "expectedReturnDate",
             "releasedBy",
             "releasedAt",
             "updatedAt"

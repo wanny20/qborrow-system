@@ -2373,3 +2373,546 @@ html[data-theme="dark"] .release-page .release-purpose-box span {
     width: 100% !important;
   }
 }
+
+
+
+/* =========================================================
+   RELEASE ITEM - FINAL COMPACT MOBILE LAYOUT + RIGHT BACK BUTTON
+   Paste at the VERY BOTTOM of ReleaseItem.css
+
+   Fixes:
+   - Moves Back to Dashboard to the right side of the title card.
+   - Stops mobile/tablet CSS from making the back button full-width.
+   - Makes scanner, manual search, selected request, and approved queue compact.
+   - Keeps dark mode support.
+========================================================= */
+
+/* ---------- Title card: back button on the right ---------- */
+.release-page .release-header,
+.release-page .release-header-compact {
+  display: block !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.release-page .release-header-content,
+.release-page .release-header-compact .release-header-content,
+.release-page .release-header > div {
+  min-height: 88px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 24px !important;
+  padding: 14px 20px !important;
+  overflow: hidden !important;
+}
+
+.release-page .release-header-text {
+  min-width: 0 !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+.release-page .release-header-text h1,
+.release-page .release-header h1 {
+  max-width: none !important;
+  margin: 0 0 4px !important;
+  font-size: clamp(1.25rem, 2vw, 1.65rem) !important;
+  line-height: 1 !important;
+}
+
+.release-page .release-header-text p,
+.release-page .release-header p {
+  max-width: 780px !important;
+  margin: 0 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
+
+.release-page .release-assigned-note {
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin-top: 7px !important;
+  padding: 5px 10px !important;
+  border-radius: 999px !important;
+  font-size: 0.58rem !important;
+  line-height: 1.1 !important;
+}
+
+.release-page .release-header-back-btn {
+  width: auto !important;
+  min-width: 150px !important;
+  max-width: 190px !important;
+  min-height: 38px !important;
+  justify-self: end !important;
+  border-radius: 999px !important;
+  padding: 0 14px !important;
+  font-size: 0.62rem !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  z-index: 4 !important;
+}
+
+/* Override the old 1180px rule that stacks the header */
+@media (max-width: 1180px) {
+  .release-page .release-header,
+  .release-page .release-header-compact .release-header-content,
+  .release-page .release-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .release-page .release-header-content,
+  .release-page .release-header-compact .release-header-content,
+  .release-page .release-header > div {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .release-page .release-header-back-btn {
+    width: auto !important;
+    min-width: 140px !important;
+  }
+}
+
+/* ---------- Compact cards and form elements ---------- */
+.release-page .release-layout {
+  gap: 12px !important;
+}
+
+.release-page .release-scanner-card,
+.release-page .release-selected-card,
+.release-page .release-queue-panel {
+  padding: 14px !important;
+  border-radius: 22px !important;
+}
+
+.release-page .release-card-heading,
+.release-page .release-section-heading {
+  margin-bottom: 10px !important;
+}
+
+.release-page .release-card-heading h2,
+.release-page .release-section-heading h2 {
+  font-size: 1.12rem !important;
+  line-height: 1.03 !important;
+}
+
+.release-page .release-card-heading p,
+.release-page .release-section-heading p {
+  margin-top: 4px !important;
+  font-size: 0.68rem !important;
+  line-height: 1.25 !important;
+}
+
+.release-page .release-camera-select {
+  gap: 6px !important;
+  margin-bottom: 8px !important;
+}
+
+.release-page .release-camera-select select,
+.release-page .release-manual-row input {
+  min-height: 38px !important;
+  border-radius: 14px !important;
+  padding: 0 12px !important;
+  font-size: 0.68rem !important;
+}
+
+.release-page .release-primary-btn,
+.release-page .release-secondary-btn,
+.release-page .release-confirm-btn {
+  min-height: 34px !important;
+  font-size: 0.56rem !important;
+  border-radius: 999px !important;
+}
+
+.release-page .release-scanner-actions {
+  gap: 7px !important;
+}
+
+.release-page .release-manual-form {
+  margin-top: 10px !important;
+}
+
+.release-page .release-manual-row {
+  grid-template-columns: minmax(0, 1fr) 86px !important;
+  gap: 8px !important;
+  margin-top: 6px !important;
+}
+
+.release-page .release-empty-selected,
+.release-page .release-empty {
+  min-height: 130px !important;
+  padding: 14px !important;
+  border-radius: 18px !important;
+}
+
+.release-page .release-empty-selected img,
+.release-page .release-empty img {
+  width: 42px !important;
+  height: 42px !important;
+  margin-bottom: 8px !important;
+}
+
+.release-page .release-empty-selected h3,
+.release-page .release-empty h2 {
+  font-size: 0.95rem !important;
+}
+
+.release-page .release-empty-selected p,
+.release-page .release-empty p {
+  margin-top: 5px !important;
+  font-size: 0.62rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Scanner preview is smaller */
+.release-page .release-scanner-box,
+.release-page #release-item-reader {
+  min-height: 150px !important;
+  margin-top: 8px !important;
+  padding: 7px !important;
+  border-radius: 14px !important;
+}
+
+.release-page #release-item-reader video {
+  min-height: 150px !important;
+  max-height: 170px !important;
+  border-radius: 12px !important;
+}
+
+/* Approved queue: compact table/card */
+.release-page .release-approved-table-header,
+.release-page .release-approved-row {
+  grid-template-columns:
+    minmax(140px, 1.15fr)
+    minmax(150px, 1.15fr)
+    minmax(100px, 0.85fr)
+    105px
+    86px
+    92px !important;
+  gap: 7px !important;
+}
+
+.release-page .release-approved-table-header {
+  padding: 8px 10px !important;
+  margin-bottom: 7px !important;
+  border-radius: 14px !important;
+}
+
+.release-page .release-approved-table-header span {
+  font-size: 0.48rem !important;
+}
+
+.release-page .release-approved-row {
+  min-height: 50px !important;
+  padding: 8px 10px !important;
+  border-radius: 14px !important;
+}
+
+.release-page .release-approved-cell strong {
+  font-size: 0.62rem !important;
+}
+
+.release-page .release-approved-item-cell span,
+.release-page .release-approved-borrower-cell span,
+.release-page .release-approved-cell span {
+  font-size: 0.46rem !important;
+}
+
+.release-page .release-approved-status-cell span,
+.release-page .release-approved-actions .release-primary-btn {
+  min-height: 28px !important;
+  font-size: 0.48rem !important;
+}
+
+/* ---------- Mobile compact layout ---------- */
+@media (max-width: 760px) {
+  .release-page {
+    gap: 8px !important;
+  }
+
+  .release-page .release-header-content,
+  .release-page .release-header-compact .release-header-content,
+  .release-page .release-header > div {
+    min-height: 74px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    padding: 10px 11px !important;
+    border-radius: 18px !important;
+  }
+
+  .release-page .release-header-content::after,
+  .release-page .release-header > div::after {
+    right: -18px !important;
+    bottom: -34px !important;
+    width: 78px !important;
+    height: 78px !important;
+    opacity: 0.62 !important;
+  }
+
+  .release-page .release-header-text h1,
+  .release-page .release-header h1 {
+    max-width: none !important;
+    margin-bottom: 3px !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+  }
+
+  .release-page .release-header-text p,
+  .release-page .release-header p {
+    display: -webkit-box !important;
+    font-size: 0.52rem !important;
+    line-height: 1.14 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .release-page .release-assigned-note {
+    margin-top: 5px !important;
+    padding: 4px 7px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-header-back-btn {
+    width: auto !important;
+    min-width: 88px !important;
+    max-width: 106px !important;
+    min-height: 31px !important;
+    padding: 0 7px !important;
+    font-size: 0.46rem !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  .release-page .release-layout {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .release-page .release-scanner-card,
+  .release-page .release-selected-card,
+  .release-page .release-queue-panel {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .release-page .release-card-heading,
+  .release-page .release-section-heading {
+    margin-bottom: 7px !important;
+  }
+
+  .release-page .release-card-heading h2,
+  .release-page .release-section-heading h2 {
+    font-size: 0.96rem !important;
+    line-height: 1.03 !important;
+  }
+
+  .release-page .release-card-heading p,
+  .release-page .release-section-heading p {
+    display: -webkit-box !important;
+    margin-top: 3px !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .release-page .release-camera-select {
+    margin-bottom: 7px !important;
+  }
+
+  .release-page .release-camera-select select,
+  .release-page .release-manual-row input {
+    min-height: 32px !important;
+    border-radius: 12px !important;
+    padding: 0 9px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .release-page .release-primary-btn,
+  .release-page .release-secondary-btn,
+  .release-page .release-confirm-btn {
+    min-height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 0.46rem !important;
+  }
+
+  .release-page .release-manual-form {
+    margin-top: 7px !important;
+  }
+
+  .release-page .release-manual-row {
+    grid-template-columns: minmax(0, 1fr) 62px !important;
+    gap: 5px !important;
+    margin-top: 5px !important;
+  }
+
+  .release-page .release-scanner-actions {
+    gap: 5px !important;
+  }
+
+  .release-page .release-scanner-box,
+  .release-page #release-item-reader {
+    min-height: 105px !important;
+    margin-top: 6px !important;
+    padding: 5px !important;
+    border-radius: 12px !important;
+  }
+
+  .release-page #release-item-reader video {
+    min-height: 105px !important;
+    max-height: 120px !important;
+    border-radius: 10px !important;
+  }
+
+  .release-page .release-empty-selected,
+  .release-page .release-empty {
+    min-height: 86px !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .release-page .release-empty-selected img,
+  .release-page .release-empty img {
+    width: 30px !important;
+    height: 30px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .release-page .release-empty-selected h3,
+  .release-page .release-empty h2 {
+    font-size: 0.74rem !important;
+  }
+
+  .release-page .release-empty-selected p,
+  .release-page .release-empty p {
+    display: -webkit-box !important;
+    margin-top: 3px !important;
+    font-size: 0.5rem !important;
+    line-height: 1.12 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .release-page .release-info-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+  }
+
+  .release-page .release-info-grid div,
+  .release-page .release-purpose-box {
+    padding: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  .release-page .release-info-grid span,
+  .release-page .release-purpose-box span {
+    font-size: 0.4rem !important;
+  }
+
+  .release-page .release-info-grid strong {
+    font-size: 0.56rem !important;
+  }
+
+  .release-page .release-purpose-box p {
+    font-size: 0.52rem !important;
+  }
+
+  /* Approved queue remains compact stacked cards on mobile */
+  .release-page .release-approved-table-header {
+    display: none !important;
+  }
+
+  .release-page .release-approved-row {
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+    min-height: 0 !important;
+    padding: 7px !important;
+    border-radius: 13px !important;
+  }
+
+  .release-page .release-approved-cell {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    gap: 6px !important;
+    padding: 6px 7px !important;
+    border-radius: 9px !important;
+  }
+
+  .release-page .release-approved-cell span {
+    display: block !important;
+    font-size: 0.44rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .release-page .release-approved-cell strong {
+    font-size: 0.58rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .release-page .release-approved-status-cell span,
+  .release-page .release-approved-actions .release-primary-btn {
+    min-height: 28px !important;
+    font-size: 0.46rem !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .release-page .release-header-back-btn {
+    min-width: 80px !important;
+    max-width: 96px !important;
+    font-size: 0.42rem !important;
+  }
+
+  .release-page .release-manual-row {
+    grid-template-columns: minmax(0, 1fr) 56px !important;
+  }
+
+  .release-page .release-approved-cell {
+    grid-template-columns: 74px minmax(0, 1fr) !important;
+  }
+}
+
+/* ---------- Dark mode ---------- */
+html[data-theme="dark"] .release-page .release-header-content,
+html[data-theme="dark"] .release-page .release-header-compact .release-header-content,
+html[data-theme="dark"] .release-page .release-header > div {
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  background:
+    radial-gradient(circle at 92% 28%, rgba(250, 204, 21, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(30, 64, 175, 0.34), rgba(15, 23, 42, 0.98) 52%, rgba(250, 204, 21, 0.10)) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .release-page .release-header-text h1,
+html[data-theme="dark"] .release-page .release-header h1,
+html[data-theme="dark"] .release-page .release-card-heading h2,
+html[data-theme="dark"] .release-page .release-section-heading h2 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .release-page .release-header-text p,
+html[data-theme="dark"] .release-page .release-header p,
+html[data-theme="dark"] .release-page .release-card-heading p,
+html[data-theme="dark"] .release-page .release-section-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .release-page .release-header-back-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #111827 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}

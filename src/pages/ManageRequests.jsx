@@ -8,6 +8,7 @@ import {
   addDoc,
   getDoc,
   serverTimestamp,
+  Timestamp,
   runTransaction,
   query as firestoreQuery,
   orderBy,
@@ -22,6 +23,12 @@ import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ManageRequests.css";
 
 const MANAGE_REQUESTS_PAGE_SIZE = 6;
+const RELEASE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const NEAR_RELEASE_WINDOW_MS = 3 * 60 * 60 * 1000;
+const TEMPORARY_BORROWING_RESTRICTION_MS = RELEASE_WINDOW_MS;
+const TEMPORARY_BORROWING_RESTRICTION_REASON =
+  "Temporary borrowing restriction for 24 hours because an approved item was not claimed/released within the allowed window.";
+
 
 function getRequestPriority(request) {
   if (request.priority === "High") return "High";
@@ -46,6 +53,23 @@ function getRequestCreatedTime(request) {
   return 0;
 }
 
+function getTimestampMs(value) {
+  if (!value) return 0;
+
+  if (typeof value?.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (value?.seconds) {
+    return value.seconds * 1000;
+  }
+
+  const parsedDate = new Date(value);
+  const parsedTime = parsedDate.getTime();
+
+  return Number.isNaN(parsedTime) ? 0 : parsedTime;
+}
+
 function ManageRequests() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
@@ -64,6 +88,7 @@ function ManageRequests() {
   overdue: 0,
   returned: 0,
   rejected: 0,
+  expired: 0,
 });
 
   const [lastRequestDoc, setLastRequestDoc] = useState(null);
@@ -267,7 +292,7 @@ async function autoRejectExpiredPendingRequests() {
 
       /*
         Category admins can only update requests inside their assigned
-        categories. Without this check, Firestore blocks the whole auto-reject
+        categories. Without this check, Firestore blocks the whole auto-expire
         batch when one expired request belongs to another category.
       */
       if (!canCategoryAdminSeeRequest(request)) return false;
@@ -282,11 +307,12 @@ async function autoRejectExpiredPendingRequests() {
   await Promise.all(
     expiredRequests.map(async (request) => {
       await updateDoc(doc(db, "borrowRequests", request.id), {
-        approvalStatus: "Rejected",
-        rejectReason:
-          "Automatically rejected because no admin action was made within 24 hours.",
-        rejectedAt: serverTimestamp(),
-        autoRejected: true,
+        approvalStatus: "Expired",
+        expireReason:
+          "Request expired because no admin action was made within 24 hours.",
+        expiredAt: serverTimestamp(),
+        expiredBy: "system",
+        autoExpired: true,
         updatedAt: serverTimestamp(),
       });
 
@@ -295,8 +321,8 @@ async function autoRejectExpiredPendingRequests() {
         targetRole: "borrower",
         categoryId: request.categoryId || "",
         categoryName: request.categoryName || "",
-        title: "Borrow Request Auto-Rejected",
-        message: `Your request for ${request.itemName} was automatically rejected because it was not approved within 24 hours. You may submit a new request.`,
+        title: "Borrow Request Expired",
+        message: `Your request for ${request.itemName} expired because it was not approved within 24 hours. You may submit a new request.`,
         status: "Unread",
         createdAt: serverTimestamp(),
         link: "/my-requests",
@@ -351,6 +377,258 @@ function getTodayDateKey() {
   const timezoneOffset = date.getTimezoneOffset() * 60000;
 
   return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+}
+
+function getApprovedTime(request) {
+  return getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+}
+
+function getApprovedReleaseRemainingMs(request) {
+  if (request.approvalStatus !== "Approved") return null;
+
+  const approvedTime = getApprovedTime(request);
+
+  if (!approvedTime) return null;
+
+  return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
+}
+
+function isApprovedReleaseExpired(request) {
+  const remainingMs = getApprovedReleaseRemainingMs(request);
+
+  return remainingMs !== null && remainingMs <= 0;
+}
+
+function isNearReleaseExpire(request) {
+  const remainingMs = getApprovedReleaseRemainingMs(request);
+
+  return (
+    remainingMs !== null &&
+    remainingMs > 0 &&
+    remainingMs <= NEAR_RELEASE_WINDOW_MS
+  );
+}
+
+function formatApprovedReleaseRemaining(request) {
+  const remainingMs = getApprovedReleaseRemainingMs(request);
+
+  if (remainingMs === null) return "No release timer";
+  if (remainingMs <= 0) return "Release window expired";
+
+  const totalMinutes = Math.ceil(remainingMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours <= 0) return `${minutes}m left to release`;
+
+  return `${hours}h ${minutes}m left to release`;
+}
+
+function formatApprovedReleaseDeadline(request) {
+  const approvedTime = getApprovedTime(request);
+
+  if (!approvedTime) return "No deadline";
+
+  return new Date(approvedTime + RELEASE_WINDOW_MS).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function parseDateKey(value) {
+  if (!value) return null;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day);
+}
+
+function formatDateKey(date) {
+  const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+  return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+}
+
+function addDaysToDateKey(dateKey, daysToAdd) {
+  const baseDate = parseDateKey(dateKey);
+
+  if (!baseDate) return dateKey;
+
+  baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+  return formatDateKey(baseDate);
+}
+
+function getRequestedBorrowDurationDays(request) {
+  const borrowDate = parseDateKey(request.borrowDate);
+  const expectedDate = parseDateKey(request.expectedReturnDate);
+
+  if (!borrowDate || !expectedDate) return 0;
+
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const durationDays = Math.round(
+    (expectedDate.getTime() - borrowDate.getTime()) / oneDayMs
+  );
+
+  return Math.max(durationDays, 0);
+}
+
+function getReleaseDateUpdate(request) {
+  const actualBorrowDate = getTodayDateKey();
+  const durationDays = getRequestedBorrowDurationDays(request);
+
+  return {
+    borrowDate: actualBorrowDate,
+    expectedReturnDate: addDaysToDateKey(actualBorrowDate, durationDays),
+  };
+}
+
+function getTemporaryRestrictionUntilDate() {
+  return new Date(Date.now() + TEMPORARY_BORROWING_RESTRICTION_MS);
+}
+
+function shouldApplyTemporaryBorrowingRestriction(
+  borrowerAccount,
+  restrictionUntilDate
+) {
+  if (!borrowerAccount) return false;
+
+  const existingSuspensionTime = getTimestampMs(borrowerAccount.suspendedUntil);
+  const restrictionUntilTime = restrictionUntilDate.getTime();
+
+  /*
+    Do not overwrite stronger restrictions:
+    - canBorrow false with no suspendedUntil means manual/indefinite restriction.
+    - suspendedUntil later than the new 24-hour window is stronger.
+  */
+  if (borrowerAccount.canBorrow === false && !existingSuspensionTime) {
+    return false;
+  }
+
+  if (
+    borrowerAccount.canBorrow === false &&
+    existingSuspensionTime >= restrictionUntilTime
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+async function notifyApprovedRequestExpired(request) {
+  await addDoc(collection(db, "notifications"), {
+    userId: request.borrowerId,
+    targetRole: "borrower",
+    categoryId: request.categoryId || "",
+    categoryName: request.categoryName || "",
+    title: "Approved Request Expired",
+    message: `Your approved request for ${
+      request.itemName || "this item"
+    } expired because the item was not released within 24 hours. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
+    status: "Unread",
+    createdAt: serverTimestamp(),
+    link: "/my-requests",
+  });
+}
+
+async function expireApprovedRequest(request) {
+  if (!request?.id) return null;
+
+  const requestRef = doc(db, "borrowRequests", request.id);
+  let expiredRequest = null;
+
+  await runTransaction(db, async (transaction) => {
+    const freshRequestSnap = await transaction.get(requestRef);
+
+    if (!freshRequestSnap.exists()) return;
+
+    const freshRequest = {
+      id: freshRequestSnap.id,
+      ...freshRequestSnap.data(),
+    };
+
+    if (freshRequest.approvalStatus !== "Approved") return;
+    if (!canCategoryAdminSeeRequest(freshRequest)) return;
+    if (!isApprovedReleaseExpired(freshRequest)) return;
+
+    const itemRef = freshRequest.itemId
+      ? doc(db, "items", freshRequest.itemId)
+      : null;
+    const itemSnap = itemRef ? await transaction.get(itemRef) : null;
+
+    const borrowerRef = freshRequest.borrowerId
+      ? doc(db, "users", freshRequest.borrowerId)
+      : null;
+    const borrowerSnap = borrowerRef ? await transaction.get(borrowerRef) : null;
+    const restrictionUntilDate = getTemporaryRestrictionUntilDate();
+
+    transaction.update(requestRef, {
+      approvalStatus: "Expired",
+      expireReason:
+        "Approved request expired because the item was not released within 24 hours.",
+      expiredAt: serverTimestamp(),
+      expiredBy: "system",
+      autoExpired: true,
+      updatedAt: serverTimestamp(),
+    });
+
+    if (itemRef && itemSnap?.exists() && itemSnap.data().availability === "Reserved") {
+      transaction.update(itemRef, {
+        availability: "Available",
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    if (
+      borrowerRef &&
+      borrowerSnap?.exists() &&
+      shouldApplyTemporaryBorrowingRestriction(
+        borrowerSnap.data(),
+        restrictionUntilDate
+      )
+    ) {
+      transaction.update(borrowerRef, {
+        canBorrow: false,
+        suspendedUntil: Timestamp.fromDate(restrictionUntilDate),
+        suspensionReason: TEMPORARY_BORROWING_RESTRICTION_REASON,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    expiredRequest = freshRequest;
+  });
+
+  if (expiredRequest) {
+    await notifyApprovedRequestExpired(expiredRequest);
+  }
+
+  return expiredRequest;
+}
+
+async function autoExpireApprovedRequests() {
+  const snapshot = await getDocs(collection(db, "borrowRequests"));
+
+  const expiredApprovedRequests = snapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((request) => {
+      return (
+        request.approvalStatus === "Approved" &&
+        canCategoryAdminSeeRequest(request) &&
+        isApprovedReleaseExpired(request)
+      );
+    });
+
+  await Promise.all(
+    expiredApprovedRequests.map((request) => expireApprovedRequest(request))
+  );
 }
 
 function getRequestQueryConstraints(
@@ -431,6 +709,7 @@ async function fetchRequestCounts(selectedStatus = statusFilter) {
     overdueCount,
     returnedCount,
     rejectedCount,
+    expiredCount,
   ] = await Promise.all([
     getRequestCount("All"),
     getRequestCount(selectedStatus),
@@ -440,6 +719,7 @@ async function fetchRequestCounts(selectedStatus = statusFilter) {
     getRequestCount("Overdue"),
     getRequestCount("Returned"),
     getRequestCount("Rejected"),
+    getRequestCount("Expired"),
   ]);
 
   setTotalMatchingRequestCount(matchingCount);
@@ -452,6 +732,7 @@ async function fetchRequestCounts(selectedStatus = statusFilter) {
     overdue: overdueCount,
     returned: returnedCount,
     rejected: rejectedCount,
+    expired: expiredCount,
   });
 }
 
@@ -624,7 +905,7 @@ async function handleApproveRequest(request) {
           targetRole: "borrower",
           categoryId: getRequestCategoryId(latestRequest),
           title: "Borrow Request Approved",
-          message: `Your request for ${latestRequest.itemName} has been approved. Please wait for the admin to release the item.`,
+          message: `Your request for ${latestRequest.itemName} has been approved. Please claim the item within 24 hours so the admin can release it. If it is not released within 24 hours, the request will expire and borrowing access may be temporarily restricted for 24 hours.`,
           status: "Unread",
           createdAt: serverTimestamp(),
           link: "/my-requests",
@@ -691,6 +972,16 @@ async function handleReleaseRequest(request) {
           return;
         }
 
+        if (isApprovedReleaseExpired(latestRequest)) {
+          await expireApprovedRequest(latestRequest);
+          showBlockedAction(
+            "This approved request expired because it was not released within 24 hours."
+          );
+          await fetchRequests("reset", statusFilter);
+          return;
+        }
+
+        const releaseDateUpdate = getReleaseDateUpdate(latestRequest);
         const itemRef = doc(db, "items", latestRequest.itemId);
         const itemSnap = await getDoc(itemRef);
 
@@ -710,6 +1001,8 @@ async function handleReleaseRequest(request) {
 
         await updateDoc(requestRef, {
           approvalStatus: "Borrowed",
+          borrowDate: releaseDateUpdate.borrowDate,
+          expectedReturnDate: releaseDateUpdate.expectedReturnDate,
           releasedBy: getAdminId(),
           releasedAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -725,8 +1018,8 @@ async function handleReleaseRequest(request) {
           targetRole: "borrower",
           categoryId: getRequestCategoryId(latestRequest),
           title: "Item Released",
-          message: `${latestRequest.itemName} has been released to you. Please return it on or before ${
-            latestRequest.expectedReturnDate || "the expected return date"
+          message: `${latestRequest.itemName} has been released to you. Your borrowing period starts today. Please return it on or before ${
+            releaseDateUpdate.expectedReturnDate || "the expected return date"
           }.`,
           status: "Unread",
           createdAt: serverTimestamp(),
@@ -831,6 +1124,7 @@ useEffect(() => {
   async function loadRequests() {
     try {
       await autoRejectExpiredPendingRequests();
+      await autoExpireApprovedRequests();
       await fetchRequests();
     } catch (error) {
       showActionError("Failed to prepare borrow requests", error);
@@ -1006,6 +1300,12 @@ return (
           <h3>{requestStats.rejected}</h3>
           <p>Rejected</p>
         </div>
+
+        <div>
+          <span>⌛</span>
+          <h3>{requestStats.expired}</h3>
+          <p>Expired</p>
+        </div>
       </section>
 
       <section className="manage-tools">
@@ -1039,6 +1339,7 @@ return (
             <option value="Borrowed">Borrowed</option>
             <option value="Overdue">Overdue</option>
             <option value="Returned">Returned</option>
+            <option value="Expired">Expired</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
           </select>
@@ -1047,7 +1348,11 @@ return (
         <button
           type="button"
           className="manage-refresh-btn"
-          onClick={() => fetchRequests("reset")}
+          onClick={async () => {
+            await autoRejectExpiredPendingRequests();
+            await autoExpireApprovedRequests();
+            await fetchRequests("reset");
+          }}
           disabled={hasActiveRequestAction()}
         >
           Refresh
@@ -1073,6 +1378,7 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
           </div>
 ) : (
   <>
+    <div className="manage-request-table-scroll" aria-label="Borrow requests table">
     <div className="manage-request-table-header">
       <span>Item</span>
       <span>Borrower</span>
@@ -1129,6 +1435,17 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
     {request.approvalStatus || "Unknown"}
   </span>
 
+  {request.approvalStatus === "Approved" && (
+    <span
+      className={`manage-status-pill ${
+        isNearReleaseExpire(request) ? "status-overdue" : "status-approved"
+      }`}
+      title={`Release deadline: ${formatApprovedReleaseDeadline(request)}`}
+    >
+      {formatApprovedReleaseRemaining(request)}
+    </span>
+  )}
+
   {isRequestOverdue(request) && (
     <span className="manage-status-pill status-overdue">Overdue</span>
   )}
@@ -1144,17 +1461,6 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
               onClick={() => setViewingRequest(request)}
             >
               <span aria-hidden="true">i</span>
-            </button>
-
-            <button
-              type="button"
-              className="manage-view-btn manage-action-icon-btn manage-action-item"
-              data-tooltip="View Item"
-              title="View Item"
-              aria-label="View item"
-              onClick={() => navigate(`/item/${request.itemId}`)}
-            >
-              <span aria-hidden="true">▣</span>
             </button>
 
             {request.approvalStatus === "Pending" && (
@@ -1243,6 +1549,7 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
         </article>
       ))}
     </div>
+    </div>
     {hasMoreRequests && filteredRequests.length < totalMatchingRequestCount && (
   <div className="manage-load-more-row">
     <button
@@ -1276,103 +1583,135 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
               ×
             </button>
 
-            <div className="manage-section-heading">
+            <div className="manage-request-view-header">
               <div>
+                <span className="manage-request-view-code">
+                  {viewingRequest.itemCode || viewingRequest.itemId}
+                </span>
                 <h2>{viewingRequest.itemName || "Untitled Item"}</h2>
-                <p>{viewingRequest.itemCode || viewingRequest.itemId}</p>
-              </div>
-            </div>
-<div className="manage-request-view-status">
-  {isFacultyPriorityRequest(viewingRequest) && (
-    <span className="manage-priority-pill manage-priority-pill-full">
-      Priority Faculty
-    </span>
-  )}
-
-  <span
-    className={`manage-status-pill status-${String(
-      viewingRequest.approvalStatus || "Unknown"
-    ).toLowerCase()}`}
-  >
-    {viewingRequest.approvalStatus || "Unknown"}
-  </span>
-
-  {isRequestOverdue(viewingRequest) && (
-    <span className="manage-status-pill status-overdue">
-      Overdue
-    </span>
-  )}
-</div>
-
-            <div className="manage-request-view-grid">
-              <div>
-                <span>Borrower</span>
-                <strong>{viewingRequest.borrowerName || "Unnamed Borrower"}</strong>
-                <p>{viewingRequest.borrowerEmail || "No email"}</p>
               </div>
 
-              <div>
-                <span>User Type</span>
-                <strong>{getBorrowerUserType(viewingRequest)}</strong>
-              </div>
+              <div className="manage-request-view-status">
+                {isFacultyPriorityRequest(viewingRequest) && (
+                  <span className="manage-priority-pill manage-priority-pill-full">
+                    Priority Faculty
+                  </span>
+                )}
 
-              <div>
-                <span>ID Number</span>
-                <strong>{getBorrowerIdNumber(viewingRequest)}</strong>
-              </div>
+                <span
+                  className={`manage-status-pill status-${String(
+                    viewingRequest.approvalStatus || "Unknown"
+                  ).toLowerCase()}`}
+                >
+                  {viewingRequest.approvalStatus || "Unknown"}
+                </span>
 
-              <div>
-                <span>Course / Department</span>
-                <strong>{cleanDisplay(viewingRequest.borrowerCourseDepartment)}</strong>
-              </div>
+                {viewingRequest.approvalStatus === "Approved" && (
+                  <span
+                    className={`manage-status-pill ${
+                      isNearReleaseExpire(viewingRequest)
+                        ? "status-overdue"
+                        : "status-approved"
+                    }`}
+                    title={`Release deadline: ${formatApprovedReleaseDeadline(
+                      viewingRequest
+                    )}`}
+                  >
+                    {formatApprovedReleaseRemaining(viewingRequest)}
+                  </span>
+                )}
 
-              <div>
-                <span>Year / Section</span>
-                <strong>{getBorrowerYearSection(viewingRequest)}</strong>
-              </div>
-
-              <div>
-                <span>Mobile Number</span>
-                <strong>{cleanDisplay(viewingRequest.borrowerMobileNumber)}</strong>
-              </div>
-
-              <div>
-                <span>Category</span>
-                <strong>{getRequestCategoryName(viewingRequest)}</strong>
-              </div>
-
-              <div>
-                <span>Borrow Date</span>
-                <strong>{viewingRequest.borrowDate || "Not set"}</strong>
-              </div>
-
-              <div>
-                <span>Expected Return</span>
-                <strong>{viewingRequest.expectedReturnDate || "Not set"}</strong>
+                {isRequestOverdue(viewingRequest) && (
+                  <span className="manage-status-pill status-overdue">
+                    Overdue
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="manage-request-view-purpose">
-              <span>Purpose</span>
-              <p>{viewingRequest.purpose || "No purpose provided."}</p>
-            </div>
+            <div className="manage-request-view-columns">
+              <section className="manage-request-view-panel manage-request-view-item-panel">
+                <div className="manage-request-view-panel-heading">
+                  <span>Item Details</span>
+                  <h3>{viewingRequest.itemName || "Untitled Item"}</h3>
+                </div>
 
-            <div className="manage-request-view-actions">
-              <button
-                type="button"
-                className="manage-secondary-btn"
-                onClick={() => setViewingRequest(null)}
-              >
-                Close
-              </button>
+                <div className="manage-request-view-detail-grid">
+                  <div>
+                    <span>Item Code</span>
+                    <strong>{viewingRequest.itemCode || viewingRequest.itemId || "Not set"}</strong>
+                  </div>
 
-              <button
-                type="button"
-                className="manage-view-btn"
-                onClick={() => navigate(`/item/${viewingRequest.itemId}`)}
-              >
-                View Item
-              </button>
+                  <div>
+                    <span>Category</span>
+                    <strong>{getRequestCategoryName(viewingRequest)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Borrow Date</span>
+                    <strong>{viewingRequest.borrowDate || "Not set"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Expected Return</span>
+                    <strong>{viewingRequest.expectedReturnDate || "Not set"}</strong>
+                  </div>
+
+                  {viewingRequest.approvalStatus === "Approved" && (
+                    <>
+                      <div>
+                        <span>Release Deadline</span>
+                        <strong>{formatApprovedReleaseDeadline(viewingRequest)}</strong>
+                      </div>
+
+                      <div>
+                        <span>Release Window</span>
+                        <strong>{formatApprovedReleaseRemaining(viewingRequest)}</strong>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="manage-request-view-purpose">
+                  <span>Purpose</span>
+                  <p>{viewingRequest.purpose || "No purpose provided."}</p>
+                </div>
+              </section>
+
+              <section className="manage-request-view-panel manage-request-view-user-panel">
+                <div className="manage-request-view-panel-heading">
+                  <span>Borrower Details</span>
+                  <h3>{viewingRequest.borrowerName || "Unnamed Borrower"}</h3>
+                  <p>{viewingRequest.borrowerEmail || "No email"}</p>
+                </div>
+
+                <div className="manage-request-view-detail-grid">
+                  <div>
+                    <span>User Type</span>
+                    <strong>{getBorrowerUserType(viewingRequest)}</strong>
+                  </div>
+
+                  <div>
+                    <span>ID Number</span>
+                    <strong>{getBorrowerIdNumber(viewingRequest)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Course / Department</span>
+                    <strong>{cleanDisplay(viewingRequest.borrowerCourseDepartment)}</strong>
+                  </div>
+
+                  <div>
+                    <span>Year / Section</span>
+                    <strong>{getBorrowerYearSection(viewingRequest)}</strong>
+                  </div>
+
+                  <div className="manage-request-view-wide-field">
+                    <span>Mobile Number</span>
+                    <strong>{cleanDisplay(viewingRequest.borrowerMobileNumber)}</strong>
+                  </div>
+                </div>
+              </section>
             </div>
           </section>
         </div>

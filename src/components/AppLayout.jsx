@@ -16,6 +16,8 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastContext.jsx";
 import "../styles/AppLayout.css";
 
+const CLAIM_PICKUP_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 function AppLayout() {
   const [userData, setUserData] = useState(null);
 
@@ -44,6 +46,7 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
   useState(false);
 
   const [adminBorrowRequestAlerts, setAdminBorrowRequestAlerts] = useState([]);
+  const [claimItemAlerts, setClaimItemAlerts] = useState([]);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const [themeMode, setThemeMode] = useState(() => {
@@ -54,12 +57,16 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
     return localStorage.getItem("qborrowTheme") || "light";
   });
 
-  const [openSidebarGroups, setOpenSidebarGroups] = useState({
+  const CLOSED_SIDEBAR_GROUPS = {
     dashboard: false,
     borrower: false,
     admin: false,
     userManagement: false,
-  });
+  };
+
+  const [openSidebarGroups, setOpenSidebarGroups] = useState(
+    CLOSED_SIDEBAR_GROUPS
+  );
 
   const [showSuspendedAlert, setShowSuspendedAlert] = useState(false);
 
@@ -287,6 +294,81 @@ function getSuspensionReason() {
     userData?.suspensionReason ||
     "Your account is temporarily restricted from borrowing because of overdue return records."
   );
+}
+
+function getDateTimeMs(value) {
+  if (!value) return 0;
+
+  if (typeof value?.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (value?.seconds) {
+    return value.seconds * 1000;
+  }
+
+  const parsedDate = new Date(value);
+  const parsedTime = parsedDate.getTime();
+
+  return Number.isNaN(parsedTime) ? 0 : parsedTime;
+}
+
+function getApprovedPickupRemainingMs(request) {
+  if (request?.approvalStatus !== "Approved") return null;
+
+  const approvedTime =
+    getDateTimeMs(request.approvedAt) || getDateTimeMs(request.updatedAt);
+
+  if (!approvedTime) return null;
+
+  return CLAIM_PICKUP_WINDOW_MS - (Date.now() - approvedTime);
+}
+
+function formatClaimPickupRemaining(request) {
+  const remainingMs = getApprovedPickupRemainingMs(request);
+
+  if (remainingMs === null) return "within the release window";
+  if (remainingMs <= 0) return "now";
+
+  const totalMinutes = Math.ceil(remainingMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours <= 0) return `${minutes}m`;
+
+  return `${hours}h ${minutes}m`;
+}
+
+function getClaimItemTooltip() {
+  const request = claimItemAlerts[0];
+
+  if (!request) {
+    return "You have an approved item to claim.";
+  }
+
+  return `${request.itemName || "An approved item"} must be claimed within ${formatClaimPickupRemaining(request)}.`;
+}
+
+function isTemporaryBorrowingRestriction() {
+  const reason = String(userData?.suspensionReason || "").toLowerCase();
+
+  return (
+    reason.includes("temporary borrowing restriction") ||
+    reason.includes("approved item") ||
+    reason.includes("claimed/released")
+  );
+}
+
+function getBorrowingRestrictionTooltip() {
+  if (isTemporaryBorrowingRestriction()) {
+    return "Your borrowing access is temporarily restricted. View details in Profile Settings.";
+  }
+
+  return "You are suspended from borrowing items. View details in Profile Settings.";
+}
+
+function handleViewBorrowingRestriction() {
+  guardedNavigate("/settings");
 }
 
 function getSuspensionStorageKey() {
@@ -881,6 +963,75 @@ useEffect(() => {
 }, [userData?.role, userData?.uid]);
 
 useEffect(() => {
+  if (userData?.role !== "borrower") {
+    setClaimItemAlerts([]);
+    return;
+  }
+
+  const userId = auth.currentUser?.uid || userData?.uid;
+
+  if (!userId) {
+    setClaimItemAlerts([]);
+    return;
+  }
+
+  const requestQuery = query(
+    collection(db, "borrowRequests"),
+    where("borrowerId", "==", userId)
+  );
+
+  const unsubscribe = onSnapshot(
+    requestQuery,
+    (snapshot) => {
+      const approvedClaimRequests = snapshot.docs
+        .map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+        .filter((request) => {
+          const remainingMs = getApprovedPickupRemainingMs(request);
+
+          return (
+            request.approvalStatus === "Approved" &&
+            remainingMs !== null &&
+            remainingMs > 0
+          );
+        })
+        .sort(
+          (a, b) =>
+            getApprovedPickupRemainingMs(a) -
+            getApprovedPickupRemainingMs(b)
+        );
+
+      setClaimItemAlerts(approvedClaimRequests);
+    },
+    (error) => {
+      console.error("Approved claim alert sync error:", error);
+    }
+  );
+
+  return () => unsubscribe();
+}, [userData?.role, userData?.uid]);
+
+useEffect(() => {
+  const activeGroupName = getActiveSidebarGroupName();
+
+  /*
+    Notifications and Settings are topbar/profile pages, not sidebar modules.
+    When those pages are opened, close all sidebar dropdown groups.
+  */
+  if (!activeGroupName) {
+    setOpenSidebarGroups(CLOSED_SIDEBAR_GROUPS);
+    return;
+  }
+
+  setOpenSidebarGroups({
+    ...CLOSED_SIDEBAR_GROUPS,
+    [activeGroupName]: true,
+  });
+}, [activeSidebarPath]);
+
+useEffect(() => {
   setProfileDropdownOpen(false);
 }, [location.pathname]);
 
@@ -1016,11 +1167,57 @@ async function confirmLogout() {
   },
 ];
 
+function getActiveSidebarGroupName() {
+  if (["/dashboard", "/items"].includes(activeSidebarPath)) {
+    return "dashboard";
+  }
+
+  if (["/scan-qr", "/my-requests"].includes(activeSidebarPath)) {
+    return "borrower";
+  }
+
+  if (
+    [
+      "/add-item",
+      "/manage-requests",
+      "/release-item",
+      "/return-confirmation",
+      "/reports",
+    ].includes(activeSidebarPath)
+  ) {
+    return "admin";
+  }
+
+  if (activeSidebarPath === "/user-management") {
+    return "userManagement";
+  }
+
+  return "";
+}
+
+/*
+  Sidebar behavior:
+  - The group for the current page stays open.
+  - Opening another group for preview does not close the current page group.
+  - When the user actually navigates to another page, the active group changes.
+*/
 function toggleSidebarGroup(groupName) {
-  setOpenSidebarGroups((previousGroups) => ({
-    ...previousGroups,
-    [groupName]: !previousGroups[groupName],
-  }));
+  setOpenSidebarGroups((previousGroups) => {
+    const activeGroupName = getActiveSidebarGroupName();
+    const willOpenGroup = previousGroups[groupName] !== true;
+
+    const nextGroups = {
+      ...CLOSED_SIDEBAR_GROUPS,
+    };
+
+    if (activeGroupName && activeGroupName !== groupName) {
+      nextGroups[activeGroupName] = true;
+    }
+
+    nextGroups[groupName] = willOpenGroup;
+
+    return nextGroups;
+  });
 }
 
 function isSidebarLinkActive(link) {
@@ -1065,7 +1262,7 @@ function renderNavLink(link) {
 }
 
 function renderSidebarGroup({ groupName, title, icon, links }) {
-  const isOpen = openSidebarGroups[groupName] !== false;
+  const isOpen = openSidebarGroups[groupName] === true;
   const hasActiveChild = links.some(isSidebarLinkActive);
 
   return (
@@ -1098,6 +1295,9 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
     </section>
   );
 }
+
+  const claimItemAlertCount = claimItemAlerts.length;
+  const showClaimItemIndicator = isBorrower && claimItemAlertCount > 0;
 
   if (loading) {
     return (
@@ -1546,15 +1746,31 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
           </div>
 
 <div className="app-topbar-right">
+  {showClaimItemIndicator && (
+    <button
+      type="button"
+      className="app-claim-topbar-btn"
+      onClick={() => guardedNavigate("/my-requests")}
+      aria-label="Approved item waiting to be claimed"
+      title={getClaimItemTooltip()}
+    >
+      <span className="app-claim-topbar-icon" aria-hidden="true">📦</span>
+      <span className="app-claim-topbar-text">Claim Item</span>
+      <strong>{claimItemAlertCount > 99 ? "99+" : claimItemAlertCount}</strong>
+    </button>
+  )}
+
   {showBorrowingSuspendedIndicator && (
     <div
       className="app-suspended-topbar-wrap"
-      aria-label="Borrowing suspended"
+      aria-label="Borrowing access restricted"
     >
       <button
         type="button"
         className="app-suspended-topbar-icon"
+        onClick={handleViewBorrowingRestriction}
         aria-describedby="suspended-topbar-tooltip"
+        title={getBorrowingRestrictionTooltip()}
       >
         !
       </button>
@@ -1564,7 +1780,7 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
         className="app-suspended-topbar-tooltip"
         role="tooltip"
       >
-        You are suspended from borrowing items.
+        {getBorrowingRestrictionTooltip()}
       </div>
     </div>
   )}

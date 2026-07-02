@@ -1967,6 +1967,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         ) : (
 
           <>
+<div className="reports-history-table-scroll" aria-label="Borrowing history table">
 <div className="reports-history-table-header">
   <span>Item</span>
   <span>Borrower</span>
@@ -2018,14 +2019,18 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <div className="reports-history-table-actions">
         <button
           type="button"
-          className="reports-secondary-btn"
+          className="reports-history-icon-btn"
+          data-tooltip="View Details"
+          title="View Details"
+          aria-label="View borrowing history details"
           onClick={() => setViewingHistoryRequest(request)}
         >
-          Details
+          <span aria-hidden="true">i</span>
         </button>
       </div>
     </article>
   ))}
+</div>
 </div>
 
             {hasMoreHistory && (
