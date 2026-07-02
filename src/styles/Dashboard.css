@@ -2470,3 +2470,237 @@ html[data-theme="dark"] .dashboard-page .dashboard-item-preview-list::-webkit-sc
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 }
+
+
+
+/* =========================================================
+   DASHBOARD URGENT ALERTS - ONE ROW COMPACT SCROLL FIX
+   Keeps all urgent alert cards in one row.
+   Desktop: 4 cards fit in one row.
+   Mobile: cards remain one row and scroll horizontally.
+========================================================= */
+
+.dashboard-page .dashboard-urgent-alerts {
+  overflow: hidden !important;
+  padding: 18px !important;
+}
+
+.dashboard-page .dashboard-urgent-heading {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.dashboard-page .dashboard-urgent-heading h2 {
+  font-size: clamp(1.25rem, 2vw, 1.65rem) !important;
+  line-height: 1.05 !important;
+}
+
+.dashboard-page .dashboard-urgent-heading span {
+  margin-top: 4px !important;
+  font-size: 0.84rem !important;
+  line-height: 1.35 !important;
+}
+
+.dashboard-page .dashboard-urgent-heading button {
+  min-height: 38px !important;
+  padding: 0 16px !important;
+  font-size: 0.78rem !important;
+}
+
+/* Main one-row behavior */
+.dashboard-page .dashboard-urgent-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 2px 2px 12px !important;
+  scroll-snap-type: x mandatory !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Desktop: 4 cards in exactly one row */
+@media (min-width: 1181px) {
+  .dashboard-page .dashboard-urgent-card {
+    flex: 0 0 calc((100% - 36px) / 4) !important;
+    min-width: 0 !important;
+    max-width: calc((100% - 36px) / 4) !important;
+  }
+}
+
+/* Compact card design */
+.dashboard-page .dashboard-urgent-card {
+  min-height: 150px !important;
+  display: grid !important;
+  grid-template-rows: auto auto minmax(42px, 1fr) !important;
+  gap: 8px !important;
+  border-radius: 20px !important;
+  padding: 14px !important;
+  scroll-snap-align: start !important;
+}
+
+.dashboard-page .dashboard-urgent-card-top {
+  gap: 8px !important;
+}
+
+.dashboard-page .dashboard-urgent-card-top span {
+  font-size: 0.88rem !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-page .dashboard-urgent-card-top strong {
+  min-width: 34px !important;
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 0.88rem !important;
+}
+
+.dashboard-page .dashboard-urgent-card > p {
+  min-height: 34px !important;
+  font-size: 0.72rem !important;
+  line-height: 1.35 !important;
+}
+
+.dashboard-page .dashboard-urgent-preview-list {
+  gap: 6px !important;
+  margin-top: 0 !important;
+}
+
+.dashboard-page .dashboard-urgent-preview-list div,
+.dashboard-page .dashboard-urgent-empty {
+  min-height: 40px !important;
+  border-radius: 14px !important;
+  padding: 8px !important;
+}
+
+.dashboard-page .dashboard-urgent-preview-list strong {
+  font-size: 0.68rem !important;
+}
+
+.dashboard-page .dashboard-urgent-preview-list span,
+.dashboard-page .dashboard-urgent-empty {
+  font-size: 0.62rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Cleaner horizontal scrollbar */
+.dashboard-page .dashboard-urgent-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.28);
+}
+
+.dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.45);
+}
+
+/* Tablet: still one row, horizontal scroll when needed */
+@media (max-width: 1180px) {
+  .dashboard-page .dashboard-urgent-grid {
+    grid-template-columns: none !important;
+  }
+
+  .dashboard-page .dashboard-urgent-card {
+    flex: 0 0 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+  }
+}
+
+/* Phone: compact side-scroll cards */
+@media (max-width: 720px) {
+  .dashboard-page .dashboard-urgent-alerts {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .dashboard-page .dashboard-urgent-heading {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .dashboard-page .dashboard-urgent-heading h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-heading span {
+    font-size: 0.72rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-heading button {
+    width: auto !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 0.66rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-grid {
+    gap: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .dashboard-page .dashboard-urgent-card {
+    flex: 0 0 232px !important;
+    min-width: 232px !important;
+    max-width: 232px !important;
+    min-height: 138px !important;
+    border-radius: 18px !important;
+    padding: 12px !important;
+  }
+
+  .dashboard-page .dashboard-urgent-card-top span {
+    font-size: 0.78rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-card-top strong {
+    min-width: 30px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-card > p {
+    min-height: 30px !important;
+    font-size: 0.66rem !important;
+  }
+
+  .dashboard-page .dashboard-urgent-empty {
+    min-height: 38px !important;
+    font-size: 0.58rem !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-page .dashboard-urgent-card {
+    flex-basis: 214px !important;
+    min-width: 214px !important;
+    max-width: 214px !important;
+  }
+
+  .dashboard-page .dashboard-urgent-heading button {
+    padding: 0 10px !important;
+  }
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.14);
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.34);
+}

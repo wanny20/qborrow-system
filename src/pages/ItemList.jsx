@@ -591,7 +591,6 @@ return (
     <label className="qb-label">Category</label>
 
     <div className="inventory-fixed-category-card">
-      <span>Fixed Assigned Category</span>
       <strong>{getAssignedCategoryNames()}</strong>
     </div>
   </div>

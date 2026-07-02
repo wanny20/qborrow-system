@@ -30,7 +30,6 @@ function Settings() {
   const [croppedPhotoSize, setCroppedPhotoSize] = useState(0);
   const [cropSourceFile, setCropSourceFile] = useState(null);
 
-  const [profilePassword, setProfilePassword] = useState("");
   const [passwordCurrent, setPasswordCurrent] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -135,15 +134,6 @@ function Settings() {
         }
       }
 
-      if (fieldName === "profilePassword") {
-        if (!profilePassword) {
-          nextErrors.profilePassword =
-            "Current password is required to save changes.";
-        } else {
-          delete nextErrors.profilePassword;
-        }
-      }
-
       return nextErrors;
     });
   }
@@ -196,10 +186,6 @@ function Settings() {
 
     if (fullNameError) {
       errors.fullName = fullNameError;
-    }
-
-    if (!profilePassword) {
-      errors.profilePassword = "Current password is required to save changes.";
     }
 
     setProfileFieldErrors(errors);
@@ -399,7 +385,7 @@ function Settings() {
     showStatus(
       `Profile picture cropped and compressed to ${(blob.size / 1024).toFixed(
         1
-      )} KB. Enter your password to save.`,
+      )} KB. Click Save Settings to apply the update.`,
       "success"
     );
   }
@@ -425,8 +411,6 @@ function Settings() {
     setSavingProfile(true);
 
     try {
-      await reauthenticateUser(profilePassword);
-
       let uploadedPhotoURL = userRecord?.photoURL || "";
       let uploadedPhotoPath = userRecord?.photoPath || "";
 
@@ -462,7 +446,6 @@ function Settings() {
       setFullName(cleanedFullName);
       setCroppedPhotoBlob(null);
       setCroppedPhotoSize(0);
-      setProfilePassword("");
       setProfileFieldErrors({});
       setProfileTouched(false);
 
@@ -631,7 +614,7 @@ function Settings() {
         >
           <div className="settings-section-heading">
             <h2>Profile</h2>
-            <p>Crop your picture, update your name, then confirm with password.</p>
+            <p>Crop your picture and update your display name without entering your password.</p>
           </div>
 
           <div className="settings-profile-preview">
@@ -724,33 +707,6 @@ function Settings() {
               )}
             </div>
 
-            <div className="settings-field">
-              <label className="qb-label" htmlFor="profile-password">
-                Current Password <span className="required-star">*</span>
-              </label>
-
-              <input
-                id="profile-password"
-                type="password"
-                className={profileFieldErrors.profilePassword ? "input-error" : ""}
-                placeholder="Password to save"
-                value={profilePassword}
-                onFocus={() => clearProfileFieldError("profilePassword")}
-                onBlur={() => validateProfileField("profilePassword")}
-                onChange={(event) => {
-                  markProfileChanged();
-                  setProfilePassword(event.target.value);
-                  clearProfileFieldError("profilePassword");
-                }}
-                disabled={savingProfile}
-              />
-
-              {profileFieldErrors.profilePassword && (
-                <p className="field-error-message">
-                  {profileFieldErrors.profilePassword}
-                </p>
-              )}
-            </div>
           </div>
 
           <button
