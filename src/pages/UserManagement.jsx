@@ -57,6 +57,7 @@ const createUserSubmitLockRef = useRef(false);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [borrowRequests, setBorrowRequests] = useState([]);
+  const [categoryAdminAssignments, setCategoryAdminAssignments] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -291,9 +292,25 @@ function validateCreateField(fieldName) {
     if (fieldName === "assignedCategories") {
       if (role === "categoryAdmin" && categories.length === 0) {
         nextErrors.assignedCategories = "Please add or seed categories first.";
+      } else if (
+        role === "categoryAdmin" &&
+        getAvailableCategoryCountForCategoryAdmin() === 0 &&
+        assignedCategories.length === 0
+      ) {
+        nextErrors.assignedCategories =
+          "All categories are already assigned to another mini admin.";
       } else if (role === "categoryAdmin" && assignedCategories.length === 0) {
         nextErrors.assignedCategories =
-          "Please assign at least one category for category admin.";
+          "Please assign one available category for this mini admin.";
+      } else if (role === "categoryAdmin" && assignedCategories.length > 1) {
+        nextErrors.assignedCategories =
+          "Mini admin can only manage one category.";
+      } else if (
+        role === "categoryAdmin" &&
+        isCategoryAssignedToAnotherAdmin(assignedCategories[0])
+      ) {
+        nextErrors.assignedCategories =
+          getCategoryAlreadyAssignedMessage(assignedCategories[0]);
       } else {
         delete nextErrors.assignedCategories;
       }
@@ -370,10 +387,35 @@ function validateEditUserField(fieldName) {
         nextErrors.editAssignedCategories = "Please add or seed categories first.";
       } else if (
         editRole === "categoryAdmin" &&
+        getAvailableCategoryCountForCategoryAdmin(editingUserId) === 0 &&
         editAssignedCategories.length === 0
       ) {
         nextErrors.editAssignedCategories =
-          "Category admin must have at least one assigned category.";
+          "All categories are already assigned to another mini admin.";
+      } else if (
+        editRole === "categoryAdmin" &&
+        editAssignedCategories.length === 0
+      ) {
+        nextErrors.editAssignedCategories =
+          "Mini admin must have one assigned category.";
+      } else if (
+        editRole === "categoryAdmin" &&
+        editAssignedCategories.length > 1
+      ) {
+        nextErrors.editAssignedCategories =
+          "Mini admin can only manage one category.";
+      } else if (
+        editRole === "categoryAdmin" &&
+        isCategoryAssignedToAnotherAdmin(
+          editAssignedCategories[0],
+          editingUserId
+        )
+      ) {
+        nextErrors.editAssignedCategories =
+          getCategoryAlreadyAssignedMessage(
+            editAssignedCategories[0],
+            editingUserId
+          );
       } else {
         delete nextErrors.editAssignedCategories;
       }
@@ -392,11 +434,33 @@ function validateEditUserForm() {
 
   if (editRole === "categoryAdmin" && categories.length === 0) {
     errors.editAssignedCategories = "Please add or seed categories first.";
-  }
-
-  if (editRole === "categoryAdmin" && editAssignedCategories.length === 0) {
+  } else if (
+    editRole === "categoryAdmin" &&
+    getAvailableCategoryCountForCategoryAdmin(editingUserId) === 0 &&
+    editAssignedCategories.length === 0
+  ) {
     errors.editAssignedCategories =
-      "Category admin must have at least one assigned category.";
+      "All categories are already assigned to another mini admin.";
+  } else if (
+    editRole === "categoryAdmin" &&
+    editAssignedCategories.length === 0
+  ) {
+    errors.editAssignedCategories =
+      "Mini admin must have one assigned category.";
+  } else if (
+    editRole === "categoryAdmin" &&
+    editAssignedCategories.length > 1
+  ) {
+    errors.editAssignedCategories =
+      "Mini admin can only manage one category.";
+  } else if (
+    editRole === "categoryAdmin" &&
+    isCategoryAssignedToAnotherAdmin(editAssignedCategories[0], editingUserId)
+  ) {
+    errors.editAssignedCategories = getCategoryAlreadyAssignedMessage(
+      editAssignedCategories[0],
+      editingUserId
+    );
   }
 
   setEditFieldErrors(errors);
@@ -414,6 +478,20 @@ async function getCreateDuplicateError() {
 
     if (!emailSnapshot.empty) {
       return "This email is already registered. Please use a different email address.";
+    }
+  }
+
+  if (role === "categoryAdmin") {
+    if (assignedCategories.length > 1) {
+      return "Mini admin can only manage one category.";
+    }
+
+    const categoryConflict = await getCategoryAssignmentConflictFromServer(
+      assignedCategories[0]
+    );
+
+    if (categoryConflict) {
+      return categoryConflict;
     }
   }
 
@@ -491,11 +569,26 @@ if (fullNameError) {
 
   if (role === "categoryAdmin" && categories.length === 0) {
     errors.assignedCategories = "Please add or seed categories first.";
-  }
-
-  if (role === "categoryAdmin" && assignedCategories.length === 0) {
+  } else if (
+    role === "categoryAdmin" &&
+    getAvailableCategoryCountForCategoryAdmin() === 0 &&
+    assignedCategories.length === 0
+  ) {
     errors.assignedCategories =
-      "Please assign at least one category for category admin.";
+      "All categories are already assigned to another mini admin.";
+  } else if (role === "categoryAdmin" && assignedCategories.length === 0) {
+    errors.assignedCategories =
+      "Please assign one available category for this mini admin.";
+  } else if (role === "categoryAdmin" && assignedCategories.length > 1) {
+    errors.assignedCategories =
+      "Mini admin can only manage one category.";
+  } else if (
+    role === "categoryAdmin" &&
+    isCategoryAssignedToAnotherAdmin(assignedCategories[0])
+  ) {
+    errors.assignedCategories = getCategoryAlreadyAssignedMessage(
+      assignedCategories[0]
+    );
   }
 
   setCreateFieldErrors(errors);
@@ -695,6 +788,88 @@ function getBorrowingStatusClass(user) {
     }
 
     return categoryIds.map(getCategoryName).join(", ");
+  }
+
+  function getCategoryAssignmentUsers() {
+    return categoryAdminAssignments.length > 0
+      ? categoryAdminAssignments
+      : users.filter((user) => user.role === "categoryAdmin");
+  }
+
+  function getCategoryAdminOwner(categoryId, excludeUserId = "") {
+    if (!categoryId) return null;
+
+    return (
+      getCategoryAssignmentUsers().find((user) => {
+        if (!user || user.id === excludeUserId) return false;
+        if (user.role !== "categoryAdmin") return false;
+
+        const userCategories = Array.isArray(user.assignedCategories)
+          ? user.assignedCategories
+          : [];
+
+        return userCategories.some(
+          (assignedCategoryId) =>
+            normalizeText(assignedCategoryId) === normalizeText(categoryId)
+        );
+      }) || null
+    );
+  }
+
+  function isCategoryAssignedToAnotherAdmin(categoryId, excludeUserId = "") {
+    return Boolean(getCategoryAdminOwner(categoryId, excludeUserId));
+  }
+
+  function getCategoryAdminOwnerName(categoryId, excludeUserId = "") {
+    const owner = getCategoryAdminOwner(categoryId, excludeUserId);
+
+    return owner?.fullName || owner?.email || "another mini admin";
+  }
+
+  function getCategoryAlreadyAssignedMessage(categoryId, excludeUserId = "") {
+    return `This category is already assigned to ${getCategoryAdminOwnerName(
+      categoryId,
+      excludeUserId
+    )}. Choose another category.`;
+  }
+
+  function getAvailableCategoryCountForCategoryAdmin(excludeUserId = "") {
+    return categories.filter(
+      (category) => !isCategoryAssignedToAnotherAdmin(category.id, excludeUserId)
+    ).length;
+  }
+
+  async function getCategoryAssignmentConflictFromServer(
+    categoryId,
+    excludeUserId = ""
+  ) {
+    if (!categoryId) return "";
+
+    const usersRef = collection(db, "users");
+    const categoryAdminSnapshot = await getDocs(
+      firestoreQuery(usersRef, where("role", "==", "categoryAdmin"))
+    );
+
+    const ownerDocument = categoryAdminSnapshot.docs.find((document) => {
+      if (document.id === excludeUserId) return false;
+
+      const userData = document.data();
+      const userCategories = Array.isArray(userData.assignedCategories)
+        ? userData.assignedCategories
+        : [];
+
+      return userCategories.some(
+        (assignedCategoryId) =>
+          normalizeText(assignedCategoryId) === normalizeText(categoryId)
+      );
+    });
+
+    if (!ownerDocument) return "";
+
+    const owner = ownerDocument.data();
+    const ownerName = owner?.fullName || owner?.email || "another mini admin";
+
+    return `This category is already assigned to ${ownerName}. Choose another category.`;
   }
 
   function getBorrowerDetailsPayload(sourceRole = role) {
@@ -930,12 +1105,22 @@ async function handleUserSearchChange(event) {
     setLoading(true);
 
     try {
-      const [categoriesSnapshot, itemsSnapshot, requestsSnapshot] =
-        await Promise.all([
-          getDocs(collection(db, "categories")),
-          getDocs(collection(db, "items")),
-          getDocs(collection(db, "borrowRequests")),
-        ]);
+      const [
+        categoriesSnapshot,
+        itemsSnapshot,
+        requestsSnapshot,
+        categoryAdminsSnapshot,
+      ] = await Promise.all([
+        getDocs(collection(db, "categories")),
+        getDocs(collection(db, "items")),
+        getDocs(collection(db, "borrowRequests")),
+        getDocs(
+          firestoreQuery(
+            collection(db, "users"),
+            where("role", "==", "categoryAdmin")
+          )
+        ),
+      ]);
 
       const categoryData = categoriesSnapshot.docs
         .map((document) => ({
@@ -956,9 +1141,15 @@ async function handleUserSearchChange(event) {
         ...document.data(),
       }));
 
+      const categoryAdminData = categoryAdminsSnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }));
+
       setCategories(categoryData);
       setItems(itemData);
       setBorrowRequests(requestData);
+      setCategoryAdminAssignments(categoryAdminData);
 
       await Promise.all([
         fetchUserStats(),
@@ -972,22 +1163,49 @@ async function handleUserSearchChange(event) {
   }
 
   function handleCategoryToggle(categoryId) {
+    if (isCategoryAssignedToAnotherAdmin(categoryId)) {
+      const message = getCategoryAlreadyAssignedMessage(categoryId);
+
+      setCreateFieldErrors((previousErrors) => ({
+        ...previousErrors,
+        assignedCategories: message,
+      }));
+
+      showBlockedAction(message);
+      return;
+    }
+
     setAssignedCategories((previousCategories) => {
       if (previousCategories.includes(categoryId)) {
-        return previousCategories.filter((category) => category !== categoryId);
+        return [];
       }
 
-      return [...previousCategories, categoryId];
+      return [categoryId];
     });
   }
 
   function handleEditCategoryToggle(categoryId) {
+    if (isCategoryAssignedToAnotherAdmin(categoryId, editingUserId)) {
+      const message = getCategoryAlreadyAssignedMessage(
+        categoryId,
+        editingUserId
+      );
+
+      setEditFieldErrors((previousErrors) => ({
+        ...previousErrors,
+        editAssignedCategories: message,
+      }));
+
+      showBlockedAction(message);
+      return;
+    }
+
     setEditAssignedCategories((previousCategories) => {
       if (previousCategories.includes(categoryId)) {
-        return previousCategories.filter((category) => category !== categoryId);
+        return [];
       }
 
-      return [...previousCategories, categoryId];
+      return [categoryId];
     });
   }
 
@@ -1082,7 +1300,8 @@ async function handleCreateUser(e) {
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       role,
-      assignedCategories: role === "categoryAdmin" ? assignedCategories : [],
+      assignedCategories:
+        role === "categoryAdmin" ? assignedCategories.slice(0, 1) : [],
       ...getBorrowerDetailsPayload(role),
       overdueCount: 0,
       suspendedUntil: "",
@@ -1226,7 +1445,9 @@ async function handleDeleteCategory(category) {
     setEditingUserId(user.id);
     setEditRole(user.role || "borrower");
     setEditAssignedCategories(
-      Array.isArray(user.assignedCategories) ? user.assignedCategories : []
+      Array.isArray(user.assignedCategories)
+        ? user.assignedCategories.slice(0, 1)
+        : []
     );
 
     setEditUserType(getSafeUserType(user.userType));
@@ -1279,6 +1500,23 @@ async function handleSaveUserChanges(user) {
 if (!isValid) {
   return;
 }
+
+if (editRole === "categoryAdmin") {
+  const categoryConflict = await getCategoryAssignmentConflictFromServer(
+    editAssignedCategories[0],
+    user.id
+  );
+
+  if (categoryConflict) {
+    setEditFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      editAssignedCategories: categoryConflict,
+    }));
+    showStatus(categoryConflict, "error");
+    return;
+  }
+}
+
 setUpdatingId(user.id);
 
     try {
@@ -1287,7 +1525,9 @@ setUpdatingId(user.id);
       await updateDoc(userRef, {
         role: editRole,
         assignedCategories:
-          editRole === "categoryAdmin" ? editAssignedCategories : [],
+          editRole === "categoryAdmin"
+            ? editAssignedCategories.slice(0, 1)
+            : [],
         ...getEditBorrowerDetailsPayload(editRole),
         updatedAt: serverTimestamp(),
       });
@@ -2403,8 +2643,11 @@ onChange={(e) => {
   }}
 >
                   <span>
-  Assigned Categories <span className="required-star">*</span>
+  Assigned Category <span className="required-star">*</span>
 </span>
+<p className="user-small-note user-category-assignment-note">
+  Select only one available category. Categories already assigned to another mini admin are locked.
+</p>
 
                   {categories.length === 0 ? (
                     <p className="user-small-note">
@@ -2412,19 +2655,52 @@ onChange={(e) => {
                     </p>
                   ) : (
                     <div className="user-category-grid">
-                      {categories.map((category) => (
-                        <label key={category.id}>
-                          <input
-                            type="checkbox"
-                            checked={assignedCategories.includes(category.id)}
-                            onChange={() => {
+                      {categories.map((category) => {
+                        const assignedOwner = getCategoryAdminOwner(category.id);
+                        const isAssignedToOtherAdmin = Boolean(assignedOwner);
+                        const isSelected = assignedCategories.includes(
+                          category.id
+                        );
+
+                        return (
+                          <label
+                            key={category.id}
+                            className={`user-category-option ${
+                              isSelected ? "user-category-option-selected" : ""
+                            } ${
+                              isAssignedToOtherAdmin
+                                ? "user-category-option-disabled"
+                                : ""
+                            }`}
+                            title={
+                              isAssignedToOtherAdmin
+                                ? getCategoryAlreadyAssignedMessage(category.id)
+                                : "Available category"
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
   handleCategoryToggle(category.id);
   clearCreateFieldError("assignedCategories");
 }}
-                          />
-                          <span>{category.name}</span>
-                        </label>
-                      ))}
+                              disabled={creating || isAssignedToOtherAdmin}
+                            />
+                            <span className="user-category-option-text">
+                              <strong>{category.name}</strong>
+                              {isAssignedToOtherAdmin && (
+                                <small>
+                                  Assigned to{" "}
+                                  {assignedOwner.fullName ||
+                                    assignedOwner.email ||
+                                    "another mini admin"}
+                                </small>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                   {createFieldErrors.assignedCategories && (
@@ -3317,31 +3593,73 @@ onClick={confirmDiscardEditChanges}
   }}
 >
                     <span>
-                      Edit Assigned Categories{" "}
+                      Edit Assigned Category{" "}
                       <span className="required-star">*</span>
                     </span>
+                    <p className="user-small-note user-category-assignment-note">
+                      Mini admin can manage only one available category.
+                    </p>
 
                     {categories.length === 0 ? (
                       <p className="user-small-note">No categories available.</p>
                     ) : (
                       <div className="user-category-grid">
-                        {categories.map((category) => (
-                          <label key={category.id}>
-                            <input
-                              type="checkbox"
-                              checked={editAssignedCategories.includes(
-                                category.id
-                              )}
-                              onChange={() => {
-                                handleEditCategoryToggle(category.id);
-                                clearEditFieldError("editAssignedCategories");
-                              }}
-                              disabled={updatingId === editingUser.id}
-                            />
+                        {categories.map((category) => {
+                          const assignedOwner = getCategoryAdminOwner(
+                            category.id,
+                            editingUser.id
+                          );
+                          const isAssignedToOtherAdmin = Boolean(assignedOwner);
+                          const isSelected = editAssignedCategories.includes(
+                            category.id
+                          );
 
-                            <span>{category.name}</span>
-                          </label>
-                        ))}
+                          return (
+                            <label
+                              key={category.id}
+                              className={`user-category-option ${
+                                isSelected ? "user-category-option-selected" : ""
+                              } ${
+                                isAssignedToOtherAdmin
+                                  ? "user-category-option-disabled"
+                                  : ""
+                              }`}
+                              title={
+                                isAssignedToOtherAdmin
+                                  ? getCategoryAlreadyAssignedMessage(
+                                      category.id,
+                                      editingUser.id
+                                    )
+                                  : "Available category"
+                              }
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  handleEditCategoryToggle(category.id);
+                                  clearEditFieldError("editAssignedCategories");
+                                }}
+                                disabled={
+                                  updatingId === editingUser.id ||
+                                  isAssignedToOtherAdmin
+                                }
+                              />
+
+                              <span className="user-category-option-text">
+                                <strong>{category.name}</strong>
+                                {isAssignedToOtherAdmin && (
+                                  <small>
+                                    Assigned to{" "}
+                                    {assignedOwner.fullName ||
+                                      assignedOwner.email ||
+                                      "another mini admin"}
+                                  </small>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
                     )}
 
