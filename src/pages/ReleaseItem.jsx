@@ -49,7 +49,7 @@ function getTimestampMs(value) {
 function ReleaseItem() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
   const { showToast } = useToast();
 
   const [approvedRequests, setApprovedRequests] = useState([]);
@@ -96,6 +96,18 @@ const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 function showBlockedAction(message) {
   showStatus(message, "error");
   showToast(message, "error");
+}
+
+function isSchoolClosed() {
+  return Boolean(schoolStatus?.isSchoolClosed);
+}
+
+function getSchoolClosedMessage() {
+  const reason = String(schoolStatus?.closureReason || "").trim();
+
+  return reason
+    ? `Item release is temporarily unavailable because the school is closed: ${reason}`
+    : "Item release is temporarily unavailable because the school is currently closed.";
 }
 
 function openConfirmAction(config) {
@@ -278,6 +290,11 @@ async function getCameraList() {
   };
 }
 async function startReleaseScanner() {
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage());
+    return;
+  }
+
   if (startingScanner || releasing) return;
 
   setStartingScanner(true);
@@ -502,51 +519,6 @@ async function restartReleaseScanner() {
     return getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
   }
 
-  function getApprovedReleaseRemainingMs(request) {
-    if (request.approvalStatus !== "Approved") return null;
-
-    const approvedTime = getApprovedTime(request);
-
-    if (!approvedTime) return null;
-
-    return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
-  }
-
-  function isApprovedReleaseExpired(request) {
-    const remainingMs = getApprovedReleaseRemainingMs(request);
-
-    return remainingMs !== null && remainingMs <= 0;
-  }
-
-  function formatApprovedReleaseRemaining(request) {
-    const remainingMs = getApprovedReleaseRemainingMs(request);
-
-    if (remainingMs === null) return "No release timer";
-    if (remainingMs <= 0) return "Release window expired";
-
-    const totalMinutes = Math.ceil(remainingMs / 60000);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (hours <= 0) return `${minutes}m left`;
-
-    return `${hours}h ${minutes}m left`;
-  }
-
-  function formatApprovedReleaseDeadline(request) {
-    const approvedTime = getApprovedTime(request);
-
-    if (!approvedTime) return "No deadline";
-
-    return new Date(approvedTime + RELEASE_WINDOW_MS).toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-
   function parseDateKey(value) {
     if (!value) return null;
 
@@ -561,6 +533,79 @@ async function restartReleaseScanner() {
     const timezoneOffset = date.getTimezoneOffset() * 60000;
 
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
+  function getEndOfDateKeyMs(dateKey) {
+    const date = parseDateKey(dateKey);
+
+    if (!date) return 0;
+
+    date.setHours(23, 59, 59, 999);
+
+    return date.getTime();
+  }
+
+  function getEarliestValidDeadlineMs(deadlines) {
+    const validDeadlines = deadlines.filter(
+      (deadline) => typeof deadline === "number" && deadline > 0
+    );
+
+    return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
+  }
+
+  function getApprovedReleaseDeadlineMs(request) {
+    if (request.approvalStatus !== "Approved") return 0;
+
+    const approvedTime = getApprovedTime(request);
+    const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
+
+    return getEarliestValidDeadlineMs([
+      approvedTime ? approvedTime + RELEASE_WINDOW_MS : 0,
+      expectedReturnEnd,
+    ]);
+  }
+
+  function getApprovedReleaseRemainingMs(request) {
+    const deadlineTime = getApprovedReleaseDeadlineMs(request);
+
+    if (!deadlineTime) return null;
+
+    return deadlineTime - Date.now();
+  }
+
+  function isApprovedReleaseExpired(request) {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    return remainingMs !== null && remainingMs <= 0;
+  }
+
+  function formatApprovedReleaseRemaining(request) {
+    const remainingMs = getApprovedReleaseRemainingMs(request);
+
+    if (remainingMs === null) return "No release deadline";
+    if (remainingMs <= 0) return "Release deadline expired";
+
+    const totalMinutes = Math.ceil(remainingMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours <= 0) return `${minutes}m left`;
+
+    return `${hours}h ${minutes}m left`;
+  }
+
+  function formatApprovedReleaseDeadline(request) {
+    const deadlineTime = getApprovedReleaseDeadlineMs(request);
+
+    if (!deadlineTime) return "No deadline";
+
+    return new Date(deadlineTime).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   }
 
   function addDaysToDateKey(dateKey, daysToAdd) {
@@ -654,7 +699,7 @@ async function notifyApprovedRequestExpired(request) {
     title: "Approved Request Expired",
     message: `Your approved request for ${
       request.itemName || "this item"
-    } expired because the item was not released within 24 hours. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
+    } expired because the item was not released before the release deadline. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
     status: "Unread",
     createdAt: serverTimestamp(),
     link: "/my-requests",
@@ -695,7 +740,7 @@ async function expireApprovedRequest(request) {
     transaction.update(requestRef, {
       approvalStatus: "Expired",
       expireReason:
-        "Approved request expired because the item was not released within 24 hours.",
+        "Approved request expired because the item was not released before the release deadline.",
       expiredAt: serverTimestamp(),
       expiredBy: "system",
       autoExpired: true,
@@ -729,7 +774,14 @@ async function expireApprovedRequest(request) {
   });
 
   if (expiredRequest) {
-    await notifyApprovedRequestExpired(expiredRequest);
+    try {
+      await notifyApprovedRequestExpired(expiredRequest);
+    } catch {
+      /*
+        The request/item/user transaction already finished. A notification
+        permission issue should not break the whole Release Item page.
+      */
+    }
   }
 
   return expiredRequest;
@@ -751,7 +803,7 @@ async function autoExpireApprovedRequests() {
       );
     });
 
-  await Promise.all(
+  await Promise.allSettled(
     expiredApprovedRequests.map((request) => expireApprovedRequest(request))
   );
 }
@@ -762,7 +814,9 @@ async function fetchApprovedRequests(options = {}) {
   setLoading(true);
 
   try {
-    await autoExpireApprovedRequests();
+    if (!isSchoolClosed()) {
+      await autoExpireApprovedRequests();
+    }
 
     const querySnapshot = await getDocs(collection(db, "borrowRequests"));
 
@@ -816,6 +870,11 @@ async function fetchApprovedRequests(options = {}) {
 
 async function findApprovedRequestByItemId(rawItemId) {
   if (isReleaseBusy()) return;
+
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage());
+    return;
+  }
 
 const itemId = extractItemId(rawItemId);
 showStatus("", "");
@@ -883,7 +942,7 @@ clearFieldError("manualItemId");
       setSelectedRequest(null);
       await fetchApprovedRequests();
       showBlockedAction(
-        "This approved request expired because it was not released within 24 hours."
+        "This approved request expired because it was not released before the release deadline."
       );
       return;
     }
@@ -899,6 +958,11 @@ showToast("Approved request found. Review details before release.", "success");
 
 async function handleConfirmRelease() {
   showStatus("", "");
+
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage());
+    return;
+  }
 
   const isValid = validateReleaseForm();
 
@@ -955,7 +1019,7 @@ async function handleConfirmRelease() {
         if (isApprovedReleaseExpired(latestRequest)) {
           await expireApprovedRequest(latestRequest);
           showBlockedAction(
-            "This approved request expired because it was not released within 24 hours."
+            "This approved request expired because it was not released before the release deadline."
           );
 
           setSelectedRequest(null);
@@ -1114,6 +1178,13 @@ return (
         </div>
       )}
 
+      {isSchoolClosed() && (
+        <div className="release-school-closed-banner" role="alert">
+          <strong>Release is temporarily unavailable</strong>
+          <p>{getSchoolClosedMessage()}</p>
+        </div>
+      )}
+
       <section className="release-layout">
         <section className="release-scanner-card">
           <div className="release-card-heading">
@@ -1133,7 +1204,7 @@ return (
       id="release-camera"
       value={selectedCameraId}
       onChange={(event) => setSelectedCameraId(event.target.value)}
-      disabled={scannerOpen || startingScanner}
+      disabled={scannerOpen || startingScanner || isSchoolClosed()}
     >
       {cameras.map((camera, index) => (
         <option key={camera.id} value={camera.id}>
@@ -1154,7 +1225,7 @@ return (
         startReleaseScanner();
       }
     }}
-    disabled={startingScanner || releasing}
+    disabled={startingScanner || releasing || isSchoolClosed()}
   >
     {startingScanner
       ? "Opening..."
@@ -1167,7 +1238,7 @@ return (
     type="button"
     className="release-secondary-btn"
     onClick={restartReleaseScanner}
-    disabled={startingScanner || releasing}
+    disabled={startingScanner || releasing || isSchoolClosed()}
   >
     Restart Scanner
   </button>
@@ -1199,13 +1270,13 @@ return (
                   clearFieldError("manualItemId");
                 }}
                 placeholder="Example: item ID or /item/itemId"
-                disabled={releasing}
+                disabled={releasing || isSchoolClosed()}
               />
             <button
               type="button"
               className="release-secondary-btn"
               onClick={() => findApprovedRequestByItemId(manualItemId)}
-              disabled={releasing}
+              disabled={releasing || isSchoolClosed()}
             >
               Find
             </button>
@@ -1230,7 +1301,7 @@ return (
               </div>
 
               <div className="release-purpose-box">
-                <span>Release Window</span>
+                <span>Release Deadline</span>
                 <p>
                   {formatApprovedReleaseRemaining(selectedRequest)} · Deadline:{" "}
                   {formatApprovedReleaseDeadline(selectedRequest)}
@@ -1283,9 +1354,9 @@ return (
                 type="button"
                 className="release-confirm-btn"
                 onClick={handleConfirmRelease}
-                disabled={releasing}
+                disabled={releasing || isSchoolClosed()}
               >
-                {releasing ? "Releasing..." : "Confirm Release"}
+                {releasing ? "Releasing..." : isSchoolClosed() ? "School Closed" : "Confirm Release"}
               </button>
             </>
           ) : (
@@ -1343,7 +1414,7 @@ return (
                 type="button"
                 className="release-secondary-btn"
                 onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
-                disabled={releasing}
+                disabled={releasing || isSchoolClosed()}
               >
                 Refresh
               </button>
@@ -1415,7 +1486,7 @@ return (
                                 fetchApprovedRequests()
                               );
                               showBlockedAction(
-                                "This approved request expired because it was not released within 24 hours."
+                                "This approved request expired because it was not released before the release deadline."
                               );
                               return;
                             }
@@ -1425,7 +1496,7 @@ return (
                             setFieldErrors({});
                             showToast("Approved request selected.", "success");
                           }}
-                          disabled={releasing || selectedRequest?.id === request.id}
+                          disabled={releasing || isSchoolClosed() || selectedRequest?.id === request.id}
                         >
                           {selectedRequest?.id === request.id ? "Selected" : "Select"}
                         </button>
@@ -1464,7 +1535,7 @@ return (
                   type="button"
                   className="release-secondary-btn"
                   onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
-                  disabled={releasing}
+                  disabled={releasing || isSchoolClosed()}
                 >
                   Refresh
                 </button>

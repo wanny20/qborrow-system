@@ -7,7 +7,7 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
@@ -22,7 +22,7 @@ function Settings() {
   const { showToast } = useToast();
 
   const outletContext = useOutletContext() || {};
-  const { setUnsavedChanges, guardedNavigate } = outletContext;
+  const { setUnsavedChanges, guardedNavigate, schoolStatus } = outletContext;
 
   const [currentUser, setCurrentUser] = useState(null);
   const [userRecord, setUserRecord] = useState(null);
@@ -55,6 +55,8 @@ function Settings() {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmProfileSaveOpen, setConfirmProfileSaveOpen] = useState(false);
   const [pendingProfileChanges, setPendingProfileChanges] = useState([]);
+  const [schoolClosureReason, setSchoolClosureReason] = useState("");
+  const [savingSchoolStatus, setSavingSchoolStatus] = useState(false);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -73,6 +75,91 @@ function Settings() {
   function showBlockedAction(message) {
     showStatus(message, "error");
     showToast(message, "error");
+  }
+
+  function isSuperAdminProfile() {
+    return userRecord?.role === "superAdmin";
+  }
+
+  function isSchoolClosed() {
+    return Boolean(schoolStatus?.isSchoolClosed);
+  }
+
+  function formatSchoolTimestamp(value) {
+    const date = getDateFromValue(value);
+
+    if (!date) return "Not recorded";
+
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  async function handleUpdateSchoolStatus(nextClosed) {
+    if (!currentUser) {
+      showBlockedAction("No logged-in user found.");
+      return;
+    }
+
+    if (!isSuperAdminProfile()) {
+      showBlockedAction("Only super admins can change school availability.");
+      return;
+    }
+
+    const cleanedReason = String(schoolClosureReason || "").trim();
+
+    if (nextClosed && !cleanedReason) {
+      showBlockedAction("Please enter a reason before closing the system.");
+      return;
+    }
+
+    setSavingSchoolStatus(true);
+    showStatus("", "");
+
+    try {
+      const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
+      const basePayload = {
+        isSchoolClosed: nextClosed,
+        updatedAt: serverTimestamp(),
+      };
+
+      const statusPayload = nextClosed
+        ? {
+            ...basePayload,
+            closureReason: cleanedReason,
+            closedAt: serverTimestamp(),
+            closedBy: currentUser.uid,
+            closedByName:
+              userRecord?.fullName || currentUser.email || "Super Admin",
+          }
+        : {
+            ...basePayload,
+            closureReason: "",
+            reopenedAt: serverTimestamp(),
+            reopenedBy: currentUser.uid,
+          };
+
+      await setDoc(schoolStatusRef, statusPayload, { merge: true });
+
+      if (!nextClosed) {
+        setSchoolClosureReason("");
+      }
+
+      const message = nextClosed
+        ? "School Closure Mode is now active. Borrowing, claiming, and returns are paused."
+        : "School Closure Mode is now inactive. Borrowing, claiming, and returns are available again.";
+
+      showStatus(message, "success");
+      showToast(nextClosed ? "System closed" : "System reopened", "success");
+    } catch (error) {
+      showActionError("Failed to update school status", error);
+    } finally {
+      setSavingSchoolStatus(false);
+    }
   }
 
   function markProfileChanged() {
@@ -831,6 +918,10 @@ function Settings() {
     setUnsavedChanges,
   ]);
 
+  useEffect(() => {
+    setSchoolClosureReason(String(schoolStatus?.closureReason || ""));
+  }, [schoolStatus?.closureReason]);
+
   const hasSettingsFieldErrors =
     Object.values(profileFieldErrors).some(Boolean) ||
     Object.values(passwordFieldErrors).some(Boolean);
@@ -1270,6 +1361,94 @@ function Settings() {
             </p>
           </section>
         )}
+
+
+
+        {isSuperAdminProfile() && (
+          <section
+            className={`settings-card settings-school-status-card ${
+              isSchoolClosed() ? "closed" : "open"
+            }`}
+            aria-label="School availability control"
+          >
+            <div className="settings-section-heading">
+              <h2>School Availability</h2>
+              <p>
+                Control whether borrowers can submit requests, claim items, or
+                process returns during school closures.
+              </p>
+            </div>
+
+            <div className="settings-school-status-main">
+              <span>{isSchoolClosed() ? "Closed" : "Open"}</span>
+              <strong>
+                {isSchoolClosed()
+                  ? "Borrowing and returns are paused"
+                  : "Borrowing and returns are available"}
+              </strong>
+            </div>
+
+            <div className="settings-school-status-grid">
+              <div>
+                <span>Closure Reason</span>
+                <strong>
+                  {schoolStatus?.closureReason || "No active closure reason"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Last Updated</span>
+                <strong>
+                  {formatSchoolTimestamp(
+                    schoolStatus?.updatedAt ||
+                      schoolStatus?.closedAt ||
+                      schoolStatus?.reopenedAt
+                  )}
+                </strong>
+              </div>
+            </div>
+
+            <div className="settings-field settings-school-reason-field">
+              <label className="qb-label" htmlFor="school-closure-reason">
+                Closure Reason
+              </label>
+
+              <textarea
+                id="school-closure-reason"
+                value={schoolClosureReason}
+                onChange={(event) => setSchoolClosureReason(event.target.value)}
+                placeholder="Example: School holiday, emergency closure, campus maintenance"
+                disabled={savingSchoolStatus}
+              />
+
+              <small>
+                This message will appear to borrowers when they try to borrow,
+                claim, or return items while the school is closed.
+              </small>
+            </div>
+
+            <div className="settings-school-status-actions">
+              <button
+                type="button"
+                className="settings-secondary-btn"
+                onClick={() => handleUpdateSchoolStatus(false)}
+                disabled={savingSchoolStatus || !isSchoolClosed()}
+              >
+                {savingSchoolStatus ? "Saving..." : "Open System"}
+              </button>
+
+              <button
+                type="button"
+                className="settings-primary-btn settings-close-school-btn"
+                onClick={() => handleUpdateSchoolStatus(true)}
+                disabled={savingSchoolStatus || isSchoolClosed()}
+              >
+                {savingSchoolStatus ? "Saving..." : "Close System"}
+              </button>
+            </div>
+          </section>
+        )}
+
 
         <form
           className="settings-card settings-password-card"

@@ -7854,3 +7854,391 @@ html[data-theme="dark"] .user-category-option-text small {
     max-width: none !important;
   }
 }
+
+
+
+/* =========================================================
+   ABSOLUTE FINAL FIX - EXISTING USERS TABLE HORIZONTAL SCROLL
+   Fixes sidebar-squeezed screens where the Actions column is hidden.
+   This targets the real wrapper from UserManagement.jsx:
+   .user-table-scroll-area
+   Put this at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* The whole page/card should not create page-level horizontal scroll.
+   Only the table area below will scroll sideways. */
+html body .user-management-page {
+  overflow-x: hidden !important;
+}
+
+html body .user-management-page .user-list-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* THIS is the real horizontal scroll container. */
+html body .user-management-page .user-list-card .user-table-scroll-area {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 0 0 14px 0 !important;
+  margin: 10px 0 0 !important;
+  scrollbar-gutter: stable both-edges !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(15, 23, 42, 0.58) rgba(148, 163, 184, 0.22) !important;
+}
+
+/* Make the scrollbar visible and easy to drag. */
+html body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar {
+  height: 14px !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(148, 163, 184, 0.24) !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar-thumb {
+  border: 3px solid rgba(148, 163, 184, 0.24) !important;
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.62) !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.82) !important;
+}
+
+/* Search controls stay fixed at normal width, not part of horizontal scroll. */
+html body .user-management-page .user-list-card > .user-section-heading,
+html body .user-management-page .user-list-card > .user-tools,
+html body .user-management-page .user-list-card > .user-load-more-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Force header + rows wider than the visible card so horizontal scroll appears. */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-grid,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+  width: 1420px !important;
+  min-width: 1420px !important;
+  max-width: none !important;
+}
+
+/* Exact shared column layout:
+   Name | Email/Role | Contact | Category | Created | Status | Actions */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+  display: grid !important;
+  grid-template-columns:
+    190px
+    260px
+    120px
+    180px
+    130px
+    190px
+    260px !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+/* Header polish and alignment */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header {
+  min-height: 48px !important;
+  margin-bottom: 8px !important;
+  padding: 10px 14px !important;
+  border-radius: 16px !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 0.62rem !important;
+  white-space: nowrap !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(1) {
+  grid-area: name !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(2) {
+  grid-area: identity !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(3) {
+  grid-area: contact !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(4) {
+  grid-area: category !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(5) {
+  grid-area: created !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(6) {
+  grid-area: status !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(7) {
+  grid-area: actions !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Row compact table mode */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+  min-height: 66px !important;
+  padding: 10px 14px !important;
+  border-radius: 0 !important;
+  border-width: 0 0 1px 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* Correct grid areas for row children */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card h3 {
+  grid-area: name !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card-topline {
+  grid-area: identity !important;
+  min-width: 0 !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cells {
+  display: contents !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-contact {
+  grid-area: contact !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-category {
+  grid-area: category !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-created {
+  grid-area: created !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-status {
+  grid-area: status !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-actions {
+  grid-area: actions !important;
+}
+
+/* Prevent hidden/clipped data inside cells */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cell {
+  min-width: 0 !important;
+  display: block !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cell span {
+  display: none !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cell strong,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card-topline > span {
+  display: block !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Status pill fits its own column only. */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-borrowing-status-text,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-status-pill,
+html body .user-management-page .user-list-card .user-table-scroll-area [class*="status-"] {
+  max-width: 170px !important;
+  min-width: 108px !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+
+/* Actions column is now a real visible column at the far right. */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-actions,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card .user-actions {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-actions button,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-actions .user-icon-action,
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card .user-view-btn {
+  flex: 0 0 34px !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+/* Hide the text labels inside small icon action buttons but keep aria-label/title. */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-action-label {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
+
+/* Edit row still opens under the row while preserving table width. */
+html body .user-management-page .user-list-card .user-table-scroll-area .user-card-editing {
+  grid-template-areas:
+    "name identity contact category created status actions"
+    "edit edit edit edit edit edit edit" !important;
+}
+
+html body .user-management-page .user-list-card .user-table-scroll-area .user-edit-panel {
+  grid-area: edit !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Dark mode scrollbar */
+html[data-theme="dark"] body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.16) !important;
+}
+
+html[data-theme="dark"] body .user-management-page .user-list-card .user-table-scroll-area::-webkit-scrollbar-thumb {
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  background: rgba(226, 232, 240, 0.52) !important;
+}
+
+/* Mobile stays as card layout. */
+@media (max-width: 700px) {
+  html body .user-management-page .user-list-card .user-table-scroll-area {
+    overflow-x: hidden !important;
+    padding-bottom: 0 !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-card,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-header {
+    display: none !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-card,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "name"
+      "identity"
+      "contact"
+      "category"
+      "created"
+      "status"
+      "actions"
+      "edit" !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(37, 99, 235, 0.16) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cells {
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cell {
+    display: grid !important;
+    gap: 3px !important;
+    border: 1px solid rgba(37, 99, 235, 0.16) !important;
+    border-radius: 14px !important;
+    background: #f8fafc !important;
+    padding: 9px !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-table-cell span {
+    display: block !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-actions button,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-actions .user-icon-action,
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-card .user-view-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 40px !important;
+    border-radius: 999px !important;
+  }
+
+  html body .user-management-page .user-list-card .user-table-scroll-area .user-action-label {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    clip: auto !important;
+  }
+}

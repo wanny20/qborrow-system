@@ -20,6 +20,10 @@ const CLAIM_PICKUP_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function AppLayout() {
   const [userData, setUserData] = useState(null);
+  const [schoolStatus, setSchoolStatus] = useState({
+    isSchoolClosed: false,
+    closureReason: "",
+  });
 
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") {
@@ -96,6 +100,36 @@ function showActionError(shortMessage, error) {
 
 function showBlockedAction(message) {
   showToast(message, "error");
+}
+
+function getDateLabel(value) {
+  const timestamp = getDateTimeMs(value);
+
+  if (!timestamp) return "Not recorded";
+
+  return new Date(timestamp).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function isSchoolClosedNow() {
+  return Boolean(schoolStatus?.isSchoolClosed);
+}
+
+function getSchoolClosureReason() {
+  return String(schoolStatus?.closureReason || "").trim();
+}
+
+function getSchoolClosureMessage() {
+  const reason = getSchoolClosureReason();
+
+  return reason
+    ? `School is currently closed: ${reason}`
+    : "School is currently closed.";
 }
 
 const setUnsavedChanges = useCallback((hasChanges, message = "") => {
@@ -577,6 +611,9 @@ function handleViewAdminBorrowRequestAlert() {
     return "Borrower";
   }, [isSuperAdmin, isCategoryAdmin]);
 
+  const schoolClosed = isSchoolClosedNow();
+  const schoolClosureMessage = getSchoolClosureMessage();
+
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
   }
@@ -707,6 +744,43 @@ const unsubscribe = onSnapshot(
     showActionError("Failed to sync user account", error);
   }
 );
+
+  return () => unsubscribe();
+}, [userData?.uid]);
+
+useEffect(() => {
+  if (!userData?.uid) {
+    setSchoolStatus({
+      isSchoolClosed: false,
+      closureReason: "",
+    });
+    return;
+  }
+
+  const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
+
+  const unsubscribe = onSnapshot(
+    schoolStatusRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        setSchoolStatus({
+          isSchoolClosed: false,
+          closureReason: "",
+        });
+        return;
+      }
+
+      setSchoolStatus({
+        id: snapshot.id,
+        isSchoolClosed: false,
+        closureReason: "",
+        ...snapshot.data(),
+      });
+    },
+    (error) => {
+      console.error("School status sync error:", error);
+    }
+  );
 
   return () => unsubscribe();
 }, [userData?.uid]);
@@ -1928,9 +2002,29 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
         </header>
 
         <div className="app-page-content">
+          {schoolClosed && (
+            <div className="app-school-closed-banner" role="alert">
+              <div>
+                <span>School Closure Mode</span>
+                <strong>{schoolClosureMessage}</strong>
+                <p>
+                  Borrowing, item claiming, and return confirmation are paused until the
+                  system is reopened by the super admin.
+                </p>
+              </div>
+
+              <small>
+                Updated: {getDateLabel(schoolStatus?.updatedAt || schoolStatus?.closedAt)}
+              </small>
+            </div>
+          )}
+
           <Outlet
   context={{
     userData,
+    schoolStatus,
+    schoolClosed,
+    schoolClosureMessage,
     setUnsavedChanges,
     guardedNavigate,
   }}
