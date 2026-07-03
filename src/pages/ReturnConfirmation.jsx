@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
-  Html5QrcodeScanner,
+  Html5Qrcode,
   Html5QrcodeSupportedFormats,
 } from "html5-qrcode";
 import {
@@ -41,6 +41,10 @@ function ReturnConfirmation() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerKey, setScannerKey] = useState(0);
+  const [startingScanner, setStartingScanner] = useState(false);
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState("");
   const [viewingBorrowedRequest, setViewingBorrowedRequest] = useState(null);
   const [activeReturnTab, setActiveReturnTab] = useState("borrowed");
   const [returnedDateFilter, setReturnedDateFilter] = useState("today");
@@ -61,7 +65,9 @@ function ReturnConfirmation() {
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   const returnLockRef = useRef(false);
-  const scannerLockRef = useRef(false);
+  const scannerRef = useRef(null);
+  const scannerRunningRef = useRef(false);
+  const hasScannedRef = useRef(false);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
@@ -233,7 +239,7 @@ function finishReturnAction() {
 }
 
 function isReturnBusy() {
-  return Boolean(returnLockRef.current || confirming);
+  return Boolean(returnLockRef.current || confirming || startingScanner);
 }
 
   function normalizeText(value) {
@@ -249,6 +255,142 @@ function isReturnBusy() {
     }
 
     return text;
+  }
+
+  function clearScannerDom() {
+    const scannerElement = document.getElementById("return-item-reader");
+
+    if (scannerElement) {
+      scannerElement.innerHTML = "";
+    }
+  }
+
+  async function stopReturnScanner(showMessage = false) {
+    try {
+      if (scannerRef.current) {
+        if (scannerRunningRef.current) {
+          await scannerRef.current.stop();
+        }
+
+        await scannerRef.current.clear();
+      }
+    } catch (error) {
+      console.log("Return scanner stop error:", error);
+    } finally {
+      scannerRef.current = null;
+      scannerRunningRef.current = false;
+      hasScannedRef.current = false;
+
+      clearScannerDom();
+      setScannerOpen(false);
+
+      if (showMessage) {
+        showToast("Scanner closed.", "success");
+      }
+    }
+  }
+
+  async function getCameraList() {
+    const devices = await Html5Qrcode.getCameras();
+
+    setCameras(devices);
+
+    if (devices.length > 0 && !selectedCameraId) {
+      const backCamera =
+        devices.find((camera) =>
+          String(camera.label || "").toLowerCase().includes("back")
+        ) ||
+        devices.find((camera) =>
+          String(camera.label || "").toLowerCase().includes("rear")
+        ) ||
+        devices[0];
+
+      setSelectedCameraId(backCamera.id);
+
+      return {
+        devices,
+        cameraId: backCamera.id,
+      };
+    }
+
+    return {
+      devices,
+      cameraId: selectedCameraId || devices[0]?.id || "",
+    };
+  }
+
+  async function startReturnScanner() {
+    if (startingScanner || confirming) return;
+
+    setStartingScanner(true);
+    showToast("Starting scanner...", "success");
+
+    try {
+      await stopReturnScanner(false);
+
+      hasScannedRef.current = false;
+      setScannerKey((current) => current + 1);
+      setScannerOpen(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 180));
+
+      clearScannerDom();
+
+      const scanner = new Html5Qrcode("return-item-reader", {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.CODE_128,
+        ],
+      });
+
+      scannerRef.current = scanner;
+
+      const scannerConfig = {
+        fps: 10,
+        qrbox: {
+          width: 250,
+          height: 250,
+        },
+        aspectRatio: 1.333,
+      };
+
+      const cameraResult = await getCameraList();
+      const cameraId = cameraResult.cameraId;
+
+      if (!cameraId) {
+        throw new Error("No camera found on this device.");
+      }
+
+      await scanner.start(
+        cameraId,
+        scannerConfig,
+        async (decodedText) => {
+          if (hasScannedRef.current || isReturnBusy()) return;
+
+          hasScannedRef.current = true;
+
+          const itemId = extractItemId(decodedText);
+
+          await stopReturnScanner(false);
+          await findBorrowedRequestByItemId(itemId);
+        },
+        () => {}
+      );
+
+      scannerRunningRef.current = true;
+
+      showToast("Scanner opened. Point the camera at the QR code or barcode.", "success");
+    } catch (error) {
+      await stopReturnScanner(false);
+      showActionError("Scanner could not start", error);
+    } finally {
+      setStartingScanner(false);
+    }
+  }
+
+  async function restartReturnScanner() {
+    showToast("Restarting scanner...", "success");
+    await startReturnScanner();
   }
 
   function getAdminId() {
@@ -858,61 +1000,18 @@ async function handleReturn() {
   }, [activeReturnTab, returnedDateFilter, userData?.assignedCategories?.join("|")]);
 
   useEffect(() => {
-    if (!scannerOpen) return;
+    getCameraList().catch((error) => {
+      console.log("Camera list error:", error);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    let scannerCleared = false;
-
-    const scanner = new Html5QrcodeScanner(
-      "return-item-reader",
-      {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.CODE_128,
-        ],
-      },
-      false
-    );
-
-async function clearScanner() {
-  if (scannerCleared) return;
-
-  scannerCleared = true;
-
-  try {
-    await scanner.clear();
-  } catch (error) {
-    console.log("Scanner clear error:", error);
-  } finally {
-    scannerLockRef.current = false;
-  }
-}
-
-scanner.render(
-  async (decodedText) => {
-    if (scannerLockRef.current || isReturnBusy()) return;
-
-    scannerLockRef.current = true;
-
-    const itemId = extractItemId(decodedText);
-
-    setScannerOpen(false);
-    await clearScanner();
-    await findBorrowedRequestByItemId(itemId);
-
-    scannerLockRef.current = false;
-  },
-  () => {}
-);
-
+  useEffect(() => {
     return () => {
-      clearScanner();
+      stopReturnScanner(false);
     };
-  }, [scannerOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -1092,20 +1191,59 @@ return (
             </p>
           </div>
 
-          <button
-                type="button"
-                className="return-primary-btn"
-                onClick={() => {
-                  if (isReturnBusy()) return;
-                  setScannerOpen((current) => !current);
-                }}
-                disabled={confirming}
+          {cameras.length > 0 && (
+            <div className="return-camera-select">
+              <label className="qb-label" htmlFor="return-camera">
+                Camera
+              </label>
+
+              <select
+                id="return-camera"
+                value={selectedCameraId}
+                onChange={(event) => setSelectedCameraId(event.target.value)}
+                disabled={scannerOpen || startingScanner || confirming}
               >
-              {scannerOpen ? "Close Scanner" : "Open QR / Barcode Scanner"}
-          </button>
+                {cameras.map((camera, index) => (
+                  <option key={camera.id} value={camera.id}>
+                    {camera.label || `Camera ${index + 1}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="return-scanner-actions">
+            <button
+              type="button"
+              className="return-primary-btn"
+              onClick={() => {
+                if (scannerOpen) {
+                  stopReturnScanner(true);
+                } else {
+                  startReturnScanner();
+                }
+              }}
+              disabled={startingScanner || confirming}
+            >
+              {startingScanner
+                ? "Opening..."
+                : scannerOpen
+                  ? "Close Scanner"
+                  : "Open QR / Barcode Scanner"}
+            </button>
+
+            <button
+              type="button"
+              className="return-secondary-btn"
+              onClick={restartReturnScanner}
+              disabled={startingScanner || confirming}
+            >
+              Restart Scanner
+            </button>
+          </div>
 
           {scannerOpen && (
-            <div className="return-scanner-box">
+            <div className="return-scanner-box" key={scannerKey}>
               <div id="return-item-reader"></div>
             </div>
           )}

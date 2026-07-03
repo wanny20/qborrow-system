@@ -3651,3 +3651,100 @@ html[data-theme="dark"] .return-returned-status-pill.status-returned-late {
     padding-top: 8px;
   }
 }
+
+
+
+/* =========================================================
+   RETURN CONFIRMATION - MATCH RELEASE ITEM SCANNER CARD
+   Adds the same camera selector + two-button scanner layout
+   used by the Release Item page.
+   Put this at the VERY BOTTOM of ReturnConfirmation.css.
+========================================================= */
+
+.return-scanner-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.return-camera-select {
+  display: grid !important;
+  gap: 7px !important;
+  margin-bottom: 12px !important;
+}
+
+.return-camera-select select {
+  width: 100% !important;
+  min-height: 42px !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  color: var(--qb-foreground) !important;
+  padding: 0 13px !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  outline: none !important;
+}
+
+.return-camera-select select:focus {
+  border-color: var(--qb-accent) !important;
+  box-shadow: 3px 3px 0 rgba(139, 92, 246, 0.22) !important;
+}
+
+.return-scanner-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.return-scanner-actions button {
+  width: 100% !important;
+}
+
+/* Match ReleaseItem: manual search sits right below scanner controls,
+   not pushed to the bottom of the card. */
+.return-manual-form {
+  margin-top: 14px !important;
+  padding-top: 0 !important;
+}
+
+/* Keep the scanner preview consistent with ReleaseItem */
+.return-scanner-box {
+  margin-top: 12px !important;
+}
+
+/* Direct Html5Qrcode creates fewer wrapper elements than Html5QrcodeScanner,
+   so this keeps the camera area clean when it opens. */
+#return-item-reader {
+  width: 100% !important;
+  min-height: 260px !important;
+  overflow: hidden !important;
+  border-radius: 14px !important;
+}
+
+#return-item-reader video {
+  width: 100% !important;
+  min-height: 260px !important;
+  object-fit: cover !important;
+  border-radius: 14px !important;
+}
+
+/* Mobile: same as Release Item, buttons stack cleanly */
+@media (max-width: 560px) {
+  .return-scanner-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .return-camera-select select,
+  .return-manual-row input {
+    min-height: 38px !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* Dark mode readability */
+html[data-theme="dark"] .return-camera-select select {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}

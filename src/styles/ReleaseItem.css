@@ -3375,3 +3375,127 @@ html[data-theme="dark"] .release-released-load-more-row .release-secondary-btn {
   background: #0f172a !important;
   color: #93c5fd !important;
 }
+
+
+
+/* =========================================================
+   RELEASE ITEM - FOR RELEASE STATUS TIMER FIX
+   Fixes the Approved pill + release countdown so the time
+   stacks cleanly and does not split beside the pill.
+   Put this at the VERY BOTTOM of ReleaseItem.css.
+========================================================= */
+
+.release-page .release-approved-status-cell {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  align-items: center !important;
+  gap: 4px !important;
+  text-align: center !important;
+  overflow: visible !important;
+}
+
+.release-page .release-approved-status-cell span {
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #d1fae5 !important;
+  color: #052e16 !important;
+  box-shadow: 0 2px 0 rgba(15, 23, 42, 0.08) !important;
+  padding: 0 14px !important;
+  font-size: 0.6rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.release-page .release-approved-status-cell small {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  color: #1e293b !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Keep status column wide enough on desktop so timer stays readable. */
+@media (min-width: 861px) {
+  .release-page .release-approved-table-header,
+  .release-page .release-approved-row {
+    grid-template-columns:
+      minmax(160px, 1.2fr)
+      minmax(170px, 1.3fr)
+      minmax(120px, 0.9fr)
+      130px
+      118px
+      110px !important;
+  }
+}
+
+/* Medium screens: keep the timer stacked and compact. */
+@media (min-width: 861px) and (max-width: 1180px) {
+  .release-page .release-approved-table-header,
+  .release-page .release-approved-row {
+    grid-template-columns:
+      minmax(140px, 1.2fr)
+      minmax(150px, 1.2fr)
+      minmax(100px, 0.8fr)
+      115px
+      112px
+      100px !important;
+  }
+
+  .release-page .release-approved-status-cell span {
+    min-height: 26px !important;
+    padding: 0 11px !important;
+    font-size: 0.54rem !important;
+  }
+
+  .release-page .release-approved-status-cell small {
+    font-size: 0.62rem !important;
+  }
+}
+
+/* Mobile/tablet card layout: make status full-width and readable. */
+@media (max-width: 860px) {
+  .release-page .release-approved-status-cell {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+    border: 2px solid var(--qb-border) !important;
+    border-radius: 12px !important;
+    background: var(--qb-bg) !important;
+    padding: 8px 10px !important;
+  }
+
+  .release-page .release-approved-status-cell span {
+    width: 100% !important;
+    min-height: 30px !important;
+    font-size: 0.56rem !important;
+  }
+
+  .release-page .release-approved-status-cell small {
+    font-size: 0.66rem !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .release-page .release-approved-status-cell span {
+  background: #bbf7d0 !important;
+  color: #052e16 !important;
+}
+
+html[data-theme="dark"] .release-page .release-approved-status-cell small {
+  color: #e2e8f0 !important;
+}
