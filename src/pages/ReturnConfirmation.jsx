@@ -25,7 +25,7 @@ const RETURNED_ITEMS_PAGE_SIZE = 10;
 function ReturnConfirmation() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
   const { showToast } = useToast();
 
   function getTodayDate() {
@@ -88,6 +88,18 @@ const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 function showBlockedAction(message) {
   showStatus(message, "error");
   showToast(message, "error");
+}
+
+function isSchoolClosed() {
+  return Boolean(schoolStatus?.isSchoolClosed);
+}
+
+function getSchoolClosedMessage() {
+  const reason = String(schoolStatus?.closureReason || "").trim();
+
+  return reason
+    ? `Return confirmation is temporarily unavailable because the school is closed: ${reason}`
+    : "Return confirmation is temporarily unavailable because the school is currently closed.";
 }
 
 function openConfirmAction(config) {
@@ -320,6 +332,11 @@ function isReturnBusy() {
   }
 
   async function startReturnScanner() {
+    if (isSchoolClosed()) {
+      showBlockedAction(getSchoolClosedMessage());
+      return;
+    }
+
     if (startingScanner || confirming) return;
 
     setStartingScanner(true);
@@ -742,6 +759,11 @@ async function fetchReturnedRequests(options = {}) {
 async function findBorrowedRequestByItemId(rawItemId) {
   if (isReturnBusy()) return;
 
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage());
+    return;
+  }
+
 const itemId = extractItemId(rawItemId);
 showStatus("", "");
 
@@ -847,6 +869,11 @@ clearFieldError("manualItemId");
 
 async function handleReturn() {
   showStatus("", "");
+
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage());
+    return;
+  }
 
   const isValid = validateReturnForm();
 
@@ -1136,7 +1163,7 @@ return (
           type="button"
           className="return-primary-btn"
           onClick={() => selectBorrowedRequest(viewingBorrowedRequest)}
-          disabled={confirming}
+          disabled={confirming || isSchoolClosed()}
         >
           Select for Return
         </button>
@@ -1181,6 +1208,13 @@ return (
         </div>
       )}
 
+      {isSchoolClosed() && (
+        <div className="return-school-closed-banner" role="alert">
+          <strong>Return confirmation is temporarily unavailable</strong>
+          <p>{getSchoolClosedMessage()}</p>
+        </div>
+      )}
+
       <section className="return-layout">
         <section className="return-scanner-card">
           <div className="return-card-heading">
@@ -1201,7 +1235,7 @@ return (
                 id="return-camera"
                 value={selectedCameraId}
                 onChange={(event) => setSelectedCameraId(event.target.value)}
-                disabled={scannerOpen || startingScanner || confirming}
+                disabled={scannerOpen || startingScanner || confirming || isSchoolClosed()}
               >
                 {cameras.map((camera, index) => (
                   <option key={camera.id} value={camera.id}>
@@ -1223,7 +1257,7 @@ return (
                   startReturnScanner();
                 }
               }}
-              disabled={startingScanner || confirming}
+              disabled={startingScanner || confirming || isSchoolClosed()}
             >
               {startingScanner
                 ? "Opening..."
@@ -1236,7 +1270,7 @@ return (
               type="button"
               className="return-secondary-btn"
               onClick={restartReturnScanner}
-              disabled={startingScanner || confirming}
+              disabled={startingScanner || confirming || isSchoolClosed()}
             >
               Restart Scanner
             </button>
@@ -1268,14 +1302,14 @@ return (
     clearFieldError("manualItemId");
   }}
   placeholder="Example: item ID or /item/itemId"
-  disabled={confirming}
+  disabled={confirming || isSchoolClosed()}
 />
 
             <button
               type="button"
               className="return-secondary-btn"
               onClick={() => findBorrowedRequestByItemId(manualItemId)}
-              disabled={confirming}
+              disabled={confirming || isSchoolClosed()}
             >
               Find
             </button>
@@ -1392,7 +1426,7 @@ return (
     clearFieldError("returnCondition");
     clearFieldError("damageLostReport");
   }}
-  disabled={confirming}
+  disabled={confirming || isSchoolClosed()}
 >
   <option value="Good">Good</option>
   <option value="Fair">Fair</option>
@@ -1424,7 +1458,7 @@ return (
     clearFieldError("damageLostReport");
   }}
   placeholder="Describe the damage or lost item issue..."
-  disabled={confirming}
+  disabled={confirming || isSchoolClosed()}
 />
 
 {fieldErrors.damageLostReport && (
@@ -1437,9 +1471,9 @@ return (
                 type="button"
                 className="return-confirm-btn"
                 onClick={handleReturn}
-                disabled={confirming}
+                disabled={confirming || isSchoolClosed()}
               >
-                {confirming ? "Confirming..." : "Confirm Return"}
+                {confirming ? "Confirming..." : isSchoolClosed() ? "School Closed" : "Confirm Return"}
               </button>
             </>
           ) : (
@@ -1496,7 +1530,7 @@ return (
                 type="button"
                 className="return-secondary-btn"
                 onClick={() => fetchBorrowedRequests({ showSuccessToast: true })}
-                disabled={confirming}
+                disabled={confirming || isSchoolClosed()}
               >
                 Refresh
               </button>
@@ -1564,7 +1598,7 @@ return (
                           type="button"
                           className="return-secondary-btn"
                           onClick={() => setViewingBorrowedRequest(request)}
-                          disabled={confirming}
+                          disabled={confirming || isSchoolClosed()}
                         >
                           Details
                         </button>
@@ -1614,7 +1648,7 @@ return (
                   type="button"
                   className="return-secondary-btn"
                   onClick={() => fetchReturnedRequests({ showSuccessToast: true })}
-                  disabled={confirming}
+                  disabled={confirming || isSchoolClosed()}
                 >
                   Refresh
                 </button>

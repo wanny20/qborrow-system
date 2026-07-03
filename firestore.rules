@@ -48,6 +48,11 @@ service cloud.firestore {
       return role() in ["superAdmin", "categoryAdmin"];
     }
 
+    function isSchoolClosed() {
+      return exists(/databases/$(database)/documents/systemSettings/schoolStatus) &&
+        get(/databases/$(database)/documents/systemSettings/schoolStatus).data.isSchoolClosed == true;
+    }
+
     function assignedCategories() {
       return userData().assignedCategories is list
         ? userData().assignedCategories
@@ -207,6 +212,7 @@ allow update: if isOwner(userId) &&
       allow read: if signedIn();
 
       allow create: if isBorrower() &&
+        !isSchoolClosed() &&
         request.resource.data.borrowerId == request.auth.uid &&
         request.resource.data.approvalStatus == "Pending" &&
         request.resource.data.actualReturnDate == "" &&
@@ -448,6 +454,29 @@ allow update: if isOwner(userId) &&
     match /categories/{categoryId} {
       allow read: if signedIn();
       allow create, update, delete: if isSuperAdmin();
+    }
+
+    /* =========================
+       SYSTEM SETTINGS
+    ========================= */
+
+    match /systemSettings/{settingId} {
+      allow read: if signedIn();
+
+      allow create, update: if isSuperAdmin() &&
+        settingId == "schoolStatus" &&
+        request.resource.data.keys().hasOnly([
+          "isSchoolClosed",
+          "closureReason",
+          "closedAt",
+          "closedBy",
+          "closedByName",
+          "reopenedAt",
+          "reopenedBy",
+          "updatedAt"
+        ]);
+
+      allow delete: if isSuperAdmin();
     }
 
     /* =========================

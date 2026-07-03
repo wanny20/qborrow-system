@@ -87,7 +87,7 @@ function getTimestampMs(value) {
 function ManageRequests() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -143,6 +143,18 @@ const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 function showBlockedAction(message) {
   showStatus(message, "error");
   showToast(message, "error");
+}
+
+function isSchoolClosed() {
+  return Boolean(schoolStatus?.isSchoolClosed);
+}
+
+function getSchoolClosedMessage(actionLabel = "This action") {
+  const reason = String(schoolStatus?.closureReason || "").trim();
+
+  return reason
+    ? `${actionLabel} is temporarily unavailable because the school is closed: ${reason}`
+    : `${actionLabel} is temporarily unavailable because the school is currently closed.`;
 }
 
 function openConfirmAction(config) {
@@ -296,7 +308,6 @@ function handleStatusFilterChange(value) {
 async function autoRejectExpiredPendingRequests() {
   const snapshot = await getDocs(collection(db, "borrowRequests"));
   const now = Date.now();
-  const oneDayMs = 24 * 60 * 60 * 1000;
 
   const expiredRequests = snapshot.docs
     .map((document) => ({
@@ -313,11 +324,9 @@ async function autoRejectExpiredPendingRequests() {
       */
       if (!canCategoryAdminSeeRequest(request)) return false;
 
-      const createdTime =
-        request.createdAt?.toMillis?.() ||
-        (request.createdAt?.seconds ? request.createdAt.seconds * 1000 : 0);
+      const requestDeadline = getPendingRequestDeadlineMs(request);
 
-      return createdTime && now - createdTime >= oneDayMs;
+      return Boolean(requestDeadline && now > requestDeadline);
     });
 
   await Promise.allSettled(
@@ -325,7 +334,7 @@ async function autoRejectExpiredPendingRequests() {
       await updateDoc(doc(db, "borrowRequests", request.id), {
         approvalStatus: "Expired",
         expireReason:
-          "Request expired because no admin action was made within 24 hours.",
+          "Request expired because it was not approved before the request deadline.",
         expiredAt: serverTimestamp(),
         expiredBy: "system",
         autoExpired: true,
@@ -338,7 +347,7 @@ async function autoRejectExpiredPendingRequests() {
         categoryId: request.categoryId || "",
         categoryName: request.categoryName || "",
         title: "Borrow Request Expired",
-        message: `Your request for ${request.itemName} expired because it was not approved within 24 hours. You may submit a new request.`,
+        message: `Your request for ${request.itemName} expired because it was not approved before the request deadline. You may submit a new request if the item is still available.`,
         status: "Unread",
         createdAt: serverTimestamp(),
         link: "/my-requests",
@@ -399,14 +408,68 @@ function getApprovedTime(request) {
   return getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
 }
 
-function getApprovedReleaseRemainingMs(request) {
-  if (request.approvalStatus !== "Approved") return null;
+function parseDateKey(value) {
+  if (!value) return null;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day);
+}
+
+function formatDateKey(date) {
+  const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+  return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+}
+
+function getEndOfDateKeyMs(dateKey) {
+  const date = parseDateKey(dateKey);
+
+  if (!date) return 0;
+
+  date.setHours(23, 59, 59, 999);
+
+  return date.getTime();
+}
+
+function getEarliestValidDeadlineMs(deadlines) {
+  const validDeadlines = deadlines.filter(
+    (deadline) => typeof deadline === "number" && deadline > 0
+  );
+
+  return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
+}
+
+function getPendingRequestDeadlineMs(request) {
+  const createdTime = getRequestCreatedTime(request);
+  const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
+
+  return getEarliestValidDeadlineMs([
+    createdTime ? createdTime + RELEASE_WINDOW_MS : 0,
+    expectedReturnEnd,
+  ]);
+}
+
+function getApprovedReleaseDeadlineMs(request) {
+  if (request.approvalStatus !== "Approved") return 0;
 
   const approvedTime = getApprovedTime(request);
+  const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
 
-  if (!approvedTime) return null;
+  return getEarliestValidDeadlineMs([
+    approvedTime ? approvedTime + RELEASE_WINDOW_MS : 0,
+    expectedReturnEnd,
+  ]);
+}
 
-  return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
+function getApprovedReleaseRemainingMs(request) {
+  const deadlineTime = getApprovedReleaseDeadlineMs(request);
+
+  if (!deadlineTime) return null;
+
+  return deadlineTime - Date.now();
 }
 
 function isApprovedReleaseExpired(request) {
@@ -428,8 +491,8 @@ function isNearReleaseExpire(request) {
 function formatApprovedReleaseRemaining(request) {
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
-  if (remainingMs === null) return "No release timer";
-  if (remainingMs <= 0) return "Release window expired";
+  if (remainingMs === null) return "No release deadline";
+  if (remainingMs <= 0) return "Release deadline expired";
 
   const totalMinutes = Math.ceil(remainingMs / 60000);
   const hours = Math.floor(totalMinutes / 60);
@@ -441,33 +504,17 @@ function formatApprovedReleaseRemaining(request) {
 }
 
 function formatApprovedReleaseDeadline(request) {
-  const approvedTime = getApprovedTime(request);
+  const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
-  if (!approvedTime) return "No deadline";
+  if (!deadlineTime) return "No deadline";
 
-  return new Date(approvedTime + RELEASE_WINDOW_MS).toLocaleString(undefined, {
+  return new Date(deadlineTime).toLocaleString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function parseDateKey(value) {
-  if (!value) return null;
-
-  const [year, month, day] = String(value).split("-").map(Number);
-
-  if (!year || !month || !day) return null;
-
-  return new Date(year, month - 1, day);
-}
-
-function formatDateKey(date) {
-  const timezoneOffset = date.getTimezoneOffset() * 60000;
-
-  return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
 }
 
 function addDaysToDateKey(dateKey, daysToAdd) {
@@ -545,7 +592,7 @@ async function notifyApprovedRequestExpired(request) {
     title: "Approved Request Expired",
     message: `Your approved request for ${
       request.itemName || "this item"
-    } expired because the item was not released within 24 hours. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
+    } expired because the item was not released before the release deadline. Your borrowing access is temporarily restricted for 24 hours. Contact the admin if this was a mistake.`,
     status: "Unread",
     createdAt: serverTimestamp(),
     link: "/my-requests",
@@ -586,7 +633,7 @@ async function expireApprovedRequest(request) {
     transaction.update(requestRef, {
       approvalStatus: "Expired",
       expireReason:
-        "Approved request expired because the item was not released within 24 hours.",
+        "Approved request expired because the item was not released before the release deadline.",
       expiredAt: serverTimestamp(),
       expiredBy: "system",
       autoExpired: true,
@@ -659,6 +706,10 @@ async function prepareBorrowRequestsForDisplay() {
     Auto-expire is helpful, but it must not block admins from opening this page.
     If Firestore blocks one old/mismatched record, requests still load normally.
   */
+  if (isSchoolClosed()) {
+    return;
+  }
+
   await Promise.allSettled([
     autoRejectExpiredPendingRequests(),
     autoExpireApprovedRequests(),
@@ -844,6 +895,11 @@ async function handleLoadMoreRequests() {
 async function handleApproveRequest(request) {
   if (hasActiveRequestAction()) return;
 
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage("Approving borrow requests"));
+    return;
+  }
+
   if (request.approvalStatus !== "Pending") {
     showBlockedAction("Only pending requests can be approved.");
     return;
@@ -939,7 +995,7 @@ async function handleApproveRequest(request) {
           targetRole: "borrower",
           categoryId: getRequestCategoryId(latestRequest),
           title: "Borrow Request Approved",
-          message: `Your request for ${latestRequest.itemName} has been approved. Please claim the item within 24 hours so the admin can release it. If it is not released within 24 hours, the request will expire and borrowing access may be temporarily restricted for 24 hours.`,
+          message: `Your request for ${latestRequest.itemName} has been approved. Please claim the item before the release deadline. The deadline is whichever comes first: 24 hours after approval or the end of your expected return date. If it is not released before the deadline, the request will expire and borrowing access may be temporarily restricted for 24 hours.`,
           status: "Unread",
           createdAt: serverTimestamp(),
           link: "/my-requests",
@@ -964,6 +1020,11 @@ async function handleApproveRequest(request) {
 
 async function handleReleaseRequest(request) {
   if (hasActiveRequestAction()) return;
+
+  if (isSchoolClosed()) {
+    showBlockedAction(getSchoolClosedMessage("Item release"));
+    return;
+  }
 
   if (request.approvalStatus !== "Approved") {
     showBlockedAction("Only approved requests can be released.");
@@ -1009,7 +1070,7 @@ async function handleReleaseRequest(request) {
         if (isApprovedReleaseExpired(latestRequest)) {
           await expireApprovedRequest(latestRequest);
           showBlockedAction(
-            "This approved request expired because it was not released within 24 hours."
+            "This approved request expired because it was not released before the release deadline."
           );
           await fetchRequests("reset", statusFilter);
           return;
@@ -1299,6 +1360,12 @@ return (
       {statusMessage && (
         <div className={`manage-status manage-status-${statusType}`} role="status">
           {statusMessage}
+        </div>
+      )}
+
+      {isSchoolClosed() && (
+        <div className="manage-status manage-status-error" role="alert">
+          {getSchoolClosedMessage("Approving and releasing requests")}
         </div>
       )}
 

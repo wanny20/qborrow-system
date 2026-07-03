@@ -3748,3 +3748,32 @@ html[data-theme="dark"] .return-camera-select select {
   color: #f8fafc !important;
   -webkit-text-fill-color: #f8fafc !important;
 }
+
+
+/* =========================================================
+   SCHOOL CLOSURE MODE - RETURN CONFIRMATION
+========================================================= */
+
+.return-school-closed-banner {
+  border: 2px solid rgba(245, 158, 11, 0.36);
+  border-radius: 18px;
+  background: #fffbeb;
+  box-shadow: 4px 4px 0 rgba(120, 53, 15, 0.12);
+  padding: 13px 15px;
+  color: #78350f;
+}
+
+.return-school-closed-banner strong {
+  display: block;
+  font-family: var(--qb-heading-font);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.return-school-closed-banner p {
+  margin: 5px 0 0;
+  color: #92400e;
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.45;
+}

@@ -19,7 +19,7 @@ function BorrowRequest() {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { setUnsavedChanges, guardedNavigate } = outletContext;
+  const { setUnsavedChanges, guardedNavigate, schoolStatus } = outletContext;
   const { showToast } = useToast();
 
   function getTodayDate() {
@@ -78,6 +78,18 @@ function showBlockedAction(message) {
   setStatusMessage("");
   setStatusType("");
   showToast(message, "error");
+}
+
+function isSchoolClosed() {
+  return Boolean(schoolStatus?.isSchoolClosed);
+}
+
+function getSchoolClosedMessage() {
+  const reason = String(schoolStatus?.closureReason || "").trim();
+
+  return reason
+    ? `Borrowing is temporarily unavailable because the school is closed: ${reason}`
+    : "Borrowing is temporarily unavailable because the school is currently closed.";
 }
 
 function clearFieldError(fieldName) {
@@ -454,6 +466,11 @@ async function handleSubmitRequest(e) {
 
 showStatus("", "");
 
+if (isSchoolClosed()) {
+  showBlockedAction(getSchoolClosedMessage());
+  return;
+}
+
 const isValid = validateBorrowRequestForm();
 
 if (!isValid) {
@@ -701,6 +718,13 @@ setTimeout(() => {
             </div>
           )}
 
+          {isSchoolClosed() && (
+            <div className="borrow-request-school-closed-banner" role="alert">
+              <strong>Borrowing is temporarily unavailable</strong>
+              <p>{getSchoolClosedMessage()}</p>
+            </div>
+          )}
+
           {item?.availability !== "Available" && (
             <div className="borrow-request-warning">
               <strong>Item not available</strong>
@@ -771,7 +795,7 @@ onChange={(e) => {
   setPurpose(sanitizedValue);
   clearFieldError("purpose");
 }}
-    disabled={submitting || requestSubmitted}
+    disabled={submitting || requestSubmitted || isSchoolClosed()}
   />
 
   {fieldErrors.purpose && (
@@ -815,7 +839,7 @@ onChange={(e) => {
   setExpectedReturnDate(e.target.value);
   clearFieldError("expectedReturnDate");
 }}
-    disabled={submitting || requestSubmitted}
+    disabled={submitting || requestSubmitted || isSchoolClosed()}
   />
 
   {fieldErrors.expectedReturnDate && (
@@ -842,7 +866,7 @@ onChange={(e) => {
 
   navigate(`/item/${itemId}`);
 }}
-              disabled={submitting || requestSubmitted}
+              disabled={submitting || requestSubmitted || isSchoolClosed()}
             >
               Cancel
             </button>
@@ -853,13 +877,16 @@ onChange={(e) => {
                 disabled={
                   submitting ||
                   requestSubmitted ||
-                  item?.availability !== "Available"
+                  item?.availability !== "Available" ||
+                  isSchoolClosed()
                 }
               >
                 {requestSubmitted
                   ? "Submitted"
                   : submitting
                   ? "Submitting..."
+                  : isSchoolClosed()
+                  ? "School Closed"
                   : "Submit Request"}
               </button>
             </div>

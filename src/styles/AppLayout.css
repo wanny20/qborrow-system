@@ -3520,3 +3520,79 @@ body :where(
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+
+/* =========================================================
+   SCHOOL CLOSURE MODE - APP LAYOUT BANNER
+========================================================= */
+
+.app-school-closed-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.28), transparent 32%),
+    linear-gradient(135deg, #fffbeb, #ffffff);
+  box-shadow: 0 16px 34px rgba(245, 158, 11, 0.12);
+  padding: 16px 18px;
+  color: #78350f;
+}
+
+.app-school-closed-banner div {
+  min-width: 0;
+}
+
+.app-school-closed-banner span {
+  display: inline-flex;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: #facc15;
+  color: #713f12;
+  padding: 5px 10px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.app-school-closed-banner strong {
+  display: block;
+  color: #78350f;
+  font-size: 0.98rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.app-school-closed-banner p,
+.app-school-closed-banner small {
+  margin: 4px 0 0;
+  color: #92400e;
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.app-school-closed-banner small {
+  flex: 0 0 auto;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .app-school-closed-banner {
+    display: grid;
+    gap: 10px;
+  }
+
+  .app-school-closed-banner small {
+    width: fit-content;
+    white-space: normal;
+  }
+}

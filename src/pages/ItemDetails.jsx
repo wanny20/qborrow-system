@@ -11,13 +11,14 @@ function ItemDetails() {
   const navigate = useNavigate();
 
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
 
   const { showToast } = useToast();
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
+  const [showSchoolClosedModal, setShowSchoolClosedModal] = useState(false);
 
   const isBorrower = userData?.role === "borrower";
 
@@ -33,6 +34,28 @@ function ItemDetails() {
   function showBlockedAction(message) {
     setStatusMessage(message);
     showToast(message, "error");
+  }
+
+  function isSchoolClosed() {
+    return Boolean(schoolStatus?.isSchoolClosed);
+  }
+
+  function getSchoolClosedMessage() {
+    const reason = String(schoolStatus?.closureReason || "").trim();
+
+    return reason
+      ? `The school is currently closed: ${reason}`
+      : "The school is currently closed.";
+  }
+
+  function handleBorrowItemClick() {
+    if (isSchoolClosed()) {
+      setShowSchoolClosedModal(true);
+      showToast("Borrowing is temporarily unavailable", "error");
+      return;
+    }
+
+    navigate(`/borrow-request/${item.id}`);
   }
 
   function getCategoryName(targetItem = item) {
@@ -169,6 +192,37 @@ function ItemDetails() {
 
   return (
     <div className="item-details-page">
+      {showSchoolClosedModal && (
+        <div
+          className="item-details-school-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="item-school-closed-title"
+          onClick={() => setShowSchoolClosedModal(false)}
+        >
+          <section
+            className="item-details-school-modal-card"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="item-details-school-modal-icon">!</div>
+            <p>School Closure Mode</p>
+            <h2 id="item-school-closed-title">Borrowing is temporarily unavailable</h2>
+            <span>
+              {getSchoolClosedMessage()} Borrow requests, item claiming, and
+              returns are paused until the super admin reopens the system.
+            </span>
+
+            <button
+              type="button"
+              className="item-details-primary-btn"
+              onClick={() => setShowSchoolClosedModal(false)}
+            >
+              I Understand
+            </button>
+          </section>
+        </div>
+      )}
+
       <section className="item-details-header item-details-header-compact">
         <div className="item-details-header-content">
           <div className="item-details-header-text">
@@ -226,6 +280,13 @@ function ItemDetails() {
                 "No description has been added for this item yet."}
             </p>
 
+            {isSchoolClosed() && isBorrower && (
+              <div className="item-details-school-closed-banner" role="alert">
+                <strong>Borrowing is temporarily unavailable</strong>
+                <p>{getSchoolClosedMessage()}</p>
+              </div>
+            )}
+
             <div className="item-details-meta-grid">
               <div>
                 <span>Item ID</span>
@@ -259,9 +320,9 @@ function ItemDetails() {
                 <button
                   type="button"
                   className="item-details-primary-btn"
-                  onClick={() => navigate(`/borrow-request/${item.id}`)}
+                  onClick={handleBorrowItemClick}
                 >
-                  Borrow This Item
+                  {isSchoolClosed() ? "School Closed" : "Borrow This Item"}
                 </button>
               ) : isBorrower ? (
                 <div className="item-details-warning">

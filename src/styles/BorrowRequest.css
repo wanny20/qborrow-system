@@ -1465,3 +1465,31 @@ html[data-theme="dark"] .borrow-request-page .borrow-request-header-back-btn {
     min-height: 72px !important;
   }
 }
+
+
+/* =========================================================
+   SCHOOL CLOSURE MODE - BORROW REQUEST
+========================================================= */
+
+.borrow-request-school-closed-banner {
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  border-radius: 18px;
+  background: #fffbeb;
+  padding: 13px 14px;
+  margin-bottom: 14px;
+  color: #78350f;
+}
+
+.borrow-request-school-closed-banner strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.borrow-request-school-closed-banner p {
+  margin: 5px 0 0;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
