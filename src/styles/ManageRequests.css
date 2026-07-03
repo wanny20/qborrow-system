@@ -4825,3 +4825,172 @@ html[data-theme="dark"] .manage-requests-page .manage-request-table-scroll::-web
 html[data-theme="dark"] .manage-requests-page .manage-request-table-scroll::-webkit-scrollbar-thumb {
   background: rgba(147, 197, 253, 0.38) !important;
 }
+
+
+
+/* =========================================================
+   MANAGE REQUESTS SUMMARY CARDS - 2 ROW DESKTOP FIX
+   Keep this at the VERY BOTTOM of ManageRequests.css.
+   Eight summary cards now display as 4 columns x 2 rows instead
+   of one long row plus a lonely extra card.
+========================================================= */
+
+@media (min-width: 761px) {
+  .manage-requests-page .manage-summary-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div {
+    min-height: 98px !important;
+    border-radius: 20px !important;
+    padding: 13px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid h3 {
+    margin-top: 8px !important;
+    font-size: 1.48rem !important;
+  }
+
+  .manage-requests-page .manage-summary-grid p {
+    font-size: 0.64rem !important;
+    letter-spacing: 0.045em !important;
+  }
+}
+
+@media (min-width: 1181px) {
+  .manage-requests-page .manage-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .manage-requests-page .manage-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .manage-requests-page .manage-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Status dropdown now only shows operational admin filters. */
+.manage-requests-page .manage-tools select#status-filter {
+  font-weight: 900 !important;
+}
+
+
+
+/* =========================================================
+   MANAGE REQUESTS TITLE CARD COMPACT FIX
+   Matches Add Item title card height so the page uses less
+   vertical space.
+========================================================= */
+
+.manage-requests-page .manage-requests-header-content,
+.manage-requests-page .manage-requests-header > div {
+  min-height: 118px !important;
+  height: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 18px !important;
+  border-radius: 28px !important;
+  padding: 18px 28px !important;
+}
+
+.manage-requests-page .manage-requests-header h1,
+.manage-requests-page .manage-requests-header-text h1 {
+  margin: 0 0 7px !important;
+  font-size: clamp(1.75rem, 2.55vw, 2.7rem) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.06em !important;
+}
+
+.manage-requests-page .manage-requests-header p,
+.manage-requests-page .manage-requests-header-text p {
+  max-width: 780px !important;
+  margin: 0 !important;
+  font-size: 0.98rem !important;
+  line-height: 1.35 !important;
+}
+
+.manage-requests-page .manage-header-back-btn {
+  min-width: 182px !important;
+  min-height: 46px !important;
+  height: 46px !important;
+  padding: 0 22px !important;
+  border: 3px solid #1e293b !important;
+  border-radius: 999px !important;
+  box-shadow: 6px 6px 0 rgba(30, 41, 59, 0.14) !important;
+}
+
+.manage-requests-page .manage-requests-header-content::after,
+.manage-requests-page .manage-requests-header > div::after {
+  right: 18px !important;
+  bottom: -46px !important;
+  width: 112px !important;
+  height: 112px !important;
+}
+
+/* Keep the compact height on large monitors too. */
+@media (min-width: 1181px) {
+  .manage-requests-page .manage-requests-header-content,
+  .manage-requests-page .manage-requests-header > div {
+    min-height: 118px !important;
+    padding: 18px 28px !important;
+  }
+
+  .manage-requests-page .manage-requests-header h1,
+  .manage-requests-page .manage-requests-header-text h1 {
+    font-size: clamp(1.75rem, 2.55vw, 2.7rem) !important;
+  }
+}
+
+/* Mobile keeps the title card compact and usable. */
+@media (max-width: 760px) {
+  .manage-requests-page .manage-requests-header-content,
+  .manage-requests-page .manage-requests-header > div {
+    min-height: 104px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .manage-requests-page .manage-requests-header h1,
+  .manage-requests-page .manage-requests-header-text h1 {
+    max-width: 100% !important;
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .manage-requests-page .manage-requests-header p,
+  .manage-requests-page .manage-requests-header-text p {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .manage-requests-page .manage-header-back-btn {
+    min-width: 104px !important;
+    max-width: 124px !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+    border-width: 2px !important;
+    font-size: 0.54rem !important;
+    box-shadow: 4px 4px 0 rgba(30, 41, 59, 0.14) !important;
+  }
+
+  .manage-requests-page .manage-requests-header-content::after,
+  .manage-requests-page .manage-requests-header > div::after {
+    right: 8px !important;
+    bottom: -30px !important;
+    width: 76px !important;
+    height: 76px !important;
+  }
+}

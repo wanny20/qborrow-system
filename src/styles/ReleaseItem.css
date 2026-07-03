@@ -2916,3 +2916,462 @@ html[data-theme="dark"] .release-page .release-header-back-btn {
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
 }
+
+
+
+/* =========================================================
+   RELEASE ITEM TABS + RELEASED ITEMS HISTORY
+   Adds For Release / Released Items tabs and released date
+   filter table.
+========================================================= */
+
+.release-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.release-tab-btn {
+  min-width: 0;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  box-shadow: 3px 3px 0 var(--qb-border);
+  font-family: var(--qb-heading-font);
+  font-size: 0.74rem;
+  font-weight: 950;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.release-tab-btn span {
+  min-width: 28px;
+  min-height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--qb-bg);
+  color: var(--qb-accent);
+  padding: 0 8px;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.release-tab-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--qb-border);
+}
+
+.release-tab-btn.active {
+  background: var(--qb-accent);
+  color: #ffffff;
+}
+
+.release-tab-btn.active span {
+  background: #ffffff;
+  color: var(--qb-accent);
+}
+
+.release-released-heading {
+  align-items: end;
+}
+
+.release-released-controls {
+  min-width: 260px;
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.release-released-controls select {
+  width: 100%;
+  min-height: 40px;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 12px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.68rem;
+  font-weight: 900;
+  outline: none;
+}
+
+.release-released-controls select:focus {
+  border-color: var(--qb-accent);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.release-released-table-header,
+.release-released-row {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1.2fr)
+    minmax(170px, 1.25fr)
+    minmax(120px, 0.9fr)
+    minmax(150px, 1fr)
+    130px
+    110px;
+  gap: 8px;
+  align-items: center;
+}
+
+.release-released-table-header {
+  border: 2px solid var(--qb-border);
+  border-radius: 18px 18px 10px 10px;
+  background: var(--qb-bg);
+  padding: 9px 11px;
+  margin-bottom: 8px;
+}
+
+.release-released-table-header span {
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.release-released-table-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.release-released-row {
+  min-height: 58px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 rgba(30, 41, 59, 0.12);
+  padding: 9px 11px;
+}
+
+.release-released-cell {
+  min-width: 0;
+}
+
+.release-released-cell span {
+  display: none;
+}
+
+.release-released-cell strong {
+  display: block;
+  color: var(--qb-foreground);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.release-released-item-cell span,
+.release-released-borrower-cell span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.5rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.release-released-status-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.release-released-status-pill {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0 10px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.54rem;
+  font-weight: 950;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.release-released-status-pill.status-returned {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.release-released-status-pill.status-borrowed {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Modern override compatibility */
+.release-tab-btn,
+.release-released-controls select {
+  box-shadow: none !important;
+}
+
+.release-tab-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.release-tab-btn.active span {
+  color: #2563eb !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .release-tab-btn,
+html[data-theme="dark"] .release-released-controls select,
+html[data-theme="dark"] .release-released-row {
+  background: var(--qb-bg);
+  color: var(--qb-foreground);
+}
+
+html[data-theme="dark"] .release-released-table-header {
+  background: var(--qb-surface);
+}
+
+html[data-theme="dark"] .release-released-status-pill.status-returned {
+  background: #bbf7d0;
+  color: #14532d;
+}
+
+html[data-theme="dark"] .release-released-status-pill.status-borrowed {
+  background: #bfdbfe;
+  color: #1e3a8a;
+}
+
+/* Responsive */
+@media (max-width: 1180px) {
+  .release-released-table-header,
+  .release-released-row {
+    grid-template-columns:
+      minmax(140px, 1.2fr)
+      minmax(150px, 1.2fr)
+      minmax(100px, 0.8fr)
+      minmax(130px, 1fr)
+      115px
+      100px;
+  }
+}
+
+@media (max-width: 860px) {
+  .release-released-table-header {
+    display: none;
+  }
+
+  .release-released-row {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .release-released-cell {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    border: 2px solid var(--qb-border);
+    border-radius: 12px;
+    background: var(--qb-bg);
+    padding: 8px 10px;
+  }
+
+  .release-released-cell span {
+    display: block;
+    color: var(--qb-muted-foreground);
+    font-family: var(--qb-heading-font);
+    font-size: 0.55rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .release-released-cell strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.72rem;
+  }
+
+  .release-released-status-cell {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .release-released-status-pill {
+    width: 100%;
+    min-height: 36px;
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .release-tabs {
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+
+  .release-tab-btn {
+    min-height: 34px;
+    border-radius: 14px;
+    font-size: 0.56rem;
+  }
+
+  .release-tab-btn span {
+    min-width: 22px;
+    min-height: 22px;
+    font-size: 0.54rem;
+  }
+
+  .release-released-heading {
+    gap: 8px;
+  }
+
+  .release-released-controls {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .release-released-controls select {
+    min-height: 34px;
+    font-size: 0.56rem;
+  }
+
+  .release-released-row {
+    gap: 6px;
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .release-released-cell {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 7px;
+    padding: 7px 8px;
+    border-radius: 10px;
+  }
+
+  .release-released-cell span {
+    font-size: 0.5rem;
+  }
+
+  .release-released-cell strong {
+    font-size: 0.68rem;
+  }
+
+  .release-released-status-pill {
+    min-height: 32px;
+    font-size: 0.54rem;
+  }
+}
+
+
+
+/* =========================================================
+   RELEASED ITEMS - RETURNED LATE STATUS + LOAD MORE
+   Shows Returned Late when actualReturnDate is after expectedReturnDate
+   and limits initial render to 10 rows with a Load More button.
+========================================================= */
+
+.release-released-status-pill.status-returned-late {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.release-released-load-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0 2px;
+}
+
+.release-released-load-more-row .release-secondary-btn {
+  width: min(320px, 100%);
+  min-height: 40px;
+}
+
+html[data-theme="dark"] .release-released-status-pill.status-returned-late {
+  background: #fecaca !important;
+  color: #450a0a !important;
+}
+
+@media (max-width: 760px) {
+  .release-released-load-more-row {
+    padding: 10px 0 0;
+  }
+
+  .release-released-load-more-row .release-secondary-btn {
+    width: 100%;
+    min-height: 34px;
+    font-size: 0.52rem !important;
+  }
+}
+
+
+
+/* =========================================================
+   RELEASED ITEMS LOAD MORE OUTLINE CLEANUP
+   Removes the unnecessary rectangle outline around the Load More
+   button area while keeping the button itself styled.
+========================================================= */
+
+.release-released-load-more-row,
+.release-load-more-row.release-released-load-more-row {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 14px 0 0 !important;
+  margin: 0 !important;
+}
+
+.release-released-load-more-row::before,
+.release-released-load-more-row::after,
+.release-load-more-row.release-released-load-more-row::before,
+.release-load-more-row.release-released-load-more-row::after {
+  display: none !important;
+  content: none !important;
+}
+
+.release-released-load-more-row .release-secondary-btn {
+  border: 2px solid var(--qb-border) !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 3px 3px 0 rgba(30, 41, 59, 0.16) !important;
+}
+
+html[data-theme="dark"] .release-released-load-more-row,
+html[data-theme="dark"] .release-load-more-row.release-released-load-more-row {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .release-released-load-more-row .release-secondary-btn {
+  border-color: rgba(203, 213, 225, 0.42) !important;
+  background: #0f172a !important;
+  color: #93c5fd !important;
+}

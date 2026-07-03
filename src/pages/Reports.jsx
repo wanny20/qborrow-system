@@ -1,17 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useToast } from "../components/ToastContext.jsx";
 import "../styles/Reports.css";
 const REPORTS_HISTORY_PAGE_SIZE = 10;
+const LATE_OVERDUE_REPORT_PAGE_SIZE = 10;
+
+const DEFAULT_REPORT_MODULE = "dashboard";
+
+const REPORT_MODULES = [
+  { key: "dashboard", label: "Reports Dashboard" },
+  { key: "frequentlyBorrowed", label: "Frequently Borrowed Items" },
+  { key: "borrowingHistory", label: "Borrowing History" },
+  { key: "overdueItems", label: "Late / Overdue Returns" },
+  { key: "damagedLostItems", label: "Damaged/Lost Items" },
+];
+
+function getValidReportModule(moduleKey) {
+  return REPORT_MODULES.some((moduleItem) => moduleItem.key === moduleKey)
+    ? moduleKey
+    : DEFAULT_REPORT_MODULE;
+}
 
 function Reports() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const outletContext = useOutletContext() || {};
   const { userData } = outletContext;
   const { showToast } = useToast();
 
+  const activeReportModule = getValidReportModule(searchParams.get("module"));
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -23,6 +42,9 @@ const [dateFrom, setDateFrom] = useState("");
 const [dateTo, setDateTo] = useState("");
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(
     REPORTS_HISTORY_PAGE_SIZE
+  );
+  const [visibleLateOverdueCount, setVisibleLateOverdueCount] = useState(
+    LATE_OVERDUE_REPORT_PAGE_SIZE
   );
   const [viewingHistoryRequest, setViewingHistoryRequest] = useState(null);
   const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
@@ -231,6 +253,54 @@ function getRequestCategoryName(request) {
     if (record.createdAt?.seconds) return record.createdAt.seconds * 1000;
     return 0;
   }
+
+function isDamagedLostStatus(value) {
+  return ["damaged", "lost"].includes(normalizeText(value));
+}
+
+function isDamagedLostItem(item) {
+  return (
+    isDamagedLostStatus(item.condition) ||
+    isDamagedLostStatus(item.availability)
+  );
+}
+
+function getItemDamagedLostDate(item) {
+  if (item.damagedLostDate) {
+    return getComparableDateKey(item.damagedLostDate);
+  }
+
+  if (item.damagedLostAt) {
+    return getComparableDateKey(item.damagedLostAt);
+  }
+
+  return "";
+}
+
+function isDamagedLostItemInsideDateRange(item) {
+  if (!isDamagedLostItem(item)) return false;
+
+  const damagedLostDate = getItemDamagedLostDate(item);
+
+  /*
+    Old damaged/lost records created before this update have no damagedLostAt.
+    Keep them visible only when viewing "All dates", but hide them whenever a
+    specific date range is selected so future/incorrect ranges stay accurate.
+  */
+  if (!damagedLostDate) {
+    return !dateFrom && !dateTo;
+  }
+
+  if (dateFrom && damagedLostDate < dateFrom) {
+    return false;
+  }
+
+  if (dateTo && damagedLostDate > dateTo) {
+    return false;
+  }
+
+  return true;
+}
 function formatDateForInput(dateValue) {
   if (!dateValue) return "";
 
@@ -275,6 +345,61 @@ function isRequestInsideDateRange(request) {
   }
 
   return true;
+}
+
+function getLateOverdueReturnReportDate(request) {
+  if (checkOverdue(request)) {
+    return getComparableDateKey(request.expectedReturnDate) || getRequestReportDate(request);
+  }
+
+  if (isReturnedLate(request)) {
+    return getComparableDateKey(request.actualReturnDate) || getRequestReportDate(request);
+  }
+
+  return getRequestReportDate(request);
+}
+
+function getLateOverdueReturnRecordTime(request) {
+  const reportDate = getLateOverdueReturnReportDate(request);
+
+  if (reportDate) {
+    const reportTime = new Date(reportDate).getTime();
+
+    if (!Number.isNaN(reportTime)) {
+      return reportTime;
+    }
+  }
+
+  return getCreatedTime(request);
+}
+
+function isLateOverdueReturnRecord(request) {
+  return checkOverdue(request) || isReturnedLate(request);
+}
+
+function isLateOverdueReturnInsideDateRange(request) {
+  if (!isLateOverdueReturnRecord(request)) return false;
+
+  const reportDate = getLateOverdueReturnReportDate(request);
+
+  if (!reportDate) return true;
+
+  if (dateFrom && reportDate < dateFrom) {
+    return false;
+  }
+
+  if (dateTo && reportDate > dateTo) {
+    return false;
+  }
+
+  return true;
+}
+
+function getLateOverdueReturnType(request) {
+  if (checkOverdue(request)) return "Currently Overdue";
+  if (isReturnedLate(request)) return "Returned Late";
+
+  return "Late / Overdue";
 }
 
 function resetDateRange() {
@@ -362,6 +487,10 @@ useEffect(() => {
   setVisibleHistoryCount(REPORTS_HISTORY_PAGE_SIZE);
 }, [searchTerm, statusFilter, dateFrom, dateTo]);
 
+useEffect(() => {
+  setVisibleLateOverdueCount(LATE_OVERDUE_REPORT_PAGE_SIZE);
+}, [dateFrom, dateTo, activeReportModule]);
+
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
       canCategoryAdminSeeCategory(
@@ -394,16 +523,36 @@ const visibleRequests = useMemo(() => {
     (item) => item.availability === "Borrowed"
   );
 
-  const damagedLostItems = visibleItems.filter(
-    (item) =>
-      item.condition === "Damaged" ||
-      item.condition === "Lost" ||
-      item.availability === "Damaged" ||
-      item.availability === "Lost"
+  const damagedLostItems = visibleItems.filter((item) =>
+    isDamagedLostItemInsideDateRange(item)
   );
 
   const overdueRequests = visibleRequests.filter((request) =>
     checkOverdue(request)
+  );
+
+  const returnedLateRequests = visibleRequests.filter((request) =>
+    isReturnedLate(request)
+  );
+
+  const lateOverdueReturnRecords = requests
+    .filter((request) => {
+      const canSeeCategory = canCategoryAdminSeeCategory(
+        getRequestCategoryId(request),
+        getRequestCategoryName(request)
+      );
+
+      return canSeeCategory && isLateOverdueReturnInsideDateRange(request);
+    })
+    .sort(
+      (a, b) =>
+        getLateOverdueReturnRecordTime(b) -
+        getLateOverdueReturnRecordTime(a)
+    );
+
+  const displayedLateOverdueReturnRecords = lateOverdueReturnRecords.slice(
+    0,
+    visibleLateOverdueCount
   );
 
   const pendingRequests = visibleRequests.filter(
@@ -451,9 +600,9 @@ const reportStatistics = [
     detail: `${damagedLostItems.length} of ${visibleItems.length} visible items are damaged or lost.`,
   },
   {
-    label: "Overdue Borrowed Rate",
-    value: getPercentage(overdueRequests.length, activeRequestTotal),
-    detail: `${overdueRequests.length} of ${activeRequestTotal} borrowed requests are overdue.`,
+    label: "Late / Overdue Return Rate",
+    value: getPercentage(lateOverdueReturnRecords.length, visibleRequests.length),
+    detail: `${lateOverdueReturnRecords.length} records are currently overdue or were returned late.`,
   },
   {
     label: "Return Completion Rate",
@@ -652,13 +801,14 @@ function handleExportCategoryReportCsv() {
 }
 
 function handleExportOverdueItemsCsv() {
-  if (overdueRequests.length === 0) {
-    showToast("No overdue item records to export", "error");
+  if (lateOverdueReturnRecords.length === 0) {
+    showToast("No late or overdue return records to export", "error");
     return;
   }
 
   try {
     const headers = [
+      "Record Type",
       "Item Code",
       "Item Name",
       "Borrower",
@@ -668,10 +818,13 @@ function handleExportOverdueItemsCsv() {
       "Category",
       "Borrow Date",
       "Expected Return",
+      "Actual Return",
+      "Report Date",
       "Status",
     ];
 
-    const rows = overdueRequests.map((request) => [
+    const rows = lateOverdueReturnRecords.map((request) => [
+      getLateOverdueReturnType(request),
       request.itemCode || request.itemId || "No code",
       request.itemName || "Untitled Item",
       request.borrowerName || "Unnamed Borrower",
@@ -681,18 +834,20 @@ function handleExportOverdueItemsCsv() {
       getRequestCategoryName(request),
       request.borrowDate || "Not set",
       request.expectedReturnDate || "Not set",
+      request.actualReturnDate || "Not returned",
+      getLateOverdueReturnReportDate(request) || "Not set",
       getRequestStatusLabel(request),
     ]);
 
     downloadCsvFile(
-      `qborrow-overdue-items-${getCsvDateStamp()}.csv`,
+      `qborrow-late-overdue-returns-${getCsvDateStamp()}.csv`,
       headers,
       rows
     );
 
-    showActionSuccess("Overdue Items Exported");
+    showActionSuccess("Late / Overdue Returns Exported");
   } catch (error) {
-    showActionError("Failed to export overdue items", error);
+    showActionError("Failed to export late or overdue returns", error);
   }
 }
 
@@ -709,6 +864,8 @@ function handleExportDamagedLostCsv() {
       "Category",
       "Availability",
       "Condition",
+      "Damaged/Lost Date",
+      "Report/Reason",
       "Item ID",
     ];
 
@@ -718,6 +875,8 @@ function handleExportDamagedLostCsv() {
       getItemCategoryName(item),
       item.availability || "N/A",
       item.condition || item.availability || "N/A",
+      getItemDamagedLostDate(item) || "No recorded date",
+      item.damagedLostReport || "No report recorded",
       item.id,
     ]);
 
@@ -936,9 +1095,12 @@ const requestStatusChart = [
     percent: getChartPercent(closedRequests.length, requestStatusChartTotal),
   },
   {
-    label: "Overdue",
-    value: overdueRequests.length,
-    percent: getChartPercent(overdueRequests.length, requestStatusChartTotal),
+    label: "Late / Overdue",
+    value: lateOverdueReturnRecords.length,
+    percent: getChartPercent(
+      lateOverdueReturnRecords.length,
+      requestStatusChartTotal
+    ),
   },
 ];
 
@@ -1000,7 +1162,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Available</th>
           <th>Reserved</th>
           <th>Borrowed</th>
-          <th>Overdue</th>
+          <th>Late / Overdue</th>
           <th>Damaged / Lost</th>
         </tr>
       </thead>
@@ -1011,7 +1173,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <td>{availableItems.length}</td>
           <td>{reservedItems.length}</td>
           <td>{borrowedItems.length}</td>
-          <td>{overdueRequests.length}</td>
+          <td>{lateOverdueReturnRecords.length}</td>
           <td>{damagedLostItems.length}</td>
         </tr>
       </tbody>
@@ -1139,34 +1301,38 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </section>
 
   <section className="reports-print-section">
-    <h2>Overdue Items</h2>
+    <h2>Late / Overdue Returns</h2>
 
     <table>
       <thead>
         <tr>
+          <th>Type</th>
           <th>Item</th>
           <th>Borrower</th>
           <th>Email</th>
           <th>ID Number</th>
           <th>Course / Department</th>
           <th>Expected Return</th>
+          <th>Actual Return</th>
         </tr>
       </thead>
 
       <tbody>
-        {overdueRequests.length === 0 ? (
+        {lateOverdueReturnRecords.length === 0 ? (
           <tr>
-            <td colSpan="6">No overdue items.</td>
+            <td colSpan="8">No late or overdue return records.</td>
           </tr>
         ) : (
-          overdueRequests.map((request) => (
+          lateOverdueReturnRecords.map((request) => (
             <tr key={request.id}>
+              <td>{getLateOverdueReturnType(request)}</td>
               <td>{request.itemName || "Untitled Item"}</td>
               <td>{request.borrowerName || "Unnamed Borrower"}</td>
               <td>{request.borrowerEmail || "No email"}</td>
               <td>{getBorrowerIdNumber(request)}</td>
               <td>{cleanDisplay(request.borrowerCourseDepartment)}</td>
               <td>{request.expectedReturnDate || "Not set"}</td>
+              <td>{request.actualReturnDate || "Not returned"}</td>
             </tr>
           ))
         )}
@@ -1449,8 +1615,15 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     <div>
       <h2>Report Controls & Export</h2>
       <p>
-        Filter reports by date range, print a PDF copy, or download report
-        records as CSV files.
+        {activeReportModule === "dashboard"
+          ? "Filter reports by date range, print a PDF copy, or download report records as CSV files."
+          : activeReportModule === "borrowingHistory"
+          ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV."
+          : activeReportModule === "overdueItems"
+          ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
+          : activeReportModule === "damagedLostItems"
+          ? "Filter damaged/lost items by recorded date, refresh the data, or export damaged/lost records as CSV."
+          : "Filter frequently borrowed items by date range and refresh the data."}
       </p>
     </div>
   </div>
@@ -1506,54 +1679,93 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <strong>{getDateRangeLabel()}</strong>
     </div>
 
-    <button
-      type="button"
-      className="reports-secondary-btn reports-print-btn reports-inline-print-btn"
-      onClick={handlePrintReport}
-    >
-      Print / Save PDF
-    </button>
+    {activeReportModule === "dashboard" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-print-btn reports-inline-print-btn"
+        onClick={handlePrintReport}
+      >
+        Print / Save PDF
+      </button>
+    )}
+
+    {activeReportModule === "borrowingHistory" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-inline-export-btn"
+        onClick={handleExportBorrowingHistoryCsv}
+        disabled={filteredHistory.length === 0}
+      >
+        Export Borrowing History
+      </button>
+    )}
+
+    {activeReportModule === "overdueItems" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-inline-export-btn"
+        onClick={handleExportOverdueItemsCsv}
+        disabled={lateOverdueReturnRecords.length === 0}
+      >
+        Export Late / Overdue
+      </button>
+    )}
+
+    {activeReportModule === "damagedLostItems" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-inline-export-btn"
+        onClick={handleExportDamagedLostCsv}
+        disabled={damagedLostItems.length === 0}
+      >
+        Export Damaged / Lost
+      </button>
+    )}
   </div>
 
-  <div className="reports-export-grid">
-    <button
-      type="button"
-      className="reports-secondary-btn"
-      onClick={handleExportBorrowingHistoryCsv}
-      disabled={filteredHistory.length === 0}
-    >
-      Export Borrowing History
-    </button>
+  {activeReportModule === "dashboard" && (
+    <div className="reports-export-grid">
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportBorrowingHistoryCsv}
+        disabled={filteredHistory.length === 0}
+      >
+        Export Borrowing History
+      </button>
 
-    <button
-      type="button"
-      className="reports-secondary-btn"
-      onClick={handleExportCategoryReportCsv}
-      disabled={categoryReports.length === 0}
-    >
-      Export Category Report
-    </button>
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportCategoryReportCsv}
+        disabled={categoryReports.length === 0}
+      >
+        Export Category Report
+      </button>
 
-    <button
-      type="button"
-      className="reports-secondary-btn"
-      onClick={handleExportOverdueItemsCsv}
-      disabled={overdueRequests.length === 0}
-    >
-      Export Overdue Items
-    </button>
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportOverdueItemsCsv}
+        disabled={lateOverdueReturnRecords.length === 0}
+      >
+        Export Late / Overdue
+      </button>
 
-    <button
-      type="button"
-      className="reports-secondary-btn"
-      onClick={handleExportDamagedLostCsv}
-      disabled={damagedLostItems.length === 0}
-    >
-      Export Damaged / Lost
-    </button>
-  </div>
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportDamagedLostCsv}
+        disabled={damagedLostItems.length === 0}
+      >
+        Export Damaged / Lost
+      </button>
+    </div>
+  )}
 </section>
 
+{activeReportModule === "dashboard" && (
+  <>
       <section className="reports-summary-grid">
         <div>
           <span>Σ</span>
@@ -1581,8 +1793,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
 
         <div>
           <span>!</span>
-          <h3>{overdueRequests.length}</h3>
-          <p>Overdue</p>
+          <h3>{lateOverdueReturnRecords.length}</h3>
+          <p>Late/Overdue</p>
         </div>
 
         <div>
@@ -1658,8 +1870,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     <div>
       <h2>Visual Analytics</h2>
       <p>
-        Simple chart overview of item availability, request status, frequently
-        borrowed items, and category performance.
+        Simple chart overview of item availability, request status, and
+        category performance.
       </p>
     </div>
   </div>
@@ -1707,34 +1919,6 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           </div>
         ))}
       </div>
-    </article>
-
-    <article className="reports-chart-card">
-      <div className="reports-chart-card-heading">
-        <h3>Top Borrowed Items</h3>
-        <span>Top {topBorrowedChart.length}</span>
-      </div>
-
-      {topBorrowedChart.length === 0 ? (
-        <div className="reports-chart-empty">No borrowed item data yet.</div>
-      ) : (
-        <div className="reports-chart-list">
-          {topBorrowedChart.map((item) => (
-            <div className="reports-chart-row" key={item.itemKey}>
-              <div className="reports-chart-row-label">
-                <strong>{item.itemName}</strong>
-                <span>{item.count}</span>
-              </div>
-
-              <div className="reports-chart-bar">
-                <span style={{ width: `${item.percent}%` }}></span>
-              </div>
-
-              <small>{item.categoryName}</small>
-            </div>
-          ))}
-        </div>
-      )}
     </article>
 
     <article className="reports-chart-card">
@@ -1835,70 +2019,161 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         )}
       </section>
 
-      <section className="reports-two-column">
-        <div className="reports-panel">
-          <div className="reports-section-heading">
+    </>
+)}
+
+{activeReportModule === "frequentlyBorrowed" && (
+  <section className="reports-panel reports-module-panel reports-frequently-borrowed-panel">
+    <div className="reports-section-heading">
+      <div>
+        <h2>Frequently Borrowed Items</h2>
+        <p>Based on Borrowed and Returned request records in the selected report range.</p>
+      </div>
+
+    </div>
+
+    {frequentlyBorrowedItems.length === 0 ? (
+      <div className="reports-empty">
+        <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+        <h2>No borrowed items yet</h2>
+        <p>No item has been released or returned within the current report range.</p>
+      </div>
+    ) : (
+      <div className="reports-list reports-module-list">
+        {frequentlyBorrowedItems.map((item, index) => (
+          <article className="reports-mini-card" key={item.itemKey}>
             <div>
-              <h2>Frequently Borrowed Items</h2>
-              <p>Based on Borrowed and Returned request records.</p>
+              <span className="reports-rank-pill">#{index + 1}</span>
+              <h3>{item.itemName}</h3>
+              <p>{item.categoryName}</p>
             </div>
-          </div>
 
-          {frequentlyBorrowedItems.length === 0 ? (
-            <div className="reports-empty small">
-              <h2>No borrowed items yet</h2>
-              <p>No item has been released or returned yet.</p>
-            </div>
-          ) : (
-            <div className="reports-list">
-              {frequentlyBorrowedItems.slice(0, 8).map((item) => (
-                <article className="reports-mini-card" key={item.itemKey}>
-                  <div>
-                    <h3>{item.itemName}</h3>
-                    <p>{item.categoryName}</p>
-                  </div>
+            <strong>{item.count}</strong>
+          </article>
+        ))}
+      </div>
+    )}
+  </section>
+)}
 
-                  <strong>{item.count}</strong>
-                </article>
-              ))}
-            </div>
-          )}
+{activeReportModule === "overdueItems" && (
+  <section className="reports-panel reports-module-panel reports-overdue-panel">
+    <div className="reports-section-heading">
+      <div>
+        <h2>Late / Overdue Returns</h2>
+        <p>
+          Showing {displayedLateOverdueReturnRecords.length} of{" "}
+          {lateOverdueReturnRecords.length} current overdue or returned-late
+          records in this report range.
+        </p>
+      </div>
+    </div>
+
+    <div className="reports-late-overdue-summary">
+      <div>
+        <span>Currently Overdue</span>
+        <strong>{overdueRequests.length}</strong>
+      </div>
+
+      <div>
+        <span>Returned Late</span>
+        <strong>{returnedLateRequests.length}</strong>
+      </div>
+
+      <div>
+        <span>Total Records</span>
+        <strong>{lateOverdueReturnRecords.length}</strong>
+      </div>
+    </div>
+
+    {lateOverdueReturnRecords.length === 0 ? (
+      <div className="reports-empty">
+        <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+        <h2>No late or overdue returns</h2>
+        <p>There are no current overdue or returned-late records in this report range.</p>
+      </div>
+    ) : (
+      <div className="reports-late-overdue-table-wrap">
+        <div className="reports-late-overdue-table-header">
+          <span>Item</span>
+          <span>Borrower</span>
+          <span>Category</span>
+          <span>Borrowed</span>
+          <span>Expected</span>
+          <span>Returned</span>
+          <span>Status</span>
         </div>
 
-        <div className="reports-panel">
-          <div className="reports-section-heading">
-            <div>
-              <h2>Overdue Items</h2>
-              <p>Borrowed requests past expected return date.</p>
-            </div>
-          </div>
+        <div className="reports-late-overdue-table-grid">
+          {displayedLateOverdueReturnRecords.map((request) => (
+            <article className="reports-late-overdue-table-row" key={request.id}>
+              <div className="reports-late-overdue-table-cell reports-late-overdue-item-cell">
+                <span>Item</span>
+                <strong>{request.itemName || "Untitled Item"}</strong>
+                <small>{request.itemCode || request.itemId || "No code"}</small>
+              </div>
 
-          {overdueRequests.length === 0 ? (
-            <div className="reports-empty small">
-              <h2>No overdue items</h2>
-              <p>All active records are within their return date.</p>
-            </div>
-          ) : (
-            <div className="reports-list">
-              {overdueRequests.slice(0, 8).map((request) => (
-                <article className="reports-mini-card danger" key={request.id}>
-                  <div>
-                    <h3>{request.itemName || "Untitled Item"}</h3>
-                    <p>{request.borrowerEmail || "No email"}</p>
-                    <p>{getBorrowerIdNumber(request)}</p>
-                    <p>{cleanDisplay(request.borrowerCourseDepartment)}</p>
-                    <p>Expected: {request.expectedReturnDate || "Not set"}</p>
-                  </div>
+              <div className="reports-late-overdue-table-cell reports-late-overdue-borrower-cell">
+                <span>Borrower</span>
+                <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                <small>{request.borrowerEmail || "No email"}</small>
+                <small>{getBorrowerIdNumber(request)}</small>
+              </div>
 
-                  <strong>Overdue</strong>
-                </article>
-              ))}
-            </div>
-          )}
+              <div className="reports-late-overdue-table-cell">
+                <span>Category</span>
+                <strong>{getRequestCategoryName(request)}</strong>
+              </div>
+
+              <div className="reports-late-overdue-table-cell">
+                <span>Borrowed</span>
+                <strong>{request.borrowDate || "Not set"}</strong>
+              </div>
+
+              <div className="reports-late-overdue-table-cell">
+                <span>Expected</span>
+                <strong>{request.expectedReturnDate || "Not set"}</strong>
+              </div>
+
+              <div className="reports-late-overdue-table-cell">
+                <span>Returned</span>
+                <strong>{request.actualReturnDate || "Not returned"}</strong>
+              </div>
+
+              <div className="reports-late-overdue-table-cell reports-late-overdue-type-cell">
+                <span>Status</span>
+                <strong>{getLateOverdueReturnType(request)}</strong>
+              </div>
+            </article>
+          ))}
         </div>
-      </section>
 
-      <section className="reports-panel">
+        {visibleLateOverdueCount < lateOverdueReturnRecords.length && (
+          <div className="reports-load-more-row reports-late-overdue-load-more-row">
+            <button
+              type="button"
+              className="reports-secondary-btn"
+              onClick={() =>
+                setVisibleLateOverdueCount((currentCount) =>
+                  Math.min(
+                    currentCount + LATE_OVERDUE_REPORT_PAGE_SIZE,
+                    lateOverdueReturnRecords.length
+                  )
+                )
+              }
+            >
+              Load More Records
+            </button>
+          </div>
+        )}
+      </div>
+    )}
+  </section>
+)}
+
+
+{activeReportModule === "borrowingHistory" && (
+      <section className="reports-panel reports-module-panel reports-borrowing-history-panel">
         <div className="reports-section-heading">
           <div>
             <h2>Borrowing History</h2>
@@ -2049,13 +2324,16 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           </>
         )}
       </section>
+)}
 
-      <section className="reports-panel">
+{activeReportModule === "damagedLostItems" && (
+      <section className="reports-panel reports-module-panel reports-damaged-lost-panel">
         <div className="reports-section-heading">
           <div>
             <h2>Damaged / Lost Items</h2>
             <p>Items currently marked as damaged or lost.</p>
           </div>
+
         </div>
         
 
@@ -2114,6 +2392,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </>
 )}
       </section>
+)}
     </div>
   );
 }

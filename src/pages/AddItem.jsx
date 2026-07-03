@@ -106,6 +106,25 @@ function AddItem() {
     return String(value || "").trim().toLowerCase();
   }
 
+  function getTodayDate() {
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
+  function isDamagedLostStatus(value) {
+    return ["Damaged", "Lost"].includes(String(value || ""));
+  }
+
+  function getAdminId() {
+    return userData?.uid || auth.currentUser?.uid || "";
+  }
+
+  function getAdminEmail() {
+    return userData?.email || auth.currentUser?.email || "";
+  }
+
   function revokePreview(url) {
     if (url && url.startsWith("blob:")) {
       URL.revokeObjectURL(url);
@@ -382,6 +401,8 @@ function AddItem() {
 
       const finalItemCode = generateItemCode();
       const imageUrl = await uploadItemImage(finalItemCode);
+      const finalAvailability = getFinalAvailability();
+      const isInitialDamagedLost = isDamagedLostStatus(finalAvailability);
 
       const itemRef = await addDoc(collection(db, "items"), {
         itemCode: finalItemCode,
@@ -394,8 +415,20 @@ function AddItem() {
         category: selectedCategory.id,
 
         condition,
-        availability: getFinalAvailability(),
+        availability: finalAvailability,
         maxBorrowDays: Number(maxBorrowDays),
+
+        ...(isInitialDamagedLost
+          ? {
+              damagedLostAt: serverTimestamp(),
+              damagedLostDate: getTodayDate(),
+              damagedLostBy: getAdminId(),
+              damagedLostByEmail: getAdminEmail(),
+              damagedLostStatus: finalAvailability,
+              damagedLostReport: `Item created with ${finalAvailability} status.`,
+              damagedLostSource: "addItem",
+            }
+          : {}),
 
         qrValue: "",
         barcodeValue: "",

@@ -115,6 +115,39 @@ function validateEditItemForm() {
     return String(value || "").trim().toLowerCase();
   }
 
+  function getTodayDate() {
+    const date = new Date();
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
+  }
+
+  function isDamagedLostStatus(value) {
+    return ["Damaged", "Lost"].includes(String(value || ""));
+  }
+
+  function getItemDamagedLostStatus(item) {
+    if (!item) return "";
+
+    if (isDamagedLostStatus(item.condition)) {
+      return item.condition;
+    }
+
+    if (isDamagedLostStatus(item.availability)) {
+      return item.availability;
+    }
+
+    return "";
+  }
+
+  function getAdminId() {
+    return userData?.uid || auth.currentUser?.uid || "";
+  }
+
+  function getAdminEmail() {
+    return userData?.email || auth.currentUser?.email || "";
+  }
+
   function revokePreview(url) {
     if (url && url.startsWith("blob:")) {
       URL.revokeObjectURL(url);
@@ -411,9 +444,17 @@ return;
 
     const finalItemCode = originalItem?.itemCode || itemCode || itemId;
     const finalImageUrl = await uploadItemImage(finalItemCode);
+    const finalAvailability = getFinalAvailability();
+    const previousDamagedLostStatus = getItemDamagedLostStatus(originalItem);
+    const nextDamagedLostStatus = isDamagedLostStatus(condition)
+      ? condition
+      : isDamagedLostStatus(finalAvailability)
+      ? finalAvailability
+      : "";
+
     const itemRef = doc(db, "items", itemId);
 
-    await updateDoc(itemRef, {
+    const itemUpdatePayload = {
       itemCode: finalItemCode,
       itemName: itemName.trim(),
       imageUrl: finalImageUrl,
@@ -424,7 +465,7 @@ return;
       category: selectedCategory.id,
 
       condition,
-      availability: getFinalAvailability(),
+      availability: finalAvailability,
       maxBorrowDays: Number(maxBorrowDays),
 
       qrValue:
@@ -432,10 +473,28 @@ return;
         `${window.location.origin}/item/${itemId}`,
       barcodeValue: originalItem?.barcodeValue || itemId,
 
-      updatedBy: userData?.uid || auth.currentUser?.uid || "",
-      updatedByEmail: userData?.email || auth.currentUser?.email || "",
+      updatedBy: getAdminId(),
+      updatedByEmail: getAdminEmail(),
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    if (nextDamagedLostStatus) {
+      itemUpdatePayload.damagedLostStatus = nextDamagedLostStatus;
+      itemUpdatePayload.damagedLostBy = getAdminId();
+      itemUpdatePayload.damagedLostByEmail = getAdminEmail();
+      itemUpdatePayload.damagedLostSource = "editItem";
+
+      if (
+        previousDamagedLostStatus !== nextDamagedLostStatus ||
+        (!originalItem?.damagedLostAt && !originalItem?.damagedLostDate)
+      ) {
+        itemUpdatePayload.damagedLostAt = serverTimestamp();
+        itemUpdatePayload.damagedLostDate = getTodayDate();
+        itemUpdatePayload.damagedLostReport = `Item manually marked as ${nextDamagedLostStatus}.`;
+      }
+    }
+
+    await updateDoc(itemRef, itemUpdatePayload);
 
     updatedSuccessfully = true;
 

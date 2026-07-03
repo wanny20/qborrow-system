@@ -113,6 +113,8 @@ service cloud.firestore {
           "courseDepartment",
           "yearLevel",
           "section",
+          "profileYearSectionUpdatedAt",
+          "profileMobileUpdatedAt",
           "updatedAt"
         ]);
         allow update: if isOwner(userId) &&

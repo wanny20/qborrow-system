@@ -26,6 +26,7 @@ const RELEASE_WINDOW_MS = 24 * 60 * 60 * 1000;
 const TEMPORARY_BORROWING_RESTRICTION_MS = RELEASE_WINDOW_MS;
 const TEMPORARY_BORROWING_RESTRICTION_REASON =
   "Temporary borrowing restriction for 24 hours because an approved item was not claimed/released within the allowed window.";
+const RELEASED_ITEMS_PAGE_SIZE = 10;
 
 
 function getTimestampMs(value) {
@@ -52,6 +53,12 @@ function ReleaseItem() {
   const { showToast } = useToast();
 
   const [approvedRequests, setApprovedRequests] = useState([]);
+  const [releasedRequests, setReleasedRequests] = useState([]);
+  const [activeReleaseTab, setActiveReleaseTab] = useState("forRelease");
+  const [releasedDateFilter, setReleasedDateFilter] = useState("today");
+  const [visibleReleasedCount, setVisibleReleasedCount] = useState(
+    RELEASED_ITEMS_PAGE_SIZE
+  );
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -368,6 +375,129 @@ async function restartReleaseScanner() {
     return new Date(date.getTime() - timezoneOffset).toISOString().split("T")[0];
   }
 
+  function getReleasedTime(request) {
+    return getTimestampMs(request?.releasedAt);
+  }
+
+  function getReleasedDateFilterRange(filterValue) {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+    if (filterValue === "week") {
+      const weekStart = new Date(todayStart);
+      weekStart.setDate(weekStart.getDate() - 6);
+
+      return {
+        start: weekStart.getTime(),
+        end: tomorrowStart.getTime(),
+      };
+    }
+
+    if (filterValue === "month") {
+      const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+
+      return {
+        start: monthStart.getTime(),
+        end: tomorrowStart.getTime(),
+      };
+    }
+
+    return {
+      start: todayStart.getTime(),
+      end: tomorrowStart.getTime(),
+    };
+  }
+
+  function getReleasedDateFilterLabel(filterValue) {
+    if (filterValue === "week") return "this week";
+    if (filterValue === "month") return "this month";
+
+    return "today";
+  }
+
+  function isReleasedRequestRecord(request) {
+    return (
+      Boolean(getReleasedTime(request)) &&
+      ["Borrowed", "Returned"].includes(request?.approvalStatus)
+    );
+  }
+
+  function isReleasedRequestInsideFilter(request) {
+    const releasedTime = getReleasedTime(request);
+
+    if (!releasedTime) return false;
+
+    const range = getReleasedDateFilterRange(releasedDateFilter);
+
+    return releasedTime >= range.start && releasedTime < range.end;
+  }
+
+  function formatReleasedDateTime(request) {
+    const releasedTime = getReleasedTime(request);
+
+    if (!releasedTime) return "No release date";
+
+    return new Date(releasedTime).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function getComparableDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value?.toDate === "function") {
+      return formatDateKey(value.toDate());
+    }
+
+    if (typeof value?.toMillis === "function") {
+      return formatDateKey(new Date(value.toMillis()));
+    }
+
+    if (value?.seconds) {
+      return formatDateKey(new Date(value.seconds * 1000));
+    }
+
+    const textValue = String(value || "").trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) {
+      return textValue;
+    }
+
+    const parsedDate = new Date(textValue);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "";
+    }
+
+    return formatDateKey(parsedDate);
+  }
+
+  function isReturnedLateRequest(request) {
+    if (request?.approvalStatus !== "Returned") return false;
+
+    const expectedReturnDate = getComparableDateKey(request.expectedReturnDate);
+    const actualReturnDate = getComparableDateKey(request.actualReturnDate);
+
+    if (!expectedReturnDate || !actualReturnDate) return false;
+
+    return actualReturnDate > expectedReturnDate;
+  }
+
+  function getReleasedStatusLabel(request) {
+    if (isReturnedLateRequest(request)) return "Returned Late";
+    if (request?.approvalStatus === "Returned") return "Returned";
+    if (request?.approvalStatus === "Borrowed") return "Borrowed";
+
+    return request?.approvalStatus || "Released";
+  }
+
   function getApprovedTime(request) {
     return getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
   }
@@ -634,39 +764,55 @@ async function fetchApprovedRequests(options = {}) {
   try {
     await autoExpireApprovedRequests();
 
-    const approvedQuery = firestoreQuery(
-      collection(db, "borrowRequests"),
-      where("approvalStatus", "==", "Approved")
-    );
-
-    const querySnapshot = await getDocs(approvedQuery);
+    const querySnapshot = await getDocs(collection(db, "borrowRequests"));
 
     const requestData = querySnapshot.docs.map((document) => ({
       id: document.id,
       ...document.data(),
     }));
 
-    setApprovedRequests(requestData);
+    setApprovedRequests(
+      requestData.filter((request) => request.approvalStatus === "Approved")
+    );
+
+    setReleasedRequests(
+      requestData.filter((request) => isReleasedRequestRecord(request))
+    );
 
     if (showSuccessToast) {
-      showToast("Release queue refreshed", "success");
+      showToast("Release records refreshed", "success");
     }
   } catch (error) {
-    showActionError("Failed to load approved requests", error);
+    showActionError("Failed to load release records", error);
   } finally {
     setLoading(false);
   }
 }
 
   const visibleApprovedRequests = useMemo(() => {
-    if (isCategoryAdmin) {
-      return approvedRequests.filter((request) =>
-        canCategoryAdminSeeRequest(request)
-      );
-    }
+    const categoryVisibleRequests = isCategoryAdmin
+      ? approvedRequests.filter((request) => canCategoryAdminSeeRequest(request))
+      : approvedRequests;
 
-    return approvedRequests;
+    return [...categoryVisibleRequests].sort(
+      (a, b) => getApprovedTime(b) - getApprovedTime(a)
+    );
   }, [approvedRequests, userData]);
+
+  const visibleReleasedRequests = useMemo(() => {
+    const categoryVisibleRequests = isCategoryAdmin
+      ? releasedRequests.filter((request) => canCategoryAdminSeeRequest(request))
+      : releasedRequests;
+
+    return [...categoryVisibleRequests]
+      .filter((request) => isReleasedRequestInsideFilter(request))
+      .sort((a, b) => getReleasedTime(b) - getReleasedTime(a));
+  }, [releasedRequests, userData, releasedDateFilter]);
+
+  const displayedReleasedRequests = visibleReleasedRequests.slice(
+    0,
+    visibleReleasedCount
+  );
 
 async function findApprovedRequestByItemId(rawItemId) {
   if (isReleaseBusy()) return;
@@ -889,6 +1035,11 @@ async function handleConfirmRelease() {
     fetchApprovedRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData?.role, userData?.assignedCategories?.join("|")]);
+
+useEffect(() => {
+  setVisibleReleasedCount(RELEASED_ITEMS_PAGE_SIZE);
+}, [activeReleaseTab, releasedDateFilter, userData?.assignedCategories?.join("|")]);
+
 useEffect(() => {
   getCameraList().catch((error) => {
     console.log("Camera list error:", error);
@@ -1152,108 +1303,260 @@ return (
       </section>
 
       <section className="release-queue-panel">
-        <div className="release-section-heading">
-          <div>
-            <h2>Approved Requests Waiting for Release</h2>
-            <p>
-              Showing {visibleApprovedRequests.length} approved request
-              {visibleApprovedRequests.length === 1 ? "" : "s"}.
-            </p>
-          </div>
+        <div className="release-tabs" role="tablist" aria-label="Release item tabs">
+          <button
+            type="button"
+            className={`release-tab-btn ${
+              activeReleaseTab === "forRelease" ? "active" : ""
+            }`}
+            onClick={() => setActiveReleaseTab("forRelease")}
+          >
+            For Release
+            <span>{visibleApprovedRequests.length}</span>
+          </button>
 
           <button
             type="button"
-            className="release-secondary-btn"
-            onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
-            disabled={releasing}
+            className={`release-tab-btn ${
+              activeReleaseTab === "releasedItems" ? "active" : ""
+            }`}
+            onClick={() => setActiveReleaseTab("releasedItems")}
           >
-            Refresh
+            Released Items
+            <span>{visibleReleasedRequests.length}</span>
           </button>
         </div>
 
-        {visibleApprovedRequests.length === 0 ? (
-          <div className="release-empty">
-            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-            <h2>No approved requests</h2>
-            <p>No items are currently waiting for release.</p>
-          </div>
+        {activeReleaseTab === "forRelease" ? (
+          <>
+            <div className="release-section-heading">
+              <div>
+                <h2>For Release</h2>
+                <p>
+                  Showing {visibleApprovedRequests.length} approved request
+                  {visibleApprovedRequests.length === 1 ? "" : "s"} waiting for
+                  physical release.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="release-secondary-btn"
+                onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
+                disabled={releasing}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {visibleApprovedRequests.length === 0 ? (
+              <div className="release-empty">
+                <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+                <h2>No approved requests</h2>
+                <p>No items are currently waiting for release.</p>
+              </div>
+            ) : (
+              <>
+                <div className="release-approved-table-header">
+                  <span>Item</span>
+                  <span>Borrower</span>
+                  <span>Category</span>
+                  <span>Expected Return</span>
+                  <span>Status</span>
+                  <span>Action</span>
+                </div>
+
+                <div className="release-approved-table-grid">
+                  {visibleApprovedRequests.map((request) => (
+                    <article
+                      className={`release-approved-row ${
+                        selectedRequest?.id === request.id ? "selected" : ""
+                      }`}
+                      key={request.id}
+                    >
+                      <div className="release-approved-cell release-approved-item-cell">
+                        <span>{request.itemCode || request.itemId}</span>
+                        <strong>{request.itemName || "Untitled Item"}</strong>
+                      </div>
+
+                      <div className="release-approved-cell release-approved-borrower-cell">
+                        <span>{request.borrowerEmail || "No email"}</span>
+                        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                      </div>
+
+                      <div className="release-approved-cell">
+                        <span>Category</span>
+                        <strong>{getRequestCategoryName(request)}</strong>
+                      </div>
+
+                      <div className="release-approved-cell">
+                        <span>Expected Return</span>
+                        <strong>{request.expectedReturnDate || "Not set"}</strong>
+                      </div>
+
+                      <div className="release-approved-status-cell">
+                        <span>{request.approvalStatus || "Approved"}</span>
+                        <small
+                          title={`Release deadline: ${formatApprovedReleaseDeadline(request)}`}
+                        >
+                          {formatApprovedReleaseRemaining(request)}
+                        </small>
+                      </div>
+
+                      <div className="release-approved-actions">
+                        <button
+                          type="button"
+                          className="release-primary-btn"
+                          onClick={() => {
+                            if (releasing) return;
+
+                            if (isApprovedReleaseExpired(request)) {
+                              expireApprovedRequest(request).then(() =>
+                                fetchApprovedRequests()
+                              );
+                              showBlockedAction(
+                                "This approved request expired because it was not released within 24 hours."
+                              );
+                              return;
+                            }
+
+                            setSelectedRequest(request);
+                            setManualItemId(request.itemId);
+                            setFieldErrors({});
+                            showToast("Approved request selected.", "success");
+                          }}
+                          disabled={releasing || selectedRequest?.id === request.id}
+                        >
+                          {selectedRequest?.id === request.id ? "Selected" : "Select"}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
-<>
-  <div className="release-approved-table-header">
-    <span>Item</span>
-    <span>Borrower</span>
-    <span>Category</span>
-    <span>Expected Return</span>
-    <span>Status</span>
-    <span>Action</span>
-  </div>
+          <>
+            <div className="release-section-heading release-released-heading">
+              <div>
+                <h2>Released Items</h2>
+                <p>
+                  Showing {displayedReleasedRequests.length} of{" "}
+                  {visibleReleasedRequests.length} released item
+                  {visibleReleasedRequests.length === 1 ? "" : "s"} for{" "}
+                  {getReleasedDateFilterLabel(releasedDateFilter)}.
+                </p>
+              </div>
 
-  <div className="release-approved-table-grid">
-    {visibleApprovedRequests.map((request) => (
-      <article
-        className={`release-approved-row ${
-          selectedRequest?.id === request.id ? "selected" : ""
-        }`}
-        key={request.id}
-      >
-        <div className="release-approved-cell release-approved-item-cell">
-          <span>{request.itemCode || request.itemId}</span>
-          <strong>{request.itemName || "Untitled Item"}</strong>
-        </div>
+              <div className="release-released-controls">
+                <select
+                  value={releasedDateFilter}
+                  onChange={(event) => setReleasedDateFilter(event.target.value)}
+                  aria-label="Released items date filter"
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                </select>
 
-        <div className="release-approved-cell release-approved-borrower-cell">
-          <span>{request.borrowerEmail || "No email"}</span>
-          <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
-        </div>
+                <button
+                  type="button"
+                  className="release-secondary-btn"
+                  onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
+                  disabled={releasing}
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
 
-        <div className="release-approved-cell">
-          <span>Category</span>
-          <strong>{getRequestCategoryName(request)}</strong>
-        </div>
+            {visibleReleasedRequests.length === 0 ? (
+              <div className="release-empty">
+                <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+                <h2>No released items</h2>
+                <p>No items were released for the selected date filter.</p>
+              </div>
+            ) : (
+              <>
+                <div className="release-released-table-header">
+                  <span>Item</span>
+                  <span>Borrower</span>
+                  <span>Category</span>
+                  <span>Released</span>
+                  <span>Expected Return</span>
+                  <span>Status</span>
+                </div>
 
-        <div className="release-approved-cell">
-          <span>Expected Return</span>
-          <strong>{request.expectedReturnDate || "Not set"}</strong>
-        </div>
+                <div className="release-released-table-grid">
+                  {displayedReleasedRequests.map((request) => (
+                    <article className="release-released-row" key={request.id}>
+                      <div className="release-released-cell release-released-item-cell">
+                        <span>{request.itemCode || request.itemId || "No code"}</span>
+                        <strong>{request.itemName || "Untitled Item"}</strong>
+                      </div>
 
-        <div className="release-approved-status-cell">
-          <span>{request.approvalStatus || "Approved"}</span>
-          <small
-            title={`Release deadline: ${formatApprovedReleaseDeadline(request)}`}
-          >
-            {formatApprovedReleaseRemaining(request)}
-          </small>
-        </div>
+                      <div className="release-released-cell release-released-borrower-cell">
+                        <span>{request.borrowerEmail || "No email"}</span>
+                        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                      </div>
 
-        <div className="release-approved-actions">
-          <button
-            type="button"
-            className="release-primary-btn"
-            onClick={() => {
-              if (releasing) return;
+                      <div className="release-released-cell">
+                        <span>Category</span>
+                        <strong>{getRequestCategoryName(request)}</strong>
+                      </div>
 
-              if (isApprovedReleaseExpired(request)) {
-                expireApprovedRequest(request).then(() => fetchApprovedRequests());
-                showBlockedAction(
-                  "This approved request expired because it was not released within 24 hours."
-                );
-                return;
-              }
+                      <div className="release-released-cell">
+                        <span>Released</span>
+                        <strong>{formatReleasedDateTime(request)}</strong>
+                      </div>
 
-              setSelectedRequest(request);
-              setManualItemId(request.itemId);
-              setFieldErrors({});
-              showToast("Approved request selected.", "success");
-            }}
-            disabled={releasing || selectedRequest?.id === request.id}
-          >
-            {selectedRequest?.id === request.id ? "Selected" : "Select"}
-          </button>
-        </div>
-      </article>
-    ))}
-  </div>
-</>
+                      <div className="release-released-cell">
+                        <span>Expected Return</span>
+                        <strong>{request.expectedReturnDate || "Not set"}</strong>
+                      </div>
+
+                      <div className="release-released-status-cell">
+                        <span
+                          className={`release-released-status-pill status-${normalizeText(
+                            getReleasedStatusLabel(request)
+                          ).replace(/\s+/g, "-")}`}
+                          title={
+                            isReturnedLateRequest(request)
+                              ? `Returned late: expected ${
+                                  request.expectedReturnDate || "not set"
+                                }, returned ${request.actualReturnDate || "not set"}`
+                              : getReleasedStatusLabel(request)
+                          }
+                        >
+                          {getReleasedStatusLabel(request)}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                {visibleReleasedCount < visibleReleasedRequests.length && (
+                  <div className="release-load-more-row release-released-load-more-row">
+                    <button
+                      type="button"
+                      className="release-secondary-btn"
+                      onClick={() =>
+                        setVisibleReleasedCount((currentCount) =>
+                          Math.min(
+                            currentCount + RELEASED_ITEMS_PAGE_SIZE,
+                            visibleReleasedRequests.length
+                          )
+                        )
+                      }
+                    >
+                      Load More Released Items
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </section>
     </div>
