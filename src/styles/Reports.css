@@ -7718,3 +7718,124 @@ html[data-theme="dark"] .reports-page .reports-late-overdue-type-cell strong {
   background: #fecaca !important;
   color: #450a0a !important;
 }
+
+
+
+/* =========================================================
+   REPORTS MODAL LAYER FIX
+   Makes Borrowing History / Damaged-Lost details modal appear
+   in front of the sidebar and topbar.
+   Put this at the VERY BOTTOM of Reports.css.
+========================================================= */
+
+.reports-history-modal-backdrop,
+.reports-damaged-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(15, 23, 42, 0.62) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  padding: 18px !important;
+  overflow: hidden !important;
+}
+
+/* Keep the modal card above everything inside the backdrop */
+.reports-history-modal-card,
+.reports-damaged-modal-card {
+  position: relative !important;
+  z-index: 2147483001 !important;
+  margin: 0 auto !important;
+  max-width: calc(100vw - 36px) !important;
+  max-height: calc(100dvh - 36px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Prevent the sidebar/topbar from visually sitting above the modal */
+body:has(.reports-history-modal-backdrop) .app-sidebar,
+body:has(.reports-history-modal-backdrop) .app-sidebar-backdrop,
+body:has(.reports-history-modal-backdrop) .app-topbar,
+body:has(.reports-history-modal-backdrop) .app-header,
+body:has(.reports-damaged-modal-backdrop) .app-sidebar,
+body:has(.reports-damaged-modal-backdrop) .app-sidebar-backdrop,
+body:has(.reports-damaged-modal-backdrop) .app-topbar,
+body:has(.reports-damaged-modal-backdrop) .app-header {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+/* Make sure the page/content layer does not clip the fixed modal */
+body:has(.reports-history-modal-backdrop),
+body:has(.reports-damaged-modal-backdrop) {
+  overflow: hidden !important;
+}
+
+body:has(.reports-history-modal-backdrop) .app-main-content,
+body:has(.reports-history-modal-backdrop) .app-page-content,
+body:has(.reports-history-modal-backdrop) .reports-page,
+body:has(.reports-damaged-modal-backdrop) .app-main-content,
+body:has(.reports-damaged-modal-backdrop) .app-page-content,
+body:has(.reports-damaged-modal-backdrop) .reports-page {
+  overflow: visible !important;
+}
+
+/* Close button stays visible and clickable */
+.reports-history-modal-close,
+.reports-damaged-modal-close {
+  z-index: 2147483002 !important;
+}
+
+/* Mobile: use almost full screen but keep clean padding */
+@media (max-width: 760px) {
+  .reports-history-modal-backdrop,
+  .reports-damaged-modal-backdrop {
+    padding: 10px !important;
+    align-items: center !important;
+  }
+
+  .reports-history-modal-card,
+  .reports-damaged-modal-card {
+    width: min(100%, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 20px !important;
+  }
+}
+
+
+
+/* =========================================================
+   REPORTS MODAL - REMOVE TOP X BUTTON
+   The bottom Close button remains.
+   Put this at the VERY BOTTOM of Reports.css.
+========================================================= */
+
+.reports-history-modal-close,
+.reports-damaged-modal-close {
+  display: none !important;
+}
+
+/* Since the X button is removed, the modal title no longer needs
+   extra right padding for the top-right button. */
+.reports-history-modal-heading,
+.reports-damaged-modal-heading {
+  padding-right: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .reports-history-modal-heading,
+  .reports-damaged-modal-heading {
+    padding-right: 0 !important;
+  }
+}

@@ -320,7 +320,7 @@ async function autoRejectExpiredPendingRequests() {
       return createdTime && now - createdTime >= oneDayMs;
     });
 
-  await Promise.all(
+  await Promise.allSettled(
     expiredRequests.map(async (request) => {
       await updateDoc(doc(db, "borrowRequests", request.id), {
         approvalStatus: "Expired",
@@ -620,7 +620,14 @@ async function expireApprovedRequest(request) {
   });
 
   if (expiredRequest) {
-    await notifyApprovedRequestExpired(expiredRequest);
+    try {
+      await notifyApprovedRequestExpired(expiredRequest);
+    } catch {
+      /*
+        The request/item/user transaction already finished. A notification
+        permission issue should not break the whole Manage Requests page.
+      */
+    }
   }
 
   return expiredRequest;
@@ -642,9 +649,20 @@ async function autoExpireApprovedRequests() {
       );
     });
 
-  await Promise.all(
+  await Promise.allSettled(
     expiredApprovedRequests.map((request) => expireApprovedRequest(request))
   );
+}
+
+async function prepareBorrowRequestsForDisplay() {
+  /*
+    Auto-expire is helpful, but it must not block admins from opening this page.
+    If Firestore blocks one old/mismatched record, requests still load normally.
+  */
+  await Promise.allSettled([
+    autoRejectExpiredPendingRequests(),
+    autoExpireApprovedRequests(),
+  ]);
 }
 
 function getRequestQueryConstraints(
@@ -1139,11 +1157,10 @@ useEffect(() => {
 
   async function loadRequests() {
     try {
-      await autoRejectExpiredPendingRequests();
-      await autoExpireApprovedRequests();
+      await prepareBorrowRequestsForDisplay();
       await fetchRequests();
     } catch (error) {
-      showActionError("Failed to prepare borrow requests", error);
+      showActionError("Failed to load borrow requests", error);
       setLoading(false);
       setLoadingMoreRequests(false);
     }
@@ -1372,8 +1389,7 @@ return (
           type="button"
           className="manage-refresh-btn"
           onClick={async () => {
-            await autoRejectExpiredPendingRequests();
-            await autoExpireApprovedRequests();
+            await prepareBorrowRequestsForDisplay();
             await fetchRequests("reset");
           }}
           disabled={hasActiveRequestAction()}
