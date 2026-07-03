@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   EmailAuthProvider,
@@ -13,6 +14,9 @@ import ImageCropModal from "../components/ImageCropModal";
 import { useToast } from "../components/ToastContext.jsx";
 import "../styles/Settings.css";
 
+const YEAR_SECTION_LOCK_DAYS = 365;
+const MOBILE_NUMBER_LOCK_DAYS = 30;
+
 function Settings() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -25,6 +29,12 @@ function Settings() {
   const [loading, setLoading] = useState(true);
 
   const [fullName, setFullName] = useState("");
+  const [userType, setUserType] = useState("");
+  const [studentNumber, setStudentNumber] = useState("");
+  const [courseDepartment, setCourseDepartment] = useState("");
+  const [yearLevel, setYearLevel] = useState("");
+  const [section, setSection] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
   const [photoPreview, setPhotoPreview] = useState("");
   const [croppedPhotoBlob, setCroppedPhotoBlob] = useState(null);
   const [croppedPhotoSize, setCroppedPhotoSize] = useState(0);
@@ -43,6 +53,8 @@ function Settings() {
 
   const [profileTouched, setProfileTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [confirmProfileSaveOpen, setConfirmProfileSaveOpen] = useState(false);
+  const [pendingProfileChanges, setPendingProfileChanges] = useState([]);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -134,6 +146,16 @@ function Settings() {
         }
       }
 
+      if (fieldName === "mobileNumber") {
+        const mobileNumberError = getMobileNumberError(mobileNumber);
+
+        if (mobileNumberError) {
+          nextErrors.mobileNumber = mobileNumberError;
+        } else {
+          delete nextErrors.mobileNumber;
+        }
+      }
+
       return nextErrors;
     });
   }
@@ -188,6 +210,24 @@ function Settings() {
       errors.fullName = fullNameError;
     }
 
+    if (isBorrowerProfile()) {
+      const yearSectionLockInfo = getYearSectionLockInfo();
+      const mobileNumberLockInfo = getMobileNumberLockInfo();
+      const mobileNumberError = getMobileNumberError(mobileNumber);
+
+      if (didYearSectionChange() && yearSectionLockInfo.locked) {
+        const lockMessage = `Year level and section can only be changed once per year. Next change available on ${yearSectionLockInfo.nextDate}. Please contact the admin if this needs correction.`;
+        errors.yearLevel = lockMessage;
+        errors.section = lockMessage;
+      }
+
+      if (mobileNumberError) {
+        errors.mobileNumber = mobileNumberError;
+      } else if (didMobileNumberChange() && mobileNumberLockInfo.locked) {
+        errors.mobileNumber = `Mobile number can only be changed once per month. Next change available on ${mobileNumberLockInfo.nextDate}. Please contact the admin if this needs correction.`;
+      }
+    }
+
     setProfileFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -219,6 +259,198 @@ function Settings() {
     if (role === "superAdmin") return "Super Admin";
     if (role === "categoryAdmin") return "Category Admin";
     return "Borrower";
+  }
+
+  function normalizeDetailValue(value) {
+    return String(value || "").trim();
+  }
+
+  function getBorrowerUserType(record) {
+    return normalizeDetailValue(record?.userType || record?.borrowerUserType);
+  }
+
+  function getBorrowerStudentNumber(record) {
+    return normalizeDetailValue(
+      record?.studentNumber || record?.borrowerStudentNumber || record?.employeeId
+    );
+  }
+
+  function getBorrowerCourseDepartment(record) {
+    return normalizeDetailValue(
+      record?.courseDepartment ||
+        record?.course ||
+        record?.department ||
+        record?.borrowerCourseDepartment
+    );
+  }
+
+  function getBorrowerYearLevel(record) {
+    return normalizeDetailValue(record?.yearLevel || record?.borrowerYearLevel);
+  }
+
+  function getBorrowerSection(record) {
+    return normalizeDetailValue(record?.section || record?.borrowerSection);
+  }
+
+  function getBorrowerMobileNumber(record) {
+    return normalizeDetailValue(record?.mobileNumber || record?.borrowerMobileNumber);
+  }
+
+  function sanitizeMobileNumberInput(value) {
+    return String(value || "").replace(/[^0-9+\-\s()]/g, "");
+  }
+
+  function cleanMobileNumberForSave(value) {
+    return String(value || "").replace(/[\s()\-]/g, "").trim();
+  }
+
+  function isValidMobileNumber(value) {
+    const cleanedValue = cleanMobileNumberForSave(value);
+
+    if (!cleanedValue) return true;
+
+    return /^\+?\d{10,15}$/.test(cleanedValue);
+  }
+
+  function getMobileNumberError(value) {
+    if (!isValidMobileNumber(value)) {
+      return "Mobile number must contain 10 to 15 digits. You may include + for country code.";
+    }
+
+    return "";
+  }
+
+  function addDaysToDate(date, numberOfDays) {
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + numberOfDays);
+    return nextDate;
+  }
+
+  function formatProfileLockDate(value) {
+    const date = getDateFromValue(value);
+
+    if (!date) return "";
+
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function getProfileLockInfo(lastUpdatedValue, lockDays) {
+    const lastUpdatedDate = getDateFromValue(lastUpdatedValue);
+
+    if (!lastUpdatedDate) {
+      return {
+        locked: false,
+        nextDate: "",
+      };
+    }
+
+    const nextAllowedDate = addDaysToDate(lastUpdatedDate, lockDays);
+    const isLocked = nextAllowedDate > new Date();
+
+    return {
+      locked: isLocked,
+      nextDate: formatProfileLockDate(nextAllowedDate),
+    };
+  }
+
+  function isBorrowerProfile() {
+    return userRecord?.role === "borrower";
+  }
+
+  function getYearSectionLockInfo() {
+    return getProfileLockInfo(
+      userRecord?.profileYearSectionUpdatedAt || userRecord?.yearSectionUpdatedAt,
+      YEAR_SECTION_LOCK_DAYS
+    );
+  }
+
+  function getMobileNumberLockInfo() {
+    return getProfileLockInfo(
+      userRecord?.profileMobileUpdatedAt || userRecord?.mobileNumberUpdatedAt,
+      MOBILE_NUMBER_LOCK_DAYS
+    );
+  }
+
+  function didYearSectionChange() {
+    return (
+      normalizeDetailValue(yearLevel) !== getBorrowerYearLevel(userRecord) ||
+      normalizeDetailValue(section) !== getBorrowerSection(userRecord)
+    );
+  }
+
+  function didMobileNumberChange() {
+    return (
+      cleanMobileNumberForSave(mobileNumber) !==
+      cleanMobileNumberForSave(getBorrowerMobileNumber(userRecord))
+    );
+  }
+
+  function getDisplayValue(value) {
+    const cleanedValue = normalizeDetailValue(value);
+
+    return cleanedValue || "Not set";
+  }
+
+  function buildProfileChangeSummary(cleanedFullName = fullName.trim()) {
+    const changes = [];
+
+    if (cleanedFullName !== normalizeDetailValue(userRecord?.fullName)) {
+      changes.push({
+        field: "Display Name",
+        from: getDisplayValue(userRecord?.fullName),
+        to: getDisplayValue(cleanedFullName),
+      });
+    }
+
+    if (croppedPhotoBlob) {
+      changes.push({
+        field: "Profile Picture",
+        from: userRecord?.photoURL ? "Current photo" : "No photo",
+        to: "New cropped photo",
+      });
+    }
+
+    if (isBorrowerProfile()) {
+      if (normalizeDetailValue(yearLevel) !== getBorrowerYearLevel(userRecord)) {
+        changes.push({
+          field: "Year Level",
+          from: getDisplayValue(getBorrowerYearLevel(userRecord)),
+          to: getDisplayValue(yearLevel),
+          lockNote: "After saving, borrower self-change locks for 1 year.",
+        });
+      }
+
+      if (normalizeDetailValue(section) !== getBorrowerSection(userRecord)) {
+        changes.push({
+          field: "Section",
+          from: getDisplayValue(getBorrowerSection(userRecord)),
+          to: getDisplayValue(section),
+          lockNote: "After saving, borrower self-change locks for 1 year.",
+        });
+      }
+
+      if (didMobileNumberChange()) {
+        changes.push({
+          field: "Mobile Number",
+          from: getDisplayValue(getBorrowerMobileNumber(userRecord)),
+          to: getDisplayValue(cleanMobileNumberForSave(mobileNumber)),
+          lockNote: "After saving, borrower self-change locks for 1 month.",
+        });
+      }
+    }
+
+    return changes;
+  }
+
+  function closeProfileSaveConfirmation() {
+    if (savingProfile) return;
+
+    setConfirmProfileSaveOpen(false);
+    setPendingProfileChanges([]);
   }
 
   function getDateFromValue(value) {
@@ -327,6 +559,12 @@ function Settings() {
 
       setUserRecord(data);
       setFullName(data.fullName || "");
+      setUserType(getBorrowerUserType(data));
+      setStudentNumber(getBorrowerStudentNumber(data));
+      setCourseDepartment(getBorrowerCourseDepartment(data));
+      setYearLevel(getBorrowerYearLevel(data));
+      setSection(getBorrowerSection(data));
+      setMobileNumber(getBorrowerMobileNumber(data));
 
       if (data.photoURL) {
         setPhotoPreview(data.photoURL);
@@ -390,8 +628,8 @@ function Settings() {
     );
   }
 
-  async function handleSaveProfile(event) {
-    event.preventDefault();
+  async function handleSaveProfile(event, options = {}) {
+    event?.preventDefault?.();
 
     if (!currentUser) {
       showBlockedAction("No logged-in user found.");
@@ -407,7 +645,22 @@ function Settings() {
     }
 
     const cleanedFullName = fullName.trim();
+    const profileChanges = buildProfileChangeSummary(cleanedFullName);
 
+    if (!options.confirmed) {
+      if (profileChanges.length === 0) {
+        showStatus("No profile changes to save.", "success");
+        showToast("No changes to save", "success");
+        return;
+      }
+
+      setPendingProfileChanges(profileChanges);
+      setConfirmProfileSaveOpen(true);
+      return;
+    }
+
+    setConfirmProfileSaveOpen(false);
+    setPendingProfileChanges(profileChanges);
     setSavingProfile(true);
 
     try {
@@ -427,27 +680,60 @@ function Settings() {
       }
 
       const userRef = doc(db, "users", currentUser.uid);
-
-      await updateDoc(userRef, {
+      const profileUpdatePayload = {
         fullName: cleanedFullName,
         photoURL: uploadedPhotoURL,
         photoPath: uploadedPhotoPath,
         updatedAt: serverTimestamp(),
-      });
+      };
 
-      const updatedUserData = {
+      const localUpdatedUserData = {
         ...userRecord,
         fullName: cleanedFullName,
         photoURL: uploadedPhotoURL,
         photoPath: uploadedPhotoPath,
       };
 
+      if (isBorrowerProfile()) {
+        const cleanedYearLevel = normalizeDetailValue(yearLevel);
+        const cleanedSection = normalizeDetailValue(section);
+        const cleanedMobileNumber = cleanMobileNumberForSave(mobileNumber);
+        const now = new Date();
+
+        if (didYearSectionChange()) {
+          profileUpdatePayload.yearLevel = cleanedYearLevel;
+          profileUpdatePayload.section = cleanedSection;
+          profileUpdatePayload.profileYearSectionUpdatedAt = serverTimestamp();
+
+          localUpdatedUserData.yearLevel = cleanedYearLevel;
+          localUpdatedUserData.section = cleanedSection;
+          localUpdatedUserData.profileYearSectionUpdatedAt = now;
+        }
+
+        if (didMobileNumberChange()) {
+          profileUpdatePayload.mobileNumber = cleanedMobileNumber;
+          profileUpdatePayload.profileMobileUpdatedAt = serverTimestamp();
+
+          localUpdatedUserData.mobileNumber = cleanedMobileNumber;
+          localUpdatedUserData.profileMobileUpdatedAt = now;
+        }
+      }
+
+      await updateDoc(userRef, profileUpdatePayload);
+
+      const updatedUserData = localUpdatedUserData;
+
       setUserRecord(updatedUserData);
       setFullName(cleanedFullName);
+      setYearLevel(getBorrowerYearLevel(updatedUserData));
+      setSection(getBorrowerSection(updatedUserData));
+      setMobileNumber(getBorrowerMobileNumber(updatedUserData));
       setCroppedPhotoBlob(null);
       setCroppedPhotoSize(0);
       setProfileFieldErrors({});
       setProfileTouched(false);
+      setPendingProfileChanges([]);
+      setConfirmProfileSaveOpen(false);
 
       window.dispatchEvent(
         new CustomEvent("qborrow-user-updated", {
@@ -455,6 +741,9 @@ function Settings() {
             fullName: cleanedFullName,
             photoURL: uploadedPhotoURL,
             photoPath: uploadedPhotoPath,
+            yearLevel: updatedUserData.yearLevel,
+            section: updatedUserData.section,
+            mobileNumber: updatedUserData.mobileNumber,
           },
         })
       );
@@ -547,6 +836,8 @@ function Settings() {
     Object.values(passwordFieldErrors).some(Boolean);
 
   const borrowingStatusInfo = getBorrowingStatusInfo();
+  const yearSectionLockInfo = getYearSectionLockInfo();
+  const mobileNumberLockInfo = getMobileNumberLockInfo();
 
   if (loading) {
     return (
@@ -572,6 +863,79 @@ function Settings() {
           onCropComplete={handleProfileCropComplete}
         />
       )}
+
+      {confirmProfileSaveOpen &&
+        createPortal(
+          <div
+            className="settings-confirm-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeProfileSaveConfirmation();
+            }
+          }}
+        >
+          <section
+            className="settings-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-confirm-title"
+          >
+            <div className="settings-confirm-icon">!</div>
+
+            <div className="settings-confirm-heading">
+              <h2 id="settings-confirm-title">Confirm Profile Changes</h2>
+              <p>
+                Are you sure you want to save these changes? Some borrower
+                details will be locked after saving.
+              </p>
+            </div>
+
+            <div className="settings-confirm-changes">
+              {pendingProfileChanges.map((change) => (
+                <article className="settings-confirm-change" key={change.field}>
+                  <div>
+                    <span>{change.field}</span>
+                    {change.lockNote && <small>{change.lockNote}</small>}
+                  </div>
+
+                  <div className="settings-confirm-change-values">
+                    <p>
+                      <span>From</span>
+                      <strong>{change.from}</strong>
+                    </p>
+                    <p>
+                      <span>To</span>
+                      <strong>{change.to}</strong>
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="settings-confirm-actions">
+              <button
+                type="button"
+                className="settings-secondary-btn"
+                onClick={closeProfileSaveConfirmation}
+                disabled={savingProfile}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="settings-primary-btn"
+                onClick={() => handleSaveProfile(null, { confirmed: true })}
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Saving..." : "Confirm Save"}
+              </button>
+            </div>
+          </section>
+        </div>,
+          document.body
+        )}
 
       <section className="settings-header settings-header-compact">
         <div className="settings-header-content">
@@ -614,7 +978,7 @@ function Settings() {
         >
           <div className="settings-section-heading">
             <h2>Profile</h2>
-            <p>Crop your picture and update your display name without entering your password.</p>
+            <p>Crop your picture, update your display name, and manage allowed borrower details.</p>
           </div>
 
           <div className="settings-profile-preview">
@@ -708,6 +1072,162 @@ function Settings() {
             </div>
 
           </div>
+
+          {isBorrowerProfile() && (
+            <section className="settings-borrower-details-card">
+              <div className="settings-borrower-details-heading">
+                <h3>Borrower Details</h3>
+                <p>
+                  User type, student number, and course/department are fixed by
+                  the admin. You may update section, year level, and mobile
+                  number only within the allowed schedule.
+                </p>
+              </div>
+
+              <div className="settings-borrower-details-grid">
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="user-type">
+                    User Type
+                  </label>
+                  <input
+                    id="user-type"
+                    type="text"
+                    value={userType || "Not set"}
+                    readOnly
+                  />
+                  <small>Only admins can change this field.</small>
+                </div>
+
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="student-number">
+                    Student Number
+                  </label>
+                  <input
+                    id="student-number"
+                    type="text"
+                    value={studentNumber || "Not set"}
+                    readOnly
+                  />
+                  <small>Only admins can change this field.</small>
+                </div>
+
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="course-department">
+                    Course / Department
+                  </label>
+                  <input
+                    id="course-department"
+                    type="text"
+                    value={courseDepartment || "Not set"}
+                    readOnly
+                  />
+                  <small>Only admins can change this field.</small>
+                </div>
+
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="year-level">
+                    Year Level
+                  </label>
+                  <select
+                    id="year-level"
+                    className={profileFieldErrors.yearLevel ? "input-error" : ""}
+                    value={yearLevel}
+                    onFocus={() => clearProfileFieldError("yearLevel")}
+                    onChange={(event) => {
+                      markProfileChanged();
+                      setYearLevel(event.target.value);
+                      clearProfileFieldError("yearLevel");
+                      clearProfileFieldError("section");
+                    }}
+                    disabled={savingProfile || yearSectionLockInfo.locked}
+                  >
+                    <option value="">Not set</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                    <option value="5th Year">5th Year</option>
+                  </select>
+                  <small>
+                    {yearSectionLockInfo.locked
+                      ? `Locked until ${yearSectionLockInfo.nextDate}. Ask an admin for corrections.`
+                      : "Can be changed once per year."}
+                  </small>
+                  {profileFieldErrors.yearLevel && (
+                    <p className="field-error-message">
+                      {profileFieldErrors.yearLevel}
+                    </p>
+                  )}
+                </div>
+
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="section">
+                    Section
+                  </label>
+                  <input
+                    id="section"
+                    type="text"
+                    className={profileFieldErrors.section ? "input-error" : ""}
+                    placeholder="Example: BSCS 3A"
+                    value={section}
+                    onFocus={() => clearProfileFieldError("section")}
+                    onChange={(event) => {
+                      markProfileChanged();
+                      setSection(event.target.value);
+                      clearProfileFieldError("section");
+                      clearProfileFieldError("yearLevel");
+                    }}
+                    disabled={savingProfile || yearSectionLockInfo.locked}
+                  />
+                  <small>
+                    {yearSectionLockInfo.locked
+                      ? `Locked until ${yearSectionLockInfo.nextDate}. Ask an admin for corrections.`
+                      : "Can be changed once per year."}
+                  </small>
+                  {profileFieldErrors.section && (
+                    <p className="field-error-message">
+                      {profileFieldErrors.section}
+                    </p>
+                  )}
+                </div>
+
+                <div className="settings-field">
+                  <label className="qb-label" htmlFor="mobile-number">
+                    Mobile Number
+                  </label>
+                  <input
+                    id="mobile-number"
+                    type="tel"
+                    className={profileFieldErrors.mobileNumber ? "input-error" : ""}
+                    placeholder="Example: 09123456789"
+                    value={mobileNumber}
+                    onFocus={() => clearProfileFieldError("mobileNumber")}
+                    onBlur={() => validateProfileField("mobileNumber")}
+                    onChange={(event) => {
+                      const sanitizedMobileNumber = sanitizeMobileNumberInput(
+                        event.target.value
+                      );
+
+                      markProfileChanged();
+                      setMobileNumber(sanitizedMobileNumber);
+                      clearProfileFieldError("mobileNumber");
+                    }}
+                    disabled={savingProfile || mobileNumberLockInfo.locked}
+                  />
+                  <small>
+                    {mobileNumberLockInfo.locked
+                      ? `Locked until ${mobileNumberLockInfo.nextDate}. Ask an admin for corrections.`
+                      : "Can be changed once per month."}
+                  </small>
+                  {profileFieldErrors.mobileNumber && (
+                    <p className="field-error-message">
+                      {profileFieldErrors.mobileNumber}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
 
           <button
             type="submit"

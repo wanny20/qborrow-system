@@ -61,6 +61,7 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
     dashboard: false,
     borrower: false,
     admin: false,
+    reports: false,
     userManagement: false,
   };
 
@@ -1132,11 +1133,39 @@ async function confirmLogout() {
       fallbackIcon: "↩",
       path: "/return-confirmation",
     },
+  ];
+
+
+  const reportsLinks = [
     {
-      label: "Reports",
+      label: "Reports Dashboard",
       icon: "/icons/reports.png",
-      fallbackIcon: "≡",
+      fallbackIcon: "▦",
       path: "/reports",
+    },
+    {
+      label: "Frequently Borrowed Items",
+      icon: "/icons/items.png",
+      fallbackIcon: "★",
+      path: "/reports?module=frequentlyBorrowed",
+    },
+    {
+      label: "Borrowing History",
+      icon: "/icons/requests.png",
+      fallbackIcon: "H",
+      path: "/reports?module=borrowingHistory",
+    },
+    {
+      label: "Late / Overdue Returns",
+      icon: "/icons/return.png",
+      fallbackIcon: "!",
+      path: "/reports?module=overdueItems",
+    },
+    {
+      label: "Damaged/Lost Items",
+      icon: "/icons/reports.png",
+      fallbackIcon: "DL",
+      path: "/reports?module=damagedLostItems",
     },
   ];
 
@@ -1182,10 +1211,13 @@ function getActiveSidebarGroupName() {
       "/manage-requests",
       "/release-item",
       "/return-confirmation",
-      "/reports",
     ].includes(activeSidebarPath)
   ) {
     return "admin";
+  }
+
+  if (activeSidebarPath === "/reports") {
+    return "reports";
   }
 
   if (activeSidebarPath === "/user-management") {
@@ -1228,6 +1260,8 @@ function isSidebarLinkActive(link) {
     ? currentFullPath === link.path
     : link.path === "/user-management"
     ? location.pathname === "/user-management" && !location.search
+    : link.path === "/reports"
+    ? location.pathname === "/reports" && !location.search
     : activeSidebarPath === link.path;
 }
 
@@ -1366,6 +1400,14 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
               title: "Admin Menu",
               icon: "⚙",
               links: adminLinks,
+            })}
+
+          {isAdmin &&
+            renderSidebarGroup({
+              groupName: "reports",
+              title: "Reports",
+              icon: "▤",
+              links: reportsLinks,
             })}
 
           {isSuperAdmin &&

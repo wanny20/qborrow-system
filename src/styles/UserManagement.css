@@ -7707,3 +7707,150 @@ html[data-theme="dark"] .user-category-option-text small {
     font-size: 0.5rem;
   }
 }
+
+
+
+/* =========================================================
+   FINAL EXISTING USERS FULL-WIDTH DESKTOP TABLE FIX
+   Keep this at the VERY BOTTOM of UserManagement.css.
+   Fixes big white space on large monitors by overriding the
+   older fixed 1180px table width.
+========================================================= */
+
+@media (min-width: 1181px) {
+  html body .app-page-content .user-management-page .user-list-card,
+  html body .user-management-page .user-list-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(150px, 1.05fr)
+      minmax(210px, 1.25fr)
+      minmax(80px, 0.55fr)
+      minmax(130px, 0.8fr)
+      minmax(100px, 0.65fr)
+      minmax(150px, 0.75fr)
+      278px !important;
+    gap: 12px !important;
+    align-items: center !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    grid-template-areas: "name identity contact category created status actions" !important;
+    overflow: visible !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span:nth-child(6),
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span:nth-child(7),
+  html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(6),
+  html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(7) {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-status,
+  html body .user-management-page .user-table-scroll-area .user-table-status {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions,
+  html body .user-management-page .user-table-scroll-area .user-actions {
+    width: 278px !important;
+    min-width: 278px !important;
+    max-width: 278px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card .user-icon-action,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action,
+  html body .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
+  html body .user-management-page .user-table-scroll-area .user-card .user-icon-action,
+  html body .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
+  html body .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action {
+    width: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    border-radius: 12px !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-load-more-row,
+  html body .user-management-page .user-table-scroll-area .user-load-more-row {
+    width: 100% !important;
+  }
+}
+
+/* Keep medium screens scrollable, but do not affect full desktop. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    overflow-x: auto !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 1180px !important;
+    min-width: 1180px !important;
+    max-width: none !important;
+  }
+}

@@ -1138,3 +1138,431 @@ html[data-theme="dark"] .settings-borrowing-status-main strong {
     grid-column: auto;
   }
 }
+
+
+
+/* =========================================================
+   SETTINGS BORROWER DETAILS + SELF-EDIT LOCK RULES
+   Adds borrower profile details with read-only admin-controlled
+   fields and limited borrower self-edit fields.
+========================================================= */
+
+.settings-page .settings-borrower-details-card {
+  margin-top: 14px;
+  border: 1.5px solid rgba(37, 99, 235, 0.16);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.055), rgba(250, 204, 21, 0.08)),
+    rgba(255, 255, 255, 0.78);
+  padding: 13px;
+}
+
+.settings-page .settings-borrower-details-heading {
+  margin-bottom: 12px;
+}
+
+.settings-page .settings-borrower-details-heading h3 {
+  margin: 0;
+  color: var(--settings-text);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.settings-page .settings-borrower-details-heading p {
+  max-width: 920px;
+  margin: 5px 0 0;
+  color: var(--settings-muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.settings-page .settings-borrower-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.settings-page .settings-field select {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--settings-text);
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 780;
+  outline: none;
+}
+
+.settings-page .settings-field select:focus {
+  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.settings-page .settings-field select.input-error {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.settings-page .settings-field input:disabled,
+.settings-page .settings-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.settings-page .settings-borrower-details-card .settings-field small {
+  display: block;
+  min-height: 28px;
+}
+
+/* Let the profile save button stay below the new details section. */
+.settings-page .settings-profile-card .settings-primary-btn {
+  margin-top: 14px !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .settings-page .settings-borrower-details-card {
+  border-color: rgba(148, 163, 184, 0.24);
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.10), rgba(250, 204, 21, 0.06)),
+    rgba(15, 23, 42, 0.72);
+}
+
+html[data-theme="dark"] .settings-page .settings-field select {
+  background: var(--qb-input, #0f172a);
+  color: var(--qb-foreground, #f8fafc);
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+/* Responsive */
+@media (max-width: 1180px) {
+  .settings-page .settings-borrower-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .settings-page .settings-borrower-details-card {
+    border-radius: 16px;
+    padding: 11px;
+  }
+
+  .settings-page .settings-borrower-details-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-page .settings-borrower-details-heading h3 {
+    font-size: 0.92rem;
+  }
+
+  .settings-page .settings-borrower-details-heading p {
+    font-size: 0.64rem;
+  }
+
+  .settings-page .settings-field select {
+    min-height: 39px;
+    font-size: 0.74rem;
+  }
+
+  .settings-page .settings-borrower-details-card .settings-field small {
+    min-height: 0;
+  }
+}
+
+
+
+/* =========================================================
+   SETTINGS PROFILE SAVE CONFIRMATION MODAL
+   Shows changed profile fields before saving and keeps modal
+   above sidebar/topbar overlays.
+========================================================= */
+
+.settings-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(8px);
+  padding: 18px;
+}
+
+.settings-confirm-modal {
+  width: min(720px, 100%);
+  max-height: min(82dvh, 720px);
+  overflow-y: auto;
+  border: 3px solid var(--settings-border);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.20), transparent 34%),
+    linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.98)),
+    #ffffff;
+  box-shadow: 10px 10px 0 rgba(15, 23, 42, 0.22);
+  padding: 20px;
+}
+
+.settings-confirm-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fef3c7;
+  color: #92400e;
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 1.35rem;
+  font-weight: 950;
+  margin-bottom: 12px;
+}
+
+.settings-confirm-heading h2 {
+  margin: 0;
+  color: var(--settings-text);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.settings-confirm-heading p {
+  margin: 8px 0 0;
+  color: var(--settings-muted);
+  font-size: 0.86rem;
+  font-weight: 760;
+  line-height: 1.45;
+}
+
+.settings-confirm-changes {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.settings-confirm-change {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.78fr) minmax(0, 1.22fr);
+  gap: 12px;
+  align-items: center;
+  border: 2px solid rgba(37, 99, 235, 0.16);
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.86);
+  padding: 12px;
+}
+
+.settings-confirm-change > div:first-child > span {
+  display: block;
+  color: var(--settings-text);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.settings-confirm-change > div:first-child > small {
+  display: block;
+  margin-top: 4px;
+  color: #92400e;
+  font-size: 0.66rem;
+  font-weight: 820;
+  line-height: 1.25;
+}
+
+.settings-confirm-change-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.settings-confirm-change-values p {
+  min-width: 0;
+  border: 1.5px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 9px 10px;
+  margin: 0;
+}
+
+.settings-confirm-change-values span {
+  display: block;
+  color: var(--settings-muted);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.54rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-confirm-change-values strong {
+  display: block;
+  min-width: 0;
+  margin-top: 4px;
+  color: var(--settings-text);
+  font-size: 0.78rem;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.settings-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.settings-confirm-actions .settings-secondary-btn,
+.settings-confirm-actions .settings-primary-btn {
+  min-height: 44px;
+}
+
+html[data-theme="dark"] .settings-confirm-modal {
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98)),
+    #0f172a;
+}
+
+html[data-theme="dark"] .settings-confirm-change {
+  border-color: rgba(148, 163, 184, 0.26);
+  background: rgba(15, 23, 42, 0.72);
+}
+
+html[data-theme="dark"] .settings-confirm-change-values p {
+  border-color: rgba(148, 163, 184, 0.20);
+  background: rgba(2, 6, 23, 0.48);
+}
+
+html[data-theme="dark"] .settings-confirm-change > div:first-child > small {
+  color: #fde68a;
+}
+
+@media (max-width: 620px) {
+  .settings-confirm-overlay {
+    padding: 12px;
+  }
+
+  .settings-confirm-modal {
+    border-radius: 22px;
+    padding: 14px;
+  }
+
+  .settings-confirm-change {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .settings-confirm-change-values {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-confirm-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   SETTINGS CONFIRM MODAL ABOVE SIDEBAR FIX
+   The confirmation modal is now portaled to document.body.
+   This keeps the sidebar/topbar behind the overlay.
+========================================================= */
+
+body:has(.settings-confirm-overlay) {
+  overflow: hidden;
+}
+
+.settings-confirm-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 2147483000 !important;
+}
+
+.settings-confirm-modal {
+  position: relative !important;
+  z-index: 2147483001 !important;
+}
+
+
+
+/* =========================================================
+   SETTINGS CONFIRM MODAL BUTTON VISIBILITY FIX
+   Keeps Cancel and Confirm Save readable inside the modal.
+   Put at the VERY BOTTOM of Settings.css.
+========================================================= */
+
+.settings-confirm-modal .settings-confirm-actions {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.settings-confirm-modal .settings-confirm-actions .settings-secondary-btn,
+.settings-confirm-modal .settings-confirm-actions .settings-primary-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-height: 46px !important;
+  border: 3px solid #162033 !important;
+  border-radius: 999px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.18) !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Cancel button */
+.settings-confirm-modal .settings-confirm-actions .settings-secondary-btn {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Confirm Save button */
+.settings-confirm-modal .settings-confirm-actions .settings-primary-btn {
+  background: #facc15 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+/* Hover */
+.settings-confirm-modal .settings-confirm-actions .settings-secondary-btn:hover:not(:disabled),
+.settings-confirm-modal .settings-confirm-actions .settings-primary-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 6px 6px 0 rgba(15, 23, 42, 0.22) !important;
+}
+
+/* Disabled/loading state should still be readable */
+.settings-confirm-modal .settings-confirm-actions .settings-secondary-btn:disabled,
+.settings-confirm-modal .settings-confirm-actions .settings-primary-btn:disabled {
+  opacity: 0.72 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background: #e5e7eb !important;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .settings-confirm-modal .settings-confirm-actions .settings-secondary-btn {
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+html[data-theme="dark"] .settings-confirm-modal .settings-confirm-actions .settings-primary-btn {
+  border-color: #cbd5e1 !important;
+  background: #facc15 !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}

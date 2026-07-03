@@ -3249,3 +3249,405 @@ html[data-theme="dark"] .return-page .return-header-back-btn {
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
 }
+
+
+
+/* =========================================================
+   RETURN CONFIRMATION TABS + RETURNED ITEMS HISTORY
+   Adds Borrowed / Returned Items tabs, returned date filter,
+   compact returned table, and load more support.
+========================================================= */
+
+.return-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.return-tab-btn {
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 rgba(30, 41, 59, 0.12);
+  color: var(--qb-foreground);
+  padding: 0 13px;
+  font-family: var(--qb-heading-font);
+  cursor: pointer;
+  transition:
+    transform 180ms var(--qb-ease-bounce),
+    box-shadow 180ms var(--qb-ease-bounce),
+    background 180ms ease;
+}
+
+.return-tab-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(30, 41, 59, 0.18);
+}
+
+.return-tab-btn.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.return-tab-btn span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.return-tab-btn strong {
+  min-width: 30px;
+  min-height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 0 8px;
+  font-size: 0.7rem;
+  font-weight: 950;
+}
+
+.return-returned-heading {
+  align-items: center;
+}
+
+.return-returned-actions {
+  display: grid;
+  grid-template-columns: 150px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.return-returned-actions select {
+  width: 100%;
+  min-height: 40px;
+  border: 2px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 12px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  outline: none;
+}
+
+.return-returned-table-header,
+.return-returned-row {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 1.1fr)
+    minmax(165px, 1.18fr)
+    minmax(110px, 0.78fr)
+    128px
+    126px
+    104px
+    126px;
+  gap: 8px;
+  align-items: center;
+}
+
+.return-returned-table-header {
+  border: 2px solid var(--qb-border);
+  border-radius: 18px 18px 10px 10px;
+  background: var(--qb-bg);
+  padding: 9px 11px;
+  margin-bottom: 8px;
+}
+
+.return-returned-table-header span {
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.54rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.return-returned-table-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.return-returned-row {
+  min-height: 58px;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 rgba(30, 41, 59, 0.12);
+  padding: 9px 11px;
+}
+
+.return-returned-cell {
+  min-width: 0;
+}
+
+.return-returned-cell span {
+  display: none;
+}
+
+.return-returned-cell strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qb-foreground);
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.return-returned-item-cell span,
+.return-returned-borrower-cell span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.5rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.return-returned-status-cell {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.return-returned-status-pill {
+  width: 100%;
+  max-width: 112px;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #166534;
+  padding: 0 8px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.46rem;
+  font-weight: 950;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.return-returned-status-pill.status-returned-late {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.return-returned-load-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.return-returned-load-more-row .return-secondary-btn {
+  width: min(320px, 100%);
+}
+
+/* Dark mode */
+html[data-theme="dark"] .return-tab-btn,
+html[data-theme="dark"] .return-returned-row {
+  background: var(--qb-bg);
+  color: var(--qb-foreground);
+}
+
+html[data-theme="dark"] .return-tab-btn.active {
+  background: rgba(37, 99, 235, 0.24);
+  color: #bfdbfe;
+}
+
+html[data-theme="dark"] .return-tab-btn strong,
+html[data-theme="dark"] .return-returned-actions select {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .return-returned-status-pill {
+  background: #bbf7d0;
+  color: #052e16;
+}
+
+html[data-theme="dark"] .return-returned-status-pill.status-returned-late {
+  background: #fecaca;
+  color: #450a0a;
+}
+
+/* Desktop overflow safety */
+@media (max-width: 1280px) {
+  .return-returned-table-header,
+  .return-returned-row {
+    grid-template-columns:
+      minmax(135px, 1.05fr)
+      minmax(145px, 1.12fr)
+      minmax(95px, 0.75fr)
+      112px
+      112px
+      92px
+      108px;
+  }
+
+  .return-returned-cell strong {
+    font-size: 0.64rem;
+  }
+
+  .return-returned-status-pill {
+    max-width: 100px;
+    font-size: 0.42rem;
+  }
+}
+
+/* Mobile cards for returned items */
+@media (max-width: 860px) {
+  .return-tabs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .return-returned-heading {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .return-returned-actions {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .return-returned-actions select,
+  .return-returned-actions .return-secondary-btn {
+    width: 100%;
+  }
+
+  .return-returned-table-header {
+    display: none;
+  }
+
+  .return-returned-row {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .return-returned-cell {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    border: 2px solid var(--qb-border);
+    border-radius: 12px;
+    background: var(--qb-bg);
+    padding: 8px 10px;
+  }
+
+  .return-returned-cell span {
+    display: block;
+    color: var(--qb-muted-foreground);
+    font-family: var(--qb-heading-font);
+    font-size: 0.55rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .return-returned-cell strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 0.72rem;
+  }
+
+  .return-returned-status-cell {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .return-returned-status-pill {
+    width: 100%;
+    max-width: 100%;
+    min-height: 34px;
+    font-size: 0.56rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .return-tabs {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .return-tab-btn {
+    min-height: 34px;
+    border-radius: 12px;
+    padding: 0 9px;
+  }
+
+  .return-tab-btn span {
+    font-size: 0.52rem;
+  }
+
+  .return-tab-btn strong {
+    min-width: 24px;
+    min-height: 22px;
+    font-size: 0.56rem;
+  }
+
+  .return-returned-actions select {
+    min-height: 30px;
+    font-size: 0.52rem;
+  }
+
+  .return-returned-row {
+    gap: 5px;
+    padding: 7px;
+    border-radius: 11px;
+    box-shadow: 2px 2px 0 rgba(30, 41, 59, 0.12);
+  }
+
+  .return-returned-cell {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 5px;
+    padding: 5px 6px;
+    border-radius: 8px;
+  }
+
+  .return-returned-cell span {
+    font-size: 0.42rem;
+    line-height: 1.05;
+  }
+
+  .return-returned-cell strong {
+    font-size: 0.58rem;
+  }
+
+  .return-returned-status-pill {
+    min-height: 28px;
+    font-size: 0.46rem;
+  }
+
+  .return-returned-load-more-row {
+    padding-top: 8px;
+  }
+}

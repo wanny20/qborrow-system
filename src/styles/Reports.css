@@ -6950,3 +6950,771 @@ html[data-theme="dark"] .reports-page .reports-category-grid::-webkit-scrollbar-
 html[data-theme="dark"] .reports-page .reports-category-grid::-webkit-scrollbar-thumb {
   background: rgba(147, 197, 253, 0.38) !important;
 }
+
+
+
+/* =========================================================
+   REPORTS MODULE SUBNAV + SUBMODULE CLEANUP
+   Reports Dashboard no longer repeats Frequently Borrowed,
+   Borrowing History, Overdue Items, and Damaged/Lost sections.
+========================================================= */
+
+.reports-module-nav {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.28fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 2px solid var(--reports-hard-outline, #1f2937);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.92), rgba(254, 249, 195, 0.55)),
+    var(--reports-surface, #ffffff);
+  box-shadow: 7px 7px 0 rgba(31, 41, 55, 0.10);
+  padding: 14px;
+}
+
+.reports-module-nav-title {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.reports-module-nav-title span {
+  color: var(--reports-muted);
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reports-module-nav-title strong {
+  color: var(--reports-text);
+  font-size: 0.95rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.reports-module-nav-actions {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reports-module-tab {
+  min-width: 0;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #bfdbfe;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1e40af;
+  padding: 0 12px;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.reports-module-tab:hover {
+  transform: translateY(-1px);
+  border-color: #2563eb;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.12);
+}
+
+.reports-module-tab.active {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22);
+}
+
+.reports-module-panel .reports-section-heading {
+  align-items: center;
+}
+
+.reports-module-list {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.reports-rank-pill {
+  width: fit-content;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--reports-blue-soft, #eff6ff);
+  color: var(--reports-blue-dark, #1d4ed8);
+  padding: 0 9px;
+  margin-bottom: 6px;
+  font-size: 0.58rem;
+  font-weight: 950;
+}
+
+html[data-theme="dark"] .reports-module-nav {
+  border-color: rgba(203, 213, 225, 0.42);
+  background: #111827;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.24);
+}
+
+html[data-theme="dark"] .reports-module-tab {
+  border-color: rgba(147, 197, 253, 0.34);
+  background: #0f172a;
+  color: #dbeafe;
+}
+
+html[data-theme="dark"] .reports-module-tab.active {
+  border-color: #60a5fa;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+}
+
+@media (max-width: 1180px) {
+  .reports-module-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-module-nav-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-module-nav {
+    border-radius: 18px;
+    padding: 10px;
+  }
+
+  .reports-module-nav-actions {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reports-module-tab {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.54rem;
+    white-space: nowrap;
+  }
+
+  .reports-module-nav-title strong {
+    font-size: 0.82rem;
+  }
+
+  .reports-module-panel .reports-section-heading {
+    align-items: stretch;
+  }
+}
+
+
+
+/* =========================================================
+   REPORTS INTERNAL MODULE TABS REMOVED
+   Sidebar now handles Reports submodule navigation, so the
+   in-page Reports Module tab card should never show.
+========================================================= */
+
+.reports-page .reports-module-nav {
+  display: none !important;
+}
+
+
+
+/* =========================================================
+   REPORTS SUBMODULE EXPORT BUTTON CLEANUP
+   Export CSV buttons are now only shown on Reports Dashboard.
+   Submodules keep date filter, refresh, reset, and print controls.
+========================================================= */
+
+.reports-page .reports-control-export-panel .reports-export-range-row:last-child {
+  margin-bottom: 0;
+}
+
+
+
+/* =========================================================
+   REPORTS MODULE ACTION CLEANUP
+   - Print / Save PDF only appears in Reports Dashboard.
+   - Submodule control action becomes the relevant CSV export button.
+   - Frequently Borrowed has no extra export action.
+========================================================= */
+
+.reports-page .reports-inline-export-btn {
+  background: linear-gradient(135deg, var(--reports-blue), var(--reports-blue-dark)) !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  color: #ffffff !important;
+}
+
+.reports-page .reports-module-panel .reports-section-heading {
+  align-items: center;
+}
+
+.reports-page .reports-module-panel .reports-section-heading > div {
+  min-width: 0;
+}
+
+/* When a submodule has no right-side header action, keep text clean and full-width. */
+.reports-page .reports-frequently-borrowed-panel .reports-section-heading,
+.reports-page .reports-overdue-panel .reports-section-heading,
+.reports-page .reports-damaged-lost-panel .reports-section-heading {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-export-range-row {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-page .reports-inline-export-btn {
+    width: 100%;
+  }
+}
+
+
+
+/* =========================================================
+   LATE / OVERDUE RETURNS REPORT
+   Turns the old current-only Overdue module into a report that
+   includes current overdue records and returned-late history.
+========================================================= */
+
+.reports-page .reports-late-overdue-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.reports-page .reports-late-overdue-summary > div {
+  min-width: 0;
+  border: 1px solid var(--reports-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(254, 242, 242, 0.72), rgba(255, 255, 255, 0.96)),
+    var(--reports-surface);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  padding: 12px;
+}
+
+.reports-page .reports-late-overdue-summary span {
+  display: block;
+  color: var(--reports-muted);
+  font-size: 0.58rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reports-page .reports-late-overdue-summary strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--reports-text);
+  font-size: 1.35rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.reports-page .reports-overdue-panel .reports-mini-card > strong {
+  max-width: 160px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.1;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-summary > div {
+  border-color: rgba(203, 213, 225, 0.30);
+  background: rgba(15, 23, 42, 0.82);
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-summary span {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-summary strong {
+  color: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-late-overdue-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+/* =========================================================
+   LATE / OVERDUE RETURNS COMPACT TABLE
+   Replaces the large card grid with a compact report table.
+========================================================= */
+
+.reports-page .reports-late-overdue-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 2px solid #1f2937;
+  border-radius: 22px;
+  background: var(--reports-surface);
+  box-shadow: 6px 6px 0 rgba(15, 23, 42, 0.08);
+}
+
+.reports-page .reports-late-overdue-table-header,
+.reports-page .reports-late-overdue-table-row {
+  min-width: 1040px;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.15fr)
+    minmax(220px, 1.25fr)
+    minmax(130px, 0.85fr)
+    112px
+    112px
+    118px
+    150px;
+  gap: 10px;
+  align-items: center;
+}
+
+.reports-page .reports-late-overdue-table-header {
+  border-bottom: 2px solid #1f2937;
+  background: var(--reports-blue-soft);
+  padding: 12px 14px;
+}
+
+.reports-page .reports-late-overdue-table-header span {
+  color: var(--reports-muted);
+  font-size: 0.58rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.reports-page .reports-late-overdue-table-grid {
+  display: grid;
+}
+
+.reports-page .reports-late-overdue-table-row {
+  min-height: 72px;
+  border-bottom: 1px solid var(--reports-border);
+  background: var(--reports-surface);
+  padding: 10px 14px;
+}
+
+.reports-page .reports-late-overdue-table-row:last-child {
+  border-bottom: 0;
+}
+
+.reports-page .reports-late-overdue-table-row:hover {
+  background: rgba(239, 246, 255, 0.68);
+}
+
+.reports-page .reports-late-overdue-table-cell {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.reports-page .reports-late-overdue-table-cell > span {
+  display: none;
+}
+
+.reports-page .reports-late-overdue-table-cell strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--reports-text);
+  font-size: 0.76rem;
+  font-weight: 950;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-page .reports-late-overdue-table-cell small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--reports-muted);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-page .reports-late-overdue-type-cell {
+  justify-items: center;
+}
+
+.reports-page .reports-late-overdue-type-cell strong {
+  width: fit-content;
+  max-width: 140px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--reports-danger-soft);
+  color: #991b1b;
+  padding: 0 10px;
+  font-size: 0.58rem;
+  font-weight: 950;
+  letter-spacing: 0.035em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+/* Dark mode */
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-wrap {
+  border-color: rgba(203, 213, 225, 0.42);
+  background: #0f172a;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-header {
+  border-bottom-color: rgba(203, 213, 225, 0.42);
+  background: #1e293b;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-header span {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-row {
+  border-bottom-color: rgba(203, 213, 225, 0.18);
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-row:hover {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-cell strong {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-table-cell small {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-type-cell strong {
+  background: #fecaca;
+  color: #450a0a;
+}
+
+/* Mobile: keep compact but readable as side-scroll table */
+@media (max-width: 760px) {
+  .reports-page .reports-late-overdue-table-wrap {
+    border-radius: 18px;
+  }
+
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 860px;
+    grid-template-columns:
+      160px
+      190px
+      116px
+      96px
+      96px
+      104px
+      118px;
+    gap: 8px;
+  }
+
+  .reports-page .reports-late-overdue-table-header {
+    padding: 10px;
+  }
+
+  .reports-page .reports-late-overdue-table-row {
+    min-height: 64px;
+    padding: 9px 10px;
+  }
+
+  .reports-page .reports-late-overdue-table-cell strong {
+    font-size: 0.68rem;
+  }
+
+  .reports-page .reports-late-overdue-table-cell small {
+    font-size: 0.58rem;
+  }
+
+  .reports-page .reports-late-overdue-type-cell strong {
+    max-width: 112px;
+    min-height: 26px;
+    font-size: 0.5rem;
+    padding: 0 8px;
+  }
+}
+
+
+
+/* =========================================================
+   LATE / OVERDUE RETURNS TABLE WIDTH + LOAD MORE FIX
+   Keeps the table compact, prevents the status pill from
+   overflowing outside the table, and supports 10-row pagination.
+========================================================= */
+
+.reports-page .reports-late-overdue-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.reports-page .reports-late-overdue-table-header,
+.reports-page .reports-late-overdue-table-row {
+  width: 100% !important;
+  min-width: 980px !important;
+  max-width: none !important;
+  grid-template-columns:
+    minmax(170px, 1.15fr)
+    minmax(205px, 1.25fr)
+    minmax(120px, 0.78fr)
+    minmax(96px, 0.62fr)
+    minmax(96px, 0.62fr)
+    minmax(104px, 0.66fr)
+    minmax(132px, 0.74fr) !important;
+  gap: 8px !important;
+}
+
+.reports-page .reports-late-overdue-table-row {
+  min-height: 64px !important;
+  padding: 9px 12px !important;
+}
+
+.reports-page .reports-late-overdue-type-cell {
+  min-width: 0 !important;
+  justify-items: center !important;
+  overflow: hidden !important;
+}
+
+.reports-page .reports-late-overdue-type-cell strong {
+  width: 100% !important;
+  max-width: 122px !important;
+  min-width: 0 !important;
+  min-height: 26px !important;
+  padding: 0 8px !important;
+  overflow: hidden !important;
+  font-size: 0.52rem !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.reports-page .reports-late-overdue-load-more-row {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0 14px;
+  margin: 0;
+  border-top: 1px solid var(--reports-border);
+  background: var(--reports-surface);
+}
+
+.reports-page .reports-late-overdue-load-more-row .reports-secondary-btn {
+  min-width: 220px;
+}
+
+/* Large screens: table should stretch to the card width without leaving an awkward empty area. */
+@media (min-width: 1180px) {
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 100% !important;
+  }
+}
+
+/* Mobile/tablet: keep a controlled side-scroll table. */
+@media (max-width: 760px) {
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 820px !important;
+    grid-template-columns:
+      145px
+      170px
+      104px
+      88px
+      88px
+      96px
+      104px !important;
+    gap: 7px !important;
+  }
+
+  .reports-page .reports-late-overdue-table-row {
+    min-height: 58px !important;
+    padding: 8px 9px !important;
+  }
+
+  .reports-page .reports-late-overdue-type-cell strong {
+    max-width: 98px !important;
+    min-height: 24px !important;
+    font-size: 0.46rem !important;
+  }
+
+  .reports-page .reports-late-overdue-load-more-row {
+    padding: 10px 0 12px;
+  }
+
+  .reports-page .reports-late-overdue-load-more-row .reports-secondary-btn {
+    width: min(220px, 100%);
+    min-width: 0;
+  }
+}
+
+/* Dark mode support for the load more footer */
+html[data-theme="dark"] .reports-page .reports-late-overdue-load-more-row {
+  border-top-color: rgba(203, 213, 225, 0.18);
+  background: #0f172a;
+}
+
+
+
+/* =========================================================
+   FINAL FIX - LATE / OVERDUE RETURNS STATUS OVERLAP
+   Put this at the VERY BOTTOM of Reports.css.
+   Fixes Returned Late pill overflowing outside the table.
+========================================================= */
+
+.reports-page .reports-late-overdue-table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  border-radius: 22px !important;
+}
+
+.reports-page .reports-late-overdue-table-header,
+.reports-page .reports-late-overdue-table-row {
+  width: 100% !important;
+  max-width: none !important;
+  display: grid !important;
+  align-items: center !important;
+  grid-template-columns:
+    minmax(160px, 1.12fr)
+    minmax(185px, 1.18fr)
+    minmax(105px, 0.72fr)
+    minmax(88px, 0.58fr)
+    minmax(88px, 0.58fr)
+    minmax(94px, 0.62fr)
+    118px !important;
+  gap: 8px !important;
+}
+
+@media (min-width: 1041px) {
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 0 !important;
+  }
+}
+
+.reports-page .reports-late-overdue-type-cell {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 118px !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+.reports-page .reports-late-overdue-type-cell strong {
+  width: 104px !important;
+  max-width: 104px !important;
+  min-width: 0 !important;
+  min-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  padding: 0 8px !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  font-size: 0.46rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-overflow: ellipsis !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+/* Keep all table text from forcing columns wider than the table. */
+.reports-page .reports-late-overdue-table-cell,
+.reports-page .reports-late-overdue-table-cell strong,
+.reports-page .reports-late-overdue-table-cell small {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* Medium widths: allow controlled horizontal scroll instead of overlap. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 900px !important;
+    grid-template-columns:
+      145px
+      170px
+      104px
+      86px
+      86px
+      92px
+      104px !important;
+  }
+
+  .reports-page .reports-late-overdue-type-cell {
+    max-width: 104px !important;
+  }
+
+  .reports-page .reports-late-overdue-type-cell strong {
+    width: 94px !important;
+    max-width: 94px !important;
+    font-size: 0.42rem !important;
+  }
+}
+
+/* Mobile: smaller fixed status column, still horizontally scrollable. */
+@media (max-width: 760px) {
+  .reports-page .reports-late-overdue-table-header,
+  .reports-page .reports-late-overdue-table-row {
+    min-width: 760px !important;
+    grid-template-columns:
+      132px
+      150px
+      90px
+      80px
+      80px
+      86px
+      92px !important;
+    gap: 6px !important;
+  }
+
+  .reports-page .reports-late-overdue-type-cell {
+    max-width: 92px !important;
+  }
+
+  .reports-page .reports-late-overdue-type-cell strong {
+    width: 82px !important;
+    max-width: 82px !important;
+    min-height: 24px !important;
+    padding: 0 6px !important;
+    font-size: 0.38rem !important;
+  }
+}
+
+html[data-theme="dark"] .reports-page .reports-late-overdue-type-cell strong {
+  background: #fecaca !important;
+  color: #450a0a !important;
+}

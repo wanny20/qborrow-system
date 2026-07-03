@@ -20,6 +20,8 @@ import { useToast } from "../components/ToastContext.jsx";
 import ConfirmActionModal from "../components/ConfirmActionModal.jsx";
 import "../styles/ReturnConfirmation.css";
 
+const RETURNED_ITEMS_PAGE_SIZE = 10;
+
 function ReturnConfirmation() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
@@ -35,10 +37,16 @@ function ReturnConfirmation() {
   const today = getTodayDate();
 
   const [requests, setRequests] = useState([]);
+  const [returnedRequests, setReturnedRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualItemId, setManualItemId] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [viewingBorrowedRequest, setViewingBorrowedRequest] = useState(null);
+  const [activeReturnTab, setActiveReturnTab] = useState("borrowed");
+  const [returnedDateFilter, setReturnedDateFilter] = useState("today");
+  const [visibleReturnedCount, setVisibleReturnedCount] = useState(
+    RETURNED_ITEMS_PAGE_SIZE
+  );
 
   const [actualReturnDate] = useState(today);
   const [returnCondition, setReturnCondition] = useState("Good");
@@ -247,6 +255,160 @@ function isReturnBusy() {
     return userData?.uid || auth.currentUser?.uid || "";
   }
 
+  function getAdminEmail() {
+    return userData?.email || auth.currentUser?.email || "";
+  }
+
+  function isDamagedLostCondition(value) {
+    return ["Damaged", "Lost"].includes(String(value || ""));
+  }
+
+  function formatDateKey(date) {
+    const safeDate = date instanceof Date ? date : new Date(date);
+
+    if (Number.isNaN(safeDate.getTime())) {
+      return "";
+    }
+
+    const timezoneOffset = safeDate.getTimezoneOffset() * 60000;
+
+    return new Date(safeDate.getTime() - timezoneOffset)
+      .toISOString()
+      .split("T")[0];
+  }
+
+  function getComparableDateKey(value) {
+    if (!value) return "";
+
+    if (typeof value?.toDate === "function") {
+      return formatDateKey(value.toDate());
+    }
+
+    if (typeof value?.toMillis === "function") {
+      return formatDateKey(new Date(value.toMillis()));
+    }
+
+    if (value?.seconds) {
+      return formatDateKey(new Date(value.seconds * 1000));
+    }
+
+    const textValue = String(value || "").trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) {
+      return textValue;
+    }
+
+    const parsedDate = new Date(textValue);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "";
+    }
+
+    return formatDateKey(parsedDate);
+  }
+
+  function getReturnedFilterStartDate(filterValue) {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+
+    if (filterValue === "week") {
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      date.setDate(diff);
+      return formatDateKey(date);
+    }
+
+    if (filterValue === "month") {
+      date.setDate(1);
+      return formatDateKey(date);
+    }
+
+    return today;
+  }
+
+  function getReturnedDateFilterLabel(filterValue) {
+    if (filterValue === "week") return "this week";
+    if (filterValue === "month") return "this month";
+
+    return "today";
+  }
+
+  function getReturnedRecordDate(request) {
+    return (
+      getComparableDateKey(request.actualReturnDate) ||
+      getComparableDateKey(request.returnedAt)
+    );
+  }
+
+  function getReturnedTime(request) {
+    if (request.returnedAt?.toMillis) return request.returnedAt.toMillis();
+    if (request.returnedAt?.seconds) return request.returnedAt.seconds * 1000;
+
+    const recordDate = getReturnedRecordDate(request);
+
+    if (recordDate) {
+      const parsedDate = new Date(recordDate).getTime();
+
+      if (!Number.isNaN(parsedDate)) {
+        return parsedDate;
+      }
+    }
+
+    return 0;
+  }
+
+  function isReturnedRequestInsideFilter(request) {
+    const recordDate = getReturnedRecordDate(request);
+
+    if (!recordDate) {
+      return returnedDateFilter === "month";
+    }
+
+    const startDate = getReturnedFilterStartDate(returnedDateFilter);
+    const endDate = today;
+
+    return recordDate >= startDate && recordDate <= endDate;
+  }
+
+  function formatReturnedDateTime(request) {
+    if (request.returnedAt?.toDate) {
+      return request.returnedAt.toDate().toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+
+    if (request.returnedAt?.seconds) {
+      return new Date(request.returnedAt.seconds * 1000).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    }
+
+    return request.actualReturnDate || "Not set";
+  }
+
+  function isReturnedLateRequest(request) {
+    const expectedReturnDate = getComparableDateKey(request.expectedReturnDate);
+    const actualReturnedDate = getComparableDateKey(request.actualReturnDate);
+
+    if (!expectedReturnDate || !actualReturnedDate) return false;
+
+    return actualReturnedDate > expectedReturnDate;
+  }
+
+  function getReturnedStatusLabel(request) {
+    if (isReturnedLateRequest(request)) return "Returned Late";
+
+    return "Returned";
+  }
+
   function getRequestCategoryId(request) {
     return request.categoryId || request.category || "";
   }
@@ -374,6 +536,32 @@ async function fetchBorrowedRequests(options = {}) {
   }
 }
 
+async function fetchReturnedRequests(options = {}) {
+  const { showSuccessToast = false } = options;
+
+  try {
+    const returnedQuery = firestoreQuery(
+      collection(db, "borrowRequests"),
+      where("approvalStatus", "==", "Returned")
+    );
+
+    const querySnapshot = await getDocs(returnedQuery);
+
+    const requestData = querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }));
+
+    setReturnedRequests(requestData);
+
+    if (showSuccessToast) {
+      showToast("Returned items refreshed", "success");
+    }
+  } catch (error) {
+    showActionError("Failed to load returned items", error);
+  }
+}
+
   const visibleBorrowedRequests = useMemo(() => {
     if (isCategoryAdmin) {
       return requests.filter((request) => canCategoryAdminSeeRequest(request));
@@ -381,6 +569,21 @@ async function fetchBorrowedRequests(options = {}) {
 
     return requests;
   }, [requests, userData]);
+
+  const visibleReturnedRequests = useMemo(() => {
+    const categoryVisibleRequests = isCategoryAdmin
+      ? returnedRequests.filter((request) => canCategoryAdminSeeRequest(request))
+      : returnedRequests;
+
+    return [...categoryVisibleRequests]
+      .filter((request) => isReturnedRequestInsideFilter(request))
+      .sort((a, b) => getReturnedTime(b) - getReturnedTime(a));
+  }, [returnedRequests, userData, returnedDateFilter, today]);
+
+  const displayedReturnedRequests = visibleReturnedRequests.slice(
+    0,
+    visibleReturnedCount
+  );
 
   function selectBorrowedRequest(request) {
   if (confirming) return;
@@ -582,11 +785,24 @@ async function handleReturn() {
           updatedAt: serverTimestamp(),
         });
 
-        await updateDoc(itemRef, {
+        const itemUpdatePayload = {
           availability: getNewItemAvailability(),
           condition: selectedReturnCondition,
           updatedAt: serverTimestamp(),
-        });
+        };
+
+        if (isDamagedLostCondition(selectedReturnCondition)) {
+          itemUpdatePayload.damagedLostAt = serverTimestamp();
+          itemUpdatePayload.damagedLostDate = actualReturnDate;
+          itemUpdatePayload.damagedLostBy = getAdminId();
+          itemUpdatePayload.damagedLostByEmail = getAdminEmail();
+          itemUpdatePayload.damagedLostStatus = selectedReturnCondition;
+          itemUpdatePayload.damagedLostReport = selectedDamageLostReport;
+          itemUpdatePayload.damagedLostSource = "returnConfirmation";
+          itemUpdatePayload.damagedLostRequestId = latestRequest.id;
+        }
+
+        await updateDoc(itemRef, itemUpdatePayload);
 
         await updateBorrowerOverdueRecord(latestRequest);
 
@@ -601,7 +817,7 @@ async function handleReturn() {
           link: "/my-requests",
         });
 
-        if (selectedReturnCondition === "Damaged" || selectedReturnCondition === "Lost") {
+        if (isDamagedLostCondition(selectedReturnCondition)) {
           await addDoc(collection(db, "notifications"), {
             userId: "",
             targetRole: "categoryAdmin",
@@ -610,7 +826,7 @@ async function handleReturn() {
             message: `${latestRequest.itemName} was returned as ${selectedReturnCondition}.`,
             status: "Unread",
             createdAt: serverTimestamp(),
-            link: "/reports",
+            link: "/reports?module=damagedLostItems",
           });
         }
 
@@ -622,6 +838,7 @@ async function handleReturn() {
         setDamageLostReport("");
 
         await fetchBorrowedRequests();
+        await fetchReturnedRequests();
       } catch (error) {
         showActionError("Failed to confirm return", error);
       } finally {
@@ -633,7 +850,12 @@ async function handleReturn() {
 
   useEffect(() => {
     fetchBorrowedRequests();
+    fetchReturnedRequests();
   }, []);
+
+  useEffect(() => {
+    setVisibleReturnedCount(RETURNED_ITEMS_PAGE_SIZE);
+  }, [activeReturnTab, returnedDateFilter, userData?.assignedCategories?.join("|")]);
 
   useEffect(() => {
     if (!scannerOpen) return;
@@ -1097,105 +1319,262 @@ return (
       </section>
 
       <section className="return-queue-panel">
-        <div className="return-section-heading">
-          <div>
-            <h2>Borrowed Items for Return</h2>
-            <p>
-              Showing {visibleBorrowedRequests.length} borrowed request
-              {visibleBorrowedRequests.length === 1 ? "" : "s"}.
-            </p>
-          </div>
-
-        <button
-          type="button"
-          className="return-secondary-btn"
-          onClick={() => fetchBorrowedRequests({ showSuccessToast: true })}
-          disabled={confirming}
-        >
-          Refresh
-        </button>
-        </div>
-
-        {visibleBorrowedRequests.length === 0 ? (
-          <div className="return-empty">
-            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-            <h2>No borrowed items</h2>
-            <p>No items are currently waiting for return.</p>
-          </div>
-        ) : (
-<>
-  <div className="return-borrowed-table-header">
-    <span>Item</span>
-    <span>Borrower</span>
-    <span>Category</span>
-    <span>Expected Return</span>
-    <span>Status</span>
-    <span>Actions</span>
-  </div>
-
-  <div className="return-borrowed-table-grid">
-    {visibleBorrowedRequests.map((request) => (
-      <article
-        className={`return-borrowed-row ${
-          selectedRequest?.id === request.id ? "selected" : ""
-        }`}
-        key={request.id}
-      >
-        <div className="return-borrowed-cell return-borrowed-item-cell">
-          <span>{request.itemCode || request.itemId}</span>
-          <strong>{request.itemName || "Untitled Item"}</strong>
-        </div>
-
-        <div className="return-borrowed-cell return-borrowed-borrower-cell">
-          <span>{request.borrowerEmail || "No email"}</span>
-          <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
-        </div>
-
-        <div className="return-borrowed-cell">
-          <span>Category</span>
-          <strong>{getRequestCategoryName(request)}</strong>
-        </div>
-
-        <div className="return-borrowed-cell">
-          <span>Expected Return</span>
-          <strong>{request.expectedReturnDate || "Not set"}</strong>
-        </div>
-
-        <div className="return-borrowed-status-cell">
-          <strong
-            className={
-              isOverdue(request.expectedReturnDate)
-                ? "return-overdue-pill overdue"
-                : "return-overdue-pill good"
-            }
-          >
-            {getOverdueStatus(request.expectedReturnDate)}
-          </strong>
-        </div>
-
-        <div className="return-borrowed-actions">
+        <div className="return-tabs" role="tablist" aria-label="Return confirmation tabs">
           <button
             type="button"
-            className="return-secondary-btn"
-            onClick={() => setViewingBorrowedRequest(request)}
-            disabled={confirming}
+            className={`return-tab-btn ${
+              activeReturnTab === "borrowed" ? "active" : ""
+            }`}
+            onClick={() => setActiveReturnTab("borrowed")}
           >
-            Details
+            <span>Borrowed</span>
+            <strong>{visibleBorrowedRequests.length}</strong>
           </button>
 
           <button
             type="button"
-            className="return-primary-btn"
-            onClick={() => selectBorrowedRequest(request)}
-            disabled={confirming || selectedRequest?.id === request.id}
+            className={`return-tab-btn ${
+              activeReturnTab === "returnedItems" ? "active" : ""
+            }`}
+            onClick={() => setActiveReturnTab("returnedItems")}
           >
-            {selectedRequest?.id === request.id ? "Selected" : "Select"}
+            <span>Returned Items</span>
+            <strong>{visibleReturnedRequests.length}</strong>
           </button>
         </div>
-      </article>
-    ))}
-  </div>
-</>
+
+        {activeReturnTab === "borrowed" && (
+          <>
+            <div className="return-section-heading">
+              <div>
+                <h2>Borrowed Items for Return</h2>
+                <p>
+                  Showing {visibleBorrowedRequests.length} borrowed request
+                  {visibleBorrowedRequests.length === 1 ? "" : "s"}.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="return-secondary-btn"
+                onClick={() => fetchBorrowedRequests({ showSuccessToast: true })}
+                disabled={confirming}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {visibleBorrowedRequests.length === 0 ? (
+              <div className="return-empty">
+                <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+                <h2>No borrowed items</h2>
+                <p>No items are currently waiting for return.</p>
+              </div>
+            ) : (
+              <>
+                <div className="return-borrowed-table-header">
+                  <span>Item</span>
+                  <span>Borrower</span>
+                  <span>Category</span>
+                  <span>Expected Return</span>
+                  <span>Status</span>
+                  <span>Actions</span>
+                </div>
+
+                <div className="return-borrowed-table-grid">
+                  {visibleBorrowedRequests.map((request) => (
+                    <article
+                      className={`return-borrowed-row ${
+                        selectedRequest?.id === request.id ? "selected" : ""
+                      }`}
+                      key={request.id}
+                    >
+                      <div className="return-borrowed-cell return-borrowed-item-cell">
+                        <span>{request.itemCode || request.itemId}</span>
+                        <strong>{request.itemName || "Untitled Item"}</strong>
+                      </div>
+
+                      <div className="return-borrowed-cell return-borrowed-borrower-cell">
+                        <span>{request.borrowerEmail || "No email"}</span>
+                        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                      </div>
+
+                      <div className="return-borrowed-cell">
+                        <span>Category</span>
+                        <strong>{getRequestCategoryName(request)}</strong>
+                      </div>
+
+                      <div className="return-borrowed-cell">
+                        <span>Expected Return</span>
+                        <strong>{request.expectedReturnDate || "Not set"}</strong>
+                      </div>
+
+                      <div className="return-borrowed-status-cell">
+                        <strong
+                          className={
+                            isOverdue(request.expectedReturnDate)
+                              ? "return-overdue-pill overdue"
+                              : "return-overdue-pill good"
+                          }
+                        >
+                          {getOverdueStatus(request.expectedReturnDate)}
+                        </strong>
+                      </div>
+
+                      <div className="return-borrowed-actions">
+                        <button
+                          type="button"
+                          className="return-secondary-btn"
+                          onClick={() => setViewingBorrowedRequest(request)}
+                          disabled={confirming}
+                        >
+                          Details
+                        </button>
+
+                        <button
+                          type="button"
+                          className="return-primary-btn"
+                          onClick={() => selectBorrowedRequest(request)}
+                          disabled={confirming || selectedRequest?.id === request.id}
+                        >
+                          {selectedRequest?.id === request.id ? "Selected" : "Select"}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {activeReturnTab === "returnedItems" && (
+          <>
+            <div className="return-section-heading return-returned-heading">
+              <div>
+                <h2>Returned Items</h2>
+                <p>
+                  Showing {displayedReturnedRequests.length} of{" "}
+                  {visibleReturnedRequests.length} returned item
+                  {visibleReturnedRequests.length === 1 ? "" : "s"} for{" "}
+                  {getReturnedDateFilterLabel(returnedDateFilter)}.
+                </p>
+              </div>
+
+              <div className="return-returned-actions">
+                <select
+                  value={returnedDateFilter}
+                  onChange={(event) => setReturnedDateFilter(event.target.value)}
+                  aria-label="Returned items date filter"
+                >
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                </select>
+
+                <button
+                  type="button"
+                  className="return-secondary-btn"
+                  onClick={() => fetchReturnedRequests({ showSuccessToast: true })}
+                  disabled={confirming}
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {visibleReturnedRequests.length === 0 ? (
+              <div className="return-empty">
+                <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+                <h2>No returned items</h2>
+                <p>No returned item records found for this date filter.</p>
+              </div>
+            ) : (
+              <>
+                <div className="return-returned-table-header">
+                  <span>Item</span>
+                  <span>Borrower</span>
+                  <span>Category</span>
+                  <span>Returned</span>
+                  <span>Expected Return</span>
+                  <span>Condition</span>
+                  <span>Status</span>
+                </div>
+
+                <div className="return-returned-table-grid">
+                  {displayedReturnedRequests.map((request) => (
+                    <article className="return-returned-row" key={request.id}>
+                      <div className="return-returned-cell return-returned-item-cell">
+                        <span>{request.itemCode || request.itemId || "No code"}</span>
+                        <strong>{request.itemName || "Untitled Item"}</strong>
+                      </div>
+
+                      <div className="return-returned-cell return-returned-borrower-cell">
+                        <span>{request.borrowerEmail || "No email"}</span>
+                        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                      </div>
+
+                      <div className="return-returned-cell">
+                        <span>Category</span>
+                        <strong>{getRequestCategoryName(request)}</strong>
+                      </div>
+
+                      <div className="return-returned-cell">
+                        <span>Returned</span>
+                        <strong>{formatReturnedDateTime(request)}</strong>
+                      </div>
+
+                      <div className="return-returned-cell">
+                        <span>Expected Return</span>
+                        <strong>{request.expectedReturnDate || "Not set"}</strong>
+                      </div>
+
+                      <div className="return-returned-cell">
+                        <span>Condition</span>
+                        <strong>{request.returnCondition || "Not set"}</strong>
+                      </div>
+
+                      <div className="return-returned-status-cell">
+                        <span
+                          className={`return-returned-status-pill status-${normalizeText(
+                            getReturnedStatusLabel(request)
+                          ).replace(/\s+/g, "-")}`}
+                          title={
+                            isReturnedLateRequest(request)
+                              ? `Returned late: expected ${
+                                  request.expectedReturnDate || "not set"
+                                }, returned ${request.actualReturnDate || "not set"}`
+                              : getReturnedStatusLabel(request)
+                          }
+                        >
+                          {getReturnedStatusLabel(request)}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                {visibleReturnedCount < visibleReturnedRequests.length && (
+                  <div className="return-returned-load-more-row">
+                    <button
+                      type="button"
+                      className="return-secondary-btn"
+                      onClick={() =>
+                        setVisibleReturnedCount((currentCount) =>
+                          Math.min(
+                            currentCount + RETURNED_ITEMS_PAGE_SIZE,
+                            visibleReturnedRequests.length
+                          )
+                        )
+                      }
+                    >
+                      Load More Returned Items
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </section>
     </div>

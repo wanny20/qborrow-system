@@ -29,6 +29,20 @@ const TEMPORARY_BORROWING_RESTRICTION_MS = RELEASE_WINDOW_MS;
 const TEMPORARY_BORROWING_RESTRICTION_REASON =
   "Temporary borrowing restriction for 24 hours because an approved item was not claimed/released within the allowed window.";
 
+const MANAGE_REQUEST_VISIBLE_STATUS_FILTERS = [
+  "All",
+  "Pending",
+  "Expired",
+  "Rejected",
+  "Cancelled",
+];
+
+function getSafeManageRequestStatusFilter(value) {
+  return MANAGE_REQUEST_VISIBLE_STATUS_FILTERS.includes(value)
+    ? value
+    : "Pending";
+}
+
 
 function getRequestPriority(request) {
   if (request.priority === "High") return "High";
@@ -98,8 +112,8 @@ function ManageRequests() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [actionLoadingType, setActionLoadingType] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState(
-    searchParams.get("status") || "Pending"
+  const [statusFilter, setStatusFilter] = useState(() =>
+    getSafeManageRequestStatusFilter(searchParams.get("status"))
   );
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState("");
@@ -249,17 +263,19 @@ function isRequestActionLoading(requestId, actionType) {
   }
 
 function handleStatusFilterChange(value) {
-  setStatusFilter(value);
+  const safeStatusFilter = getSafeManageRequestStatusFilter(value);
 
-  if (value === "Pending") {
+  setStatusFilter(safeStatusFilter);
+
+  if (safeStatusFilter === "Pending") {
     setSearchParams({ status: "Pending" });
-  } else if (value === "All") {
+  } else if (safeStatusFilter === "All") {
     setSearchParams({});
   } else {
-    setSearchParams({ status: value });
+    setSearchParams({ status: safeStatusFilter });
   }
 
-  fetchRequests("reset", value);
+  fetchRequests("reset", safeStatusFilter);
 }
 
   function canCategoryAdminSeeRequest(request) {
@@ -1140,9 +1156,20 @@ useEffect(() => {
   useEffect(() => {
     const statusFromUrl = searchParams.get("status");
 
-    if (statusFromUrl) {
-      setStatusFilter(statusFromUrl);
+    if (!statusFromUrl) {
+      return;
     }
+
+    const safeStatusFilter = getSafeManageRequestStatusFilter(statusFromUrl);
+
+    if (safeStatusFilter !== statusFromUrl) {
+      setStatusFilter(safeStatusFilter);
+      setSearchParams({ status: safeStatusFilter }, { replace: true });
+      fetchRequests("reset", safeStatusFilter);
+      return;
+    }
+
+    setStatusFilter(safeStatusFilter);
   }, [searchParams]);
 
   const visibleRequests = useMemo(() => {
@@ -1335,10 +1362,6 @@ return (
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Borrowed">Borrowed</option>
-            <option value="Overdue">Overdue</option>
-            <option value="Returned">Returned</option>
             <option value="Expired">Expired</option>
             <option value="Rejected">Rejected</option>
             <option value="Cancelled">Cancelled</option>
