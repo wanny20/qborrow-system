@@ -7839,3 +7839,1086 @@ body:has(.reports-damaged-modal-backdrop) .reports-page {
     padding-right: 0 !important;
   }
 }
+/* =========================================================
+   REPORTS PAGE - ADD ITEM STYLE MOBILE COMPACT FINAL
+   Matches Add Item title card sizing and makes controls compact.
+   Paste at the VERY BOTTOM of Reports.css.
+========================================================= */
+
+/* ---------- Page spacing ---------- */
+
+body .app-page-content .reports-page {
+  gap: 12px !important;
+}
+
+/* ---------- Reports title card: match Add Item compact style ---------- */
+
+body .app-page-content .reports-page .reports-header,
+body .app-page-content .reports-page .reports-header-compact {
+  margin: 0 !important;
+}
+
+body .app-page-content .reports-page .reports-header-content {
+  min-height: 106px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 92% 82%, rgba(250, 204, 21, 0.46), transparent 30%),
+    radial-gradient(circle at 0% 14%, rgba(37, 99, 235, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.96) 58%, rgba(250, 204, 21, 0.13)),
+    var(--qb-surface, #ffffff) !important;
+
+  box-shadow: 7px 7px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 18px 24px !important;
+  overflow: hidden !important;
+}
+
+body .app-page-content .reports-page .reports-header-content::before {
+  opacity: 0.45 !important;
+}
+
+body .app-page-content .reports-page .reports-header-content::after {
+  right: 26px !important;
+  bottom: -42px !important;
+  width: 100px !important;
+  height: 100px !important;
+  opacity: 0.58 !important;
+}
+
+body .app-page-content .reports-page .reports-header-text {
+  min-width: 0 !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+body .app-page-content .reports-page .reports-header h1,
+body .app-page-content .reports-page .reports-header-text h1 {
+  max-width: 100% !important;
+  margin: 0 0 5px !important;
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: clamp(1.55rem, 2.4vw, 2rem) !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.05em !important;
+}
+
+body .app-page-content .reports-page .reports-header p,
+body .app-page-content .reports-page .reports-header-text p {
+  max-width: 640px !important;
+  margin: 0 !important;
+  color: var(--qb-muted-foreground, #64748b) !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  line-height: 1.28 !important;
+}
+
+body .app-page-content .reports-page .reports-header-actions {
+  width: auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+body .app-page-content .reports-page .reports-header-back-btn {
+  width: auto !important;
+  min-width: 165px !important;
+  max-width: 190px !important;
+  min-height: 42px !important;
+  height: 42px !important;
+
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.14) !important;
+  padding: 0 16px !important;
+
+  font-size: 0.66rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* ---------- Controls & Export card compact ---------- */
+
+body .app-page-content .reports-page .reports-control-export-panel {
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 96% 100%, rgba(250, 204, 21, 0.28), transparent 30%),
+    linear-gradient(135deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.96) 56%, rgba(254, 249, 195, 0.58)),
+    var(--qb-surface, #ffffff) !important;
+  box-shadow: 7px 7px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 16px !important;
+}
+
+body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading {
+  margin-bottom: 10px !important;
+  gap: 8px !important;
+}
+
+body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading h2 {
+  margin: 0 !important;
+  font-size: 1.22rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading p {
+  max-width: 720px !important;
+  margin-top: 4px !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  line-height: 1.28 !important;
+}
+
+/* Controls: desktop stays compact */
+body .app-page-content .reports-page .reports-export-control-grid {
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr) 118px 128px !important;
+  gap: 8px !important;
+  align-items: end !important;
+}
+
+body .app-page-content .reports-page .reports-export-control-grid > div {
+  gap: 5px !important;
+}
+
+body .app-page-content .reports-page .reports-export-control-grid .qb-label {
+  margin: 0 !important;
+  font-size: 0.68rem !important;
+  line-height: 1 !important;
+}
+
+body .app-page-content .reports-page .reports-export-control-grid input {
+  min-height: 38px !important;
+  height: 38px !important;
+  border-radius: 14px !important;
+  padding: 0 12px !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+}
+
+body .app-page-content .reports-page .reports-refresh-btn,
+body .app-page-content .reports-page .reports-reset-date-btn,
+body .app-page-content .reports-page .reports-print-btn,
+body .app-page-content .reports-page .reports-inline-export-btn,
+body .app-page-content .reports-page .reports-secondary-btn {
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  padding: 0 13px !important;
+  font-size: 0.62rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+/* Range row */
+body .app-page-content .reports-page .reports-export-range-row {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+body .app-page-content .reports-page .reports-date-range-note,
+body .app-page-content .reports-page .reports-compact-range-note {
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(219, 234, 254, 0.82) !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 7px 11px !important;
+  font-size: 0.72rem !important;
+}
+
+/* Export buttons */
+body .app-page-content .reports-page .reports-export-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+/* ---------- Mobile compact layout ---------- */
+
+@media (max-width: 760px) {
+  body .app-page-content .reports-page {
+    gap: 9px !important;
+  }
+
+  body .app-page-content .reports-page .reports-header-content {
+    min-height: 86px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    padding: 11px 12px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.13) !important;
+  }
+
+  body .app-page-content .reports-page .reports-header-content::after {
+    right: -22px !important;
+    bottom: -42px !important;
+    width: 86px !important;
+    height: 86px !important;
+    opacity: 0.62 !important;
+  }
+
+  body .app-page-content .reports-page .reports-header h1,
+  body .app-page-content .reports-page .reports-header-text h1 {
+    max-width: none !important;
+    margin-bottom: 4px !important;
+    font-size: 1.08rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .reports-page .reports-header p,
+  body .app-page-content .reports-page .reports-header-text p {
+    display: -webkit-box !important;
+    font-size: 0.56rem !important;
+    line-height: 1.16 !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  body .app-page-content .reports-page .reports-header-actions {
+    align-self: center !important;
+  }
+
+  body .app-page-content .reports-page .reports-header-back-btn {
+    min-width: 104px !important;
+    max-width: 118px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    border-width: 2px !important;
+    padding: 0 8px !important;
+    font-size: 0.46rem !important;
+    white-space: normal !important;
+    box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.13) !important;
+  }
+
+  body .app-page-content .reports-page .reports-control-export-panel {
+    border-radius: 18px !important;
+    padding: 11px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.13) !important;
+  }
+
+  body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading {
+    margin-bottom: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading h2 {
+    font-size: 1.02rem !important;
+    line-height: 1.05 !important;
+  }
+
+  body .app-page-content .reports-page .reports-control-export-panel .reports-section-heading p {
+    display: -webkit-box !important;
+    font-size: 0.58rem !important;
+    line-height: 1.18 !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  /* Mobile: 2-column controls */
+  body .app-page-content .reports-page .reports-export-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-control-grid > div {
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-control-grid .qb-label {
+    font-size: 0.52rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-control-grid input {
+    min-height: 35px !important;
+    height: 35px !important;
+    border-radius: 999px !important;
+    padding: 0 10px !important;
+    font-size: 0.62rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-refresh-btn,
+  body .app-page-content .reports-page .reports-reset-date-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 35px !important;
+    height: 35px !important;
+    padding: 0 8px !important;
+    font-size: 0.5rem !important;
+  }
+
+  /* Range + active export button */
+  body .app-page-content .reports-page .reports-export-range-row {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+    margin-top: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-date-range-note,
+  body .app-page-content .reports-page .reports-compact-range-note {
+    width: 100% !important;
+    min-height: 32px !important;
+    justify-content: center !important;
+    border-radius: 999px !important;
+    padding: 6px 9px !important;
+    font-size: 0.58rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-inline-print-btn,
+  body .app-page-content .reports-page .reports-inline-export-btn,
+  body .app-page-content .reports-page .reports-print-btn {
+    width: 100% !important;
+    min-height: 36px !important;
+    font-size: 0.54rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-grid {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+    margin-top: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-grid .reports-secondary-btn {
+    min-height: 35px !important;
+    font-size: 0.52rem !important;
+  }
+}
+
+/* ---------- Extra small phones ---------- */
+
+@media (max-width: 390px) {
+  body .app-page-content .reports-page .reports-header-content {
+    padding: 10px !important;
+  }
+
+  body .app-page-content .reports-page .reports-header-back-btn {
+    min-width: 92px !important;
+    max-width: 104px !important;
+    font-size: 0.42rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-export-control-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ---------- Dark mode compatibility ---------- */
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header-content,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-control-export-panel {
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  background:
+    radial-gradient(circle at 92% 76%, rgba(250, 204, 21, 0.18), transparent 30%),
+    radial-gradient(circle at 0% 12%, rgba(37, 99, 235, 0.24), transparent 34%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98) 58%, rgba(30, 41, 59, 0.92)) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header h1,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header-text h1,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-section-heading h2 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header p,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header-text p,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-section-heading p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header-back-btn,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-reset-date-btn {
+  border-color: rgba(147, 197, 253, 0.55) !important;
+  background: rgba(15, 23, 42, 0.78) !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-export-control-grid input {
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  background: rgba(15, 23, 42, 0.86) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-date-range-note,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-compact-range-note {
+  background: rgba(30, 41, 59, 0.86) !important;
+  color: #e5e7eb !important;
+}
+/* =========================================================
+   REPORTS - RESTORE BLACK OUTLINES FINAL
+   Put this at the VERY BOTTOM of Reports.css
+========================================================= */
+
+.reports-page {
+  --reports-black-outline: #1e293b;
+  --reports-outline-shadow: 5px 5px 0 rgba(15, 23, 42, 0.14);
+}
+
+/* Main Reports title card */
+body .app-page-content .reports-page .reports-header-content {
+  border: 2px solid var(--reports-black-outline) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--reports-outline-shadow) !important;
+}
+
+/* Report Controls & Export card */
+body .app-page-content .reports-page .reports-control-export-panel,
+body .app-page-content .reports-page .reports-panel.reports-control-export-panel {
+  border: 2px solid var(--reports-black-outline) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--reports-outline-shadow) !important;
+}
+
+/* Search/filter card in report modules */
+body .app-page-content .reports-page .reports-history-controls {
+  border: 2px solid var(--reports-black-outline) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Search/date/filter inputs */
+body .app-page-content .reports-page .reports-export-control-grid input,
+body .app-page-content .reports-page .reports-history-controls input,
+body .app-page-content .reports-page .reports-history-controls select {
+  border: 2px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: var(--qb-foreground, #0f172a) !important;
+  box-shadow: none !important;
+}
+
+body .app-page-content .reports-page .reports-export-control-grid input:focus,
+body .app-page-content .reports-page .reports-history-controls input:focus,
+body .app-page-content .reports-page .reports-history-controls select:focus {
+  border-color: var(--reports-black-outline) !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.14) !important;
+}
+
+/* Keep inner text wrappers from becoming cards */
+body .app-page-content .reports-page .reports-header-text,
+body .app-page-content .reports-page .reports-header-text h1,
+body .app-page-content .reports-page .reports-header-text p,
+body .app-page-content .reports-page .reports-section-heading,
+body .app-page-content .reports-page .reports-section-heading h2,
+body .app-page-content .reports-page .reports-section-heading p {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Mobile outline consistency */
+@media (max-width: 760px) {
+  body .app-page-content .reports-page .reports-header-content,
+  body .app-page-content .reports-page .reports-control-export-panel,
+  body .app-page-content .reports-page .reports-panel.reports-control-export-panel {
+    border: 2px solid var(--reports-black-outline) !important;
+    border-radius: 18px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.13) !important;
+  }
+
+  body .app-page-content .reports-page .reports-history-controls {
+    border: 2px solid var(--reports-black-outline) !important;
+    border-radius: 16px !important;
+    box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.12) !important;
+  }
+}
+
+/* Dark mode: use soft outline instead of pure black */
+html[data-theme="dark"] body .app-page-content .reports-page .reports-header-content,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-control-export-panel,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-panel.reports-control-export-panel,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-export-control-grid input,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls input,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls select {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  color: #f8fafc !important;
+}
+/* =========================================================
+   REPORTS - FREQUENTLY BORROWED COMPACT MOBILE FIX
+   Makes Frequently Borrowed Items smaller and mobile friendly.
+   Paste at the VERY BOTTOM of Reports.css.
+========================================================= */
+
+/* Panel itself */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel {
+  border: 2px solid #1e293b !important;
+  border-radius: 22px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 14px !important;
+  overflow: hidden !important;
+}
+
+/* Header compact */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading {
+  margin-bottom: 10px !important;
+}
+
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading h2 {
+  font-size: 1.08rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading p {
+  max-width: 100% !important;
+  font-size: 0.68rem !important;
+  line-height: 1.22 !important;
+  font-weight: 800 !important;
+}
+
+/* Desktop/tablet: compact grid */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-module-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+/* Compact row card */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card {
+  min-height: 62px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 38px !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  border: 2px solid #1e293b !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.10) !important;
+
+  padding: 9px 10px !important;
+  overflow: hidden !important;
+}
+
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card > div {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "rank name"
+    "rank category" !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+}
+
+/* Rank pill */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-rank-pill {
+  grid-area: rank !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 999px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  font-size: 0.62rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+/* Item text */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card h3 {
+  grid-area: name !important;
+  margin: 0 !important;
+
+  font-size: 0.82rem !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card p {
+  grid-area: category !important;
+  margin: 2px 0 0 !important;
+
+  color: #64748b !important;
+  font-size: 0.62rem !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Count pill */
+body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card > strong {
+  width: 34px !important;
+  height: 30px !important;
+  min-width: 34px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border-radius: 999px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+
+  padding: 0 !important;
+  font-size: 0.7rem !important;
+  font-weight: 950 !important;
+}
+
+/* Mobile: one compact scrollable list */
+@media (max-width: 760px) {
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel {
+    border-radius: 18px !important;
+    padding: 10px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading {
+    margin-bottom: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading h2 {
+    font-size: 0.98rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-section-heading p {
+    display: -webkit-box !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-module-list {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+
+    max-height: 340px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 3px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-module-list::-webkit-scrollbar {
+    width: 4px !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-module-list::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.35) !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card {
+    min-height: 52px !important;
+    grid-template-columns: minmax(0, 1fr) 32px !important;
+    border-radius: 14px !important;
+    padding: 7px 8px !important;
+    box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.10) !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card > div {
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    column-gap: 7px !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-rank-pill {
+    width: 25px !important;
+    height: 25px !important;
+    min-width: 25px !important;
+    font-size: 0.52rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card h3 {
+    font-size: 0.7rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card p {
+    font-size: 0.52rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card > strong {
+    width: 29px !important;
+    height: 27px !important;
+    min-width: 29px !important;
+    font-size: 0.6rem !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: #101827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card h3 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-rank-pill,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-frequently-borrowed-panel .reports-mini-card > strong {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+}/* =========================================================
+   REPORTS - COMPACT LATE / OVERDUE RETURNS MOBILE
+   Makes Currently Overdue, Returned Late, and Total Records
+   smaller and less space-consuming on mobile.
+========================================================= */
+
+body .app-page-content .reports-page .reports-overdue-panel {
+  border: 2px solid #1e293b !important;
+  border-radius: 22px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.12) !important;
+  padding: 14px !important;
+}
+
+body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading {
+  margin-bottom: 10px !important;
+}
+
+body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading h2 {
+  font-size: 1.1rem !important;
+  line-height: 1.05 !important;
+}
+
+body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading p {
+  font-size: 0.68rem !important;
+  line-height: 1.22 !important;
+  font-weight: 800 !important;
+}
+
+/* Desktop/tablet compact stat cards */
+body .app-page-content .reports-page .reports-late-overdue-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin: 0 0 10px !important;
+}
+
+body .app-page-content .reports-page .reports-late-overdue-summary > div {
+  min-height: 76px !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 16px !important;
+  background:
+    linear-gradient(135deg, rgba(254, 242, 242, 0.55), rgba(255, 255, 255, 0.96)),
+    #ffffff !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.1) !important;
+  padding: 10px !important;
+}
+
+body .app-page-content .reports-page .reports-late-overdue-summary span {
+  font-size: 0.52rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: 0.06em !important;
+}
+
+body .app-page-content .reports-page .reports-late-overdue-summary strong {
+  display: block !important;
+  margin-top: 7px !important;
+  font-size: 1.35rem !important;
+  line-height: 1 !important;
+}
+
+/* Mobile: keep the 3 cards in one compact row */
+@media (max-width: 760px) {
+  body .app-page-content .reports-page .reports-overdue-panel {
+    padding: 10px !important;
+    border-radius: 18px !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.12) !important;
+  }
+
+  body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading {
+    margin-bottom: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading h2 {
+    font-size: 0.98rem !important;
+  }
+
+  body .app-page-content .reports-page .reports-overdue-panel .reports-section-heading p {
+    display: -webkit-box !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary > div {
+    min-height: 58px !important;
+    border-radius: 13px !important;
+    padding: 7px !important;
+    box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.1) !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary span {
+    display: block !important;
+    font-size: 0.39rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.04em !important;
+    white-space: normal !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary strong {
+    margin-top: 5px !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+  }
+}
+
+/* Very small phones: make it horizontally scrollable instead of stacking */
+@media (max-width: 390px) {
+  body .app-page-content .reports-page .reports-late-overdue-summary {
+    grid-template-columns: none !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(92px, 1fr) !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 5px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-summary::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.35) !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] body .app-page-content .reports-page .reports-overdue-panel,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-summary > div {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: #101827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-summary span {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-summary strong {
+  color: #f8fafc !important;
+}
+/* =========================================================
+   REPORTS - LATE / OVERDUE TABLE FLAT DATA ROWS
+   Removes rectangular/card outlines from table data rows.
+   Keeps only the outer table outline + clean row dividers.
+========================================================= */
+
+/* Keep only one clean outer table outline */
+body .app-page-content .reports-page .reports-late-overdue-table-wrap {
+  border: 2px solid #1e293b !important;
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.1) !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Header stays as the top table header, not a separate card */
+body .app-page-content .reports-page .reports-late-overdue-table-header {
+  border: 0 !important;
+  border-bottom: 2px solid #1e293b !important;
+  border-radius: 0 !important;
+  background: #eff6ff !important;
+  box-shadow: none !important;
+}
+
+/* Remove rectangular outlines from each data row */
+body .app-page-content .reports-page .reports-late-overdue-table-row {
+  border: 0 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Last row should not have extra bottom line */
+body .app-page-content .reports-page .reports-late-overdue-table-row:last-child {
+  border-bottom: 0 !important;
+}
+
+/* Remove all inner cell boxes */
+body .app-page-content .reports-page .reports-late-overdue-table-cell,
+body .app-page-content .reports-page .reports-late-overdue-item-cell,
+body .app-page-content .reports-page .reports-late-overdue-borrower-cell,
+body .app-page-content .reports-page .reports-late-overdue-type-cell {
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Keep text clean */
+body .app-page-content .reports-page .reports-late-overdue-table-cell strong,
+body .app-page-content .reports-page .reports-late-overdue-table-cell small {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep the status as the only pill-style element */
+body .app-page-content .reports-page .reports-late-overdue-type-cell strong {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+/* Mobile: same flat table look */
+@media (max-width: 760px) {
+  body .app-page-content .reports-page .reports-late-overdue-table-wrap {
+    border-radius: 18px !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-table-header {
+    border-radius: 0 !important;
+    border-bottom: 2px solid #1e293b !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-table-row {
+    border-radius: 0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+
+  body .app-page-content .reports-page .reports-late-overdue-table-row:last-child {
+    border-bottom: 0 !important;
+  }
+}
+
+/* Dark mode: keep the same clean table behavior */
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-table-wrap {
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-table-header {
+  border-bottom-color: rgba(148, 163, 184, 0.36) !important;
+  background: #111827 !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-table-row {
+  border-bottom-color: rgba(148, 163, 184, 0.22) !important;
+  background: #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-table-cell,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-item-cell,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-borrower-cell,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-late-overdue-type-cell {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* =========================================================
+   REPORTS - LATE / OVERDUE DARK MODE STATUS READABILITY
+   Fixes unreadable "Returned Late" text in night mode.
+   Paste at the VERY BOTTOM of Reports.css.
+========================================================= */
+
+html[data-theme="dark"] body .app-page-content .reports-page
+.reports-late-overdue-type-cell strong,
+html[data-theme="dark"] body .app-page-content .reports-page
+.reports-late-overdue-table-status strong,
+html[data-theme="dark"] body .app-page-content .reports-page
+.reports-status-pill.status-returned-late,
+html[data-theme="dark"] body .app-page-content .reports-page
+.status-returned-late {
+  width: 100% !important;
+  max-width: 118px !important;
+  min-height: 28px !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 1px solid rgba(248, 113, 113, 0.42) !important;
+  border-radius: 999px !important;
+  background: rgba(248, 113, 113, 0.18) !important;
+
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
+
+  padding: 0 9px !important;
+
+  font-size: 0.5rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+
+  opacity: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Optional: make the text a little larger on mobile/tablet */
+@media (max-width: 760px) {
+  html[data-theme="dark"] body .app-page-content .reports-page
+  .reports-late-overdue-type-cell strong,
+  html[data-theme="dark"] body .app-page-content .reports-page
+  .reports-late-overdue-table-status strong,
+  html[data-theme="dark"] body .app-page-content .reports-page
+  .reports-status-pill.status-returned-late,
+  html[data-theme="dark"] body .app-page-content .reports-page
+  .status-returned-late {
+    max-width: 106px !important;
+    min-height: 26px !important;
+    font-size: 0.48rem !important;
+  }
+}

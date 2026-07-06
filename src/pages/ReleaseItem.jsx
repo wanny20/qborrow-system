@@ -215,6 +215,19 @@ function isReleaseBusy() {
   return Boolean(releaseLockRef.current || releasing || startingScanner);
 }
 
+function clearSelectedReleaseRequest() {
+  if (releasing) return;
+
+  setSelectedRequest(null);
+  setManualItemId("");
+
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+    delete nextErrors.selectedRequest;
+    return nextErrors;
+  });
+}
+
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
   }
@@ -1458,11 +1471,24 @@ return (
           </div>
         </section>
 
-        <section className="release-selected-card">
-          <div className="release-card-heading">
-            <h2>Selected Request</h2>
-            <p>Review the request before confirming physical release.</p>
-          </div>
+<section className="release-selected-card">
+  {selectedRequest && (
+    <button
+      type="button"
+      className="release-selected-close-btn"
+      onClick={clearSelectedReleaseRequest}
+      disabled={releasing}
+      aria-label="Clear selected request"
+      title="Clear selected request"
+    >
+      ×
+    </button>
+  )}
+
+  <div className="release-card-heading">
+    <h2>Selected Request</h2>
+    <p>Review the request before confirming physical release.</p>
+  </div>
 
           {selectedRequest ? (
             <>
@@ -1614,9 +1640,9 @@ return (
                 <h2>No approved requests</h2>
                 <p>No items are currently waiting for release.</p>
               </div>
-            ) : (
-              <>
-                <div className="release-approved-table-header">
+) : (
+  <div className="release-table-scroll-area" aria-label="For release table">
+    <div className="release-approved-table-header">
                   <span>Item</span>
                   <span>Borrower</span>
                   <span>Category</span>
@@ -1692,7 +1718,7 @@ return (
                     </article>
                   ))}
                 </div>
-              </>
+              </div>
             )}
           </>
         ) : (
@@ -1736,9 +1762,10 @@ return (
                 <h2>No released items</h2>
                 <p>No items were released for the selected date filter.</p>
               </div>
-            ) : (
-              <>
-                <div className="release-released-table-header">
+) : (
+  <>
+    <div className="release-table-scroll-area" aria-label="Released items table">
+    <div className="release-released-table-header">
                   <span>Item</span>
                   <span>Borrower</span>
                   <span>Category</span>
@@ -1793,9 +1820,10 @@ return (
                       </div>
                     </article>
                   ))}
-                </div>
+    </div>
+  </div>
 
-                {visibleReleasedCount < visibleReleasedRequests.length && (
+  {visibleReleasedCount < visibleReleasedRequests.length && (
                   <div className="release-load-more-row release-released-load-more-row">
                     <button
                       type="button"

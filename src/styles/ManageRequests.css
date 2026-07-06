@@ -5581,3 +5581,674 @@ html[data-theme="dark"] .manage-request-view-media {
     font-size: 1.55rem;
   }
 }
+/* =========================================================
+   MANAGE REQUESTS - MOBILE CARD OVERLAP FIX
+   Fixes overlapping summary cards, tools, and request table
+========================================================= */
+
+@media (max-width: 760px) {
+  .manage-requests-page {
+    gap: 10px !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Compact header */
+  .manage-requests-header-content {
+    min-height: auto !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .manage-requests-header-text h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .manage-requests-header-text p {
+    display: -webkit-box !important;
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .manage-header-back-btn {
+    width: 100% !important;
+    min-height: 36px !important;
+    font-size: 0.62rem !important;
+  }
+
+  /* Summary cards: turn into horizontal swipe row */
+  .manage-summary-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(108px, 118px) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 2px 2px 8px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .manage-summary-grid::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  .manage-summary-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.28) !important;
+  }
+
+  .manage-summary-grid > div {
+    scroll-snap-align: start !important;
+    min-width: 0 !important;
+    min-height: 78px !important;
+    border-radius: 15px !important;
+    padding: 9px 10px !important;
+    overflow: hidden !important;
+  }
+
+  .manage-summary-grid > div span {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .manage-summary-grid > div h3 {
+    margin-top: 7px !important;
+    font-size: 1.25rem !important;
+    line-height: 0.95 !important;
+    white-space: nowrap !important;
+  }
+
+  .manage-summary-grid > div p {
+    margin-top: 3px !important;
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0.05em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Search/filter tools */
+  .manage-tools {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    padding: 10px !important;
+  }
+
+  .manage-tools .qb-label {
+    display: none !important;
+  }
+
+  .manage-tools input,
+  .manage-tools select {
+    min-height: 38px !important;
+    border-radius: 999px !important;
+    font-size: 0.68rem !important;
+    padding-inline: 12px !important;
+  }
+
+  .manage-refresh-btn {
+    width: 100% !important;
+    min-height: 36px !important;
+    font-size: 0.62rem !important;
+  }
+
+  /* Borrow request panel */
+  .manage-request-panel {
+    border-radius: 18px !important;
+    padding: 11px !important;
+    overflow: hidden !important;
+  }
+
+  .manage-section-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .manage-section-heading h2 {
+    font-size: 1rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .manage-section-heading p {
+    font-size: 0.66rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Keep table scrollable instead of squeezing columns */
+  .manage-request-table-scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-radius: 16px !important;
+    padding-bottom: 5px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .manage-request-table-scroll::-webkit-scrollbar {
+    height: 4px !important;
+  }
+
+  .manage-request-table-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.28) !important;
+  }
+
+  .manage-request-table-header,
+  .manage-request-row {
+    min-width: 620px !important;
+    grid-template-columns:
+      minmax(150px, 1.2fr)
+      minmax(150px, 1.2fr)
+      minmax(110px, 0.8fr)
+      minmax(105px, 0.8fr)
+      minmax(115px, 0.8fr)
+      minmax(100px, 0.7fr)
+      minmax(105px, 0.7fr) !important;
+  }
+
+  .manage-request-table-header {
+    min-height: 40px !important;
+    border-radius: 14px !important;
+    padding: 9px 10px !important;
+  }
+
+  .manage-request-table-header span {
+    font-size: 0.52rem !important;
+    white-space: nowrap !important;
+  }
+
+  .manage-request-row {
+    min-height: 58px !important;
+    border-radius: 14px !important;
+    padding: 8px 10px !important;
+  }
+
+  .manage-request-cell span,
+  .manage-request-status-cell span {
+    font-size: 0.52rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .manage-request-cell strong {
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .manage-request-row-actions {
+    gap: 5px !important;
+  }
+
+  .manage-action-icon-btn {
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    border-radius: 10px !important;
+    font-size: 0.68rem !important;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 390px) {
+  .manage-summary-grid {
+    grid-auto-columns: minmax(100px, 108px) !important;
+  }
+
+  .manage-summary-grid > div {
+    min-height: 72px !important;
+    padding: 8px !important;
+  }
+
+  .manage-summary-grid > div h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .manage-summary-grid > div p {
+    font-size: 0.46rem !important;
+  }
+
+  .manage-request-table-header,
+  .manage-request-row {
+    min-width: 590px !important;
+  }
+}
+
+/* Dark mode scrollbar compatibility */
+html[data-theme="dark"] .manage-summary-grid::-webkit-scrollbar-thumb,
+html[data-theme="dark"] .manage-request-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.35) !important;
+}
+
+  /* Remove decorative circles that are making cards look visually stacked */
+  .manage-summary-grid > div::before,
+  .manage-summary-grid > div::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .manage-summary-grid > div span {
+    grid-area: icon !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    margin: 0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  .manage-summary-grid > div h3 {
+    grid-area: number !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .manage-summary-grid > div p {
+    grid-area: label !important;
+    margin: 2px 0 0 !important;
+    min-width: 0 !important;
+    font-size: 0.52rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .manage-summary-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+/* Very small phones */
+@media (max-width: 390px) {
+  .manage-summary-grid {
+    gap: 7px !important;
+  }
+
+  .manage-summary-grid > div {
+    min-height: 76px !important;
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    padding: 8px !important;
+  }
+
+  .manage-summary-grid > div span {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .manage-summary-grid > div h3 {
+    font-size: 1.18rem !important;
+  }
+
+  .manage-summary-grid > div p {
+    font-size: 0.46rem !important;
+  }
+}
+/* =========================================================
+   MANAGE REQUESTS - TRUE FINAL MOBILE SUMMARY FIX
+   This overrides older horizontal-scroll summary rules.
+========================================================= */
+
+@media (max-width: 760px) {
+  .manage-requests-page > .manage-summary-grid,
+  .manage-requests-page .manage-summary-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    grid-auto-columns: initial !important;
+    grid-auto-rows: auto !important;
+
+    gap: 8px !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+
+    scroll-snap-type: none !important;
+    -webkit-overflow-scrolling: auto !important;
+  }
+
+  .manage-requests-page > .manage-summary-grid > div,
+  .manage-requests-page .manage-summary-grid > div {
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+
+    transform: none !important;
+    translate: none !important;
+    scroll-snap-align: none !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 74px !important;
+
+    display: grid !important;
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+      "icon number"
+      "icon label" !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    row-gap: 0 !important;
+
+    border: 2px solid #1e293b !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.09) !important;
+
+    padding: 9px !important;
+    overflow: hidden !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div::before,
+  .manage-requests-page .manage-summary-grid > div::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > span {
+    grid-area: icon !important;
+
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+
+    font-size: 0.68rem !important;
+    line-height: 1 !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > h3 {
+    grid-area: number !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+
+    font-size: 1.15rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.04em !important;
+
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > p {
+    grid-area: label !important;
+
+    margin: 2px 0 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+
+    font-size: 0.48rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .manage-requests-page .manage-summary-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+/* Extra small phone fix */
+@media (max-width: 390px) {
+  .manage-requests-page > .manage-summary-grid,
+  .manage-requests-page .manage-summary-grid {
+    gap: 7px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div {
+    min-height: 68px !important;
+    grid-template-columns: 26px minmax(0, 1fr) !important;
+    padding: 8px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > span {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    max-height: 25px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > h3 {
+    font-size: 1.02rem !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > p {
+    font-size: 0.42rem !important;
+  }
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div > h3 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div > p {
+  color: #cbd5e1 !important;
+}
+/* =========================================================
+   MANAGE REQUESTS - MOBILE SUMMARY ONE ROW SCROLL
+   Total, Pending, Approved, Borrowed, Overdue,
+   Returned, Rejected, Expired in one horizontal row.
+========================================================= */
+
+@media (max-width: 760px) {
+  .manage-requests-page > .manage-summary-grid,
+  .manage-requests-page .manage-summary-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    display: grid !important;
+    grid-template-columns: none !important;
+    grid-template-rows: 1fr !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(118px, 128px) !important;
+
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+
+    padding: 2px 2px 8px !important;
+    margin: 0 !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .manage-requests-page .manage-summary-grid::-webkit-scrollbar {
+    height: 5px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.3) !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div {
+    scroll-snap-align: start !important;
+
+    position: relative !important;
+    transform: none !important;
+    translate: none !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 82px !important;
+
+    display: grid !important;
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "icon number"
+      "icon label" !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+
+    border: 2px solid #1e293b !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 4px 4px 0 rgba(15, 23, 42, 0.09) !important;
+
+    padding: 9px !important;
+    overflow: hidden !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div::before,
+  .manage-requests-page .manage-summary-grid > div::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > span {
+    grid-area: icon !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 11px !important;
+
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > h3 {
+    grid-area: number !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.04em !important;
+
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > p {
+    grid-area: label !important;
+
+    margin: 2px 0 0 !important;
+    padding: 0 !important;
+
+    font-size: 0.5rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 390px) {
+  .manage-requests-page > .manage-summary-grid,
+  .manage-requests-page .manage-summary-grid {
+    grid-auto-columns: minmax(108px, 116px) !important;
+    gap: 7px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div {
+    min-height: 76px !important;
+    grid-template-columns: 28px minmax(0, 1fr) !important;
+    padding: 8px !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > span {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > h3 {
+    font-size: 1.08rem !important;
+  }
+
+  .manage-requests-page .manage-summary-grid > div > p {
+    font-size: 0.43rem !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid > div {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #111827 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .manage-requests-page .manage-summary-grid::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.35) !important;
+}

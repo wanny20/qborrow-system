@@ -3935,3 +3935,777 @@ html[data-theme="dark"] .return-modal-item-preview img {
     height: 150px;
   }
 }
+/* =========================================================
+   RETURN CONFIRMATION - SELECTED REQUEST CLOSE BUTTON
+========================================================= */
+
+.return-page .return-selected-card {
+  position: relative !important;
+}
+
+.return-page .return-selected-close-btn {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  z-index: 8 !important;
+
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border: 1.8px solid #fecaca !important;
+  border-radius: 999px !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 1.15rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.return-page .return-selected-close-btn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  background: #fecaca !important;
+  border-color: #fca5a5 !important;
+}
+
+.return-page .return-selected-close-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+}
+
+/* Prevent the close button from covering the heading text */
+.return-page .return-selected-card > .return-card-heading {
+  padding-right: 52px !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .return-page .return-selected-close-btn {
+    top: 10px !important;
+    right: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 1rem !important;
+  }
+
+  .return-page .return-selected-card > .return-card-heading {
+    padding-right: 44px !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .return-page .return-selected-close-btn {
+  border-color: rgba(248, 113, 113, 0.45) !important;
+  background: rgba(153, 27, 27, 0.34) !important;
+  color: #fecaca !important;
+}
+/* =========================================================
+   RETURN CONFIRMATION - MOBILE TABLE SCROLL MODE
+   Makes Borrowed + Returned tabs use side-scroll tables.
+   Paste at the VERY BOTTOM of ReturnConfirmation.css.
+========================================================= */
+
+@media (max-width: 860px) {
+  /* The queue panel becomes the horizontal scroll container */
+  .return-page .return-queue-panel {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .return-page .return-queue-panel::-webkit-scrollbar {
+    height: 6px !important;
+  }
+
+  .return-page .return-queue-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.35) !important;
+  }
+
+  /* Keep tabs and headings normal width */
+  .return-page .return-tabs,
+  .return-page .return-section-heading,
+  .return-page .return-empty,
+  .return-page .return-returned-actions,
+  .return-page .return-returned-load-more-row {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* ---------- BORROWED ITEMS TABLE ---------- */
+
+  .return-page .return-borrowed-table-header,
+  .return-page .return-borrowed-row {
+    min-width: 700px !important;
+    width: 700px !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(135px, 1.18fr)
+      minmax(145px, 1.22fr)
+      minmax(100px, 0.78fr)
+      112px
+      104px
+      112px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .return-page .return-borrowed-table-header {
+    display: grid !important;
+    border-radius: 16px 16px 10px 10px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .return-page .return-borrowed-table-header span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .return-page .return-borrowed-table-grid {
+    width: 700px !important;
+    min-width: 700px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .return-page .return-borrowed-row {
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .return-page .return-borrowed-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .return-page .return-borrowed-cell > span {
+    display: none !important;
+  }
+
+  .return-page .return-borrowed-item-cell > span,
+  .return-page .return-borrowed-borrower-cell > span {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .return-page .return-borrowed-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .return-page .return-borrowed-status-cell {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .return-page .return-borrowed-status-pill {
+    width: 100% !important;
+    max-width: 104px !important;
+    min-height: 26px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+  }
+
+  .return-page .return-borrowed-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .return-page .return-borrowed-actions .return-primary-btn,
+  .return-page .return-borrowed-actions .return-secondary-btn {
+    width: 100% !important;
+    min-height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* ---------- RETURNED ITEMS TABLE ---------- */
+
+  .return-page .return-returned-table-header,
+  .return-page .return-returned-row {
+    min-width: 790px !important;
+    width: 790px !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(135px, 1.12fr)
+      minmax(145px, 1.16fr)
+      minmax(100px, 0.72fr)
+      128px
+      118px
+      104px
+      112px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .return-page .return-returned-table-header {
+    display: grid !important;
+    border-radius: 16px 16px 10px 10px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .return-page .return-returned-table-header span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .return-page .return-returned-table-grid {
+    width: 790px !important;
+    min-width: 790px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .return-page .return-returned-row {
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .return-page .return-returned-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .return-page .return-returned-cell > span {
+    display: none !important;
+  }
+
+  .return-page .return-returned-item-cell > span,
+  .return-page .return-returned-borrower-cell > span {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .return-page .return-returned-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .return-page .return-returned-status-cell {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .return-page .return-returned-status-pill {
+    width: 100% !important;
+    max-width: 104px !important;
+    min-height: 26px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Dark mode scrollbar */
+html[data-theme="dark"] .return-page .return-queue-panel::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.4) !important;
+}
+/* =========================================================
+   RETURN CONFIRMATION - TABLE ONLY HORIZONTAL SCROLL
+   The card, tabs, heading, filters, and load more stay fixed.
+   Only the table header + rows scroll sideways.
+========================================================= */
+
+.return-page .return-queue-panel {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.return-page .return-tabs,
+.return-page .return-section-heading,
+.return-page .return-returned-heading,
+.return-page .return-returned-actions,
+.return-page .return-empty,
+.return-page .return-returned-load-more-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.return-page .return-table-scroll-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding-bottom: 8px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+.return-page .return-table-scroll-area::-webkit-scrollbar {
+  height: 7px !important;
+}
+
+.return-page .return-table-scroll-area::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.return-page .return-table-scroll-area::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.42) !important;
+}
+
+/* Borrowed table */
+.return-page .return-table-scroll-area .return-borrowed-table-header,
+.return-page .return-table-scroll-area .return-borrowed-table-grid {
+  width: 720px !important;
+  min-width: 720px !important;
+  max-width: none !important;
+}
+
+.return-page .return-table-scroll-area .return-borrowed-table-header,
+.return-page .return-table-scroll-area .return-borrowed-row {
+  display: grid !important;
+  grid-template-columns: 145px 155px 105px 125px 105px 120px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+/* Returned table */
+.return-page .return-table-scroll-area .return-returned-table-header,
+.return-page .return-table-scroll-area .return-returned-table-grid {
+  width: 820px !important;
+  min-width: 820px !important;
+  max-width: none !important;
+}
+
+.return-page .return-table-scroll-area .return-returned-table-header,
+.return-page .return-table-scroll-area .return-returned-row {
+  display: grid !important;
+  grid-template-columns: 145px 155px 105px 135px 125px 105px 120px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+/* Keep mobile table layout, not stacked cards */
+@media (max-width: 860px) {
+  .return-page .return-borrowed-table-header,
+  .return-page .return-returned-table-header {
+    display: grid !important;
+  }
+
+  .return-page .return-borrowed-row,
+  .return-page .return-returned-row {
+    display: grid !important;
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .return-page .return-borrowed-cell,
+  .return-page .return-returned-cell,
+  .return-page .return-borrowed-status-cell,
+  .return-page .return-returned-status-cell,
+  .return-page .return-borrowed-actions {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .return-page .return-borrowed-cell strong,
+  .return-page .return-returned-cell strong {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+html[data-theme="dark"] .return-page .return-table-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.42) !important;
+}
+/* =========================================================
+   RETURN CONFIRMATION - FIX TABLE WHITE SPACE
+   Desktop: table fills the card.
+   Mobile: only the table scrolls sideways.
+========================================================= */
+
+/* Desktop / tablet wide view */
+@media (min-width: 861px) {
+  .return-page .return-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-table-grid,
+  .return-page .return-table-scroll-area .return-returned-table-header,
+  .return-page .return-table-scroll-area .return-returned-table-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-row {
+    width: 100% !important;
+    grid-template-columns:
+      minmax(150px, 1.15fr)
+      minmax(165px, 1.25fr)
+      minmax(110px, 0.85fr)
+      minmax(130px, 0.9fr)
+      minmax(110px, 0.75fr)
+      minmax(130px, 0.85fr) !important;
+  }
+
+  .return-page .return-table-scroll-area .return-returned-table-header,
+  .return-page .return-table-scroll-area .return-returned-row {
+    width: 100% !important;
+    grid-template-columns:
+      minmax(150px, 1.15fr)
+      minmax(165px, 1.25fr)
+      minmax(120px, 0.9fr)
+      minmax(150px, 1fr)
+      minmax(140px, 0.9fr)
+      minmax(110px, 0.75fr)
+      minmax(135px, 0.85fr) !important;
+  }
+}
+
+/* Mobile: keep only table area horizontally scrollable */
+@media (max-width: 860px) {
+  .return-page .return-queue-panel {
+    overflow-x: hidden !important;
+  }
+
+  .return-page .return-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-table-grid {
+    width: 720px !important;
+    min-width: 720px !important;
+    max-width: none !important;
+  }
+
+  .return-page .return-table-scroll-area .return-returned-table-header,
+  .return-page .return-table-scroll-area .return-returned-table-grid {
+    width: 820px !important;
+    min-width: 820px !important;
+    max-width: none !important;
+  }
+}
+/* =========================================================
+   RETURN CONFIRMATION - MOBILE ACTION BUTTON FIX
+   Keeps Details / Select buttons inside the table row.
+========================================================= */
+
+@media (max-width: 860px) {
+  /* Borrowed table needs enough width for action buttons */
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-table-grid {
+    width: 790px !important;
+    min-width: 790px !important;
+    max-width: none !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-row {
+    grid-template-columns:
+      130px
+      135px
+      95px
+      110px
+      105px
+      165px !important;
+    gap: 8px !important;
+  }
+
+  /* Action cell */
+  .return-page .return-borrowed-actions {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+  }
+
+  /* Details / Select buttons */
+  .return-page .return-borrowed-actions .return-primary-btn,
+  .return-page .return-borrowed-actions .return-secondary-btn {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 78px !important;
+    min-height: 32px !important;
+
+    border-radius: 999px !important;
+    padding: 0 7px !important;
+    box-shadow: none !important;
+
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .return-page .return-borrowed-actions .return-primary-btn:hover:not(:disabled),
+  .return-page .return-borrowed-actions .return-secondary-btn:hover:not(:disabled) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Prevent status pill from pushing into Action column */
+  .return-page .return-borrowed-status-cell {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .return-page .return-borrowed-status-pill {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+  }
+}
+/* =========================================================
+   RETURN CONFIRMATION - TRUE FINAL MOBILE TABLE ACTION FIX
+   Fixes Status + Action overlap by making table width match columns.
+========================================================= */
+
+@media (max-width: 860px) {
+  .return-page .return-queue-panel {
+    overflow-x: hidden !important;
+  }
+
+  .return-page .return-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* BORROWED TABLE */
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-table-grid {
+    width: 920px !important;
+    min-width: 920px !important;
+    max-width: none !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-table-header,
+  .return-page .return-table-scroll-area .return-borrowed-row {
+    width: 100% !important;
+    min-width: 920px !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+
+    display: grid !important;
+    grid-template-columns:
+      140px
+      150px
+      105px
+      125px
+      135px
+      190px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-row {
+    min-height: 62px !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* RETURNED TABLE */
+  .return-page .return-table-scroll-area .return-returned-table-header,
+  .return-page .return-table-scroll-area .return-returned-table-grid {
+    width: 980px !important;
+    min-width: 980px !important;
+    max-width: none !important;
+  }
+
+  .return-page .return-table-scroll-area .return-returned-table-header,
+  .return-page .return-table-scroll-area .return-returned-row {
+    width: 100% !important;
+    min-width: 980px !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+
+    display: grid !important;
+    grid-template-columns:
+      135px
+      145px
+      105px
+      140px
+      125px
+      100px
+      140px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .return-page .return-table-scroll-area .return-returned-row {
+    min-height: 62px !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset old stacked-card mobile styles inside scroll table */
+  .return-page .return-table-scroll-area .return-borrowed-cell,
+  .return-page .return-table-scroll-area .return-returned-cell,
+  .return-page .return-table-scroll-area .return-borrowed-status-cell,
+  .return-page .return-table-scroll-area .return-returned-status-cell,
+  .return-page .return-table-scroll-area .return-borrowed-actions {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-cell strong,
+  .return-page .return-table-scroll-area .return-returned-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-item-cell span,
+  .return-page .return-table-scroll-area .return-borrowed-borrower-cell span,
+  .return-page .return-table-scroll-area .return-returned-item-cell span,
+  .return-page .return-table-scroll-area .return-returned-borrower-cell span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Status pills */
+  .return-page .return-table-scroll-area .return-borrowed-status-cell,
+  .return-page .return-table-scroll-area .return-returned-status-cell {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-status-pill,
+  .return-page .return-table-scroll-area .return-returned-status-pill,
+  .return-page .return-table-scroll-area .return-borrowed-status-cell .return-overdue-pill {
+    width: 100% !important;
+    max-width: 128px !important;
+    min-width: 0 !important;
+    min-height: 30px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+
+    font-size: 0.48rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Action buttons */
+  .return-page .return-table-scroll-area .return-borrowed-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-actions .return-primary-btn,
+  .return-page .return-table-scroll-area .return-borrowed-actions .return-secondary-btn {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: 86px !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+
+    padding: 0 7px !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+
+    font-size: 0.46rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .return-page .return-table-scroll-area .return-borrowed-actions .return-primary-btn:hover:not(:disabled),
+  .return-page .return-table-scroll-area .return-borrowed-actions .return-secondary-btn:hover:not(:disabled) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
