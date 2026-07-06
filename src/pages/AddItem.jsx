@@ -31,6 +31,8 @@ function AddItem() {
   const [condition, setCondition] = useState("Good");
   const [availability, setAvailability] = useState("Available");
   const [maxBorrowDays, setMaxBorrowDays] = useState("7");
+  const [bulkQuantity, setBulkQuantity] = useState("1");
+  const [maintenanceReason, setMaintenanceReason] = useState("");
 
   const [formTouched, setFormTouched] = useState(false);
 
@@ -89,12 +91,25 @@ function AddItem() {
       errors.maxBorrowDays = "Max borrow days must be greater than 0.";
     }
 
+    if (!bulkQuantity || Number(bulkQuantity) <= 0) {
+      errors.bulkQuantity = "Quantity must be at least 1.";
+    } else if (Number(bulkQuantity) > 100) {
+      errors.bulkQuantity = "Quantity cannot exceed 100 items per batch.";
+    }
+
     if (!condition) {
       errors.condition = "Condition is required.";
     }
 
     if (!getFinalAvailability()) {
       errors.availability = "Availability is required.";
+    }
+
+    if (
+      getFinalAvailability() === "Under Maintenance" &&
+      !maintenanceReason.trim()
+    ) {
+      errors.maintenanceReason = "Maintenance reason is required.";
     }
 
     setFieldErrors(errors);
@@ -115,6 +130,14 @@ function AddItem() {
 
   function isDamagedLostStatus(value) {
     return ["Damaged", "Lost"].includes(String(value || ""));
+  }
+
+  function isMaintenanceStatus(value) {
+    return String(value || "") === "Under Maintenance";
+  }
+
+  function sanitizeMaintenanceReason(value) {
+    return String(value || "").replace(/[<>`]/g, "").trim();
   }
 
   function getAdminId() {
@@ -217,15 +240,57 @@ function AddItem() {
     setFormTouched(true);
   }
 
-  function generateItemCode() {
+  function sanitizeCodePart(value, fallback = "QBR", maxLength = 4) {
+    const cleanedValue = String(value || "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+    return (cleanedValue || fallback).slice(0, maxLength);
+  }
+
+  function getBulkQuantity() {
+    const parsedQuantity = Number(bulkQuantity);
+
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      return 1;
+    }
+
+    return Math.min(Math.floor(parsedQuantity), 100);
+  }
+
+  function getBulkQuantityLabel() {
+    const quantity = getBulkQuantity();
+
+    return `${quantity} item${quantity === 1 ? "" : "s"}`;
+  }
+
+  function generateBatchCode() {
     const selectedCategory = getSelectedCategory();
-    const prefix = selectedCategory?.id
-      ? selectedCategory.id.slice(0, 3).toUpperCase()
-      : "QBR";
+
+    const categoryPrefix = sanitizeCodePart(
+      selectedCategory?.id || selectedCategory?.name,
+      "QBR",
+      3
+    );
+
+    const itemPrefix = sanitizeCodePart(itemName, "ITEM", 4);
+    const timePart = Date.now().toString().slice(-6);
+
+    return `${categoryPrefix}-${itemPrefix}-${timePart}`;
+  }
+
+  function generateItemCode(batchCode, sequenceNumber, totalQuantity) {
+    if (totalQuantity > 1) {
+      const sequenceWidth = Math.max(3, String(totalQuantity).length);
+      const sequenceLabel = String(sequenceNumber).padStart(sequenceWidth, "0");
+
+      return `${batchCode}-${sequenceLabel}`;
+    }
 
     const randomNumber = Math.floor(1000 + Math.random() * 9000);
 
-    return `${prefix}-${Date.now().toString().slice(-5)}-${randomNumber}`;
+    return `${batchCode}-${randomNumber}`;
   }
 
   function getFinalAvailability() {
@@ -263,6 +328,16 @@ function AddItem() {
         }
       }
 
+      if (fieldName === "bulkQuantity") {
+        if (!bulkQuantity || Number(bulkQuantity) <= 0) {
+          nextErrors.bulkQuantity = "Quantity must be at least 1.";
+        } else if (Number(bulkQuantity) > 100) {
+          nextErrors.bulkQuantity = "Quantity cannot exceed 100 items per batch.";
+        } else {
+          delete nextErrors.bulkQuantity;
+        }
+      }
+
       if (fieldName === "condition") {
         if (!condition) {
           nextErrors.condition = "Condition is required.";
@@ -276,6 +351,21 @@ function AddItem() {
           nextErrors.availability = "Availability is required.";
         } else {
           delete nextErrors.availability;
+        }
+
+        if (getFinalAvailability() !== "Under Maintenance") {
+          delete nextErrors.maintenanceReason;
+        }
+      }
+
+      if (fieldName === "maintenanceReason") {
+        if (
+          getFinalAvailability() === "Under Maintenance" &&
+          !maintenanceReason.trim()
+        ) {
+          nextErrors.maintenanceReason = "Maintenance reason is required.";
+        } else {
+          delete nextErrors.maintenanceReason;
         }
       }
 
@@ -291,6 +381,8 @@ function AddItem() {
     setCondition("Good");
     setAvailability("Available");
     setMaxBorrowDays("7");
+    setBulkQuantity("1");
+    setMaintenanceReason("");
     setImageFile(null);
     setImagePreview("");
     setCropSourceFile(null);
@@ -399,56 +491,89 @@ function AddItem() {
         return;
       }
 
-      const finalItemCode = generateItemCode();
-      const imageUrl = await uploadItemImage(finalItemCode);
+      const totalQuantity = getBulkQuantity();
+      const batchCode = generateBatchCode();
+      const imageUrl = await uploadItemImage(batchCode);
       const finalAvailability = getFinalAvailability();
       const isInitialDamagedLost = isDamagedLostStatus(finalAvailability);
+      const isInitialMaintenance = isMaintenanceStatus(finalAvailability);
+      const cleanedMaintenanceReason = sanitizeMaintenanceReason(maintenanceReason);
+      const createdItemCodes = [];
 
-      const itemRef = await addDoc(collection(db, "items"), {
-        itemCode: finalItemCode,
-        itemName: itemName.trim(),
-        imageUrl,
-        description: description.trim(),
+      for (let index = 1; index <= totalQuantity; index += 1) {
+        const finalItemCode = generateItemCode(batchCode, index, totalQuantity);
 
-        categoryId: selectedCategory.id,
-        categoryName: selectedCategory.name,
-        category: selectedCategory.id,
+        const itemRef = await addDoc(collection(db, "items"), {
+          itemCode: finalItemCode,
+          itemName: itemName.trim(),
+          imageUrl,
+          description: description.trim(),
 
-        condition,
-        availability: finalAvailability,
-        maxBorrowDays: Number(maxBorrowDays),
+          categoryId: selectedCategory.id,
+          categoryName: selectedCategory.name,
+          category: selectedCategory.id,
 
-        ...(isInitialDamagedLost
-          ? {
-              damagedLostAt: serverTimestamp(),
-              damagedLostDate: getTodayDate(),
-              damagedLostBy: getAdminId(),
-              damagedLostByEmail: getAdminEmail(),
-              damagedLostStatus: finalAvailability,
-              damagedLostReport: `Item created with ${finalAvailability} status.`,
-              damagedLostSource: "addItem",
-            }
-          : {}),
+          condition,
+          availability: finalAvailability,
+          maxBorrowDays: Number(maxBorrowDays),
 
-        qrValue: "",
-        barcodeValue: "",
+          bulkCreated: totalQuantity > 1,
+          bulkBatchCode: batchCode,
+          bulkSequence: index,
+          bulkTotal: totalQuantity,
 
-        createdBy: userData?.uid || auth.currentUser?.uid || "",
-        createdByEmail: userData?.email || auth.currentUser?.email || "",
+          ...(isInitialDamagedLost
+            ? {
+                damagedLostAt: serverTimestamp(),
+                damagedLostDate: getTodayDate(),
+                damagedLostBy: getAdminId(),
+                damagedLostByEmail: getAdminEmail(),
+                damagedLostStatus: finalAvailability,
+                damagedLostReport: `Item created with ${finalAvailability} status.`,
+                damagedLostSource: "addItem",
+              }
+            : {}),
 
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+          ...(isInitialMaintenance
+            ? {
+                maintenanceReason: cleanedMaintenanceReason,
+                maintenanceStartedAt: serverTimestamp(),
+                maintenanceStartedDate: getTodayDate(),
+                maintenanceStartedBy: getAdminId(),
+                maintenanceStartedByEmail: getAdminEmail(),
+                maintenanceStatus: "Under Maintenance",
+                maintenanceSource: "addItem",
+              }
+            : {}),
 
-      const qrValue = `${window.location.origin}/item/${itemRef.id}`;
-      const barcodeValue = itemRef.id;
+          qrValue: "",
+          barcodeValue: "",
 
-      await updateDoc(itemRef, {
-        qrValue,
-        barcodeValue,
-        updatedAt: serverTimestamp(),
-      });
+          createdBy: userData?.uid || auth.currentUser?.uid || "",
+          createdByEmail: userData?.email || auth.currentUser?.email || "",
 
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        const qrValue = `${window.location.origin}/item/${itemRef.id}`;
+        const barcodeValue = itemRef.id;
+
+        await updateDoc(itemRef, {
+          qrValue,
+          barcodeValue,
+          updatedAt: serverTimestamp(),
+        });
+
+        createdItemCodes.push(finalItemCode);
+      }
+
+      const successMessage =
+        totalQuantity === 1
+          ? "Successfully created 1 item."
+          : `Successfully created ${totalQuantity} individual item records with unique QR codes.`;
+
+      showStatus(successMessage, "success");
       showToast("Successfully Created", "success");
       resetForm();
     } catch (error) {
@@ -562,12 +687,44 @@ function AddItem() {
               <label className="qb-label">Item Code</label>
 
               <div className="add-item-auto-code-display" aria-label="Auto-generated item code">
-                <span>Auto-generated after saving</span>
+                <span>{getBulkQuantity() > 1 ? "Bulk codes generated after saving" : "Auto-generated after saving"}</span>
               </div>
 
               <p>
                 The item code is generated automatically after saving and is used
                 for QR, barcode, borrowing records, and item tracking.
+              </p>
+            </div>
+
+            <div className="add-item-field add-item-quantity-field">
+              <label className="qb-label" htmlFor="bulk-quantity">
+                Quantity <span className="required-star">*</span>
+              </label>
+
+              <input
+                id="bulk-quantity"
+                type="number"
+                min="1"
+                max="100"
+                className={fieldErrors.bulkQuantity ? "input-error" : ""}
+                value={bulkQuantity}
+                onFocus={() => clearFieldError("bulkQuantity")}
+                onBlur={() => validateAddItemField("bulkQuantity")}
+                onChange={(e) => {
+                  markFormChanged();
+                  setBulkQuantity(e.target.value);
+                  clearFieldError("bulkQuantity");
+                }}
+                disabled={submitting}
+              />
+
+              {fieldErrors.bulkQuantity && (
+                <p className="field-error-message">{fieldErrors.bulkQuantity}</p>
+              )}
+
+              <p>
+                Use 1 for a single item. Use more than 1 to create individual
+                item records with unique QR/barcode values using the same details.
               </p>
             </div>
 
@@ -721,10 +878,12 @@ function AddItem() {
                     markFormChanged();
                     setAvailability(e.target.value);
                     clearFieldError("availability");
+                    clearFieldError("maintenanceReason");
                   }}
                   disabled={submitting || condition === "Damaged" || condition === "Lost"}
                 >
                   <option value="Available">Available</option>
+                  <option value="Under Maintenance">Under Maintenance</option>
                   <option value="Unavailable">Unavailable</option>
                 </select>
 
@@ -735,8 +894,39 @@ function AddItem() {
                 {(condition === "Damaged" || condition === "Lost") && (
                   <p>Availability will automatically become {condition}.</p>
                 )}
+
+                {getFinalAvailability() === "Under Maintenance" && (
+                  <p>This item cannot be borrowed until maintenance is resolved.</p>
+                )}
               </div>
             </div>
+
+            {getFinalAvailability() === "Under Maintenance" && (
+              <div className="add-item-field add-item-maintenance-field">
+                <label className="qb-label" htmlFor="maintenance-reason">
+                  Maintenance Reason <span className="required-star">*</span>
+                </label>
+
+                <textarea
+                  id="maintenance-reason"
+                  className={fieldErrors.maintenanceReason ? "input-error" : ""}
+                  placeholder="Example: Needs repair, missing cable, for inspection..."
+                  value={maintenanceReason}
+                  onFocus={() => clearFieldError("maintenanceReason")}
+                  onBlur={() => validateAddItemField("maintenanceReason")}
+                  onChange={(e) => {
+                    markFormChanged();
+                    setMaintenanceReason(sanitizeMaintenanceReason(e.target.value));
+                    clearFieldError("maintenanceReason");
+                  }}
+                  disabled={submitting}
+                />
+
+                {fieldErrors.maintenanceReason && (
+                  <p className="field-error-message">{fieldErrors.maintenanceReason}</p>
+                )}
+              </div>
+            )}
 
             <div className="add-item-field add-item-image-field">
               <label className="qb-label" htmlFor="item-image">
@@ -776,7 +966,7 @@ function AddItem() {
                   availableCategories.length === 0
                 }
               >
-                {submitting ? "Saving..." : "Save Item"}
+                {submitting ? "Saving..." : getBulkQuantity() > 1 ? `Save ${getBulkQuantity()} Items` : "Save Item"}
               </button>
             </div>
           </form>
@@ -797,7 +987,7 @@ function AddItem() {
           </div>
 
           <div className="add-item-preview-info">
-            <span>Auto-generated after saving</span>
+            <span>{getBulkQuantity() > 1 ? `${getBulkQuantity()} individual records` : "Auto-generated after saving"}</span>
             <h3>{itemName || "Untitled Item"}</h3>
             <p>{description || "No description yet."}</p>
 
@@ -821,12 +1011,26 @@ function AddItem() {
                 <span>Max Days</span>
                 <strong>{maxBorrowDays || "0"}</strong>
               </div>
+
+              <div>
+                <span>Quantity</span>
+                <strong>{getBulkQuantityLabel()}</strong>
+              </div>
+
+              {getFinalAvailability() === "Under Maintenance" && (
+                <div>
+                  <span>Maintenance</span>
+                  <strong>{maintenanceReason || "Reason required"}</strong>
+                </div>
+              )}
             </div>
 
             <div className="add-item-qr-note">
               <strong>QR / Barcode</strong>
               <p>
-                QR and barcode values will be generated after the item is saved.
+                {getBulkQuantity() > 1
+                  ? "Each physical item will receive its own QR and barcode after saving."
+                  : "QR and barcode values will be generated after the item is saved."}
               </p>
             </div>
           </div>

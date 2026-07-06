@@ -1,52 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
-:root {
-  /* Playful Geometric Design Tokens */
-  --qb-bg: #fffdf5;
-  --qb-surface: #ffffff;
-  --qb-foreground: #1e293b;
-  --qb-muted: #f1f5f9;
-  --qb-muted-foreground: #64748b;
+/*
+  Main QBorrow theme.
+  Adjust the path only if your qborrow-theme.css is in another folder.
+*/
+@import "./styles/qborrow-theme.css";
 
-  --qb-accent: #8b5cf6;
-  --qb-accent-foreground: #ffffff;
-  --qb-secondary: #f472b6;
-  --qb-tertiary: #fbbf24;
-  --qb-quaternary: #34d399;
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
 
-  --qb-border: #1e293b;
-  --qb-soft-border: #e2e8f0;
-  --qb-input: #ffffff;
-  --qb-ring: #8b5cf6;
-
-  --qb-danger: #ef4444;
-  --qb-success: #22c55e;
-  --qb-warning: #f59e0b;
-  --qb-info: #3b82f6;
-
-  --qb-heading-font: "Outfit", system-ui, sans-serif;
-  --qb-body-font: "Plus Jakarta Sans", system-ui, sans-serif;
-
-  --qb-radius-sm: 8px;
-  --qb-radius-md: 16px;
-  --qb-radius-lg: 24px;
-  --qb-radius-full: 9999px;
-
-  --qb-border-width: 2px;
-
-  --qb-shadow-pop: 4px 4px 0 0 var(--qb-border);
-  --qb-shadow-pop-hover: 6px 6px 0 0 var(--qb-border);
-  --qb-shadow-pop-active: 2px 2px 0 0 var(--qb-border);
-  --qb-shadow-card: 8px 8px 0 0 #e2e8f0;
-  --qb-shadow-pink: 8px 8px 0 0 var(--qb-secondary);
-  --qb-shadow-yellow: 8px 8px 0 0 var(--qb-tertiary);
-  --qb-shadow-violet: 8px 8px 0 0 var(--qb-accent);
-
-  --qb-container: 1180px;
-  --qb-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -61,6 +27,7 @@ body,
 
 html {
   scroll-behavior: smooth;
+  background: var(--qb-bg);
 }
 
 body {
@@ -69,6 +36,11 @@ body {
   color: var(--qb-foreground);
   overflow-x: hidden;
   text-rendering: geometricPrecision;
+}
+
+#root {
+  display: block;
+  min-height: 100dvh;
 }
 
 button,
@@ -103,25 +75,21 @@ svg {
 }
 
 ::selection {
-  background: var(--qb-tertiary);
-  color: var(--qb-foreground);
+  background: var(--qb-accent);
+  color: #1e293b;
 }
 
 :focus-visible {
-  outline: 3px solid var(--qb-ring);
+  outline: 3px solid var(--qb-primary);
   outline-offset: 3px;
 }
 
-/* Reusable QBorrow UI foundation */
-
-.qb-page {
-  min-height: 100vh;
-  background: var(--qb-bg);
-  color: var(--qb-foreground);
-}
+/* =========================================================
+   GLOBAL HELPERS
+========================================================= */
 
 .qb-container {
-  width: min(var(--qb-container), calc(100% - 32px));
+  width: min(var(--qb-container, 1180px), calc(100% - 32px));
   margin: 0 auto;
 }
 
@@ -130,185 +98,6 @@ svg {
   font-weight: 900;
   letter-spacing: -0.045em;
   line-height: 0.95;
-}
-
-.qb-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  margin: 0;
-  padding: 8px 14px;
-  border: var(--qb-border-width) solid var(--qb-border);
-  border-radius: var(--qb-radius-full);
-  background: var(--qb-tertiary);
-  box-shadow: var(--qb-shadow-pop);
-  color: var(--qb-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.qb-card {
-  position: relative;
-  border: var(--qb-border-width) solid var(--qb-border);
-  border-radius: var(--qb-radius-lg);
-  background: var(--qb-surface);
-  box-shadow: var(--qb-shadow-card);
-}
-
-.qb-btn {
-  min-height: 48px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: var(--qb-border-width) solid var(--qb-border);
-  border-radius: var(--qb-radius-full);
-  padding: 0 22px;
-  background: var(--qb-surface);
-  color: var(--qb-foreground);
-  box-shadow: var(--qb-shadow-pop);
-  font-family: var(--qb-heading-font);
-  font-size: 0.88rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  transition:
-    transform 240ms var(--qb-ease-bounce),
-    box-shadow 240ms var(--qb-ease-bounce),
-    background 240ms ease,
-    color 240ms ease;
-}
-
-.qb-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: var(--qb-shadow-pop-hover);
-}
-
-.qb-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: var(--qb-shadow-pop-active);
-}
-
-.qb-btn-primary {
-  background: var(--qb-accent);
-  color: var(--qb-accent-foreground);
-}
-
-.qb-btn-secondary {
-  background: transparent;
-  color: var(--qb-foreground);
-}
-
-.qb-btn-secondary:hover {
-  background: var(--qb-tertiary);
-}
-
-.qb-btn-pink {
-  background: var(--qb-secondary);
-  color: var(--qb-foreground);
-}
-
-.qb-btn-yellow {
-  background: var(--qb-tertiary);
-  color: var(--qb-foreground);
-}
-
-.qb-btn-green {
-  background: var(--qb-quaternary);
-  color: var(--qb-foreground);
-}
-
-.qb-btn-icon {
-  width: 28px;
-  height: 28px;
-  display: inline-grid;
-  place-items: center;
-  border: var(--qb-border-width) solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-surface);
-  color: var(--qb-foreground);
-  font-size: 0.9rem;
-  line-height: 1;
-}
-
-.qb-label {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: var(--qb-foreground);
-  font-family: var(--qb-heading-font);
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.qb-input {
-  width: 100%;
-  min-height: 48px;
-  border: var(--qb-border-width) solid #cbd5e1;
-  border-radius: var(--qb-radius-md);
-  background: var(--qb-input);
-  color: var(--qb-foreground);
-  padding: 12px 14px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition:
-    border-color 200ms ease,
-    box-shadow 200ms ease;
-}
-
-.qb-input:focus {
-  border-color: var(--qb-accent);
-  box-shadow: 4px 4px 0 0 var(--qb-accent);
-  outline: none;
-}
-
-.qb-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  border: var(--qb-border-width) solid var(--qb-border);
-  border-radius: var(--qb-radius-full);
-  padding: 6px 12px;
-  background: var(--qb-muted);
-  color: var(--qb-foreground);
-  font-size: 0.76rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.qb-status-pill::before {
-  content: "";
-  width: 9px;
-  height: 9px;
-  border: 1.5px solid var(--qb-border);
-  border-radius: 50%;
-  background: var(--qb-muted-foreground);
-}
-
-.qb-status-pill[data-status="available"]::before,
-.qb-status-pill[data-status="returned"]::before {
-  background: var(--qb-success);
-}
-
-.qb-status-pill[data-status="pending"]::before,
-.qb-status-pill[data-status="reserved"]::before {
-  background: var(--qb-tertiary);
-}
-
-.qb-status-pill[data-status="borrowed"]::before {
-  background: var(--qb-info);
-}
-
-.qb-status-pill[data-status="damaged"]::before,
-.qb-status-pill[data-status="lost"]::before,
-.qb-status-pill[data-status="overdue"]::before {
-  background: var(--qb-danger);
 }
 
 .qb-sr-only {
@@ -321,6 +110,24 @@ svg {
   white-space: nowrap;
   border: 0;
 }
+
+/* =========================================================
+   DARK MODE BODY BACKGROUND ONLY
+   Do not force every card/panel/header here.
+   Let qborrow-theme.css variables handle colors.
+========================================================= */
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 15%, rgba(250, 204, 21, 0.12), transparent 25%),
+    var(--qb-bg);
+  color: var(--qb-foreground);
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -335,77 +142,4 @@ svg {
     scroll-behavior: auto !important;
     transition-duration: 0.001ms !important;
   }
-}
-html,
-body,
-#root {
-  height: auto !important;
-  min-height: 100% !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-}
-
-body {
-  position: static !important;
-}
-
-#root {
-  display: block !important;
-}
-
-html[data-theme="dark"] {
-  --qb-bg: #0f172a;
-  --qb-surface: #111827;
-  --qb-foreground: #f8fafc;
-  --qb-muted: #1e293b;
-  --qb-muted-foreground: #cbd5e1;
-  --qb-border: #e5e7eb;
-  --qb-input: #0b1220;
-
-  color-scheme: dark;
-}
-
-html[data-theme="dark"] body {
-  background:
-    radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.2), transparent 28%),
-    radial-gradient(circle at 80% 15%, rgba(251, 191, 36, 0.14), transparent 25%),
-    #0f172a !important;
-  color: var(--qb-foreground);
-}
-
-html[data-theme="dark"] .app-sidebar,
-html[data-theme="dark"] .app-topbar,
-html[data-theme="dark"] .app-page-content {
-  background: #0f172a !important;
-  color: var(--qb-foreground) !important;
-}
-
-html[data-theme="dark"] [class*="-card"],
-html[data-theme="dark"] [class*="-panel"],
-html[data-theme="dark"] [class*="-tools"],
-html[data-theme="dark"] [class*="-row"],
-html[data-theme="dark"] [class*="-header"],
-html[data-theme="dark"] [class*="-title-area"],
-html[data-theme="dark"] [class*="-box"] {
-  background-color: rgba(17, 24, 39, 0.96) !important;
-  color: var(--qb-foreground) !important;
-}
-
-html[data-theme="dark"] input,
-html[data-theme="dark"] select,
-html[data-theme="dark"] textarea {
-  background: #0b1220 !important;
-  color: var(--qb-foreground) !important;
-  border-color: #64748b !important;
-}
-
-html[data-theme="dark"] input::placeholder,
-html[data-theme="dark"] textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-html[data-theme="dark"] p,
-html[data-theme="dark"] small,
-html[data-theme="dark"] span {
-  color: inherit;
 }

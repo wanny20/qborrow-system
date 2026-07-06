@@ -1551,3 +1551,96 @@ html[data-theme="dark"] .app-page-content .item-details-scan-values span {
   font-weight: 750;
   line-height: 1.55;
 }
+
+
+/* =========================================================
+   ITEM DETAILS - DUPLICATE ITEM BUTTON
+========================================================= */
+
+.item-details-page .item-details-header-actions-compact {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.item-details-page .item-details-duplicate-btn {
+  border-color: #c7d2fe !important;
+  background: #eef2ff !important;
+  color: #4338ca !important;
+}
+
+.item-details-page .item-details-duplicate-btn:hover:not(:disabled) {
+  border-color: #a5b4fc !important;
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+
+.item-details-page .item-details-secondary-btn:disabled,
+.item-details-page .item-details-duplicate-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.62 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  .item-details-page .item-details-header-actions-compact {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .item-details-page .item-details-header-actions-compact button {
+    width: 100% !important;
+  }
+}
+
+html[data-theme="dark"] .item-details-page .item-details-duplicate-btn {
+  border-color: rgba(165, 180, 252, 0.38) !important;
+  background: rgba(67, 56, 202, 0.24) !important;
+  color: #c7d2fe !important;
+}
+
+
+/* =========================================================
+   ITEM DETAILS - UNDER MAINTENANCE STATUS
+========================================================= */
+
+.availability-maintenance,
+.item-details-page .availability-maintenance {
+  background: #e0f2fe !important;
+  color: #075985 !important;
+}
+
+.item-details-maintenance-banner {
+  margin-top: 14px;
+  border: 1px solid #7dd3fc;
+  border-radius: 18px;
+  background: #f0f9ff;
+  color: #075985;
+  padding: 12px;
+}
+
+.item-details-maintenance-banner strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.item-details-maintenance-banner p {
+  margin: 5px 0 0;
+  color: #075985;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+html[data-theme="dark"] .item-details-maintenance-banner {
+  border-color: rgba(125, 211, 252, 0.36);
+  background: rgba(14, 165, 233, 0.14);
+  color: #bae6fd;
+}
+
+html[data-theme="dark"] .item-details-maintenance-banner p {
+  color: #bae6fd;
+}

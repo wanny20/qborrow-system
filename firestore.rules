@@ -267,6 +267,9 @@ allow update: if isOwner(userId) &&
         adminCanAccessCategory(request.resource.data) &&
         validAdminRequestUpdate();
 
+      allow update: if isSuperAdmin() &&
+        validClosureExtensionUpdate();
+
       allow update: if isBorrower() &&
         resource.data.borrowerId == request.auth.uid &&
         resource.data.approvalStatus == "Pending" &&
@@ -297,6 +300,22 @@ allow update: if isOwner(userId) &&
           validExpireUpdate() ||
           validReleaseUpdate() ||
           validReturnUpdate();
+      }
+
+      function validClosureExtensionUpdate() {
+        return resource.data.approvalStatus == "Borrowed" &&
+          request.resource.data.approvalStatus == "Borrowed" &&
+          hasOnlyChangedFields([
+            "expectedReturnDate",
+            "originalExpectedReturnDate",
+            "closureExtended",
+            "closureExtendedDays",
+            "lastClosureExtendedDays",
+            "closureAdjustedAt",
+            "closureAdjustedBy",
+            "closureAdjustmentReason",
+            "updatedAt"
+          ]);
       }
 
       function validApproveUpdate() {
@@ -448,6 +467,59 @@ allow update: if isOwner(userId) &&
     }
 
     /* =========================
+       PENALTY / BORROWER RESTRICTION RECORDS
+    ========================= */
+
+    match /penaltyRecords/{penaltyId} {
+      allow read: if signedIn() && (
+        resource.data.borrowerId == request.auth.uid ||
+        isSuperAdmin() ||
+        (
+          isCategoryAdmin() &&
+          adminCanAccessCategory(resource.data)
+        )
+      );
+
+      allow create: if isAdmin() &&
+        adminCanAccessCategory(request.resource.data) &&
+        request.resource.data.keys().hasOnly([
+          "borrowerId",
+          "borrowerName",
+          "borrowerEmail",
+          "requestId",
+          "itemId",
+          "itemName",
+          "itemCode",
+          "categoryId",
+          "categoryName",
+          "reason",
+          "penaltyType",
+          "penaltySource",
+          "restrictionStartAt",
+          "restrictionEndAt",
+          "status",
+          "createdAt",
+          "createdBy",
+          "createdByEmail",
+          "updatedAt"
+        ]);
+
+      allow update: if isAdmin() &&
+        adminCanAccessCategory(resource.data) &&
+        adminCanAccessCategory(request.resource.data) &&
+        hasOnlyChangedFields([
+          "status",
+          "resolvedAt",
+          "resolvedBy",
+          "resolvedByEmail",
+          "resolutionReason",
+          "updatedAt"
+        ]);
+
+      allow delete: if isSuperAdmin();
+    }
+
+    /* =========================
        CATEGORIES
     ========================= */
 
@@ -473,6 +545,9 @@ allow update: if isOwner(userId) &&
           "closedByName",
           "reopenedAt",
           "reopenedBy",
+          "lastClosureExtendedDays",
+          "lastClosureExtendedRequests",
+          "lastClosureAdjustedAt",
           "updatedAt"
         ]);
 

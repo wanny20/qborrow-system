@@ -8242,3 +8242,153 @@ html[data-theme="dark"] body .user-management-page .user-list-card .user-table-s
     clip: auto !important;
   }
 }
+
+
+/* =========================================================
+   USER MANAGEMENT - PENALTY / BORROWER RESTRICTION HISTORY
+========================================================= */
+
+.user-penalty-history-card {
+  margin-top: 14px;
+  border: 2px solid var(--qb-border);
+  border-radius: 18px;
+  background: #f8fafc;
+  box-shadow: 3px 3px 0 rgba(30, 41, 59, 0.12);
+  padding: 12px;
+}
+
+.user-penalty-history-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.user-penalty-history-heading span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-penalty-history-heading strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--qb-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.user-penalty-history-heading p,
+.user-penalty-empty {
+  max-width: 360px;
+  margin: 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.user-penalty-list {
+  display: grid;
+  gap: 9px;
+}
+
+.user-penalty-item {
+  border: 1.5px solid rgba(30, 41, 59, 0.16);
+  border-radius: 15px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.user-penalty-item > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.user-penalty-item strong {
+  display: block;
+  color: var(--qb-foreground);
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.user-penalty-item span {
+  display: block;
+  margin-top: 4px;
+  color: var(--qb-muted-foreground);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.user-penalty-item p {
+  margin: 8px 0 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.72rem;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.user-penalty-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.user-penalty-meta span {
+  margin: 0;
+  font-size: 0.62rem;
+}
+
+.user-penalty-meta em,
+.settings-penalty-item-head em {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.penalty-status-active {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.penalty-status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.penalty-status-resolved {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+@media (max-width: 640px) {
+  .user-penalty-history-heading,
+  .user-penalty-item > div:first-child,
+  .user-penalty-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+html[data-theme="dark"] .user-penalty-history-card,
+html[data-theme="dark"] .user-penalty-item {
+  border-color: rgba(203, 213, 225, 0.24);
+  background: rgba(15, 23, 42, 0.9);
+}

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   collection,
   getDocs,
   query,
   where,
   doc,
+  getDoc,
   updateDoc,
   serverTimestamp,
   orderBy,
@@ -24,6 +25,8 @@ const RELEASE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 function MyRequests() {
   const navigate = useNavigate();
+  const outletContext = useOutletContext() || {};
+  const { schoolStatus } = outletContext;
   const { showToast } = useToast();
 
   const [requests, setRequests] = useState([]);
@@ -69,6 +72,80 @@ function MyRequests() {
   function showBlockedAction(message) {
     showStatus(message, "error");
     showToast(message, "error");
+  }
+
+  function getRequestItemImageUrl(request) {
+    return (
+      request?.itemImageUrl ||
+      request?.itemImage ||
+      request?.imageUrl ||
+      request?.itemPhotoUrl ||
+      ""
+    );
+  }
+
+  function getRequestItemInitial(request) {
+    return String(request?.itemName || request?.itemCode || "Q")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "Q";
+  }
+
+  async function enrichRequestsWithItemImages(requestList) {
+    const uniqueItemIds = [
+      ...new Set(
+        requestList
+          .map((request) => request.itemId)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (uniqueItemIds.length === 0) {
+      return requestList;
+    }
+
+    const itemEntries = await Promise.all(
+      uniqueItemIds.map(async (itemId) => {
+        try {
+          const itemSnap = await getDoc(doc(db, "items", itemId));
+
+          return [
+            itemId,
+            itemSnap.exists()
+              ? {
+                  id: itemSnap.id,
+                  ...itemSnap.data(),
+                }
+              : null,
+          ];
+        } catch (error) {
+          console.warn("Failed to load item image", itemId, error);
+          return [itemId, null];
+        }
+      })
+    );
+
+    const itemMap = new Map(itemEntries);
+
+    return requestList.map((request) => {
+      const itemRecord = itemMap.get(request.itemId);
+
+      return {
+        ...request,
+        itemImageUrl:
+          getRequestItemImageUrl(request) ||
+          itemRecord?.imageUrl ||
+          itemRecord?.itemImageUrl ||
+          "",
+        itemCondition: request.itemCondition || itemRecord?.condition || "",
+        itemAvailability:
+          request.itemAvailability || itemRecord?.availability || "",
+      };
+    });
+  }
+
+  function isSchoolClosed() {
+    return Boolean(schoolStatus?.isSchoolClosed);
   }
 
   function openConfirmAction(config) {
@@ -117,18 +194,85 @@ function MyRequests() {
     return Number.isNaN(parsedTime) ? 0 : parsedTime;
   }
 
-  function getApprovedReleaseRemainingMs(request) {
-    if (request.approvalStatus !== "Approved") return null;
+  function parseDateKey(value) {
+    if (!value) return null;
+
+    const [year, month, day] = String(value).split("-").map(Number);
+
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  }
+
+  function getEndOfDateKeyMs(dateKey) {
+    const date = parseDateKey(dateKey);
+
+    if (!date) return 0;
+
+    date.setHours(23, 59, 59, 999);
+
+    return date.getTime();
+  }
+
+  function getEarliestValidDeadlineMs(deadlines) {
+    const validDeadlines = deadlines.filter(
+      (deadline) => typeof deadline === "number" && deadline > 0
+    );
+
+    return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
+  }
+
+  function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
+    const closedTime = getTimestampMs(schoolStatus?.closedAt);
+    const reopenedTime = isSchoolClosed()
+      ? Date.now()
+      : getTimestampMs(schoolStatus?.reopenedAt);
+
+    if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
+    if (baseDeadlineMs <= closedTime) return 0;
+    if (timerStartMs && timerStartMs >= reopenedTime) return 0;
+
+    const pauseStart = Math.max(closedTime, timerStartMs || closedTime);
+    const pauseEnd = reopenedTime;
+
+    return Math.max(0, pauseEnd - pauseStart);
+  }
+
+  function getDeadlineWithSchoolClosurePause(timerStartMs, baseDeadlineMs) {
+    if (!baseDeadlineMs) return 0;
+
+    return baseDeadlineMs + getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs);
+  }
+
+  function getApprovedReleaseDeadlineMs(request) {
+    if (request.approvalStatus !== "Approved") return 0;
 
     const approvedTime =
       getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+    const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
 
-    if (!approvedTime) return null;
+    return getEarliestValidDeadlineMs([
+      approvedTime
+        ? getDeadlineWithSchoolClosurePause(
+            approvedTime,
+            approvedTime + RELEASE_WINDOW_MS
+          )
+        : 0,
+      getDeadlineWithSchoolClosurePause(approvedTime, expectedReturnEnd),
+    ]);
+  }
 
-    return RELEASE_WINDOW_MS - (Date.now() - approvedTime);
+  function getApprovedReleaseRemainingMs(request) {
+    const deadlineTime = getApprovedReleaseDeadlineMs(request);
+
+    if (!deadlineTime) return null;
+
+    return deadlineTime - Date.now();
   }
 
   function formatApprovedReleaseRemaining(request) {
+    if (isSchoolClosed()) return "Claim Paused - School Closed";
+
     const remainingMs = getApprovedReleaseRemainingMs(request);
 
     if (remainingMs === null) return "Awaiting Release";
@@ -213,11 +357,19 @@ function MyRequests() {
       which is approvalStatus === "Borrowed".
     */
     if (request.approvalStatus === "Borrowed") {
+      if (isSchoolClosed()) return "Return Deadline Paused";
+
       return today > expectedDate ? "Overdue" : "Not Overdue";
     }
 
     if (request.approvalStatus === "Approved") {
+      if (isSchoolClosed()) return "Claim Paused - School Closed";
+
       return formatApprovedReleaseRemaining(request);
+    }
+
+    if (request.approvalStatus === "Pending" && isSchoolClosed()) {
+      return "Approval Timer Paused";
     }
 
     return "N/A";
@@ -298,10 +450,12 @@ function MyRequests() {
       const docs = querySnapshot.docs;
       const visibleDocs = docs.slice(0, REQUESTS_PAGE_SIZE);
 
-      const requestData = visibleDocs.map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }));
+      const requestData = await enrichRequestsWithItemImages(
+        visibleDocs.map((document) => ({
+          id: document.id,
+          ...document.data(),
+        }))
+      );
 
       setHasMoreRequests(docs.length > REQUESTS_PAGE_SIZE);
       setLastRequestDoc(visibleDocs[visibleDocs.length - 1] || null);
@@ -522,6 +676,23 @@ function MyRequests() {
               >
                 {selectedRequest.approvalStatus || "Unknown"}
               </strong>
+            </div>
+
+            <div className="my-requests-modal-item-preview">
+              {getRequestItemImageUrl(selectedRequest) ? (
+                <img
+                  src={getRequestItemImageUrl(selectedRequest)}
+                  alt={selectedRequest.itemName || "Requested item"}
+                />
+              ) : (
+                <span>{getRequestItemInitial(selectedRequest)}</span>
+              )}
+
+              <div>
+                <span>Item Photo</span>
+                <strong>{selectedRequest.itemName || "Untitled Item"}</strong>
+                <p>{selectedRequest.itemCode || selectedRequest.itemId || "No item code"}</p>
+              </div>
             </div>
 
             <p className="my-requests-modal-purpose">

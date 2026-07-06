@@ -1235,3 +1235,21 @@ html[data-theme="dark"] .edit-item-preview-media {
   }
 }
 
+
+
+/* =========================================================
+   EDIT ITEM - UNDER MAINTENANCE STATUS
+========================================================= */
+
+.edit-item-maintenance-field {
+  grid-column: 1 / -1 !important;
+}
+
+.edit-item-maintenance-field textarea {
+  min-height: 86px !important;
+}
+
+html[data-theme="dark"] .edit-item-maintenance-field textarea {
+  background-color: var(--qb-input, #111827);
+  color: var(--qb-foreground, #e5e7eb);
+}

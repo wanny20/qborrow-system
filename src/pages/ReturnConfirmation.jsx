@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   Html5Qrcode,
@@ -586,6 +587,76 @@ function isReturnBusy() {
     return cleanedValue || fallback;
   }
 
+
+  function getRequestItemImageUrl(request) {
+    return (
+      request?.itemImageUrl ||
+      request?.itemImage ||
+      request?.imageUrl ||
+      request?.itemPhotoUrl ||
+      ""
+    );
+  }
+
+  function getRequestItemInitial(request) {
+    return String(request?.itemName || request?.itemCode || "Q")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "Q";
+  }
+
+  async function enrichRequestsWithItemImages(requestList) {
+    const uniqueItemIds = [
+      ...new Set(
+        requestList
+          .map((request) => request.itemId)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (uniqueItemIds.length === 0) {
+      return requestList;
+    }
+
+    const itemEntries = await Promise.all(
+      uniqueItemIds.map(async (itemId) => {
+        try {
+          const itemSnap = await getDoc(doc(db, "items", itemId));
+
+          return [
+            itemId,
+            itemSnap.exists()
+              ? {
+                  id: itemSnap.id,
+                  ...itemSnap.data(),
+                }
+              : null,
+          ];
+        } catch (error) {
+          console.warn("Failed to load item image", itemId, error);
+          return [itemId, null];
+        }
+      })
+    );
+
+    const itemMap = new Map(itemEntries);
+
+    return requestList.map((request) => {
+      const itemRecord = itemMap.get(request.itemId);
+
+      return {
+        ...request,
+        itemImageUrl:
+          getRequestItemImageUrl(request) ||
+          itemRecord?.imageUrl ||
+          itemRecord?.itemImageUrl ||
+          "",
+        itemCondition: request.itemCondition || itemRecord?.condition || "",
+        itemAvailability:
+          request.itemAvailability || itemRecord?.availability || "",
+      };
+    });
+  }
   function getBorrowerUserType(request) {
     return cleanDisplay(request?.borrowerUserType, "Student");
   }
@@ -626,6 +697,8 @@ function isReturnBusy() {
   }
 
   function isOverdue(expectedReturnDate) {
+    if (isSchoolClosed()) return false;
+
     if (!expectedReturnDate) return false;
 
     const currentDate = new Date(today);
@@ -638,6 +711,8 @@ function isReturnBusy() {
   }
 
   function getOverdueStatus(expectedReturnDate) {
+    if (isSchoolClosed()) return "Paused - School Closed";
+
     return isOverdue(expectedReturnDate) ? "Overdue" : "Not Overdue";
   }
 
@@ -678,10 +753,12 @@ async function fetchBorrowedRequests(options = {}) {
 
     const querySnapshot = await getDocs(borrowedQuery);
 
-    const requestData = querySnapshot.docs.map((document) => ({
-      id: document.id,
-      ...document.data(),
-    }));
+    const requestData = await enrichRequestsWithItemImages(
+      querySnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+    );
 
     setRequests(requestData);
 
@@ -706,10 +783,12 @@ async function fetchReturnedRequests(options = {}) {
 
     const querySnapshot = await getDocs(returnedQuery);
 
-    const requestData = querySnapshot.docs.map((document) => ({
-      id: document.id,
-      ...document.data(),
-    }));
+    const requestData = await enrichRequestsWithItemImages(
+      querySnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+    );
 
     setReturnedRequests(requestData);
 
@@ -754,6 +833,16 @@ async function fetchReturnedRequests(options = {}) {
   setFieldErrors({});
   setViewingBorrowedRequest(null);
   showToast("Borrowed request selected.", "success");
+}
+
+function openBorrowedRequestDetails(request) {
+  if (!request) return;
+
+  if (scannerOpen) {
+    stopReturnScanner(false);
+  }
+
+  setViewingBorrowedRequest(request);
 }
 
 async function findBorrowedRequestByItemId(rawItemId) {
@@ -824,6 +913,12 @@ clearFieldError("manualItemId");
       );
       return;
     }
+
+    const [enrichedMatchingRequest] = await enrichRequestsWithItemImages([
+      matchingRequest,
+    ]);
+
+    matchingRequest = enrichedMatchingRequest;
 
     setSelectedRequest(matchingRequest);
     setManualItemId(itemId);
@@ -1065,8 +1160,10 @@ return (
       onConfirm={runConfirmAction}
       onCancel={closeConfirmAction}
     />
-      {viewingBorrowedRequest && (
-  <div
+      {viewingBorrowedRequest &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
     className="return-modal-backdrop"
     role="dialog"
     aria-modal="true"
@@ -1100,6 +1197,23 @@ return (
 
         <h2>{viewingBorrowedRequest.itemName || "Untitled Item"}</h2>
         <p>Review the borrowed request details before selecting it for return.</p>
+      </div>
+
+      <div className="return-modal-item-preview">
+        {getRequestItemImageUrl(viewingBorrowedRequest) ? (
+          <img
+            src={getRequestItemImageUrl(viewingBorrowedRequest)}
+            alt={viewingBorrowedRequest.itemName || "Borrowed item"}
+          />
+        ) : (
+          <span>{getRequestItemInitial(viewingBorrowedRequest)}</span>
+        )}
+
+        <div>
+          <span>Item Photo</span>
+          <strong>{viewingBorrowedRequest.itemName || "Untitled Item"}</strong>
+          <p>{viewingBorrowedRequest.itemCode || viewingBorrowedRequest.itemId || "No item code"}</p>
+        </div>
       </div>
 
       <div className="return-modal-info-grid">
@@ -1169,8 +1283,9 @@ return (
         </button>
       </div>
     </section>
-  </div>
-)}
+  </div>,
+          document.body
+        )}
 <section className="return-header return-header-compact">
   <div className="return-header-content">
 <div className="return-header-text">
@@ -1597,7 +1712,7 @@ return (
                         <button
                           type="button"
                           className="return-secondary-btn"
-                          onClick={() => setViewingBorrowedRequest(request)}
+                          onClick={() => openBorrowedRequestDetails(request)}
                           disabled={confirming || isSchoolClosed()}
                         >
                           Details

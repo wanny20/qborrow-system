@@ -2704,3 +2704,289 @@ html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollba
 html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-thumb {
   background: rgba(96, 165, 250, 0.34);
 }
+/* =========================================================
+   DASHBOARD - COMPACT QUICK ACTIONS + NEEDS ATTENTION
+   Paste at the VERY BOTTOM of Dashboard.css
+========================================================= */
+
+/* Keep both panels from stretching too tall */
+.dashboard-page .dashboard-main-grid {
+  align-items: start !important;
+  gap: 14px !important;
+}
+
+/* Compact panel shell */
+.dashboard-page .dashboard-panel {
+  border-radius: 22px !important;
+  padding: 16px !important;
+}
+
+/* Compact panel heading */
+.dashboard-page .dashboard-panel-heading {
+  margin-bottom: 12px !important;
+}
+
+.dashboard-page .dashboard-panel-heading h2 {
+  font-size: clamp(1.25rem, 1.7vw, 1.65rem) !important;
+  line-height: 1.05 !important;
+}
+
+.dashboard-page .dashboard-panel-heading p {
+  margin-top: 4px !important;
+  font-size: 0.82rem !important;
+  line-height: 1.35 !important;
+}
+
+/* Desktop: Quick Actions becomes 2 columns instead of one long list */
+@media (min-width: 1181px) {
+  .dashboard-page .dashboard-action-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-page .dashboard-attention-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Compact Quick Action rows */
+.dashboard-page .dashboard-action-list button {
+  min-height: 72px !important;
+  grid-template-columns: minmax(0, 1fr) 30px !important;
+  gap: 10px !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+}
+
+.dashboard-page .dashboard-action-list strong {
+  font-size: 0.9rem !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-page .dashboard-action-list span {
+  margin-top: 3px !important;
+  font-size: 0.74rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Arrow icon smaller */
+.dashboard-page .dashboard-action-list button > span:last-child {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 0.82rem !important;
+}
+
+/* Compact Needs Attention rows */
+.dashboard-page .dashboard-attention-list button {
+  min-height: 70px !important;
+  grid-template-columns: minmax(0, 1fr) 44px !important;
+  gap: 10px !important;
+  border-radius: 16px !important;
+  padding: 12px 14px !important;
+}
+
+.dashboard-page .dashboard-attention-list span {
+  font-size: 0.88rem !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-page .dashboard-attention-list strong {
+  min-width: 40px !important;
+  width: 40px !important;
+  height: 36px !important;
+  font-size: 0.92rem !important;
+}
+
+/* Medium screens: keep panels stacked but compact */
+@media (max-width: 1180px) {
+  .dashboard-page .dashboard-main-grid {
+    gap: 12px !important;
+  }
+
+  .dashboard-page .dashboard-panel {
+    padding: 14px !important;
+  }
+
+  .dashboard-page .dashboard-action-list,
+  .dashboard-page .dashboard-attention-list {
+    gap: 8px !important;
+  }
+
+  .dashboard-page .dashboard-action-list button,
+  .dashboard-page .dashboard-attention-list button {
+    min-height: 62px !important;
+    border-radius: 15px !important;
+    padding: 10px 12px !important;
+  }
+}
+
+/* Mobile: compact vertical list */
+@media (max-width: 760px) {
+  .dashboard-page .dashboard-panel {
+    border-radius: 16px !important;
+    padding: 11px !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading h2 {
+    font-size: 1rem !important;
+  }
+
+  .dashboard-page .dashboard-panel-heading p {
+    font-size: 0.66rem !important;
+  }
+
+  .dashboard-page .dashboard-action-list,
+  .dashboard-page .dashboard-attention-list {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .dashboard-page .dashboard-action-list button,
+  .dashboard-page .dashboard-attention-list button {
+    min-height: 46px !important;
+    border-radius: 14px !important;
+    padding: 8px 10px !important;
+  }
+
+  .dashboard-page .dashboard-action-list strong,
+  .dashboard-page .dashboard-attention-list span {
+    font-size: 0.72rem !important;
+  }
+
+  .dashboard-page .dashboard-action-list span {
+    font-size: 0.58rem !important;
+  }
+
+  .dashboard-page .dashboard-action-list button > span:last-child {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  .dashboard-page .dashboard-attention-list strong {
+    min-width: 34px !important;
+    width: 34px !important;
+    height: 30px !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+/* Dark mode compact card support */
+html[data-theme="dark"] .dashboard-page .dashboard-action-list button,
+html[data-theme="dark"] .dashboard-page .dashboard-attention-list button {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+html[data-theme="dark"] .dashboard-page .dashboard-action-list button:hover,
+html[data-theme="dark"] .dashboard-page .dashboard-attention-list button:hover {
+  background: rgba(37, 99, 235, 0.2) !important;
+}
+/* =========================================================
+   DASHBOARD - 7 STAT CARDS IN ONE ROW
+   Paste at the VERY BOTTOM of Dashboard.css
+   For: Total Items, Available, Borrowed, Pending, Overdue,
+   Damaged/Lost, Maintenance
+========================================================= */
+
+@media (min-width: 1200px) {
+  .dashboard-page .dashboard-stats-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 98px !important;
+    border-radius: 18px !important;
+    padding: 12px 13px !important;
+  }
+
+  .dashboard-page .dashboard-stat-label {
+    max-width: calc(100% - 34px) !important;
+    margin: 0 0 8px !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0.07em !important;
+  }
+
+  .dashboard-page .dashboard-stat-card strong {
+    font-size: clamp(1.45rem, 1.55vw, 1.85rem) !important;
+    line-height: 0.95 !important;
+  }
+
+  .dashboard-page .dashboard-stat-hint {
+    left: 13px !important;
+    bottom: 10px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .dashboard-page .dashboard-stat-card::before {
+    top: 12px !important;
+    right: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 12px !important;
+  }
+
+  .dashboard-page .dashboard-stat-card::after {
+    top: 20px !important;
+    right: 21px !important;
+    font-size: 0.78rem !important;
+  }
+}
+
+/* Laptop size: still keep one row, but allow horizontal scroll if screen is narrow */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .dashboard-page .dashboard-stats-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(150px, 1fr) !important;
+    grid-template-columns: none !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 6px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    min-height: 98px !important;
+    border-radius: 18px !important;
+    padding: 12px 13px !important;
+  }
+}
+
+/* Tablet: 4 + 3 layout is more readable */
+@media (min-width: 761px) and (max-width: 1023px) {
+  .dashboard-page .dashboard-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+/* Mobile: keep compact horizontal swipe row */
+@media (max-width: 760px) {
+  .dashboard-page .dashboard-stats-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(118px, 126px) !important;
+    grid-template-columns: none !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 6px !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .dashboard-page .dashboard-stat-card {
+    scroll-snap-align: start !important;
+  }
+}

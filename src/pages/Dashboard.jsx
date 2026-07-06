@@ -19,6 +19,7 @@ const emptyDashboardCounts = {
   pendingRequests: 0,
   overdueRequests: 0,
   damagedLostItems: 0,
+  maintenanceItems: 0,
 };
 const AUTO_REJECT_MS = 24 * 60 * 60 * 1000;
 const NEAR_AUTO_REJECT_MS = 3 * 60 * 60 * 1000;
@@ -26,7 +27,7 @@ const NEAR_AUTO_REJECT_MS = 3 * 60 * 60 * 1000;
 function Dashboard() {
   const navigate = useNavigate();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
 
   const { showToast } = useToast();
 
@@ -45,6 +46,10 @@ function Dashboard() {
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isBorrower = userData?.role === "borrower";
   const isAdmin = isSuperAdmin || isCategoryAdmin;
+
+  function isSchoolClosed() {
+    return Boolean(schoolStatus?.isSchoolClosed);
+  }
 
   const dashboardRoleLabel = isSuperAdmin
     ? "Super Admin"
@@ -93,6 +98,10 @@ function Dashboard() {
   }
 
 function isOverdue(request) {
+  if (isSchoolClosed()) {
+    return false;
+  }
+
   if (request.approvalStatus !== "Borrowed") {
     return false;
   }
@@ -109,6 +118,10 @@ function isOverdue(request) {
 }
 
 function isDueToday(request) {
+  if (isSchoolClosed()) {
+    return false;
+  }
+
   if (request.approvalStatus !== "Borrowed") {
     return false;
   }
@@ -130,17 +143,84 @@ function isDueToday(request) {
   return 0;
 }
 
+function parseDateKey(value) {
+  if (!value) return null;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day);
+}
+
+function getEndOfDateKeyMs(dateKey) {
+  const date = parseDateKey(dateKey);
+
+  if (!date) return 0;
+
+  date.setHours(23, 59, 59, 999);
+
+  return date.getTime();
+}
+
+function getEarliestValidDeadlineMs(deadlines) {
+  const validDeadlines = deadlines.filter(
+    (deadline) => typeof deadline === "number" && deadline > 0
+  );
+
+  return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
+}
+
+function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
+  const closedTime = getTimestampMs(schoolStatus?.closedAt);
+  const reopenedTime = isSchoolClosed()
+    ? Date.now()
+    : getTimestampMs(schoolStatus?.reopenedAt);
+
+  if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
+  if (baseDeadlineMs <= closedTime) return 0;
+  if (timerStartMs && timerStartMs >= reopenedTime) return 0;
+
+  const pauseStart = Math.max(closedTime, timerStartMs || closedTime);
+  const pauseEnd = reopenedTime;
+
+  return Math.max(0, pauseEnd - pauseStart);
+}
+
+function getDeadlineWithSchoolClosurePause(timerStartMs, baseDeadlineMs) {
+  if (!baseDeadlineMs) return 0;
+
+  return baseDeadlineMs + getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs);
+}
+
+function getPendingRequestDeadlineMs(request) {
+  const createdTime = getRequestCreatedTime(request);
+  const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
+
+  return getEarliestValidDeadlineMs([
+    createdTime
+      ? getDeadlineWithSchoolClosurePause(
+          createdTime,
+          createdTime + AUTO_REJECT_MS
+        )
+      : 0,
+    getDeadlineWithSchoolClosurePause(createdTime, expectedReturnEnd),
+  ]);
+}
+
 function getAutoRejectRemainingMs(request) {
   if (request.approvalStatus !== "Pending") return null;
 
-  const createdTime = getRequestCreatedTime(request);
+  const deadlineTime = getPendingRequestDeadlineMs(request);
 
-  if (!createdTime) return null;
+  if (!deadlineTime) return null;
 
-  return AUTO_REJECT_MS - (Date.now() - createdTime);
+  return deadlineTime - Date.now();
 }
 
 function formatAutoRejectRemaining(request) {
+  if (isSchoolClosed()) return "Paused by school closure";
+
   const remainingMs = getAutoRejectRemainingMs(request);
 
   if (remainingMs === null) return "No timer";
@@ -156,6 +236,8 @@ function formatAutoRejectRemaining(request) {
 }
 
 function isNearAutoReject(request) {
+  if (isSchoolClosed()) return false;
+
   const remainingMs = getAutoRejectRemainingMs(request);
 
   return remainingMs !== null && remainingMs <= NEAR_AUTO_REJECT_MS;
@@ -178,17 +260,35 @@ function getTimestampMs(value) {
   return Number.isNaN(parsedTime) ? 0 : parsedTime;
 }
 
+function getApprovedReleaseDeadlineMs(request) {
+  if (request.approvalStatus !== "Approved") return 0;
+
+  const approvedTime =
+    getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+  const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
+
+  return getEarliestValidDeadlineMs([
+    approvedTime
+      ? getDeadlineWithSchoolClosurePause(
+          approvedTime,
+          approvedTime + AUTO_REJECT_MS
+        )
+      : 0,
+    getDeadlineWithSchoolClosurePause(approvedTime, expectedReturnEnd),
+  ]);
+}
+
 function getApprovedReleaseRemainingMs(request) {
-  if (request.approvalStatus !== "Approved") return null;
+  const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
-  const approvedTime = getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+  if (!deadlineTime) return null;
 
-  if (!approvedTime) return null;
-
-  return AUTO_REJECT_MS - (Date.now() - approvedTime);
+  return deadlineTime - Date.now();
 }
 
 function formatApprovedReleaseRemaining(request) {
+  if (isSchoolClosed()) return "Paused by school closure";
+
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
   if (remainingMs === null) return "No release timer";
@@ -204,11 +304,13 @@ function formatApprovedReleaseRemaining(request) {
 }
 
 function formatApprovedReleaseDeadline(request) {
-  const approvedTime = getTimestampMs(request.approvedAt) || getTimestampMs(request.updatedAt);
+  if (isSchoolClosed()) return "Paused by school closure";
 
-  if (!approvedTime) return "No deadline";
+  const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
-  return new Date(approvedTime + AUTO_REJECT_MS).toLocaleString(undefined, {
+  if (!deadlineTime) return "No deadline";
+
+  return new Date(deadlineTime).toLocaleString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -251,6 +353,7 @@ const [
   conditionLostSnapshot,
   availabilityDamagedSnapshot,
   availabilityLostSnapshot,
+  maintenanceSnapshot,
   allRequestsSnapshot,
 ] = await Promise.all([
 
@@ -263,12 +366,15 @@ const [
       getDocs(query(itemsRef, where("condition", "==", "Lost"))),
       getDocs(query(itemsRef, where("availability", "==", "Damaged"))),
      getDocs(query(itemsRef, where("availability", "==", "Lost"))),
+      getDocs(query(itemsRef, where("availability", "==", "Under Maintenance"))),
 getDocs(requestsRef),
     ]);
 
-const overdueCount = overdueSnapshot.docs.filter(
-  (document) => document.data().approvalStatus === "Borrowed"
-).length;
+const overdueCount = isSchoolClosed()
+  ? 0
+  : overdueSnapshot.docs.filter(
+      (document) => document.data().approvalStatus === "Borrowed"
+    ).length;
 
     const damagedLostItemIds = new Set();
 
@@ -293,6 +399,7 @@ setRequests(mapSnapshot(allRequestsSnapshot));
       pendingRequests: pendingRequestsCount,
       overdueRequests: overdueCount,
       damagedLostItems: damagedLostItemIds.size,
+      maintenanceItems: maintenanceSnapshot.docs.length,
     });
   }
 
@@ -360,7 +467,13 @@ setRequests(mapSnapshot(allRequestsSnapshot));
     if (!userData?.role) return;
 
     fetchDashboardData();
-  }, [userData?.role, userData?.assignedCategories?.join("|"), currentUser?.uid]);
+  }, [
+    userData?.role,
+    userData?.assignedCategories?.join("|"),
+    currentUser?.uid,
+    schoolStatus?.isSchoolClosed,
+    schoolStatus?.reopenedAt,
+  ]);
 
   const visibleItems = useMemo(() => {
     if (isCategoryAdmin) {
@@ -503,6 +616,10 @@ const adminUrgentAlerts = [
       item.availability === "Lost"
   );
 
+  const maintenanceItems = visibleItems.filter(
+    (item) => item.availability === "Under Maintenance"
+  );
+
   const myPendingRequests = myRequests.filter(
     (request) => request.approvalStatus === "Pending"
   );
@@ -547,6 +664,10 @@ const adminUrgentAlerts = [
     ? dashboardCounts.damagedLostItems
     : damagedLostItems.length;
 
+  const maintenanceItemsValue = isSuperAdmin
+    ? dashboardCounts.maintenanceItems
+    : maintenanceItems.length;
+
   const borrowerAvailableItemsValue = isBorrower
     ? dashboardCounts.availableItems
     : items.filter((item) => item.availability === "Available").length;
@@ -587,6 +708,12 @@ const adminUrgentAlerts = [
       value: damagedLostItemsValue,
       tone: "red",
       path: "/admin-list/damaged-lost",
+    },
+    {
+      label: "Maintenance",
+      value: maintenanceItemsValue,
+      tone: "purple",
+      path: "/items?availability=Under%20Maintenance",
     },
   ];
 
@@ -1016,6 +1143,11 @@ const adminUrgentAlerts = [
               <button type="button" onClick={() => navigate("/reports")}>
                 <span>Damaged/Lost Items</span>
                 <strong>{damagedLostItemsValue}</strong>
+              </button>
+
+              <button type="button" onClick={() => navigate("/items?availability=Under%20Maintenance")}>
+                <span>Under Maintenance</span>
+                <strong>{maintenanceItemsValue}</strong>
               </button>
             </div>
           </div>

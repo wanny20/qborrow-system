@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import QRCodeGenerator from "../components/QRCodeGenerator";
 import { useToast } from "../components/ToastContext.jsx";
@@ -21,6 +25,9 @@ function ItemDetails() {
   const [showSchoolClosedModal, setShowSchoolClosedModal] = useState(false);
 
   const isBorrower = userData?.role === "borrower";
+  const isSuperAdmin = userData?.role === "superAdmin";
+  const isCategoryAdmin = userData?.role === "categoryAdmin";
+  const isAdmin = isSuperAdmin || isCategoryAdmin;
 
   function showActionError(shortMessage, error) {
     const detailedMessage = error?.message
@@ -34,6 +41,29 @@ function ItemDetails() {
   function showBlockedAction(message) {
     setStatusMessage(message);
     showToast(message, "error");
+  }
+
+
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function canCategoryAdminAccessItem(targetItem) {
+    if (!isCategoryAdmin) return true;
+
+    const assignedCategories = Array.isArray(userData?.assignedCategories)
+      ? userData.assignedCategories.map(normalizeText)
+      : [];
+
+    const itemCategoryId = normalizeText(targetItem?.categoryId || targetItem?.category || "");
+    const itemCategoryName = normalizeText(
+      targetItem?.categoryName || targetItem?.category || targetItem?.categoryId || ""
+    );
+
+    return (
+      assignedCategories.includes(itemCategoryId) ||
+      assignedCategories.includes(itemCategoryName)
+    );
   }
 
   function isSchoolClosed() {
@@ -75,6 +105,7 @@ function ItemDetails() {
     if (availability === "Available") return "available";
     if (availability === "Reserved") return "reserved";
     if (availability === "Borrowed") return "borrowed";
+    if (availability === "Under Maintenance") return "maintenance";
     if (availability === "Damaged") return "damaged";
     if (availability === "Lost") return "lost";
     return "unavailable";
@@ -188,10 +219,13 @@ function ItemDetails() {
     );
   }
 
+  const isItemUnderMaintenance = item.availability === "Under Maintenance";
+  const maintenanceReason = String(item.maintenanceReason || "").trim();
   const canBorrow = isBorrower && item.availability === "Available";
 
   return (
     <div className="item-details-page">
+
       {showSchoolClosedModal && (
         <div
           className="item-details-school-modal-backdrop"
@@ -287,6 +321,17 @@ function ItemDetails() {
               </div>
             )}
 
+            {isItemUnderMaintenance && (
+              <div className="item-details-maintenance-banner" role="alert">
+                <strong>Under Maintenance</strong>
+                <p>
+                  {maintenanceReason
+                    ? maintenanceReason
+                    : "This item is temporarily unavailable while it is being inspected or repaired."}
+                </p>
+              </div>
+            )}
+
             <div className="item-details-meta-grid">
               <div>
                 <span>Item ID</span>
@@ -326,10 +371,20 @@ function ItemDetails() {
                 </button>
               ) : isBorrower ? (
                 <div className="item-details-warning">
-                  <strong>Not available for borrowing</strong>
+                  <strong>
+                    {isItemUnderMaintenance
+                      ? "Item under maintenance"
+                      : "Not available for borrowing"}
+                  </strong>
                   <p>
-                    This item is currently marked as{" "}
-                    <span>{item.availability || "Unavailable"}</span>.
+                    {isItemUnderMaintenance
+                      ? maintenanceReason || "This item cannot be borrowed until the admin marks it as available again."
+                      : (
+                          <>
+                            This item is currently marked as{" "}
+                            <span>{item.availability || "Unavailable"}</span>.
+                          </>
+                        )}
                   </p>
                 </div>
               ) : (

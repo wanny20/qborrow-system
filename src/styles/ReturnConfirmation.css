@@ -3777,3 +3777,161 @@ html[data-theme="dark"] .return-camera-select select {
   font-weight: 750;
   line-height: 1.45;
 }
+
+
+/* =========================================================
+   RETURN CONFIRMATION - BORROWER DETAILS MODAL STACKING FIX
+   Fixes scanner card appearing on top when viewing borrower/request details.
+   The JSX now renders the details modal through a React Portal, and this
+   CSS guarantees the modal/backdrop stay above page cards, scanner, sidebar,
+   and html5-qrcode generated layers.
+========================================================= */
+
+.return-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: grid !important;
+  place-items: center !important;
+  isolation: isolate !important;
+  background: rgba(15, 23, 42, 0.56) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  padding: 18px !important;
+}
+
+.return-modal-card {
+  position: relative !important;
+  z-index: 2147483001 !important;
+  width: min(980px, calc(100vw - 36px)) !important;
+  max-height: min(760px, calc(100dvh - 36px)) !important;
+  overflow-y: auto !important;
+  margin: auto !important;
+}
+
+.return-modal-close {
+  z-index: 2147483002 !important;
+}
+
+.return-page .return-scanner-card,
+.return-page .return-selected-card,
+.return-page .return-queue-panel,
+.return-page .return-layout,
+#return-item-reader,
+#return-item-reader video,
+#return-item-reader__scan_region {
+  z-index: auto !important;
+}
+
+body:has(.return-modal-backdrop) {
+  overflow: hidden !important;
+}
+
+html[data-theme="dark"] .return-modal-backdrop {
+  background: rgba(2, 6, 23, 0.72) !important;
+}
+
+@media (max-width: 760px) {
+  .return-modal-backdrop {
+    padding: 12px !important;
+  }
+
+  .return-modal-card {
+    width: min(100%, calc(100vw - 24px)) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 18px !important;
+  }
+}
+
+
+/* =========================================================
+   RETURN CONFIRMATION - ITEM PHOTO IN DETAILS MODAL
+========================================================= */
+
+.return-modal-item-preview {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(251, 191, 36, 0.18), transparent 30%),
+    var(--qb-bg);
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.return-modal-item-preview img {
+  width: 100%;
+  height: 128px;
+  object-fit: contain;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.return-modal-item-preview > span {
+  width: 100%;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 16px;
+  background: var(--qb-accent);
+  color: #ffffff;
+  font-family: var(--qb-heading-font);
+  font-size: 2rem;
+  font-weight: 950;
+}
+
+.return-modal-item-preview div span {
+  display: block;
+  color: var(--qb-muted-foreground);
+  font-family: var(--qb-heading-font);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.return-modal-item-preview div strong {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--qb-heading-font);
+  font-size: 1.15rem;
+  font-weight: 950;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.return-modal-item-preview div p {
+  margin: 5px 0 0;
+  color: var(--qb-muted-foreground);
+  font-size: 0.74rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+html[data-theme="dark"] .return-modal-item-preview,
+html[data-theme="dark"] .return-modal-item-preview img {
+  background: var(--qb-bg);
+  border-color: var(--qb-border);
+}
+
+@media (max-width: 760px) {
+  .return-modal-item-preview {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+    margin-top: 12px;
+  }
+
+  .return-modal-item-preview img,
+  .return-modal-item-preview > span {
+    height: 150px;
+  }
+}

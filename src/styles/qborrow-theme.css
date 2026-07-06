@@ -1,4 +1,13 @@
+/* =========================================================
+   QBORROW THEME SYSTEM
+   Single source of truth for colors, spacing, cards,
+   buttons, forms, tables, modals, statuses, and dark mode.
+========================================================= */
+
 :root {
+  color-scheme: light;
+
+  /* Brand */
   --qb-primary: #2563eb;
   --qb-primary-dark: #1d4ed8;
   --qb-primary-soft: #dbeafe;
@@ -7,41 +16,136 @@
   --qb-accent-dark: #eab308;
   --qb-accent-soft: #fef9c3;
 
+  /* Surfaces */
   --qb-bg: #f4f8ff;
   --qb-surface: #ffffff;
   --qb-surface-soft: #f8fafc;
+  --qb-surface-raised: #ffffff;
 
+  /* Text */
   --qb-text: #0f172a;
   --qb-muted: #64748b;
-  --qb-border: #e2e8f0;
+  --qb-subtle: #475569;
 
+  /* Borders */
+  --qb-border: #e2e8f0;
+  --qb-border-strong: #cbd5e1;
+
+  /* States */
   --qb-success: #16a34a;
   --qb-warning: #f59e0b;
   --qb-danger: #dc2626;
   --qb-info: #0284c7;
 
+  --qb-success-soft: #dcfce7;
+  --qb-warning-soft: #fef3c7;
+  --qb-danger-soft: #fee2e2;
+  --qb-info-soft: #dbeafe;
+
+  /* Radius */
   --qb-radius-sm: 10px;
   --qb-radius-md: 14px;
   --qb-radius-lg: 20px;
   --qb-radius-xl: 28px;
+  --qb-radius-pill: 999px;
 
+  /* Shadows */
   --qb-shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.06);
   --qb-shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
   --qb-shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
 
+  /* Layout */
   --qb-sidebar-width: 280px;
   --qb-topbar-height: 72px;
+  --qb-page-gap: 24px;
+  --qb-card-padding: 22px;
+
+  /* Typography */
+  --qb-body-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --qb-heading-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Motion */
+  --qb-ease: 0.18s ease;
+  --qb-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Compatibility aliases for older CSS files */
+  --qb-foreground: var(--qb-text);
+  --qb-muted-foreground: var(--qb-muted);
+  --qb-secondary: #fee2e2;
+  --qb-tertiary: var(--qb-accent);
+  --qb-quaternary: #bfdbfe;
 }
+
+/* =========================================================
+   DARK MODE
+   Works if you use:
+   html[data-theme="dark"]
+   or
+   body.dark
+========================================================= */
+
+html[data-theme="dark"],
+body.dark {
+  color-scheme: dark;
+
+  --qb-primary: #60a5fa;
+  --qb-primary-dark: #93c5fd;
+  --qb-primary-soft: rgba(37, 99, 235, 0.2);
+
+  --qb-accent: #facc15;
+  --qb-accent-dark: #fde047;
+  --qb-accent-soft: rgba(250, 204, 21, 0.16);
+
+  --qb-bg: #0b1120;
+  --qb-surface: #111827;
+  --qb-surface-soft: #172033;
+  --qb-surface-raised: #1e293b;
+
+  --qb-text: #f8fafc;
+  --qb-muted: #cbd5e1;
+  --qb-subtle: #94a3b8;
+
+  --qb-border: rgba(203, 213, 225, 0.18);
+  --qb-border-strong: rgba(203, 213, 225, 0.3);
+
+  --qb-success: #4ade80;
+  --qb-warning: #facc15;
+  --qb-danger: #f87171;
+  --qb-info: #38bdf8;
+
+  --qb-success-soft: rgba(34, 197, 94, 0.16);
+  --qb-warning-soft: rgba(250, 204, 21, 0.16);
+  --qb-danger-soft: rgba(248, 113, 113, 0.16);
+  --qb-info-soft: rgba(56, 189, 248, 0.16);
+
+  --qb-shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.24);
+  --qb-shadow-md: 0 16px 38px rgba(0, 0, 0, 0.32);
+  --qb-shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.42);
+
+  --qb-foreground: var(--qb-text);
+  --qb-muted-foreground: var(--qb-muted);
+  --qb-secondary: rgba(248, 113, 113, 0.18);
+  --qb-tertiary: var(--qb-accent);
+  --qb-quaternary: rgba(96, 165, 250, 0.2);
+}
+
+/* =========================================================
+   BASE
+========================================================= */
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  background: var(--qb-bg);
 }
 
 body {
   margin: 0;
   background: var(--qb-bg);
   color: var(--qb-text);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--qb-body-font);
 }
 
 button,
@@ -55,10 +159,24 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* =========================================================
+   PAGE
+========================================================= */
+
 .qb-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--qb-page-gap);
+  color: var(--qb-text);
 }
 
 .qb-page-header {
@@ -73,7 +191,7 @@ button {
   margin: 0 0 6px;
   color: var(--qb-primary);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 850;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -82,7 +200,8 @@ button {
   margin: 0;
   color: var(--qb-text);
   font-size: clamp(1.6rem, 3vw, 2.25rem);
-  font-weight: 850;
+  font-weight: 900;
+  line-height: 1.05;
   letter-spacing: -0.04em;
 }
 
@@ -93,6 +212,10 @@ button {
   line-height: 1.6;
 }
 
+/* =========================================================
+   CARDS
+========================================================= */
+
 .qb-card {
   background: var(--qb-surface);
   border: 1px solid var(--qb-border);
@@ -101,20 +224,61 @@ button {
 }
 
 .qb-card-pad {
-  padding: 22px;
+  padding: var(--qb-card-padding);
 }
+
+.qb-card-soft {
+  background: var(--qb-surface-soft);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-lg);
+}
+
+.qb-section-title {
+  margin: 0 0 14px;
+}
+
+.qb-section-title h2 {
+  margin: 0;
+  color: var(--qb-text);
+  font-size: 1.18rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.qb-section-title p {
+  margin: 5px 0 0;
+  color: var(--qb-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
 
 .qb-btn {
   min-height: 42px;
-  border: 0;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: var(--qb-radius-pill);
   padding: 0 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-weight: 750;
-  transition: 0.18s ease;
+  color: inherit;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform var(--qb-ease),
+    background var(--qb-ease),
+    border-color var(--qb-ease),
+    box-shadow var(--qb-ease);
+}
+
+.qb-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .qb-btn-primary {
@@ -123,9 +287,8 @@ button {
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
 }
 
-.qb-btn-primary:hover {
+.qb-btn-primary:hover:not(:disabled) {
   background: var(--qb-primary-dark);
-  transform: translateY(-1px);
 }
 
 .qb-btn-accent {
@@ -133,41 +296,40 @@ button {
   color: #1e293b;
 }
 
-.qb-btn-accent:hover {
+.qb-btn-accent:hover:not(:disabled) {
   background: var(--qb-accent-dark);
-  transform: translateY(-1px);
 }
 
-.qb-btn-light {
+.qb-btn-light,
+.qb-btn-secondary {
   background: var(--qb-surface);
   color: var(--qb-text);
-  border: 1px solid var(--qb-border);
+  border-color: var(--qb-border);
 }
 
-.qb-btn-light:hover {
+.qb-btn-light:hover:not(:disabled),
+.qb-btn-secondary:hover:not(:disabled) {
   background: var(--qb-primary-soft);
-  border-color: #bfdbfe;
-}
-
-.qb-input,
-.qb-select,
-.qb-textarea {
-  width: 100%;
-  border: 1px solid var(--qb-border);
-  border-radius: 14px;
-  background: #ffffff;
-  color: var(--qb-text);
-  padding: 12px 14px;
-  outline: none;
-  transition: 0.18s ease;
-}
-
-.qb-input:focus,
-.qb-select:focus,
-.qb-textarea:focus {
   border-color: var(--qb-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
+
+.qb-btn-danger {
+  background: var(--qb-danger);
+  color: #ffffff;
+}
+
+.qb-btn-warning {
+  background: var(--qb-warning);
+  color: #1e293b;
+}
+
+.qb-btn-full {
+  width: 100%;
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
 
 .qb-form-grid {
   display: grid;
@@ -184,20 +346,78 @@ button {
 .qb-label {
   color: var(--qb-text);
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 850;
 }
 
+.qb-input,
+.qb-select,
+.qb-textarea {
+  width: 100%;
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-md);
+  background: var(--qb-surface);
+  color: var(--qb-text);
+  padding: 12px 14px;
+  outline: none;
+  transition:
+    border-color var(--qb-ease),
+    box-shadow var(--qb-ease),
+    background var(--qb-ease);
+}
+
+.qb-textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.qb-input::placeholder,
+.qb-textarea::placeholder {
+  color: var(--qb-muted);
+}
+
+.qb-input:focus,
+.qb-select:focus,
+.qb-textarea:focus {
+  border-color: var(--qb-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.qb-input:disabled,
+.qb-select:disabled,
+.qb-textarea:disabled {
+  background: var(--qb-surface-soft);
+  opacity: 0.75;
+}
+
+.input-error {
+  border-color: var(--qb-danger) !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12) !important;
+}
+
+.field-error-message {
+  margin: 0;
+  color: var(--qb-danger);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+/* =========================================================
+   TABLES
+========================================================= */
+
 .qb-table-wrap {
-  overflow: auto;
+  overflow-x: auto;
   border: 1px solid var(--qb-border);
   border-radius: var(--qb-radius-lg);
   background: var(--qb-surface);
+  box-shadow: var(--qb-shadow-sm);
 }
 
 .qb-table {
   width: 100%;
-  border-collapse: collapse;
   min-width: 760px;
+  border-collapse: collapse;
 }
 
 .qb-table th {
@@ -223,12 +443,20 @@ button {
   border-bottom: 0;
 }
 
+.qb-table tr:hover td {
+  background: color-mix(in srgb, var(--qb-primary-soft) 30%, transparent);
+}
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
 .qb-status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 28px;
-  border-radius: 999px;
+  border-radius: var(--qb-radius-pill);
   padding: 5px 11px;
   font-size: 0.78rem;
   font-weight: 850;
@@ -236,13 +464,13 @@ button {
 }
 
 .qb-status-pending {
-  background: #fef3c7;
+  background: var(--qb-warning-soft);
   color: #92400e;
 }
 
 .qb-status-approved {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--qb-info-soft);
+  color: var(--qb-primary-dark);
 }
 
 .qb-status-borrowed {
@@ -251,39 +479,75 @@ button {
 }
 
 .qb-status-returned,
-.qb-status-available {
-  background: #dcfce7;
+.qb-status-available,
+.qb-status-active {
+  background: var(--qb-success-soft);
   color: #166534;
 }
 
 .qb-status-rejected,
 .qb-status-cancelled,
 .qb-status-damaged,
-.qb-status-lost {
-  background: #fee2e2;
+.qb-status-lost,
+.qb-status-overdue {
+  background: var(--qb-danger-soft);
   color: #991b1b;
 }
 
 .qb-status-reserved {
-  background: #fef9c3;
+  background: var(--qb-accent-soft);
   color: #854d0e;
 }
 
-.qb-status-unavailable {
-  background: #e2e8f0;
-  color: #475569;
+.qb-status-unavailable,
+.qb-status-muted {
+  background: var(--qb-surface-soft);
+  color: var(--qb-muted);
 }
+
+/* Dark status text correction */
+html[data-theme="dark"] .qb-status-approved,
+body.dark .qb-status-approved {
+  color: #bfdbfe;
+}
+
+html[data-theme="dark"] .qb-status-returned,
+html[data-theme="dark"] .qb-status-available,
+html[data-theme="dark"] .qb-status-active,
+body.dark .qb-status-returned,
+body.dark .qb-status-available,
+body.dark .qb-status-active {
+  color: #bbf7d0;
+}
+
+html[data-theme="dark"] .qb-status-rejected,
+html[data-theme="dark"] .qb-status-cancelled,
+html[data-theme="dark"] .qb-status-damaged,
+html[data-theme="dark"] .qb-status-lost,
+html[data-theme="dark"] .qb-status-overdue,
+body.dark .qb-status-rejected,
+body.dark .qb-status-cancelled,
+body.dark .qb-status-damaged,
+body.dark .qb-status-lost,
+body.dark .qb-status-overdue {
+  color: #fecaca;
+}
+
+/* =========================================================
+   EMPTY / LOADING
+========================================================= */
 
 .qb-empty {
   padding: 44px 24px;
   text-align: center;
   background: var(--qb-surface);
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed var(--qb-border-strong);
   border-radius: var(--qb-radius-lg);
 }
 
 .qb-empty h3 {
   margin: 0 0 8px;
+  color: var(--qb-text);
   font-size: 1.1rem;
 }
 
@@ -298,9 +562,9 @@ button {
   border-radius: var(--qb-radius-lg);
   background: linear-gradient(
     90deg,
-    #ffffff 0%,
-    #eff6ff 50%,
-    #ffffff 100%
+    var(--qb-surface) 0%,
+    var(--qb-primary-soft) 50%,
+    var(--qb-surface) 100%
   );
   background-size: 200% 100%;
   animation: qbSkeleton 1.2s ease-in-out infinite;
@@ -317,26 +581,132 @@ button {
   }
 }
 
+/* =========================================================
+   MODAL FOUNDATION
+========================================================= */
+
+.qb-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+}
+
+.qb-modal {
+  width: min(980px, 100%);
+  max-height: min(90dvh, 900px);
+  overflow: auto;
+  background: var(--qb-surface);
+  color: var(--qb-text);
+  border: 1px solid var(--qb-border);
+  border-radius: var(--qb-radius-xl);
+  box-shadow: var(--qb-shadow-lg);
+  padding: 24px;
+}
+
+.qb-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.qb-modal-header h2 {
+  margin: 0;
+  color: var(--qb-text);
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.qb-modal-header p {
+  margin: 5px 0 0;
+  color: var(--qb-muted);
+  line-height: 1.5;
+}
+
+.qb-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1024px) {
+  :root {
+    --qb-page-gap: 20px;
+    --qb-card-padding: 20px;
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --qb-page-gap: 16px;
+    --qb-card-padding: 18px;
+  }
+
   .qb-page-header {
     flex-direction: column;
   }
 
-  .qb-card-pad {
-    padding: 18px;
+  .qb-page-title {
+    font-size: 1.55rem;
+  }
+
+  .qb-page-subtitle {
+    font-size: 0.88rem;
   }
 
   .qb-form-grid {
     grid-template-columns: 1fr;
   }
 
-  .qb-table-wrap {
-    border: 0;
-    overflow: visible;
-    background: transparent;
+  .qb-modal {
+    max-height: 92dvh;
+    border-radius: 22px;
+    padding: 18px;
   }
 
+  .qb-modal-header {
+    flex-direction: column;
+  }
+
+  .qb-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .qb-modal-actions .qb-btn,
+  .qb-btn-full-mobile {
+    width: 100%;
+  }
+}
+
+@media (max-width: 540px) {
+  .qb-btn {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.82rem;
+  }
+
+  .qb-card-pad {
+    padding: 16px;
+  }
+
+  /*
+    Do NOT globally hide .qb-table.
+    Some pages may not have card alternatives yet.
+    Keep table scrollable unless the specific page has its own mobile card layout.
+  */
   .qb-table {
-    display: none;
+    min-width: 680px;
   }
 }
