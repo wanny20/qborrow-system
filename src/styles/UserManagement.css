@@ -8392,3 +8392,1750 @@ html[data-theme="dark"] .user-penalty-item {
   border-color: rgba(203, 213, 225, 0.24);
   background: rgba(15, 23, 42, 0.9);
 }
+/* =========================================================
+   USER MANAGEMENT - EXISTING USERS MOBILE TABLE MODE FINAL
+   Makes Existing Users data a side-scroll table on mobile.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* Keep the outer Existing Users card fixed */
+html body .app-page-content .user-management-page .user-list-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* Title, search, filter, refresh, load more should NOT scroll sideways */
+html body .app-page-content .user-management-page .user-list-card > .user-section-heading,
+html body .app-page-content .user-management-page .user-list-card > .user-tools,
+html body .app-page-content .user-management-page .user-list-card > .user-load-more-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+/* Only the real table scrolls sideways */
+html body .app-page-content .user-management-page .user-table-scroll-area,
+html body .user-management-page .user-table-scroll-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 0 0 10px !important;
+  margin-top: 10px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+/* Visible scrollbar */
+html body .app-page-content .user-management-page .user-table-scroll-area::-webkit-scrollbar,
+html body .user-management-page .user-table-scroll-area::-webkit-scrollbar {
+  height: 8px !important;
+}
+
+html body .app-page-content .user-management-page .user-table-scroll-area::-webkit-scrollbar-track,
+html body .user-management-page .user-table-scroll-area::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+html body .app-page-content .user-management-page .user-table-scroll-area::-webkit-scrollbar-thumb,
+html body .user-management-page .user-table-scroll-area::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.45) !important;
+}
+
+/* Table width */
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+html body .user-management-page .user-table-scroll-area .user-table-header,
+html body .user-management-page .user-table-scroll-area .user-grid,
+html body .user-management-page .user-table-scroll-area .user-table-grid {
+  width: 1080px !important;
+  min-width: 1080px !important;
+  max-width: none !important;
+}
+
+/* Shared columns: Name | Email/Role | Contact | Category | Created | Status | Actions */
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+html body .user-management-page .user-table-scroll-area .user-table-header,
+html body .user-management-page .user-table-scroll-area .user-card,
+html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+  width: 1080px !important;
+  min-width: 1080px !important;
+  max-width: none !important;
+
+  display: grid !important;
+  grid-template-columns:
+    135px
+    190px
+    90px
+    120px
+    90px
+    130px
+    260px !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+/* Force header to show on mobile */
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+html body .user-management-page .user-table-scroll-area .user-table-header {
+  display: grid !important;
+  min-height: 42px !important;
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 15px 15px 8px 8px !important;
+  background: #eff6ff !important;
+  padding: 9px 10px !important;
+  margin-bottom: 7px !important;
+}
+
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span,
+html body .user-management-page .user-table-scroll-area .user-table-header span {
+  display: block !important;
+  color: var(--qb-muted-foreground, #64748b) !important;
+  font-size: 0.52rem !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(1) { grid-area: name !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(2) { grid-area: identity !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(3) { grid-area: contact !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(4) { grid-area: category !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(5) { grid-area: created !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(6) { grid-area: status !important; text-align: center !important; }
+html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(7) { grid-area: actions !important; text-align: center !important; }
+
+/* Rows become compact table rows, not large cards */
+html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+html body .user-management-page .user-table-scroll-area .user-card,
+html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+  min-height: 56px !important;
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 13px !important;
+  background: #ffffff !important;
+  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.1) !important;
+  padding: 8px 10px !important;
+  overflow: hidden !important;
+}
+
+/* Remove big mobile-card decorative styles */
+html body .user-management-page .user-table-scroll-area .user-card::before,
+html body .user-management-page .user-table-scroll-area .user-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Name column */
+html body .user-management-page .user-table-scroll-area .user-card h3 {
+  grid-area: name !important;
+  margin: 0 !important;
+  font-size: 0.68rem !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Email / Role column */
+html body .user-management-page .user-table-scroll-area .user-card-topline {
+  grid-area: identity !important;
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-card-topline > span {
+  color: var(--qb-muted-foreground, #64748b) !important;
+  font-size: 0.52rem !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-card-topline strong {
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 21px !important;
+  padding: 0 8px !important;
+  font-size: 0.48rem !important;
+  white-space: nowrap !important;
+}
+
+/* Cells must behave like table cells, not stacked mobile boxes */
+html body .user-management-page .user-table-scroll-area .user-table-cells {
+  display: contents !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-cell {
+  min-width: 0 !important;
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-cell span {
+  display: none !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-contact {
+  grid-area: contact !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-category {
+  grid-area: category !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-created {
+  grid-area: created !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-status {
+  grid-area: status !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-table-cell strong {
+  display: block !important;
+  max-width: 100% !important;
+  font-size: 0.6rem !important;
+  line-height: 1.12 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Status text */
+html body .user-management-page .user-table-scroll-area .user-borrowing-status-text {
+  width: 100% !important;
+  max-width: 116px !important;
+  min-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  padding: 0 8px !important;
+  font-size: 0.48rem !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+}
+
+/* Actions column */
+html body .user-management-page .user-table-scroll-area .user-actions {
+  grid-area: actions !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  align-items: center !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+html body .user-management-page .user-table-scroll-area .user-actions button,
+html body .user-management-page .user-table-scroll-area .user-card .user-view-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  padding: 0 5px !important;
+  font-size: 0.42rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Override old mobile rules that hide the header and stack cards */
+@media (max-width: 920px) {
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-table-header {
+    display: grid !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-grid {
+    width: 1080px !important;
+    min-width: 1080px !important;
+    max-width: none !important;
+    display: grid !important;
+    gap: 7px !important;
+    background: transparent !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    grid-template-columns:
+      135px
+      190px
+      90px
+      120px
+      90px
+      130px
+      260px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+  }
+}
+
+/* Override extra-small rule that forced cards back again */
+@media (max-width: 700px) {
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 10px !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-table-header {
+    display: grid !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 1080px !important;
+    min-width: 1080px !important;
+    max-width: none !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] html body .user-management-page .user-table-scroll-area .user-table-header,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-table-header {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  background: rgba(30, 41, 59, 0.72) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  background: #101827 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-card h3,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-table-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-card-topline > span,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+/* =========================================================
+   USER MANAGEMENT - FIX DESKTOP TABLE WHITE SPACE
+   Desktop: table fills the Existing Users card.
+   Mobile: table stays horizontally scrollable.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* Desktop / wide tablet: make table fill the whole card */
+@media (min-width: 921px) {
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+
+    display: grid !important;
+    grid-template-columns:
+      minmax(130px, 1.05fr)
+      minmax(170px, 1.25fr)
+      minmax(80px, 0.65fr)
+      minmax(110px, 0.8fr)
+      minmax(90px, 0.7fr)
+      minmax(130px, 0.9fr)
+      minmax(250px, 1.35fr) !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 10px !important;
+    align-items: center !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions,
+  html body .user-management-page .user-table-scroll-area .user-actions {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(6, minmax(34px, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions button,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card .user-view-btn,
+  html body .user-management-page .user-table-scroll-area .user-actions button,
+  html body .user-management-page .user-table-scroll-area .user-card .user-view-btn {
+    min-height: 34px !important;
+    height: 34px !important;
+    border-radius: 14px !important;
+  }
+}
+
+/* Mobile: keep the table scrollable sideways */
+@media (max-width: 920px) {
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 10px !important;
+  }
+
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 1080px !important;
+    min-width: 1080px !important;
+    max-width: none !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT - MOBILE TABLE ROW HEIGHT FIX
+   Makes Existing Users rows compact in mobile horizontal table.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+@media (max-width: 920px) {
+  /* Keep only the table area scrollable */
+  html body .app-page-content .user-management-page .user-table-scroll-area,
+  html body .user-management-page .user-table-scroll-area {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Mobile table width */
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-grid,
+  html body .user-management-page .user-table-scroll-area .user-table-grid {
+    width: 1040px !important;
+    min-width: 1040px !important;
+    max-width: none !important;
+  }
+
+  /* Header row */
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
+  html body .user-management-page .user-table-scroll-area .user-table-header {
+    display: grid !important;
+    grid-template-columns:
+      130px
+      185px
+      85px
+      120px
+      90px
+      125px
+      240px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 8px !important;
+
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 7px 9px !important;
+    margin-bottom: 6px !important;
+    border-radius: 14px 14px 8px 8px !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-header span {
+    font-size: 0.46rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Main row: force compact table row, not stacked card */
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
+  html body .user-management-page .user-table-scroll-area .user-card,
+  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
+    width: 1040px !important;
+    min-width: 1040px !important;
+    max-width: none !important;
+
+    display: grid !important;
+    grid-template-columns:
+      130px
+      185px
+      85px
+      120px
+      90px
+      125px
+      240px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 8px !important;
+    align-items: center !important;
+
+    min-height: 52px !important;
+    height: 52px !important;
+    max-height: 52px !important;
+
+    padding: 6px 9px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+
+  /* Remove old mobile stacked-card behavior */
+  html body .user-management-page .user-table-scroll-area .user-card h3 {
+    grid-area: name !important;
+    margin: 0 !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-card-topline {
+    grid-area: identity !important;
+    display: grid !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-card-topline > span {
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-card-topline strong {
+    width: fit-content !important;
+    min-height: 18px !important;
+    height: 18px !important;
+    padding: 0 7px !important;
+    font-size: 0.4rem !important;
+    line-height: 1 !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-cells {
+    display: contents !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-cell span {
+    display: none !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-contact {
+    grid-area: contact !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-category {
+    grid-area: category !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-created {
+    grid-area: created !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-status {
+    grid-area: status !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-table-cell strong {
+    display: block !important;
+    font-size: 0.55rem !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Status pill */
+  html body .user-management-page .user-table-scroll-area .user-borrowing-status-text {
+    width: 100% !important;
+    max-width: 110px !important;
+    min-height: 24px !important;
+    height: 24px !important;
+    padding: 0 7px !important;
+    font-size: 0.42rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Actions: compact single row */
+  html body .user-management-page .user-table-scroll-area .user-actions {
+    grid-area: actions !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+    align-items: center !important;
+
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html body .user-management-page .user-table-scroll-area .user-actions button,
+  html body .user-management-page .user-table-scroll-area .user-card .user-view-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    max-height: 26px !important;
+
+    border-radius: 10px !important;
+    padding: 0 4px !important;
+
+    font-size: 0.38rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-shadow: none !important;
+  }
+
+  /* If edit form opens, allow that row to grow only while editing */
+  html body .user-management-page .user-table-scroll-area .user-card.user-card-editing {
+    height: auto !important;
+    max-height: none !important;
+    align-items: start !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT - TRUE FINAL MOBILE TABLE DATA VISIBILITY
+   Fixes blank details in mobile horizontal table.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+@media (max-width: 920px) {
+  /* Only the table scrolls sideways */
+  html body .app-page-content .user-management-page .user-list-card {
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+    margin-top: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Stable mobile table width */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-grid,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-grid {
+    width: 1080px !important;
+    min-width: 1080px !important;
+    max-width: none !important;
+  }
+
+  /* Shared table columns */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+    width: 1080px !important;
+    min-width: 1080px !important;
+    max-width: none !important;
+
+    display: grid !important;
+    grid-template-columns:
+      135px
+      190px
+      90px
+      135px
+      100px
+      145px
+      260px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  /* Header must stay visible */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header {
+    display: grid !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 7px 9px !important;
+    margin-bottom: 6px !important;
+    border-radius: 14px 14px 8px 8px !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span {
+    display: flex !important;
+    align-items: center !important;
+    color: #64748b !important;
+    font-size: 0.48rem !important;
+    font-weight: 950 !important;
+    letter-spacing: 0.07em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(1) {
+    grid-area: name !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(2) {
+    grid-area: identity !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(3) {
+    grid-area: contact !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(4) {
+    grid-area: category !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(5) {
+    grid-area: created !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(6) {
+    grid-area: status !important;
+    justify-content: center !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-header span:nth-child(7) {
+    grid-area: actions !important;
+    justify-content: center !important;
+  }
+
+  /* Compact row */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-grid .user-card {
+    min-height: 52px !important;
+    height: 52px !important;
+    max-height: 52px !important;
+    padding: 6px 9px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+
+  /* Name column */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card h3 {
+    grid-area: name !important;
+    margin: 0 !important;
+    display: block !important;
+    color: var(--qb-foreground, #0f172a) !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Email / Role column */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card-topline {
+    grid-area: identity !important;
+    display: grid !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card-topline > span {
+    display: block !important;
+    color: #64748b !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card-topline strong {
+    width: fit-content !important;
+    min-height: 18px !important;
+    height: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0 7px !important;
+    font-size: 0.4rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  /* IMPORTANT:
+     This makes Contact, Category, Created, Status become real table columns.
+     It overrides the old mobile stacked-card CSS. */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells {
+    display: contents !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-cell {
+    min-width: 0 !important;
+    display: block !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-cell span {
+    display: none !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-contact {
+    grid-area: contact !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-category {
+    grid-area: category !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-created {
+    grid-area: created !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-status {
+    grid-area: status !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card > .user-table-cells > .user-table-cell strong {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: var(--qb-foreground, #0f172a) !important;
+    -webkit-text-fill-color: var(--qb-foreground, #0f172a) !important;
+    font-size: 0.55rem !important;
+    font-weight: 850 !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Status pill */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-borrowing-status-text {
+    width: 100% !important;
+    max-width: 126px !important;
+    min-height: 24px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 7px !important;
+    border-radius: 999px !important;
+    font-size: 0.42rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Actions */
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-actions {
+    grid-area: actions !important;
+    width: 100% !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+    align-items: center !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-actions button,
+  html body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card .user-view-btn {
+    min-height: 26px !important;
+    height: 26px !important;
+    max-height: 26px !important;
+    border-radius: 10px !important;
+    padding: 0 4px !important;
+    font-size: 0.38rem !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Dark mode text visibility */
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card h3,
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-table-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-table-scroll-area .user-card-topline > span {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+/* =========================================================
+   USER MANAGEMENT - MANAGE ITEM CATEGORIES COMPACT FIX
+   Compact hero, right-middle dashboard button, compact table,
+   centered action icons.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* Scope only to Manage Item Categories tool */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form) {
+  padding: 14px !important;
+}
+
+/* Top card: compact and dashboard button on right middle */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-modal-hero {
+  min-height: 108px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 148px !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  border-radius: 20px !important;
+  padding: 14px 18px !important;
+  margin: 0 0 12px !important;
+  overflow: hidden !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-modal-hero::after {
+  right: 18px !important;
+  bottom: -26px !important;
+  width: 72px !important;
+  height: 72px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-modal-hero-text {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-modal-hero h2 {
+  margin: 0 0 6px !important;
+  font-size: 1.25rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-modal-hero p {
+  max-width: 460px !important;
+  margin: 0 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.28 !important;
+  font-weight: 800 !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-tool-dashboard-btn {
+  justify-self: end !important;
+  align-self: center !important;
+  position: relative !important;
+  z-index: 2 !important;
+
+  width: 148px !important;
+  min-width: 0 !important;
+  max-width: 148px !important;
+  min-height: 40px !important;
+  height: 40px !important;
+
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  font-size: 0.55rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Form area compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-category-add-form {
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-field {
+  margin-bottom: 0 !important;
+  gap: 5px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-field input {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-category-add-form .user-primary-btn {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  font-size: 0.7rem !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-category-toggle-row {
+  margin-top: 10px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+.user-category-toggle-btn {
+  width: min(280px, 100%) !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  margin-inline: auto !important;
+  font-size: 0.7rem !important;
+}
+
+/* Category table compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table-wrap {
+  max-height: 360px !important;
+  border: 1.8px solid #dbeafe !important;
+  border-radius: 16px !important;
+  margin-top: 10px !important;
+  overflow: auto !important;
+  background: #ffffff !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table {
+  width: 100% !important;
+  min-width: 610px !important;
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th,
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td {
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th {
+  font-size: 0.52rem !important;
+  line-height: 1 !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td {
+  font-size: 0.68rem !important;
+  line-height: 1.1 !important;
+  font-weight: 850 !important;
+}
+
+/* Column sizing */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(1),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(1) {
+  width: 210px !important;
+  text-align: left !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(2),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(3),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(4),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(2),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(3),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(4) {
+  width: 68px !important;
+  text-align: center !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(5),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(5) {
+  width: 96px !important;
+  text-align: center !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(6),
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:nth-child(6) {
+  width: 70px !important;
+  text-align: center !important;
+}
+
+/* Category text compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:first-child strong {
+  font-size: 0.76rem !important;
+  line-height: 1.1 !important;
+  white-space: normal !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:first-child span {
+  margin-top: 2px !important;
+  font-size: 0.5rem !important;
+  line-height: 1.1 !important;
+}
+
+/* Status pill compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-status {
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  font-size: 0.46rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Center action icons */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:last-child {
+  text-align: center !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:last-child button {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+
+  display: inline-grid !important;
+  place-items: center !important;
+
+  margin: 0 auto !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+
+  font-size: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+/* Trash icon for deletable category */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:last-child .user-danger-btn::before {
+  content: "🗑" !important;
+  font-size: 0.9rem !important;
+  line-height: 1 !important;
+}
+
+/* Lock icon for categories in use */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:last-child .user-secondary-btn::before {
+  content: "🔒" !important;
+  font-size: 0.9rem !important;
+  line-height: 1 !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form) {
+    padding: 11px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-modal-hero {
+    min-height: 92px !important;
+    grid-template-columns: minmax(0, 1fr) 96px !important;
+    gap: 7px !important;
+    border-radius: 18px !important;
+    padding: 11px 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-modal-hero::after {
+    right: -8px !important;
+    bottom: -26px !important;
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-modal-hero h2 {
+    margin-bottom: 4px !important;
+    font-size: 1.03rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-modal-hero p {
+    display: -webkit-box !important;
+    font-size: 0.56rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 4 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-tool-dashboard-btn {
+    width: 94px !important;
+    max-width: 94px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 7px !important;
+    font-size: 0.42rem !important;
+    box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.16) !important;
+    white-space: normal !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-field input,
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-category-add-form .user-primary-btn {
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-add-form)
+  .user-category-toggle-btn {
+    min-height: 38px !important;
+    height: 38px !important;
+    font-size: 0.62rem !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table-wrap {
+    max-height: 330px !important;
+    border-radius: 15px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table {
+    min-width: 540px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th,
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td {
+    padding: 7px 8px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(1),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(1) {
+    width: 170px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(2),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(3),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(4),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(2),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(3),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(4) {
+    width: 56px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(5),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(5) {
+    width: 82px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(6),
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:nth-child(6) {
+    width: 58px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:first-child strong {
+    font-size: 0.66rem !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:first-child span {
+    font-size: 0.44rem !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table td:last-child button {
+    width: 31px !important;
+    min-width: 31px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    border-radius: 11px !important;
+  }
+}
+
+/* Dark mode compatibility */
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table-wrap {
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table thead {
+  background: rgba(30, 41, 59, 0.86) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th,
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:first-child strong,
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td {
+  color: #f8fafc !important;
+}
+/* =========================================================
+   USER MANAGEMENT - ADD USER + IMPORT BORROWERS HERO COMPACT
+   Makes the top card text smaller and keeps Back to Dashboard
+   at the right-middle side.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* Target only Add More User and Import Borrowers */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+) {
+  padding: 14px !important;
+}
+
+/* Compact top hero card */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero {
+  min-height: 108px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 150px !important;
+  align-items: center !important;
+  gap: 12px !important;
+
+  border: 2px solid var(--qb-border, #1e293b) !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 92% 82%, rgba(250, 204, 21, 0.55), transparent 30%),
+    linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0.98) 55%, rgba(254, 249, 195, 0.72)),
+    #ffffff !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.14) !important;
+
+  padding: 14px 18px !important;
+  margin: 0 0 12px !important;
+  overflow: hidden !important;
+}
+
+/* Yellow circle decoration smaller */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero::after {
+  right: 18px !important;
+  bottom: -28px !important;
+  width: 74px !important;
+  height: 74px !important;
+  opacity: 0.78 !important;
+}
+
+/* Text area */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero-text {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Smaller title */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero h2 {
+  margin: 0 0 6px !important;
+  font-size: 1.25rem !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.045em !important;
+}
+
+/* Smaller description */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero p {
+  max-width: 520px !important;
+  margin: 0 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.28 !important;
+  font-weight: 800 !important;
+}
+
+/* Back to Dashboard: right-middle */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-tool-dashboard-btn {
+  justify-self: end !important;
+  align-self: center !important;
+  position: relative !important;
+  z-index: 3 !important;
+
+  width: 150px !important;
+  min-width: 0 !important;
+  max-width: 150px !important;
+  min-height: 40px !important;
+  height: 40px !important;
+
+  border-radius: 999px !important;
+  padding: 0 12px !important;
+  font-size: 0.54rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* Make Add User form fields more compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-create-submit-btn)
+.user-field {
+  gap: 5px !important;
+  margin-bottom: 10px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-create-submit-btn)
+.user-field input,
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-create-submit-btn)
+.user-field select {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  font-size: 0.76rem !important;
+}
+
+/* Import Borrowers guide cards compact */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-import-polish-grid)
+.user-import-polish-grid {
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-import-polish-grid)
+.user-import-guide-card {
+  border-radius: 16px !important;
+  padding: 10px !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-import-polish-grid)
+.user-import-guide-card strong {
+  font-size: 0.82rem !important;
+  line-height: 1.1 !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-import-polish-grid)
+.user-import-guide-card p {
+  font-size: 0.62rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  ) {
+    padding: 11px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  )
+  .user-modal-hero {
+    min-height: 92px !important;
+    grid-template-columns: minmax(0, 1fr) 96px !important;
+    gap: 7px !important;
+    border-radius: 18px !important;
+    padding: 11px 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  )
+  .user-modal-hero::after {
+    right: -8px !important;
+    bottom: -26px !important;
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  )
+  .user-modal-hero h2 {
+    margin-bottom: 4px !important;
+    font-size: 1.03rem !important;
+    line-height: 1 !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  )
+  .user-modal-hero p {
+    display: -webkit-box !important;
+    font-size: 0.54rem !important;
+    line-height: 1.15 !important;
+    -webkit-line-clamp: 4 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:is(
+    :has(.user-create-submit-btn),
+    :has(.user-import-polish-grid)
+  )
+  .user-tool-dashboard-btn {
+    width: 94px !important;
+    max-width: 94px !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 7px !important;
+    font-size: 0.42rem !important;
+    white-space: normal !important;
+    box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.16) !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-create-submit-btn)
+  .user-field input,
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-create-submit-btn)
+  .user-field select {
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+}
+
+/* Dark mode compatibility */
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero {
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  background:
+    radial-gradient(circle at 92% 82%, rgba(250, 204, 21, 0.18), transparent 30%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98) 58%, rgba(30, 41, 59, 0.92)),
+    #0f172a !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero h2 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:is(
+  :has(.user-create-submit-btn),
+  :has(.user-import-polish-grid)
+)
+.user-modal-hero p {
+  color: #cbd5e1 !important;
+}

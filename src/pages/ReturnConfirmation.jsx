@@ -254,6 +254,22 @@ function finishReturnAction() {
 function isReturnBusy() {
   return Boolean(returnLockRef.current || confirming || startingScanner);
 }
+function clearSelectedReturnRequest() {
+  if (confirming) return;
+
+  setSelectedRequest(null);
+  setManualItemId("");
+  setReturnCondition("Good");
+  setDamageLostReport("");
+
+  setFieldErrors((previousErrors) => {
+    const nextErrors = { ...previousErrors };
+    delete nextErrors.selectedRequest;
+    delete nextErrors.returnCondition;
+    delete nextErrors.damageLostReport;
+    return nextErrors;
+  });
+}
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -1435,11 +1451,24 @@ return (
           </div>
         </section>
 
-        <section className="return-selected-card">
-          <div className="return-card-heading">
-            <h2>Selected Borrowed Request</h2>
-            <p>Review the item before confirming the return.</p>
-          </div>
+<section className="return-selected-card">
+  {selectedRequest && (
+    <button
+      type="button"
+      className="return-selected-close-btn"
+      onClick={clearSelectedReturnRequest}
+      disabled={confirming}
+      aria-label="Clear selected request"
+      title="Clear selected request"
+    >
+      ×
+    </button>
+  )}
+
+  <div className="return-card-heading">
+    <h2>Selected Borrowed Request</h2>
+    <p>Review the item before confirming the return.</p>
+  </div>
 
           {selectedRequest ? (
             <>
@@ -1657,9 +1686,9 @@ return (
                 <h2>No borrowed items</h2>
                 <p>No items are currently waiting for return.</p>
               </div>
-            ) : (
-              <>
-                <div className="return-borrowed-table-header">
+) : (
+  <div className="return-table-scroll-area" aria-label="Borrowed items table">
+    <div className="return-borrowed-table-header">
                   <span>Item</span>
                   <span>Borrower</span>
                   <span>Category</span>
@@ -1729,9 +1758,9 @@ return (
                       </div>
                     </article>
                   ))}
-                </div>
-              </>
-            )}
+    </div>
+  </div>
+)}
           </>
         )}
 
@@ -1776,9 +1805,10 @@ return (
                 <h2>No returned items</h2>
                 <p>No returned item records found for this date filter.</p>
               </div>
-            ) : (
-              <>
-                <div className="return-returned-table-header">
+) : (
+  <>
+    <div className="return-table-scroll-area" aria-label="Returned items table">
+    <div className="return-returned-table-header">
                   <span>Item</span>
                   <span>Borrower</span>
                   <span>Category</span>
@@ -1839,9 +1869,10 @@ return (
                       </div>
                     </article>
                   ))}
-                </div>
+    </div>
+  </div>
 
-                {visibleReturnedCount < visibleReturnedRequests.length && (
+  {visibleReturnedCount < visibleReturnedRequests.length && (
                   <div className="return-returned-load-more-row">
                     <button
                       type="button"

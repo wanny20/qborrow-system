@@ -3618,3 +3618,789 @@ html[data-theme="dark"] .release-selected-item-preview img {
     height: 130px;
   }
 }
+/* =========================================================
+   RELEASE ITEM - SELECTED REQUEST CLOSE BUTTON
+========================================================= */
+
+.release-page .release-selected-card {
+  position: relative !important;
+}
+
+.release-page .release-selected-close-btn {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  z-index: 8 !important;
+
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border: 1.8px solid #fecaca !important;
+  border-radius: 999px !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 1.15rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.release-page .release-selected-close-btn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  background: #fecaca !important;
+  border-color: #fca5a5 !important;
+}
+
+.release-page .release-selected-close-btn:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55 !important;
+}
+
+/* Prevent the close button from covering the heading text */
+.release-page .release-selected-card > .release-card-heading {
+  padding-right: 52px !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .release-page .release-selected-close-btn {
+    top: 10px !important;
+    right: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 1rem !important;
+  }
+
+  .release-page .release-selected-card > .release-card-heading {
+    padding-right: 44px !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .release-page .release-selected-close-btn {
+  border-color: rgba(248, 113, 113, 0.45) !important;
+  background: rgba(153, 27, 27, 0.34) !important;
+  color: #fecaca !important;
+}
+/* =========================================================
+   RELEASE ITEM - MOBILE TABLE SCROLL MODE
+   Makes For Release + Released Items use side-scroll tables.
+   Paste at the VERY BOTTOM of ReleaseItem.css.
+========================================================= */
+
+@media (max-width: 860px) {
+  /* The queue panel becomes the horizontal scroll container */
+  .release-page .release-queue-panel {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .release-page .release-queue-panel::-webkit-scrollbar {
+    height: 6px !important;
+  }
+
+  .release-page .release-queue-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.35) !important;
+  }
+
+  /* Keep tabs and heading normal width */
+  .release-page .release-tabs,
+  .release-page .release-section-heading,
+  .release-page .release-empty,
+  .release-page .release-released-actions,
+  .release-page .release-load-more-row {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* ---------- FOR RELEASE TABLE ---------- */
+
+  .release-page .release-approved-table-header,
+  .release-page .release-approved-row {
+    min-width: 680px !important;
+    width: 680px !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(135px, 1.25fr)
+      minmax(145px, 1.25fr)
+      minmax(100px, 0.8fr)
+      112px
+      118px
+      104px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .release-page .release-approved-table-header {
+    display: grid !important;
+    border-radius: 16px 16px 10px 10px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .release-page .release-approved-table-header span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-approved-table-grid {
+    width: 680px !important;
+    min-width: 680px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .release-page .release-approved-row {
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .release-page .release-approved-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .release-page .release-approved-cell > span {
+    display: none !important;
+  }
+
+  .release-page .release-approved-item-cell > span,
+  .release-page .release-approved-borrower-cell > span {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-approved-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-approved-status-cell {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    gap: 3px !important;
+  }
+
+  .release-page .release-approved-status-cell span {
+    max-width: 100% !important;
+    min-height: 24px !important;
+    padding: 0 9px !important;
+    font-size: 0.48rem !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-approved-status-cell small {
+    font-size: 0.52rem !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-approved-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .release-page .release-approved-actions .release-primary-btn {
+    width: 100% !important;
+    min-height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* ---------- RELEASED ITEMS TABLE ---------- */
+
+  .release-page .release-released-table-header,
+  .release-page .release-released-row {
+    min-width: 720px !important;
+    width: 720px !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(135px, 1.18fr)
+      minmax(145px, 1.22fr)
+      minmax(100px, 0.78fr)
+      132px
+      118px
+      112px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .release-page .release-released-table-header {
+    display: grid !important;
+    border-radius: 16px 16px 10px 10px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .release-page .release-released-table-header span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-released-table-grid {
+    width: 720px !important;
+    min-width: 720px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .release-page .release-released-row {
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .release-page .release-released-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .release-page .release-released-cell > span {
+    display: none !important;
+  }
+
+  .release-page .release-released-item-cell > span,
+  .release-page .release-released-borrower-cell > span {
+    display: block !important;
+    margin-bottom: 3px !important;
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-released-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-released-status-cell {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .release-page .release-released-status-pill {
+    width: 100% !important;
+    max-width: 106px !important;
+    min-height: 26px !important;
+    font-size: 0.46rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Dark mode scrollbar */
+html[data-theme="dark"] .release-page .release-queue-panel::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.4) !important;
+}
+/* =========================================================
+   RELEASE ITEM - TABLE ONLY HORIZONTAL SCROLL
+   The card, tabs, heading, filters, and load more stay fixed.
+   Only the table header + rows scroll sideways.
+========================================================= */
+
+.release-page .release-queue-panel {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.release-page .release-tabs,
+.release-page .release-section-heading,
+.release-page .release-released-heading,
+.release-page .release-released-controls,
+.release-page .release-empty,
+.release-page .release-load-more-row,
+.release-page .release-released-load-more-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+.release-page .release-table-scroll-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding-bottom: 8px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+.release-page .release-table-scroll-area::-webkit-scrollbar {
+  height: 7px !important;
+}
+
+.release-page .release-table-scroll-area::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.release-page .release-table-scroll-area::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.42) !important;
+}
+
+/* For Release table */
+.release-page .release-table-scroll-area .release-approved-table-header,
+.release-page .release-table-scroll-area .release-approved-table-grid {
+  width: 700px !important;
+  min-width: 700px !important;
+  max-width: none !important;
+}
+
+.release-page .release-table-scroll-area .release-approved-table-header,
+.release-page .release-table-scroll-area .release-approved-row {
+  display: grid !important;
+  grid-template-columns: 145px 155px 105px 115px 120px 110px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+/* Released Items table */
+.release-page .release-table-scroll-area .release-released-table-header,
+.release-page .release-table-scroll-area .release-released-table-grid {
+  width: 760px !important;
+  min-width: 760px !important;
+  max-width: none !important;
+}
+
+.release-page .release-table-scroll-area .release-released-table-header,
+.release-page .release-table-scroll-area .release-released-row {
+  display: grid !important;
+  grid-template-columns: 145px 155px 105px 135px 120px 115px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+/* Keep mobile table layout, not stacked cards */
+@media (max-width: 860px) {
+  .release-page .release-approved-table-header,
+  .release-page .release-released-table-header {
+    display: grid !important;
+  }
+
+  .release-page .release-approved-row,
+  .release-page .release-released-row {
+    display: grid !important;
+    min-height: 58px !important;
+    border-radius: 15px !important;
+    padding: 8px 10px !important;
+  }
+
+  .release-page .release-approved-cell,
+  .release-page .release-released-cell,
+  .release-page .release-approved-status-cell,
+  .release-page .release-released-status-cell,
+  .release-page .release-approved-actions {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .release-page .release-approved-cell strong,
+  .release-page .release-released-cell strong {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.42) !important;
+}
+/* =========================================================
+   RELEASE ITEM - FIX TABLE WHITE SPACE
+   Desktop: table fills the card.
+   Mobile: only the table scrolls sideways.
+========================================================= */
+
+/* Desktop / tablet wide view */
+@media (min-width: 861px) {
+  .release-page .release-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-table-grid,
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-table-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-row {
+    width: 100% !important;
+    grid-template-columns:
+      minmax(160px, 1.2fr)
+      minmax(170px, 1.3fr)
+      minmax(120px, 0.9fr)
+      minmax(130px, 0.85fr)
+      minmax(120px, 0.8fr)
+      minmax(120px, 0.8fr) !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-row {
+    width: 100% !important;
+    grid-template-columns:
+      minmax(160px, 1.2fr)
+      minmax(170px, 1.3fr)
+      minmax(120px, 0.9fr)
+      minmax(150px, 1fr)
+      minmax(140px, 0.9fr)
+      minmax(130px, 0.85fr) !important;
+  }
+}
+
+/* Mobile: keep only table area horizontally scrollable */
+@media (max-width: 860px) {
+  .release-page .release-queue-panel {
+    overflow-x: hidden !important;
+  }
+
+  .release-page .release-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-table-grid {
+    width: 700px !important;
+    min-width: 700px !important;
+    max-width: none !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-table-grid {
+    width: 760px !important;
+    min-width: 760px !important;
+    max-width: none !important;
+  }
+}
+/* =========================================================
+   RELEASE ITEM - MOBILE ACTION BUTTON FIX
+   Keeps Select button inside the table row.
+========================================================= */
+
+@media (max-width: 860px) {
+  /* Make the mobile table width match the actual column sizes */
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-table-grid {
+    width: 760px !important;
+    min-width: 760px !important;
+    max-width: none !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-row {
+    grid-template-columns:
+      130px
+      135px
+      95px
+      110px
+      115px
+      125px !important;
+    gap: 8px !important;
+  }
+
+  /* Action cell */
+  .release-page .release-approved-actions {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  /* Select button */
+  .release-page .release-approved-actions .release-primary-btn {
+    width: 100% !important;
+    max-width: 112px !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+
+    border-radius: 999px !important;
+    padding: 0 8px !important;
+    box-shadow: none !important;
+
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-approved-actions .release-primary-btn:hover:not(:disabled) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Prevent status pill from pushing into Action column */
+  .release-page .release-approved-status-cell {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .release-page .release-approved-status-cell span {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 8px !important;
+    font-size: 0.48rem !important;
+  }
+
+  .release-page .release-approved-status-cell small {
+    max-width: 100% !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+/* =========================================================
+   RELEASE ITEM - TRUE FINAL MOBILE TABLE ACTION FIX
+   Fixes Status + Action overlap by making table width match columns.
+========================================================= */
+
+@media (max-width: 860px) {
+  .release-page .release-queue-panel {
+    overflow-x: hidden !important;
+  }
+
+  .release-page .release-table-scroll-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* FOR RELEASE TABLE */
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-table-grid {
+    width: 880px !important;
+    min-width: 880px !important;
+    max-width: none !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-table-header,
+  .release-page .release-table-scroll-area .release-approved-row {
+    width: 100% !important;
+    min-width: 880px !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+
+    display: grid !important;
+    grid-template-columns:
+      140px
+      150px
+      105px
+      125px
+      145px
+      130px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-row {
+    min-height: 62px !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* RELEASED ITEMS TABLE */
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-table-grid {
+    width: 920px !important;
+    min-width: 920px !important;
+    max-width: none !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-row {
+    width: 100% !important;
+    min-width: 920px !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+
+    display: grid !important;
+    grid-template-columns:
+      140px
+      150px
+      105px
+      145px
+      135px
+      145px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-row {
+    min-height: 62px !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset old stacked-card mobile styles inside scroll table */
+  .release-page .release-table-scroll-area .release-approved-cell,
+  .release-page .release-table-scroll-area .release-released-cell,
+  .release-page .release-table-scroll-area .release-approved-status-cell,
+  .release-page .release-table-scroll-area .release-released-status-cell,
+  .release-page .release-table-scroll-area .release-approved-actions {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-cell strong,
+  .release-page .release-table-scroll-area .release-released-cell strong {
+    display: block !important;
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-item-cell span,
+  .release-page .release-table-scroll-area .release-approved-borrower-cell span,
+  .release-page .release-table-scroll-area .release-released-item-cell span,
+  .release-page .release-table-scroll-area .release-released-borrower-cell span {
+    display: block !important;
+    font-size: 0.48rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Status pills */
+  .release-page .release-table-scroll-area .release-approved-status-cell,
+  .release-page .release-table-scroll-area .release-released-status-cell {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-status-cell span,
+  .release-page .release-table-scroll-area .release-released-status-pill {
+    width: 100% !important;
+    max-width: 132px !important;
+    min-width: 0 !important;
+    min-height: 30px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+
+    font-size: 0.48rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-status-cell small {
+    max-width: 100% !important;
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 0.5rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Action button */
+  .release-page .release-table-scroll-area .release-approved-actions {
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-actions .release-primary-btn {
+    width: 100% !important;
+    max-width: 118px !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+
+    padding: 0 8px !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+
+    font-size: 0.48rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .release-page .release-table-scroll-area .release-approved-actions .release-primary-btn:hover:not(:disabled) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
