@@ -57,6 +57,7 @@ const createUserSubmitLockRef = useRef(false);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [borrowRequests, setBorrowRequests] = useState([]);
+  const [penaltyRecords, setPenaltyRecords] = useState([]);
   const [categoryAdminAssignments, setCategoryAdminAssignments] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -696,6 +697,130 @@ function formatSuspendedUntilDateTime(value) {
     minute: "2-digit",
   });
 }
+function isBorrowingRestrictionActive(user) {
+  if (user?.role !== "borrower") return false;
+  if (user?.canBorrow !== false) return false;
+
+  const suspendedDate = getDateFromValue(user?.suspendedUntil);
+
+  // No end date means manual borrowing disable.
+  if (!suspendedDate) return true;
+
+  return suspendedDate > new Date();
+}
+
+function getRestrictionEndsLabel(user) {
+  if (user?.role !== "borrower") return "N/A";
+
+  if (!isBorrowingRestrictionActive(user)) {
+    return "None";
+  }
+
+  const suspendedDate = getDateFromValue(user?.suspendedUntil);
+
+  if (!suspendedDate) {
+    return "No end date";
+  }
+
+  return suspendedDate.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function shouldShowRestrictionReason(user) {
+  return (
+    isBorrowingRestrictionActive(user) &&
+    Boolean(String(user?.suspensionReason || "").trim())
+  );
+}
+
+function getPenaltyDate(value) {
+  const date = getDateFromValue(value);
+
+  if (!date) return null;
+
+  return date;
+}
+
+function formatPenaltyDateTime(value) {
+  const date = getPenaltyDate(value);
+
+  if (!date) return "Not recorded";
+
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getPenaltyRecordsForUser(userId) {
+  if (!userId) return [];
+
+  return penaltyRecords
+    .filter((record) => record.borrowerId === userId)
+    .sort((a, b) => {
+      const firstDate = getPenaltyDate(a.createdAt)?.getTime() || 0;
+      const secondDate = getPenaltyDate(b.createdAt)?.getTime() || 0;
+
+      return secondDate - firstDate;
+    });
+}
+
+function getPenaltyStatusLabel(record) {
+  if (record?.status === "Resolved") return "Resolved";
+
+  const restrictionEndDate = getPenaltyDate(record?.restrictionEndAt);
+
+  if (restrictionEndDate && restrictionEndDate < new Date()) {
+    return "Completed";
+  }
+
+  return record?.status || "Active";
+}
+
+function getPenaltyStatusClass(record) {
+  return String(getPenaltyStatusLabel(record) || "active")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function resolveActivePenaltyRecordsForUser(user, resolutionReason) {
+  if (!user?.id) return;
+
+  const penaltyQuery = firestoreQuery(
+    collection(db, "penaltyRecords"),
+    where("borrowerId", "==", user.id)
+  );
+
+  const penaltySnapshot = await getDocs(penaltyQuery);
+  const activePenaltyRecords = penaltySnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((record) => getPenaltyStatusLabel(record) === "Active");
+
+  await Promise.allSettled(
+    activePenaltyRecords.map((record) =>
+      updateDoc(doc(db, "penaltyRecords", record.id), {
+        status: "Resolved",
+        resolvedAt: serverTimestamp(),
+        resolvedBy: currentAdmin?.uid || "",
+        resolvedByEmail: currentAdmin?.email || "",
+        resolutionReason,
+        updatedAt: serverTimestamp(),
+      })
+    )
+  );
+}
 
 function isTemporaryBorrowingRestriction(user) {
   if (user?.role !== "borrower") return false;
@@ -1109,11 +1234,13 @@ async function handleUserSearchChange(event) {
         categoriesSnapshot,
         itemsSnapshot,
         requestsSnapshot,
+        penaltyRecordsSnapshot,
         categoryAdminsSnapshot,
       ] = await Promise.all([
         getDocs(collection(db, "categories")),
         getDocs(collection(db, "items")),
         getDocs(collection(db, "borrowRequests")),
+        getDocs(collection(db, "penaltyRecords")),
         getDocs(
           firestoreQuery(
             collection(db, "users"),
@@ -1141,6 +1268,11 @@ async function handleUserSearchChange(event) {
         ...document.data(),
       }));
 
+      const penaltyRecordData = penaltyRecordsSnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }));
+
       const categoryAdminData = categoryAdminsSnapshot.docs.map((document) => ({
         id: document.id,
         ...document.data(),
@@ -1149,6 +1281,7 @@ async function handleUserSearchChange(event) {
       setCategories(categoryData);
       setItems(itemData);
       setBorrowRequests(requestData);
+      setPenaltyRecords(penaltyRecordData);
       setCategoryAdminAssignments(categoryAdminData);
 
       await Promise.all([
@@ -1606,10 +1739,37 @@ async function handleToggleBorrowing(user) {
       try {
         const userRef = doc(db, "users", user.id);
 
-        await updateDoc(userRef, {
+        const updatePayload = {
           canBorrow: nextValue,
           updatedAt: serverTimestamp(),
-        });
+        };
+
+        // Important:
+        // When enabling borrowing again, remove old temporary restriction data.
+        if (nextValue) {
+          updatePayload.suspendedUntil = "";
+          updatePayload.suspensionReason = "";
+        }
+
+        await updateDoc(userRef, updatePayload);
+
+        if (nextValue) {
+          await resolveActivePenaltyRecordsForUser(
+            user,
+            "Borrowing access enabled by admin."
+          );
+        }
+
+        setViewingUser((previousUser) =>
+          previousUser?.id === user.id
+            ? {
+                ...previousUser,
+                canBorrow: nextValue,
+                suspendedUntil: nextValue ? "" : previousUser.suspendedUntil,
+                suspensionReason: nextValue ? "" : previousUser.suspensionReason,
+              }
+            : previousUser
+        );
 
         showToast(
           nextValue ? "Borrowing Enabled" : "Borrowing Disabled",
@@ -1645,6 +1805,11 @@ async function handleRestoreBorrowingAccess(user) {
           suspensionReason: "",
           updatedAt: serverTimestamp(),
         });
+
+        await resolveActivePenaltyRecordsForUser(
+          user,
+          "Borrowing access manually restored by admin."
+        );
 
         showToast("Borrowing Access Restored", "success");
 
@@ -1689,6 +1854,11 @@ async function handleResetSuspension(user) {
           canBorrow: true,
           updatedAt: serverTimestamp(),
         });
+
+        await resolveActivePenaltyRecordsForUser(
+          user,
+          "Suspension and overdue count reset by admin."
+        );
 
         showToast("Suspension Reset", "success");
         fetchData();
@@ -3780,7 +3950,7 @@ onClick={confirmDiscardEditChanges}
 
                 <div>
                   <span>Restriction Ends</span>
-                  <strong>{formatSuspendedUntilDateTime(viewingUser.suspendedUntil)}</strong>
+                  <strong>{getRestrictionEndsLabel(viewingUser)}</strong>
                 </div>
 
                 <div>
@@ -3789,11 +3959,59 @@ onClick={confirmDiscardEditChanges}
                 </div>
               </div>
 
-              {viewingUser.suspensionReason && (
+              {shouldShowRestrictionReason(viewingUser) && (
                 <div className="user-view-note">
                   <span>Borrowing Restriction Reason</span>
                   <p>{viewingUser.suspensionReason}</p>
                 </div>
+              )}
+
+              {viewingUser.role === "borrower" && (
+                <section className="user-penalty-history-card">
+                  <div className="user-penalty-history-heading">
+                    <div>
+                      <span>Penalty History</span>
+                      <strong>
+                        {getPenaltyRecordsForUser(viewingUser.id).length} record
+                        {getPenaltyRecordsForUser(viewingUser.id).length === 1 ? "" : "s"}
+                      </strong>
+                    </div>
+                    <p>
+                      Shows temporary borrowing restrictions caused by expired
+                      approved requests or admin resolution actions.
+                    </p>
+                  </div>
+
+                  {getPenaltyRecordsForUser(viewingUser.id).length === 0 ? (
+                    <p className="user-penalty-empty">
+                      No penalty or restriction history recorded for this borrower.
+                    </p>
+                  ) : (
+                    <div className="user-penalty-list">
+                      {getPenaltyRecordsForUser(viewingUser.id)
+                        .slice(0, 5)
+                        .map((record) => (
+                          <article className="user-penalty-item" key={record.id}>
+                            <div>
+                              <strong>{record.penaltyType || "Borrowing Restriction"}</strong>
+                              <span>{record.itemName || "No item linked"}</span>
+                            </div>
+
+                            <p>{record.reason || "No reason recorded."}</p>
+
+                            <div className="user-penalty-meta">
+                              <span>
+                                Ends: {formatPenaltyDateTime(record.restrictionEndAt)}
+                              </span>
+                              <em className={`penalty-status-${getPenaltyStatusClass(record)}`}>
+                                {getPenaltyStatusLabel(record)}
+                              </em>
+                            </div>
+                          </article>
+                        ))}
+                    </div>
+                  )}
+                </section>
               )}
 
               {shouldShowRestoreBorrowingAccess(viewingUser) && (

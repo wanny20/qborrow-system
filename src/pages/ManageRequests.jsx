@@ -227,6 +227,77 @@ function isRequestActionLoading(requestId, actionType) {
     return cleanedValue || fallback;
   }
 
+
+  function getRequestItemImageUrl(request) {
+    return (
+      request?.itemImageUrl ||
+      request?.itemImage ||
+      request?.imageUrl ||
+      request?.itemPhotoUrl ||
+      ""
+    );
+  }
+
+  function getRequestItemInitial(request) {
+    return String(request?.itemName || request?.itemCode || "Q")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "Q";
+  }
+
+  async function enrichRequestsWithItemImages(requestList) {
+    const uniqueItemIds = [
+      ...new Set(
+        requestList
+          .map((request) => request.itemId)
+          .filter(Boolean)
+      ),
+    ];
+
+    if (uniqueItemIds.length === 0) {
+      return requestList;
+    }
+
+    const itemEntries = await Promise.all(
+      uniqueItemIds.map(async (itemId) => {
+        try {
+          const itemSnap = await getDoc(doc(db, "items", itemId));
+
+          return [
+            itemId,
+            itemSnap.exists()
+              ? {
+                  id: itemSnap.id,
+                  ...itemSnap.data(),
+                }
+              : null,
+          ];
+        } catch (error) {
+          console.warn("Failed to load item image", itemId, error);
+          return [itemId, null];
+        }
+      })
+    );
+
+    const itemMap = new Map(itemEntries);
+
+    return requestList.map((request) => {
+      const itemRecord = itemMap.get(request.itemId);
+
+      return {
+        ...request,
+        itemImageUrl:
+          getRequestItemImageUrl(request) ||
+          itemRecord?.imageUrl ||
+          itemRecord?.itemImageUrl ||
+          "",
+        itemCondition: request.itemCondition || itemRecord?.condition || "",
+        itemAvailability:
+          request.itemAvailability || itemRecord?.availability || "",
+      };
+    });
+  }
+
   function getBorrowerUserType(request) {
     return cleanDisplay(request.borrowerUserType, "Student");
   }
@@ -306,6 +377,14 @@ function handleStatusFilterChange(value) {
     );
   }
 async function autoRejectExpiredPendingRequests() {
+  /*
+    School Closure Mode pauses pending request expiration.
+    Requests should not expire while admins/borrowers cannot continue the workflow.
+  */
+  if (isSchoolClosed()) {
+    return;
+  }
+
   const snapshot = await getDocs(collection(db, "borrowRequests"));
   const now = Date.now();
 
@@ -442,13 +521,40 @@ function getEarliestValidDeadlineMs(deadlines) {
   return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
 }
 
+function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
+  const closedTime = getTimestampMs(schoolStatus?.closedAt);
+  const reopenedTime = isSchoolClosed()
+    ? Date.now()
+    : getTimestampMs(schoolStatus?.reopenedAt);
+
+  if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
+  if (baseDeadlineMs <= closedTime) return 0;
+  if (timerStartMs && timerStartMs >= reopenedTime) return 0;
+
+  const pauseStart = Math.max(closedTime, timerStartMs || closedTime);
+  const pauseEnd = reopenedTime;
+
+  return Math.max(0, pauseEnd - pauseStart);
+}
+
+function getDeadlineWithSchoolClosurePause(timerStartMs, baseDeadlineMs) {
+  if (!baseDeadlineMs) return 0;
+
+  return baseDeadlineMs + getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs);
+}
+
 function getPendingRequestDeadlineMs(request) {
   const createdTime = getRequestCreatedTime(request);
   const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
 
   return getEarliestValidDeadlineMs([
-    createdTime ? createdTime + RELEASE_WINDOW_MS : 0,
-    expectedReturnEnd,
+    createdTime
+      ? getDeadlineWithSchoolClosurePause(
+          createdTime,
+          createdTime + RELEASE_WINDOW_MS
+        )
+      : 0,
+    getDeadlineWithSchoolClosurePause(createdTime, expectedReturnEnd),
   ]);
 }
 
@@ -459,8 +565,13 @@ function getApprovedReleaseDeadlineMs(request) {
   const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
 
   return getEarliestValidDeadlineMs([
-    approvedTime ? approvedTime + RELEASE_WINDOW_MS : 0,
-    expectedReturnEnd,
+    approvedTime
+      ? getDeadlineWithSchoolClosurePause(
+          approvedTime,
+          approvedTime + RELEASE_WINDOW_MS
+        )
+      : 0,
+    getDeadlineWithSchoolClosurePause(approvedTime, expectedReturnEnd),
   ]);
 }
 
@@ -473,12 +584,16 @@ function getApprovedReleaseRemainingMs(request) {
 }
 
 function isApprovedReleaseExpired(request) {
+  if (isSchoolClosed()) return false;
+
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
   return remainingMs !== null && remainingMs <= 0;
 }
 
 function isNearReleaseExpire(request) {
+  if (isSchoolClosed()) return false;
+
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
   return (
@@ -489,6 +604,8 @@ function isNearReleaseExpire(request) {
 }
 
 function formatApprovedReleaseRemaining(request) {
+  if (isSchoolClosed()) return "Paused by school closure";
+
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
   if (remainingMs === null) return "No release deadline";
@@ -504,6 +621,8 @@ function formatApprovedReleaseRemaining(request) {
 }
 
 function formatApprovedReleaseDeadline(request) {
+  if (isSchoolClosed()) return "Paused by school closure";
+
   const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
   if (!deadlineTime) return "No deadline";
@@ -583,6 +702,41 @@ function shouldApplyTemporaryBorrowingRestriction(
   return true;
 }
 
+
+function buildTemporaryPenaltyRecordPayload(request, restrictionUntilDate) {
+  if (!request?.borrowerId || !restrictionUntilDate) return null;
+
+  return {
+    borrowerId: request.borrowerId || "",
+    borrowerName: request.borrowerName || "Unknown borrower",
+    borrowerEmail: request.borrowerEmail || "",
+    requestId: request.id || "",
+    itemId: request.itemId || "",
+    itemName: request.itemName || "Unknown item",
+    itemCode: request.itemCode || "",
+    categoryId: request.categoryId || "",
+    categoryName: request.categoryName || "",
+    reason: TEMPORARY_BORROWING_RESTRICTION_REASON,
+    penaltyType: "Temporary Borrowing Restriction",
+    penaltySource: "approvedReleaseExpired",
+    restrictionEndAt: Timestamp.fromDate(restrictionUntilDate),
+    status: "Active",
+  };
+}
+
+async function createPenaltyRecord(payload) {
+  if (!payload) return;
+
+  await addDoc(collection(db, "penaltyRecords"), {
+    ...payload,
+    restrictionStartAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    createdBy: "system",
+    createdByEmail: "",
+    updatedAt: serverTimestamp(),
+  });
+}
+
 async function notifyApprovedRequestExpired(request) {
   await addDoc(collection(db, "notifications"), {
     userId: request.borrowerId,
@@ -604,6 +758,7 @@ async function expireApprovedRequest(request) {
 
   const requestRef = doc(db, "borrowRequests", request.id);
   let expiredRequest = null;
+  let penaltyRecordPayload = null;
 
   await runTransaction(db, async (transaction) => {
     const freshRequestSnap = await transaction.get(requestRef);
@@ -661,6 +816,11 @@ async function expireApprovedRequest(request) {
         suspensionReason: TEMPORARY_BORROWING_RESTRICTION_REASON,
         updatedAt: serverTimestamp(),
       });
+
+      penaltyRecordPayload = buildTemporaryPenaltyRecordPayload(
+        freshRequest,
+        restrictionUntilDate
+      );
     }
 
     expiredRequest = freshRequest;
@@ -675,12 +835,25 @@ async function expireApprovedRequest(request) {
         permission issue should not break the whole Manage Requests page.
       */
     }
+
+    try {
+      await createPenaltyRecord(penaltyRecordPayload);
+    } catch (error) {
+      console.error("Penalty record creation failed:", error);
+    }
   }
 
   return expiredRequest;
 }
 
 async function autoExpireApprovedRequests() {
+  /*
+    School Closure Mode pauses approved request release/claim expiration.
+  */
+  if (isSchoolClosed()) {
+    return;
+  }
+
   const snapshot = await getDocs(collection(db, "borrowRequests"));
 
   const expiredApprovedRequests = snapshot.docs
@@ -853,10 +1026,12 @@ async function fetchRequests(mode = "reset", selectedStatus = statusFilter) {
     const docs = querySnapshot.docs;
     const visibleDocs = docs.slice(0, MANAGE_REQUESTS_PAGE_SIZE);
 
-    const requestData = visibleDocs.map((document) => ({
-      id: document.id,
-      ...document.data(),
-    }));
+    const requestData = await enrichRequestsWithItemImages(
+      visibleDocs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+    );
 
     setHasMoreRequests(docs.length > MANAGE_REQUESTS_PAGE_SIZE);
     setLastRequestDoc(visibleDocs[visibleDocs.length - 1] || null);
@@ -1229,7 +1404,12 @@ useEffect(() => {
 
   loadRequests();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+}, [
+  userData?.role,
+  userData?.assignedCategories?.join("|"),
+  schoolStatus?.isSchoolClosed,
+  schoolStatus?.reopenedAt,
+]);
 
   useEffect(() => {
     const statusFromUrl = searchParams.get("status");
@@ -1737,6 +1917,17 @@ request{totalMatchingRequestCount === 1 ? "" : "s"}.
 
             <div className="manage-request-view-columns">
               <section className="manage-request-view-panel manage-request-view-item-panel">
+                <div className="manage-request-view-media">
+                  {getRequestItemImageUrl(viewingRequest) ? (
+                    <img
+                      src={getRequestItemImageUrl(viewingRequest)}
+                      alt={viewingRequest.itemName || "Borrowed item"}
+                    />
+                  ) : (
+                    <span>{getRequestItemInitial(viewingRequest)}</span>
+                  )}
+                </div>
+
                 <div className="manage-request-view-panel-heading">
                   <span>Item Details</span>
                   <h3>{viewingRequest.itemName || "Untitled Item"}</h3>

@@ -36,6 +36,7 @@ function EditItem() {
   const [condition, setCondition] = useState("Good");
   const [availability, setAvailability] = useState("Available");
   const [maxBorrowDays, setMaxBorrowDays] = useState("7");
+  const [maintenanceReason, setMaintenanceReason] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -106,6 +107,13 @@ function validateEditItemForm() {
     errors.availability = "Availability is required.";
   }
 
+  if (
+    getFinalAvailability() === "Under Maintenance" &&
+    !maintenanceReason.trim()
+  ) {
+    errors.maintenanceReason = "Maintenance reason is required.";
+  }
+
   setFieldErrors(errors);
 
   return Object.keys(errors).length === 0;
@@ -124,6 +132,14 @@ function validateEditItemForm() {
 
   function isDamagedLostStatus(value) {
     return ["Damaged", "Lost"].includes(String(value || ""));
+  }
+
+  function isMaintenanceStatus(value) {
+    return String(value || "") === "Under Maintenance";
+  }
+
+  function sanitizeMaintenanceReason(value) {
+    return String(value || "").replace(/[<>`]/g, "").trim();
   }
 
   function getItemDamagedLostStatus(item) {
@@ -262,6 +278,21 @@ function validateEditItemForm() {
       } else {
         delete nextErrors.availability;
       }
+
+      if (getFinalAvailability() !== "Under Maintenance") {
+        delete nextErrors.maintenanceReason;
+      }
+    }
+
+    if (fieldName === "maintenanceReason") {
+      if (
+        getFinalAvailability() === "Under Maintenance" &&
+        !maintenanceReason.trim()
+      ) {
+        nextErrors.maintenanceReason = "Maintenance reason is required.";
+      } else {
+        delete nextErrors.maintenanceReason;
+      }
     }
 
     return nextErrors;
@@ -311,12 +342,17 @@ function validateEditItemForm() {
       setCategoryId(existingCategoryId);
       setCondition(item.condition || "Good");
       setAvailability(
-        ["Available", "Reserved", "Borrowed", "Unavailable"].includes(
-          item.availability
-        )
+        [
+          "Available",
+          "Reserved",
+          "Borrowed",
+          "Under Maintenance",
+          "Unavailable",
+        ].includes(item.availability)
           ? item.availability
           : "Available"
       );
+      setMaintenanceReason(item.maintenanceReason || "");
       setMaxBorrowDays(String(item.maxBorrowDays || 7));
       setImageUrl(item.imageUrl || "");
       setImagePreview(item.imageUrl || "");
@@ -451,6 +487,13 @@ return;
       : isDamagedLostStatus(finalAvailability)
       ? finalAvailability
       : "";
+    const previousMaintenanceStatus = isMaintenanceStatus(originalItem?.availability)
+      ? "Under Maintenance"
+      : "";
+    const nextMaintenanceStatus = isMaintenanceStatus(finalAvailability)
+      ? "Under Maintenance"
+      : "";
+    const cleanedMaintenanceReason = sanitizeMaintenanceReason(maintenanceReason);
 
     const itemRef = doc(db, "items", itemId);
 
@@ -492,6 +535,29 @@ return;
         itemUpdatePayload.damagedLostDate = getTodayDate();
         itemUpdatePayload.damagedLostReport = `Item manually marked as ${nextDamagedLostStatus}.`;
       }
+    }
+
+    if (nextMaintenanceStatus) {
+      itemUpdatePayload.maintenanceReason = cleanedMaintenanceReason;
+      itemUpdatePayload.maintenanceStatus = "Under Maintenance";
+      itemUpdatePayload.maintenanceSource = "editItem";
+      itemUpdatePayload.maintenanceStartedBy = getAdminId();
+      itemUpdatePayload.maintenanceStartedByEmail = getAdminEmail();
+
+      if (
+        previousMaintenanceStatus !== nextMaintenanceStatus ||
+        (!originalItem?.maintenanceStartedAt && !originalItem?.maintenanceStartedDate)
+      ) {
+        itemUpdatePayload.maintenanceStartedAt = serverTimestamp();
+        itemUpdatePayload.maintenanceStartedDate = getTodayDate();
+      }
+    }
+
+    if (previousMaintenanceStatus && !nextMaintenanceStatus) {
+      itemUpdatePayload.maintenanceResolvedAt = serverTimestamp();
+      itemUpdatePayload.maintenanceResolvedBy = getAdminId();
+      itemUpdatePayload.maintenanceResolvedByEmail = getAdminEmail();
+      itemUpdatePayload.maintenanceStatus = "Resolved";
     }
 
     await updateDoc(itemRef, itemUpdatePayload);
@@ -840,12 +906,14 @@ onChange={(e) => {
   markFormChanged();
   setAvailability(e.target.value);
   clearFieldError("availability");
+  clearFieldError("maintenanceReason");
 }}
                     disabled={submitting || condition === "Damaged" || condition === "Lost"}
                   >
                     <option value="Available">Available</option>
                     <option value="Reserved">Reserved</option>
                     <option value="Borrowed">Borrowed</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
                     <option value="Unavailable">Unavailable</option>
                   </select>
                   {fieldErrors.availability && (
@@ -855,8 +923,38 @@ onChange={(e) => {
                   {(condition === "Damaged" || condition === "Lost") && (
                     <p>Availability will automatically become {condition}.</p>
                   )}
+
+                  {getFinalAvailability() === "Under Maintenance" && (
+                    <p>This item cannot be borrowed until maintenance is resolved.</p>
+                  )}
                 </div>
               </div>
+
+              {getFinalAvailability() === "Under Maintenance" && (
+                <div className="edit-item-field edit-item-maintenance-field">
+                  <label className="qb-label" htmlFor="maintenance-reason">
+                    Maintenance Reason <span className="required-star">*</span>
+                  </label>
+
+                  <textarea
+                    id="maintenance-reason"
+                    className={fieldErrors.maintenanceReason ? "input-error" : ""}
+                    placeholder="Example: Needs repair, missing cable, for inspection..."
+                    value={maintenanceReason}
+                    onBlur={() => validateEditItemField("maintenanceReason")}
+                    onChange={(e) => {
+                      markFormChanged();
+                      setMaintenanceReason(sanitizeMaintenanceReason(e.target.value));
+                      clearFieldError("maintenanceReason");
+                    }}
+                    disabled={submitting}
+                  />
+
+                  {fieldErrors.maintenanceReason && (
+                    <p className="field-error-message">{fieldErrors.maintenanceReason}</p>
+                  )}
+                </div>
+              )}
 
               <div className="edit-item-field edit-item-image-field">
                 <label className="qb-label" htmlFor="item-image">

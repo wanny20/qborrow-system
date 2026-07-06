@@ -1997,3 +1997,150 @@ html[data-theme="dark"] .settings-page .settings-school-reason-field textarea {
   color: var(--qb-foreground, #f8fafc) !important;
   border-color: rgba(148, 163, 184, 0.24) !important;
 }
+
+
+/* =========================================================
+   SETTINGS - PENALTY / BORROWER RESTRICTION HISTORY
+========================================================= */
+
+.settings-penalty-history-card {
+  grid-column: 1 / span 5;
+  display: grid;
+  gap: 12px;
+}
+
+.settings-penalty-empty {
+  border: 1.5px dashed rgba(30, 41, 59, 0.22);
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.settings-penalty-empty strong {
+  display: block;
+  color: var(--settings-text);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.settings-penalty-empty p {
+  margin: 5px 0 0;
+  color: var(--settings-muted);
+  font-size: 0.74rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.settings-penalty-list {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-penalty-item {
+  border: 1.5px solid rgba(30, 41, 59, 0.18);
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.settings-penalty-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-penalty-item-head span {
+  display: block;
+  color: var(--settings-muted);
+  font-family: var(--qb-heading-font, inherit);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-penalty-item-head strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--settings-text);
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.settings-penalty-item > p {
+  margin: 9px 0 0;
+  color: var(--settings-muted);
+  font-size: 0.74rem;
+  font-weight: 740;
+  line-height: 1.35;
+}
+
+.settings-penalty-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.settings-penalty-meta span {
+  min-width: 0;
+  border: 1px solid rgba(30, 41, 59, 0.12);
+  border-radius: 14px;
+  background: #f8fafc;
+  color: var(--settings-muted);
+  padding: 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.settings-penalty-item-head em {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.penalty-status-active {
+  background: #fef3c7;
+  color: #854d0e;
+}
+
+.penalty-status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.penalty-status-resolved {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+@media (max-width: 920px) {
+  .settings-penalty-history-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-penalty-item-head,
+  .settings-penalty-meta {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}
+
+html[data-theme="dark"] .settings-penalty-empty,
+html[data-theme="dark"] .settings-penalty-item,
+html[data-theme="dark"] .settings-penalty-meta span {
+  border-color: rgba(203, 213, 225, 0.24);
+  background: rgba(15, 23, 42, 0.88);
+}

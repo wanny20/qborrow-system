@@ -7,7 +7,7 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query as firestoreQuery, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { auth, db, storage } from "../firebase/firebaseConfig";
 import ImageCropModal from "../components/ImageCropModal";
@@ -57,6 +57,7 @@ function Settings() {
   const [pendingProfileChanges, setPendingProfileChanges] = useState([]);
   const [schoolClosureReason, setSchoolClosureReason] = useState("");
   const [savingSchoolStatus, setSavingSchoolStatus] = useState(false);
+  const [penaltyRecords, setPenaltyRecords] = useState([]);
 
   function showStatus(message, type) {
     setStatusMessage(message);
@@ -99,6 +100,119 @@ function Settings() {
     });
   }
 
+  function formatClosureDateKey(dateValue) {
+    const date = dateValue instanceof Date ? dateValue : getDateFromValue(dateValue);
+
+    if (!date) return "";
+
+    const safeDate = new Date(date);
+    safeDate.setHours(0, 0, 0, 0);
+
+    const timezoneOffset = safeDate.getTimezoneOffset() * 60000;
+
+    return new Date(safeDate.getTime() - timezoneOffset)
+      .toISOString()
+      .split("T")[0];
+  }
+
+  function parseClosureDateKey(dateKey) {
+    const [year, month, day] = String(dateKey || "").split("-").map(Number);
+
+    if (!year || !month || !day) return null;
+
+    return new Date(year, month - 1, day);
+  }
+
+  function addDaysToDateKey(dateKey, daysToAdd) {
+    const baseDate = parseClosureDateKey(dateKey);
+
+    if (!baseDate) return dateKey;
+
+    baseDate.setDate(baseDate.getDate() + daysToAdd);
+
+    return formatClosureDateKey(baseDate);
+  }
+
+  function getClosureDayCount(closedAtValue, reopenedAtDate = new Date()) {
+    const closedAtDate = getDateFromValue(closedAtValue);
+
+    if (!closedAtDate) return 0;
+
+    const closureStartDate = new Date(closedAtDate);
+    closureStartDate.setHours(0, 0, 0, 0);
+
+    const reopenStartDate = new Date(reopenedAtDate);
+    reopenStartDate.setHours(0, 0, 0, 0);
+
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const dayCount = Math.round(
+      (reopenStartDate.getTime() - closureStartDate.getTime()) / oneDayMs
+    );
+
+    return Math.max(dayCount, 0);
+  }
+
+  async function extendBorrowedDueDatesForClosure() {
+    const closedAtDate = getDateFromValue(schoolStatus?.closedAt);
+    const closureDays = getClosureDayCount(schoolStatus?.closedAt);
+
+    if (!closedAtDate || closureDays <= 0) {
+      return {
+        closureDays: 0,
+        extendedCount: 0,
+      };
+    }
+
+    const closureStartDateKey = formatClosureDateKey(closedAtDate);
+    const borrowRequestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+
+    const borrowedRequestsToExtend = borrowRequestsSnapshot.docs
+      .map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+      .filter((request) => {
+        if (request.approvalStatus !== "Borrowed") return false;
+        if (!request.expectedReturnDate) return false;
+
+        /*
+          Do not extend records that were already overdue before the closure.
+          Example: expectedReturnDate is before the closure start date.
+        */
+        return String(request.expectedReturnDate) >= closureStartDateKey;
+      });
+
+    await Promise.allSettled(
+      borrowedRequestsToExtend.map(async (request) => {
+        const previousExtendedDays = Number(request.closureExtendedDays || 0);
+        const newExpectedReturnDate = addDaysToDateKey(
+          request.expectedReturnDate,
+          closureDays
+        );
+
+        await updateDoc(doc(db, "borrowRequests", request.id), {
+          expectedReturnDate: newExpectedReturnDate,
+          originalExpectedReturnDate:
+            request.originalExpectedReturnDate || request.expectedReturnDate,
+          closureExtended: true,
+          closureExtendedDays: previousExtendedDays + closureDays,
+          lastClosureExtendedDays: closureDays,
+          closureAdjustedAt: serverTimestamp(),
+          closureAdjustedBy: currentUser.uid,
+          closureAdjustmentReason: `Return date extended by ${closureDays} day${
+            closureDays === 1 ? "" : "s"
+          } because of school closure.`,
+          updatedAt: serverTimestamp(),
+        });
+      })
+    );
+
+    return {
+      closureDays,
+      extendedCount: borrowedRequestsToExtend.length,
+    };
+  }
+
   async function handleUpdateSchoolStatus(nextClosed) {
     if (!currentUser) {
       showBlockedAction("No logged-in user found.");
@@ -122,6 +236,19 @@ function Settings() {
 
     try {
       const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
+      let closureExtensionResult = {
+        closureDays: 0,
+        extendedCount: 0,
+      };
+
+      /*
+        When reopening, adjust all currently borrowed items affected by
+        the closure before marking the system open again.
+      */
+      if (!nextClosed && isSchoolClosed()) {
+        closureExtensionResult = await extendBorrowedDueDatesForClosure();
+      }
+
       const basePayload = {
         isSchoolClosed: nextClosed,
         updatedAt: serverTimestamp(),
@@ -141,6 +268,9 @@ function Settings() {
             closureReason: "",
             reopenedAt: serverTimestamp(),
             reopenedBy: currentUser.uid,
+            lastClosureExtendedDays: closureExtensionResult.closureDays,
+            lastClosureExtendedRequests: closureExtensionResult.extendedCount,
+            lastClosureAdjustedAt: serverTimestamp(),
           };
 
       await setDoc(schoolStatusRef, statusPayload, { merge: true });
@@ -149,9 +279,18 @@ function Settings() {
         setSchoolClosureReason("");
       }
 
+      const reopenDetail =
+        !nextClosed && closureExtensionResult.closureDays > 0
+          ? ` ${closureExtensionResult.extendedCount} borrowed request${
+              closureExtensionResult.extendedCount === 1 ? "" : "s"
+            } were extended by ${closureExtensionResult.closureDays} closure day${
+              closureExtensionResult.closureDays === 1 ? "" : "s"
+            }.`
+          : "";
+
       const message = nextClosed
         ? "School Closure Mode is now active. Borrowing, claiming, and returns are paused."
-        : "School Closure Mode is now inactive. Borrowing, claiming, and returns are available again.";
+        : `School Closure Mode is now inactive. Borrowing, claiming, and returns are available again.${reopenDetail}`;
 
       showStatus(message, "success");
       showToast(nextClosed ? "System closed" : "System reopened", "success");
@@ -570,6 +709,69 @@ function Settings() {
     });
   }
 
+  function formatPenaltyDateTime(value) {
+    const date = getDateFromValue(value);
+
+    if (!date) return "Not recorded";
+
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function getSortedPenaltyRecords() {
+    return [...penaltyRecords].sort((a, b) => {
+      const firstDate = getDateFromValue(a.createdAt)?.getTime() || 0;
+      const secondDate = getDateFromValue(b.createdAt)?.getTime() || 0;
+
+      return secondDate - firstDate;
+    });
+  }
+
+  function getPenaltyStatusLabel(record) {
+    if (record?.status === "Resolved") return "Resolved";
+
+    const restrictionEndDate = getDateFromValue(record?.restrictionEndAt);
+
+    if (restrictionEndDate && restrictionEndDate < new Date()) {
+      return "Completed";
+    }
+
+    return record?.status || "Active";
+  }
+
+  function getPenaltyStatusClass(record) {
+    return String(getPenaltyStatusLabel(record) || "active")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  async function fetchPenaltyRecords(userId) {
+    if (!userId) {
+      setPenaltyRecords([]);
+      return;
+    }
+
+    const penaltyQuery = firestoreQuery(
+      collection(db, "penaltyRecords"),
+      where("borrowerId", "==", userId)
+    );
+
+    const penaltySnapshot = await getDocs(penaltyQuery);
+
+    setPenaltyRecords(
+      penaltySnapshot.docs.map((document) => ({
+        id: document.id,
+        ...document.data(),
+      }))
+    );
+  }
+
   function getBorrowingStatusInfo() {
     if (userRecord?.role !== "borrower") {
       return null;
@@ -891,6 +1093,7 @@ function Settings() {
 
       try {
         await loadUserRecord(user);
+        await fetchPenaltyRecords(user.uid);
       } catch (error) {
         showActionError("Failed to load settings", error);
       } finally {
@@ -1359,6 +1562,51 @@ function Settings() {
             <p className="settings-borrowing-status-note">
               {borrowingStatusInfo.detail}
             </p>
+          </section>
+        )}
+
+        {isBorrowerProfile() && (
+          <section className="settings-card settings-penalty-history-card">
+            <div className="settings-section-heading">
+              <h2>Penalty History</h2>
+              <p>
+                View your temporary borrowing restriction records and the item
+                that caused each restriction.
+              </p>
+            </div>
+
+            {getSortedPenaltyRecords().length === 0 ? (
+              <div className="settings-penalty-empty">
+                <strong>No penalty records</strong>
+                <p>You have no recorded borrowing restriction history.</p>
+              </div>
+            ) : (
+              <div className="settings-penalty-list">
+                {getSortedPenaltyRecords()
+                  .slice(0, 5)
+                  .map((record) => (
+                    <article className="settings-penalty-item" key={record.id}>
+                      <div className="settings-penalty-item-head">
+                        <div>
+                          <span>{record.penaltyType || "Borrowing Restriction"}</span>
+                          <strong>{record.itemName || "No item linked"}</strong>
+                        </div>
+
+                        <em className={`penalty-status-${getPenaltyStatusClass(record)}`}>
+                          {getPenaltyStatusLabel(record)}
+                        </em>
+                      </div>
+
+                      <p>{record.reason || "No reason recorded."}</p>
+
+                      <div className="settings-penalty-meta">
+                        <span>Started: {formatPenaltyDateTime(record.restrictionStartAt || record.createdAt)}</span>
+                        <span>Ends: {formatPenaltyDateTime(record.restrictionEndAt)}</span>
+                      </div>
+                    </article>
+                  ))}
+              </div>
+            )}
           </section>
         )}
 

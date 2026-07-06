@@ -505,6 +505,15 @@ let submittedSuccessfully = false;
     }
 
     if (item.availability !== "Available") {
+        if (item.availability === "Under Maintenance") {
+          showBlockedAction(
+            item.maintenanceReason
+              ? `This item is under maintenance: ${item.maintenanceReason}`
+              : "This item is under maintenance and cannot be borrowed right now."
+          );
+          return;
+        }
+
         showBlockedAction("This item is not available for borrowing right now.");
         return;
     }
@@ -727,10 +736,16 @@ setTimeout(() => {
 
           {item?.availability !== "Available" && (
             <div className="borrow-request-warning">
-              <strong>Item not available</strong>
+              <strong>
+                {item?.availability === "Under Maintenance"
+                  ? "Item under maintenance"
+                  : "Item not available"}
+              </strong>
               <p>
-                This item is currently marked as {item?.availability}. You cannot
-                request it right now.
+                {item?.availability === "Under Maintenance"
+                  ? item?.maintenanceReason ||
+                    "This item is temporarily unavailable while it is being inspected or repaired."
+                  : `This item is currently marked as ${item?.availability}. You cannot request it right now.`}
               </p>
             </div>
           )}

@@ -1197,3 +1197,123 @@ html[data-theme="dark"] .add-item-page .add-item-header-back-btn {
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
 }
+
+
+
+/* =========================================================
+   ADD ITEM - BULK QUANTITY GENERATOR
+   Supports creating multiple individual item records with
+   unique QR/barcode values from one form entry.
+========================================================= */
+
+.add-item-quantity-field {
+  min-width: 0 !important;
+}
+
+.add-item-quantity-field input {
+  font-weight: 950 !important;
+}
+
+.add-item-quantity-field p {
+  color: var(--add-muted) !important;
+}
+
+.add-item-preview-meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* Make the bulk quantity field fit cleanly with the compact desktop layout. */
+@media (min-width: 1121px) {
+  .add-item-form-card form {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .add-item-form-card form > .add-item-field:nth-child(1) {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-code-field {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-quantity-field {
+    grid-column: span 1 !important;
+  }
+
+  .add-item-description-field {
+    grid-column: span 3 !important;
+  }
+
+  .add-item-form-card form > .add-item-grid:nth-of-type(1),
+  .add-item-form-card form > .add-item-grid:nth-of-type(2) {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-image-field {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-actions {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-preview-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Sidebar-open desktop / medium laptop width */
+@media (min-width: 1121px) and (max-width: 1450px) {
+  .add-item-form-card form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .add-item-form-card form > .add-item-field:nth-child(1),
+  .add-item-code-field,
+  .add-item-description-field,
+  .add-item-form-card form > .add-item-grid:nth-of-type(1),
+  .add-item-form-card form > .add-item-grid:nth-of-type(2),
+  .add-item-image-field,
+  .add-item-actions {
+    grid-column: span 2 !important;
+  }
+
+  .add-item-quantity-field {
+    grid-column: span 1 !important;
+  }
+}
+
+/* Mobile: keep quantity as a normal full-width field */
+@media (max-width: 760px) {
+  .add-item-quantity-field {
+    grid-column: auto !important;
+  }
+
+  .add-item-quantity-field input {
+    min-height: 40px !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .add-item-quantity-field input {
+  background-color: var(--qb-input, #111827) !important;
+  color: var(--qb-foreground, #e5e7eb) !important;
+}
+
+
+/* =========================================================
+   ADD ITEM - UNDER MAINTENANCE STATUS
+========================================================= */
+
+.add-item-maintenance-field {
+  grid-column: 1 / -1 !important;
+}
+
+.add-item-maintenance-field textarea {
+  min-height: 86px !important;
+}
+
+html[data-theme="dark"] .add-item-maintenance-field textarea {
+  background-color: var(--qb-input, #111827);
+  color: var(--qb-foreground, #e5e7eb);
+}

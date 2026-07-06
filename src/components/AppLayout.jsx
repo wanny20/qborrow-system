@@ -348,18 +348,85 @@ function getDateTimeMs(value) {
   return Number.isNaN(parsedTime) ? 0 : parsedTime;
 }
 
-function getApprovedPickupRemainingMs(request) {
-  if (request?.approvalStatus !== "Approved") return null;
+function parseDateKey(value) {
+  if (!value) return null;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day);
+}
+
+function getEndOfDateKeyMs(dateKey) {
+  const date = parseDateKey(dateKey);
+
+  if (!date) return 0;
+
+  date.setHours(23, 59, 59, 999);
+
+  return date.getTime();
+}
+
+function getEarliestValidDeadlineMs(deadlines) {
+  const validDeadlines = deadlines.filter(
+    (deadline) => typeof deadline === "number" && deadline > 0
+  );
+
+  return validDeadlines.length > 0 ? Math.min(...validDeadlines) : 0;
+}
+
+function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
+  const closedTime = getDateTimeMs(schoolStatus?.closedAt);
+  const reopenedTime = isSchoolClosedNow()
+    ? Date.now()
+    : getDateTimeMs(schoolStatus?.reopenedAt);
+
+  if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
+  if (baseDeadlineMs <= closedTime) return 0;
+  if (timerStartMs && timerStartMs >= reopenedTime) return 0;
+
+  const pauseStart = Math.max(closedTime, timerStartMs || closedTime);
+  const pauseEnd = reopenedTime;
+
+  return Math.max(0, pauseEnd - pauseStart);
+}
+
+function getDeadlineWithSchoolClosurePause(timerStartMs, baseDeadlineMs) {
+  if (!baseDeadlineMs) return 0;
+
+  return baseDeadlineMs + getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs);
+}
+
+function getApprovedPickupDeadlineMs(request) {
+  if (request?.approvalStatus !== "Approved") return 0;
 
   const approvedTime =
     getDateTimeMs(request.approvedAt) || getDateTimeMs(request.updatedAt);
+  const expectedReturnEnd = getEndOfDateKeyMs(request.expectedReturnDate);
 
-  if (!approvedTime) return null;
+  return getEarliestValidDeadlineMs([
+    approvedTime
+      ? getDeadlineWithSchoolClosurePause(
+          approvedTime,
+          approvedTime + CLAIM_PICKUP_WINDOW_MS
+        )
+      : 0,
+    getDeadlineWithSchoolClosurePause(approvedTime, expectedReturnEnd),
+  ]);
+}
 
-  return CLAIM_PICKUP_WINDOW_MS - (Date.now() - approvedTime);
+function getApprovedPickupRemainingMs(request) {
+  const deadlineTime = getApprovedPickupDeadlineMs(request);
+
+  if (!deadlineTime) return null;
+
+  return deadlineTime - Date.now();
 }
 
 function formatClaimPickupRemaining(request) {
+  if (isSchoolClosedNow()) return "when school reopens";
+
   const remainingMs = getApprovedPickupRemainingMs(request);
 
   if (remainingMs === null) return "within the release window";
@@ -379,6 +446,10 @@ function getClaimItemTooltip() {
 
   if (!request) {
     return "You have an approved item to claim.";
+  }
+
+  if (isSchoolClosedNow()) {
+    return `${request.itemName || "An approved item"} claim is paused while the school is closed.`;
   }
 
   return `${request.itemName || "An approved item"} must be claimed within ${formatClaimPickupRemaining(request)}.`;
@@ -1035,7 +1106,13 @@ useEffect(() => {
   if (!userId) return;
 
   checkRejectedRequestAlerts(userId);
-}, [userData?.role, userData?.uid]);
+}, [
+  userData?.role,
+  userData?.uid,
+  schoolStatus?.isSchoolClosed,
+  schoolStatus?.closedAt,
+  schoolStatus?.reopenedAt,
+]);
 
 useEffect(() => {
   if (userData?.role !== "borrower") {

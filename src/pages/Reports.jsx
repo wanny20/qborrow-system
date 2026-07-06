@@ -14,7 +14,7 @@ const REPORT_MODULES = [
   { key: "frequentlyBorrowed", label: "Frequently Borrowed Items" },
   { key: "borrowingHistory", label: "Borrowing History" },
   { key: "overdueItems", label: "Late / Overdue Returns" },
-  { key: "damagedLostItems", label: "Damaged/Lost Items" },
+  { key: "damagedLostItems", label: "Damaged/Lost/Maintenance Items" },
 ];
 
 function getValidReportModule(moduleKey) {
@@ -27,7 +27,7 @@ function Reports() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const outletContext = useOutletContext() || {};
-  const { userData } = outletContext;
+  const { userData, schoolStatus } = outletContext;
   const { showToast } = useToast();
 
   const activeReportModule = getValidReportModule(searchParams.get("module"));
@@ -50,6 +50,10 @@ const [dateTo, setDateTo] = useState("");
   const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
+  function isSchoolClosed() {
+    return Boolean(schoolStatus?.isSchoolClosed);
+  }
+
   const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
   const UNCATEGORIZED_CATEGORY_NAME = "Uncategorized";
 
@@ -181,6 +185,10 @@ function getRequestCategoryName(request) {
   }
 
   function checkOverdue(request) {
+    if (isSchoolClosed()) {
+      return false;
+    }
+
     if (request.approvalStatus !== "Borrowed") {
       return false;
     }
@@ -255,7 +263,11 @@ function getRequestCategoryName(request) {
   }
 
 function isDamagedLostStatus(value) {
-  return ["damaged", "lost"].includes(normalizeText(value));
+  return ["damaged", "lost", "under maintenance"].includes(normalizeText(value));
+}
+
+function isMaintenanceStatus(value) {
+  return normalizeText(value) === "under maintenance";
 }
 
 function isDamagedLostItem(item) {
@@ -274,6 +286,14 @@ function getItemDamagedLostDate(item) {
     return getComparableDateKey(item.damagedLostAt);
   }
 
+  if (item.maintenanceStartedDate) {
+    return getComparableDateKey(item.maintenanceStartedDate);
+  }
+
+  if (item.maintenanceStartedAt) {
+    return getComparableDateKey(item.maintenanceStartedAt);
+  }
+
   return "";
 }
 
@@ -283,7 +303,7 @@ function isDamagedLostItemInsideDateRange(item) {
   const damagedLostDate = getItemDamagedLostDate(item);
 
   /*
-    Old damaged/lost records created before this update have no damagedLostAt.
+    Old damaged/lost/maintenance records created before this update may have no recorded status date.
     Keep them visible only when viewing "All dates", but hide them whenever a
     specific date range is selected so future/incorrect ranges stay accurate.
   */
@@ -595,9 +615,9 @@ const reportStatistics = [
     detail: `${borrowedItems.length} of ${visibleItems.length} visible items are currently borrowed.`,
   },
   {
-    label: "Damaged/Lost Rate",
+    label: "Damaged/Lost/Maintenance Rate",
     value: getPercentage(damagedLostItems.length, visibleItems.length),
-    detail: `${damagedLostItems.length} of ${visibleItems.length} visible items are damaged or lost.`,
+    detail: `${damagedLostItems.length} of ${visibleItems.length} visible items are damaged, lost, or under maintenance.`,
   },
   {
     label: "Late / Overdue Return Rate",
@@ -774,7 +794,7 @@ function handleExportCategoryReportCsv() {
       "Available",
       "Reserved",
       "Borrowed",
-      "Damaged / Lost",
+      "Damaged / Lost / Maintenance",
       "Total Requests",
     ];
 
@@ -853,7 +873,7 @@ function handleExportOverdueItemsCsv() {
 
 function handleExportDamagedLostCsv() {
   if (damagedLostItems.length === 0) {
-    showToast("No damaged or lost item records to export", "error");
+    showToast("No damaged, lost, or under maintenance item records to export", "error");
     return;
   }
 
@@ -864,7 +884,7 @@ function handleExportDamagedLostCsv() {
       "Category",
       "Availability",
       "Condition",
-      "Damaged/Lost Date",
+      "Damaged/Lost/Maintenance Date",
       "Report/Reason",
       "Item ID",
     ];
@@ -876,7 +896,7 @@ function handleExportDamagedLostCsv() {
       item.availability || "N/A",
       item.condition || item.availability || "N/A",
       getItemDamagedLostDate(item) || "No recorded date",
-      item.damagedLostReport || "No report recorded",
+      item.damagedLostReport || item.maintenanceReason || "No report recorded",
       item.id,
     ]);
 
@@ -886,9 +906,9 @@ function handleExportDamagedLostCsv() {
       rows
     );
 
-    showActionSuccess("Damaged / Lost Items Exported");
+    showActionSuccess("Damaged / Lost / Maintenance Items Exported");
   } catch (error) {
-    showActionError("Failed to export damaged or lost items", error);
+    showActionError("Failed to export damaged, lost, or under maintenance items", error);
   }
 }
 
@@ -994,7 +1014,8 @@ function getReportGeneratedDate() {
         item.condition === "Damaged" ||
         item.condition === "Lost" ||
         item.availability === "Damaged" ||
-        item.availability === "Lost"
+        item.availability === "Lost" ||
+        item.availability === "Under Maintenance"
       ) {
         categoryMap[categoryId].damagedLost += 1;
       }
@@ -1055,7 +1076,7 @@ const itemAvailabilityChart = [
     percent: getChartPercent(borrowedItems.length, itemAvailabilityChartTotal),
   },
   {
-    label: "Damaged / Lost",
+    label: "Damaged / Lost / Maintenance",
     value: damagedLostItems.length,
     percent: getChartPercent(damagedLostItems.length, itemAvailabilityChartTotal),
   },
@@ -1163,7 +1184,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Reserved</th>
           <th>Borrowed</th>
           <th>Late / Overdue</th>
-          <th>Damaged / Lost</th>
+          <th>Damaged / Lost / Maintenance</th>
         </tr>
       </thead>
 
@@ -1241,7 +1262,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Available</th>
           <th>Reserved</th>
           <th>Borrowed</th>
-          <th>Damaged / Lost</th>
+          <th>Damaged / Lost / Maintenance</th>
           <th>Total Requests</th>
         </tr>
       </thead>
@@ -1379,7 +1400,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </section>
 
   <section className="reports-print-section">
-    <h2>Damaged / Lost Items</h2>
+    <h2>Damaged / Lost / Maintenance Items</h2>
 
     <table>
       <thead>
@@ -1395,7 +1416,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <tbody>
         {damagedLostItems.length === 0 ? (
           <tr>
-            <td colSpan="5">No damaged or lost items.</td>
+            <td colSpan="5">No damaged, lost, or under maintenance items.</td>
           </tr>
         ) : (
           damagedLostItems.map((item) => (
@@ -1545,7 +1566,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <div className="reports-damaged-modal-heading">
         <span>{viewingDamagedItem.itemCode || viewingDamagedItem.id}</span>
         <h2>{viewingDamagedItem.itemName || "Untitled Item"}</h2>
-        <p>Complete damaged or lost item information.</p>
+        <p>Complete damaged, lost, or under maintenance item information.</p>
       </div>
 
       <div className="reports-damaged-modal-grid">
@@ -1718,7 +1739,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         onClick={handleExportDamagedLostCsv}
         disabled={damagedLostItems.length === 0}
       >
-        Export Damaged / Lost
+        Export Damaged / Lost / Maintenance
       </button>
     )}
   </div>
@@ -1758,7 +1779,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         onClick={handleExportDamagedLostCsv}
         disabled={damagedLostItems.length === 0}
       >
-        Export Damaged / Lost
+        Export Damaged / Lost / Maintenance
       </button>
     </div>
   )}
@@ -1800,7 +1821,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         <div>
           <span>×</span>
           <h3>{damagedLostItems.length}</h3>
-          <p>Damaged/Lost</p>
+          <p>Damaged/Lost/Maintenance</p>
         </div>
       </section>
 
@@ -2004,7 +2025,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
                   </div>
 
                   <div>
-                    <span>Damaged/Lost</span>
+                    <span>Damaged/Lost/Maintenance</span>
                     <strong>{category.damagedLost}</strong>
                   </div>
 
@@ -2330,8 +2351,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <section className="reports-panel reports-module-panel reports-damaged-lost-panel">
         <div className="reports-section-heading">
           <div>
-            <h2>Damaged / Lost Items</h2>
-            <p>Items currently marked as damaged or lost.</p>
+            <h2>Damaged / Lost / Maintenance Items</h2>
+            <p>Items currently marked as damaged, lost, or under maintenance.</p>
           </div>
 
         </div>
@@ -2340,8 +2361,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         {damagedLostItems.length === 0 ? (
           <div className="reports-empty">
             <img src="/qborrow-logo.png" alt="QBorrow Logo" />
-            <h2>No damaged or lost items</h2>
-            <p>Your visible inventory has no damaged or lost records.</p>
+            <h2>No damaged, lost, or under maintenance items</h2>
+            <p>Your visible inventory has no damaged, lost, or under maintenance records.</p>
           </div>
 ) : (
   <>

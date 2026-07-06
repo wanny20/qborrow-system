@@ -1,49 +1,4 @@
 /* =========================================================
-   QBORROW APP LAYOUT - MODERN SAAS REDESIGN
-   Blue + Yellow + White theme
-   Safe replacement for src/styles/AppLayout.css
-========================================================= */
-
-:root {
-  --qb-primary: #2563eb;
-  --qb-primary-dark: #1d4ed8;
-  --qb-primary-soft: #dbeafe;
-  --qb-primary-soft-2: #eff6ff;
-
-  --qb-accent: #facc15;
-  --qb-accent-dark: #eab308;
-  --qb-accent-soft: #fef9c3;
-
-  --qb-bg: #f4f8ff;
-  --qb-surface: #ffffff;
-  --qb-surface-soft: #f8fafc;
-
-  --qb-foreground: #0f172a;
-  --qb-text: #0f172a;
-  --qb-muted-foreground: #64748b;
-  --qb-muted: #64748b;
-  --qb-border: #e2e8f0;
-
-  --qb-success: #16a34a;
-  --qb-warning: #f59e0b;
-  --qb-danger: #dc2626;
-  --qb-info: #0284c7;
-
-  --qb-radius-sm: 10px;
-  --qb-radius-md: 14px;
-  --qb-radius-lg: 20px;
-  --qb-radius-xl: 28px;
-
-  --qb-shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-  --qb-shadow-md: 0 14px 36px rgba(15, 23, 42, 0.09);
-  --qb-shadow-lg: 0 24px 70px rgba(15, 23, 42, 0.16);
-
-  --qb-sidebar-width: 292px;
-  --qb-topbar-height: 72px;
-  --qb-heading-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --qb-body-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --qb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
 
 /* =========================
    Shell / Page Layout
