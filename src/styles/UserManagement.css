@@ -10139,3 +10139,81 @@ html[data-theme="dark"] body .app-page-content .user-management-page
 .user-modal-hero p {
   color: #cbd5e1 !important;
 }
+/* =========================================================
+   USER MANAGEMENT TABLE - DESKTOP HORIZONTAL SCROLL FIX
+   Makes the user table scroll sideways when sidebar is open.
+   Keeps mobile card layout unchanged.
+========================================================= */
+
+@media (min-width: 901px) {
+  .user-management-page {
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .user-list-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .user-grid,
+  .user-table-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding-bottom: 10px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .user-table-header,
+  .user-table-grid .user-card,
+  .user-grid .user-card,
+  .user-card {
+    min-width: 1120px !important;
+  }
+
+  .user-table-header {
+    width: 1120px !important;
+  }
+
+  .user-table-grid .user-card,
+  .user-grid .user-card {
+    width: 1120px !important;
+  }
+
+  .user-actions {
+    width: 170px !important;
+    max-width: 170px !important;
+    overflow: visible !important;
+  }
+
+  .user-actions button,
+  .user-card .user-view-btn {
+    min-width: 0 !important;
+  }
+
+  .user-grid::-webkit-scrollbar,
+  .user-table-grid::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .user-grid::-webkit-scrollbar-track,
+  .user-table-grid::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.08);
+  }
+
+  .user-grid::-webkit-scrollbar-thumb,
+  .user-table-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.35);
+  }
+
+  .user-grid::-webkit-scrollbar-thumb:hover,
+  .user-table-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(37, 99, 235, 0.55);
+  }
+}
