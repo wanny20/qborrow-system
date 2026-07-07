@@ -266,9 +266,6 @@ function isDamagedLostStatus(value) {
   return ["damaged", "lost", "under maintenance"].includes(normalizeText(value));
 }
 
-function isMaintenanceStatus(value) {
-  return normalizeText(value) === "under maintenance";
-}
 
 function isDamagedLostItem(item) {
   return (
@@ -597,8 +594,6 @@ const visibleRequests = useMemo(() => {
       request.approvalStatus === "Expired" ||
       request.approvalStatus === "Cancelled"
   );
-
-  const activeRequestTotal = borrowedRequests.length;
 
 const returnableRequestTotal =
   borrowedRequests.length + returnedRequests.length;
@@ -1125,15 +1120,6 @@ const requestStatusChart = [
   },
 ];
 
-const topBorrowedChartMax = Math.max(
-  ...frequentlyBorrowedItems.slice(0, 8).map((item) => item.count),
-  1
-);
-
-const topBorrowedChart = frequentlyBorrowedItems.slice(0, 8).map((item) => ({
-  ...item,
-  percent: getChartPercent(item.count, topBorrowedChartMax),
-}));
 
 const categoryPerformanceMax = Math.max(
   ...categoryReports.map((category) =>

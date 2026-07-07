@@ -53,6 +53,15 @@ service cloud.firestore {
         get(/databases/$(database)/documents/systemSettings/schoolStatus).data.isSchoolClosed == true;
     }
 
+    function isSystemSuspended() {
+      return exists(/databases/$(database)/documents/systemSettings/schoolStatus) &&
+        get(/databases/$(database)/documents/systemSettings/schoolStatus).data.isSystemSuspended == true;
+    }
+
+    function isBorrowingUnavailable() {
+      return isSchoolClosed() || isSystemSuspended();
+    }
+
     function assignedCategories() {
       return userData().assignedCategories is list
         ? userData().assignedCategories
@@ -122,18 +131,19 @@ service cloud.firestore {
           "profileMobileUpdatedAt",
           "updatedAt"
         ]);
-        allow update: if isOwner(userId) &&
-  request.resource.data.diff(resource.data).affectedKeys()
-    .hasOnly([
-      "termsAccepted",
-      "termsAcceptedAt",
-      "termsVersion",
-      "mustChangePassword",
-      "passwordChangedAt",
-      "updatedAt"
-    ]) &&
-  request.resource.data.termsAccepted == true &&
-  request.resource.data.mustChangePassword == false;
+
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "termsAccepted",
+            "termsAcceptedAt",
+            "termsVersion",
+            "mustChangePassword",
+            "passwordChangedAt",
+            "updatedAt"
+          ]) &&
+        request.resource.data.termsAccepted == true &&
+        request.resource.data.mustChangePassword == false;
 
       allow update: if isOwner(userId) &&
         hasOnlyChangedFields([
@@ -142,33 +152,34 @@ service cloud.firestore {
           "updatedAt"
         ]) &&
         request.resource.data.mustChangePassword == false;
-        allow update: if isOwner(userId) &&
-  request.resource.data.diff(resource.data).affectedKeys()
-    .hasOnly([
-      "mustChangePassword",
-      "passwordChangedAt",
-      "updatedAt"
-    ]) &&
-  request.resource.data.mustChangePassword == false;
 
-allow update: if isOwner(userId) &&
-  request.resource.data.diff(resource.data).affectedKeys()
-    .hasOnly([
-      "termsAccepted",
-      "termsAcceptedAt",
-      "termsVersion",
-      "updatedAt"
-    ]) &&
-  request.resource.data.termsAccepted == true;
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "mustChangePassword",
+            "passwordChangedAt",
+            "updatedAt"
+          ]) &&
+        request.resource.data.mustChangePassword == false;
 
-        allow update: if isOwner(userId) &&
-  hasOnlyChangedFields([
-    "termsAccepted",
-    "termsAcceptedAt",
-    "termsVersion",
-    "updatedAt"
-  ]) &&
-  request.resource.data.termsAccepted == true;
+      allow update: if isOwner(userId) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "termsAccepted",
+            "termsAcceptedAt",
+            "termsVersion",
+            "updatedAt"
+          ]) &&
+        request.resource.data.termsAccepted == true;
+
+      allow update: if isOwner(userId) &&
+        hasOnlyChangedFields([
+          "termsAccepted",
+          "termsAcceptedAt",
+          "termsVersion",
+          "updatedAt"
+        ]) &&
+        request.resource.data.termsAccepted == true;
 
       allow update: if isAdmin() &&
         hasOnlyChangedFields([
@@ -212,7 +223,7 @@ allow update: if isOwner(userId) &&
       allow read: if signedIn();
 
       allow create: if isBorrower() &&
-        !isSchoolClosed() &&
+        !isBorrowingUnavailable() &&
         request.resource.data.borrowerId == request.auth.uid &&
         request.resource.data.approvalStatus == "Pending" &&
         request.resource.data.actualReturnDate == "" &&
@@ -262,13 +273,26 @@ allow update: if isOwner(userId) &&
           "returnedAt"
         ]);
 
+      /*
+        Admin request actions are blocked only during System Suspension.
+        School Closed Today does NOT block Manage Requests because timers continue.
+      */
       allow update: if isAdmin() &&
+        !isSystemSuspended() &&
         adminCanAccessCategory(resource.data) &&
         adminCanAccessCategory(request.resource.data) &&
         validAdminRequestUpdate();
 
+      /*
+        Super Admin extension updates are allowed for:
+        - existing closure extension fields
+        - new system suspension extension fields
+      */
       allow update: if isSuperAdmin() &&
-        validClosureExtensionUpdate();
+        (
+          validClosureExtensionUpdate() ||
+          validSystemSuspensionExtensionUpdate()
+        );
 
       allow update: if isBorrower() &&
         resource.data.borrowerId == request.auth.uid &&
@@ -281,16 +305,16 @@ allow update: if isOwner(userId) &&
           "cancelledBy",
           "updatedAt"
         ]);
-        
-        allow update: if isBorrower() &&
-  resource.data.borrowerId == request.auth.uid &&
-  resource.data.approvalStatus == "Rejected" &&
-  request.resource.data.approvalStatus == "Rejected" &&
-  request.resource.data.borrowerAcknowledgedBy == request.auth.uid &&
-  hasOnlyChangedFields([
-    "borrowerAcknowledgedAt",
-    "borrowerAcknowledgedBy"
-  ]);
+
+      allow update: if isBorrower() &&
+        resource.data.borrowerId == request.auth.uid &&
+        resource.data.approvalStatus == "Rejected" &&
+        request.resource.data.approvalStatus == "Rejected" &&
+        request.resource.data.borrowerAcknowledgedBy == request.auth.uid &&
+        hasOnlyChangedFields([
+          "borrowerAcknowledgedAt",
+          "borrowerAcknowledgedBy"
+        ]);
 
       allow delete: if isSuperAdmin();
 
@@ -314,6 +338,22 @@ allow update: if isOwner(userId) &&
             "closureAdjustedAt",
             "closureAdjustedBy",
             "closureAdjustmentReason",
+            "updatedAt"
+          ]);
+      }
+
+      function validSystemSuspensionExtensionUpdate() {
+        return resource.data.approvalStatus == "Borrowed" &&
+          request.resource.data.approvalStatus == "Borrowed" &&
+          hasOnlyChangedFields([
+            "expectedReturnDate",
+            "originalExpectedReturnDate",
+            "systemSuspensionExtended",
+            "systemSuspensionExtendedDays",
+            "lastSystemSuspensionExtendedDays",
+            "systemSuspensionAdjustedAt",
+            "systemSuspensionAdjustedBy",
+            "systemSuspensionAdjustmentReason",
             "updatedAt"
           ]);
       }
@@ -548,6 +588,18 @@ allow update: if isOwner(userId) &&
           "lastClosureExtendedDays",
           "lastClosureExtendedRequests",
           "lastClosureAdjustedAt",
+
+          "isSystemSuspended",
+          "systemSuspensionReason",
+          "systemSuspendedAt",
+          "systemSuspendedBy",
+          "systemSuspendedByName",
+          "systemResumedAt",
+          "systemResumedBy",
+          "lastSystemSuspensionExtendedDays",
+          "lastSystemSuspensionExtendedRequests",
+          "lastSystemSuspensionAdjustedAt",
+
           "updatedAt"
         ]);
 

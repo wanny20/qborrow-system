@@ -144,8 +144,8 @@ function MyRequests() {
     });
   }
 
-  function isSchoolClosed() {
-    return Boolean(schoolStatus?.isSchoolClosed);
+  function isSystemSuspended() {
+    return Boolean(schoolStatus?.isSystemSuspended);
   }
 
   function openConfirmAction(config) {
@@ -223,10 +223,10 @@ function MyRequests() {
   }
 
   function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
-    const closedTime = getTimestampMs(schoolStatus?.closedAt);
-    const reopenedTime = isSchoolClosed()
+    const closedTime = getTimestampMs(schoolStatus?.systemSuspendedAt);
+    const reopenedTime = isSystemSuspended()
       ? Date.now()
-      : getTimestampMs(schoolStatus?.reopenedAt);
+      : getTimestampMs(schoolStatus?.systemResumedAt);
 
     if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
     if (baseDeadlineMs <= closedTime) return 0;
@@ -271,7 +271,7 @@ function MyRequests() {
   }
 
   function formatApprovedReleaseRemaining(request) {
-    if (isSchoolClosed()) return "Claim Paused - School Closed";
+    if (isSystemSuspended()) return "Claim Paused - System Suspended";
 
     const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -357,18 +357,18 @@ function MyRequests() {
       which is approvalStatus === "Borrowed".
     */
     if (request.approvalStatus === "Borrowed") {
-      if (isSchoolClosed()) return "Return Deadline Paused";
+      if (isSystemSuspended()) return "Return Deadline Paused";
 
       return today > expectedDate ? "Overdue" : "Not Overdue";
     }
 
     if (request.approvalStatus === "Approved") {
-      if (isSchoolClosed()) return "Claim Paused - School Closed";
+      if (isSystemSuspended()) return "Claim Paused - System Suspended";
 
       return formatApprovedReleaseRemaining(request);
     }
 
-    if (request.approvalStatus === "Pending" && isSchoolClosed()) {
+    if (request.approvalStatus === "Pending" && isSystemSuspended()) {
       return "Approval Timer Paused";
     }
 

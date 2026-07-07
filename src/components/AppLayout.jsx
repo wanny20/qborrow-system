@@ -23,6 +23,8 @@ function AppLayout() {
   const [schoolStatus, setSchoolStatus] = useState({
     isSchoolClosed: false,
     closureReason: "",
+    isSystemSuspended: false,
+    systemSuspensionReason: "",
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -78,6 +80,9 @@ const [pendingNavigationPath, setPendingNavigationPath] = useState("");
   const [showBorrowingRestoredAlert, setShowBorrowingRestoredAlert] =
   useState(false);
 
+  const [showSystemStatusLoginModal, setShowSystemStatusLoginModal] =
+  useState(false);
+
   const [showAccountDisabledAlert, setShowAccountDisabledAlert] =
   useState(false);
 
@@ -120,6 +125,22 @@ function isSchoolClosedNow() {
   return Boolean(schoolStatus?.isSchoolClosed);
 }
 
+function isSystemSuspendedNow() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
+
+function getSystemSuspensionReason() {
+  return String(schoolStatus?.systemSuspensionReason || "").trim();
+}
+
+function getSystemSuspensionMessage() {
+  const reason = getSystemSuspensionReason();
+
+  return reason
+    ? `System is currently suspended: ${reason}`
+    : "System is currently suspended.";
+}
+
 function getSchoolClosureReason() {
   return String(schoolStatus?.closureReason || "").trim();
 }
@@ -130,6 +151,69 @@ function getSchoolClosureMessage() {
   return reason
     ? `School is currently closed: ${reason}`
     : "School is currently closed.";
+}
+
+function getActiveSystemStatusMode() {
+  if (isSystemSuspendedNow()) {
+    return {
+      type: "system-suspended",
+      eyebrow: "System Suspension Mode",
+      title: getSystemSuspensionMessage(),
+      description:
+        "All borrowing workflows and borrowing timers are paused until the system is resumed by the super admin.",
+      modalTitle: "System Suspension is Active",
+      modalDescription:
+        "The system is currently suspended due to an official suspension, holiday, calamity, or emergency. Borrowing actions and borrowing timers are paused.",
+      updatedAt:
+        schoolStatus?.updatedAt ||
+        schoolStatus?.systemSuspendedAt ||
+        schoolStatus?.systemResumedAt,
+    };
+  }
+
+  if (isSchoolClosedNow()) {
+    return {
+      type: "school-closed",
+      eyebrow: "School Closed Today",
+      title: getSchoolClosureMessage(),
+      description:
+        "Borrowing, item release, and return confirmation are unavailable, but borrowing timers continue running.",
+      modalTitle: "School is Closed Today",
+      modalDescription:
+        "Borrowing, item release, and return confirmation are temporarily unavailable. The system is still running and borrowing time continues.",
+      updatedAt:
+        schoolStatus?.updatedAt ||
+        schoolStatus?.closedAt ||
+        schoolStatus?.reopenedAt,
+    };
+  }
+
+  return null;
+}
+
+function getSystemStatusModalStorageKey(mode) {
+  const userKey =
+    userData?.uid ||
+    auth.currentUser?.uid ||
+    userData?.email ||
+    "qborrow-user";
+
+  const updatedKey = getDateTimeMs(mode?.updatedAt) || "active";
+
+  return `qborrow-system-status-modal-${userKey}-${mode?.type}-${updatedKey}`;
+}
+
+function handleCloseSystemStatusLoginModal() {
+  const activeMode = getActiveSystemStatusMode();
+
+  if (typeof window !== "undefined" && activeMode) {
+    sessionStorage.setItem(
+      getSystemStatusModalStorageKey(activeMode),
+      "seen"
+    );
+  }
+
+  setShowSystemStatusLoginModal(false);
 }
 
 const setUnsavedChanges = useCallback((hasChanges, message = "") => {
@@ -377,10 +461,10 @@ function getEarliestValidDeadlineMs(deadlines) {
 }
 
 function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
-  const closedTime = getDateTimeMs(schoolStatus?.closedAt);
-  const reopenedTime = isSchoolClosedNow()
+  const closedTime = getDateTimeMs(schoolStatus?.systemSuspendedAt);
+  const reopenedTime = isSystemSuspendedNow()
     ? Date.now()
-    : getDateTimeMs(schoolStatus?.reopenedAt);
+    : getDateTimeMs(schoolStatus?.systemResumedAt);
 
   if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
   if (baseDeadlineMs <= closedTime) return 0;
@@ -425,7 +509,7 @@ function getApprovedPickupRemainingMs(request) {
 }
 
 function formatClaimPickupRemaining(request) {
-  if (isSchoolClosedNow()) return "when school reopens";
+  if (isSystemSuspendedNow()) return "when the system resumes";
 
   const remainingMs = getApprovedPickupRemainingMs(request);
 
@@ -448,8 +532,12 @@ function getClaimItemTooltip() {
     return "You have an approved item to claim.";
   }
 
+  if (isSystemSuspendedNow()) {
+    return `${request.itemName || "An approved item"} claim timer is paused while the system is suspended.`;
+  }
+
   if (isSchoolClosedNow()) {
-    return `${request.itemName || "An approved item"} claim is paused while the school is closed.`;
+    return `${request.itemName || "An approved item"} cannot be claimed while school is closed, but the claim timer continues.`;
   }
 
   return `${request.itemName || "An approved item"} must be claimed within ${formatClaimPickupRemaining(request)}.`;
@@ -684,6 +772,33 @@ function handleViewAdminBorrowRequestAlert() {
 
   const schoolClosed = isSchoolClosedNow();
   const schoolClosureMessage = getSchoolClosureMessage();
+  const systemSuspended = isSystemSuspendedNow();
+  const systemSuspensionMessage = getSystemSuspensionMessage();
+  const activeSystemStatusMode = getActiveSystemStatusMode();
+  useEffect(() => {
+  const activeMode = getActiveSystemStatusMode();
+
+  if (!userData || !activeMode) {
+    setShowSystemStatusLoginModal(false);
+    return;
+  }
+
+  if (typeof window === "undefined") return;
+
+  const storageKey = getSystemStatusModalStorageKey(activeMode);
+  const alreadySeen = sessionStorage.getItem(storageKey) === "seen";
+
+  if (!alreadySeen) {
+    setShowSystemStatusLoginModal(true);
+  }
+}, [
+  userData,
+  schoolStatus?.isSchoolClosed,
+  schoolStatus?.isSystemSuspended,
+  schoolStatus?.updatedAt,
+  schoolStatus?.closedAt,
+  schoolStatus?.systemSuspendedAt,
+]);
 
   function normalizeText(value) {
     return String(value || "").trim().toLowerCase();
@@ -824,6 +939,8 @@ useEffect(() => {
     setSchoolStatus({
       isSchoolClosed: false,
       closureReason: "",
+      isSystemSuspended: false,
+      systemSuspensionReason: "",
     });
     return;
   }
@@ -837,6 +954,8 @@ useEffect(() => {
         setSchoolStatus({
           isSchoolClosed: false,
           closureReason: "",
+          isSystemSuspended: false,
+          systemSuspensionReason: "",
         });
         return;
       }
@@ -845,6 +964,8 @@ useEffect(() => {
         id: snapshot.id,
         isSchoolClosed: false,
         closureReason: "",
+        isSystemSuspended: false,
+        systemSuspensionReason: "",
         ...snapshot.data(),
       });
     },
@@ -1110,8 +1231,9 @@ useEffect(() => {
   userData?.role,
   userData?.uid,
   schoolStatus?.isSchoolClosed,
-  schoolStatus?.closedAt,
-  schoolStatus?.reopenedAt,
+  schoolStatus?.isSystemSuspended,
+  schoolStatus?.systemSuspendedAt,
+  schoolStatus?.systemResumedAt,
 ]);
 
 useEffect(() => {
@@ -2079,22 +2201,23 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
         </header>
 
         <div className="app-page-content">
-          {schoolClosed && (
-            <div className="app-school-closed-banner" role="alert">
-              <div>
-                <span>School Closure Mode</span>
-                <strong>{schoolClosureMessage}</strong>
-                <p>
-                  Borrowing, item claiming, and return confirmation are paused until the
-                  system is reopened by the super admin.
-                </p>
-              </div>
 
-              <small>
-                Updated: {getDateLabel(schoolStatus?.updatedAt || schoolStatus?.closedAt)}
-              </small>
-            </div>
-          )}
+{activeSystemStatusMode && (
+  <div
+    className={`app-school-closed-banner ${activeSystemStatusMode.type}`}
+    role="alert"
+  >
+    <div>
+      <span>{activeSystemStatusMode.eyebrow}</span>
+      <strong>{activeSystemStatusMode.title}</strong>
+      <p>{activeSystemStatusMode.description}</p>
+    </div>
+
+    <small>
+      Updated: {getDateLabel(activeSystemStatusMode.updatedAt)}
+    </small>
+  </div>
+)}
 
           <Outlet
   context={{
@@ -2102,12 +2225,50 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
     schoolStatus,
     schoolClosed,
     schoolClosureMessage,
+    systemSuspended,
+    systemSuspensionMessage,
     setUnsavedChanges,
     guardedNavigate,
   }}
 />
         </div>
       </main>
+      {showSystemStatusLoginModal && activeSystemStatusMode && (
+  <div
+    className={`app-system-status-modal-backdrop ${activeSystemStatusMode.type}`}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="system-status-modal-title"
+  >
+    <section className="app-system-status-modal">
+      <div className="app-system-status-modal-icon">
+        {activeSystemStatusMode.type === "system-suspended" ? "!" : "i"}
+      </div>
+
+      <div className="app-system-status-modal-content">
+        <span>{activeSystemStatusMode.eyebrow}</span>
+
+        <h2 id="system-status-modal-title">
+          {activeSystemStatusMode.modalTitle}
+        </h2>
+
+        <p>{activeSystemStatusMode.modalDescription}</p>
+
+        <div className="app-system-status-modal-note">
+          <strong>Status:</strong> {activeSystemStatusMode.title}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="app-system-status-modal-btn"
+        onClick={handleCloseSystemStatusLoginModal}
+      >
+        I Understand
+      </button>
+    </section>
+  </div>
+)}
     </div>
   );
 }

@@ -103,6 +103,26 @@ function getSchoolClosedMessage() {
     : "Return confirmation is temporarily unavailable because the school is currently closed.";
 }
 
+function isSystemSuspended() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
+
+function isReturnUnavailable() {
+  return isSchoolClosed() || isSystemSuspended();
+}
+
+function getReturnUnavailableMessage() {
+  if (isSystemSuspended()) {
+    const reason = String(schoolStatus?.systemSuspensionReason || "").trim();
+
+    return reason
+      ? `Return confirmation is unavailable because the system is suspended: ${reason}`
+      : "Return confirmation is unavailable because the system is currently suspended.";
+  }
+
+  return getSchoolClosedMessage();
+}
+
 function openConfirmAction(config) {
   setConfirmAction(config);
 }
@@ -349,8 +369,8 @@ function clearSelectedReturnRequest() {
   }
 
   async function startReturnScanner() {
-    if (isSchoolClosed()) {
-      showBlockedAction(getSchoolClosedMessage());
+    if (isReturnUnavailable()) {
+      showBlockedAction(getReturnUnavailableMessage());
       return;
     }
 
@@ -713,7 +733,7 @@ function clearSelectedReturnRequest() {
   }
 
   function isOverdue(expectedReturnDate) {
-    if (isSchoolClosed()) return false;
+    if (isSystemSuspended()) return false;
 
     if (!expectedReturnDate) return false;
 
@@ -727,7 +747,7 @@ function clearSelectedReturnRequest() {
   }
 
   function getOverdueStatus(expectedReturnDate) {
-    if (isSchoolClosed()) return "Paused - School Closed";
+    if (isSystemSuspended()) return "Paused - System Suspended";
 
     return isOverdue(expectedReturnDate) ? "Overdue" : "Not Overdue";
   }
@@ -864,8 +884,8 @@ function openBorrowedRequestDetails(request) {
 async function findBorrowedRequestByItemId(rawItemId) {
   if (isReturnBusy()) return;
 
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage());
+  if (isReturnUnavailable()) {
+    showBlockedAction(getReturnUnavailableMessage());
     return;
   }
 
@@ -981,8 +1001,8 @@ clearFieldError("manualItemId");
 async function handleReturn() {
   showStatus("", "");
 
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage());
+  if (isReturnUnavailable()) {
+    showBlockedAction(getReturnUnavailableMessage());
     return;
   }
 
@@ -1293,7 +1313,7 @@ return (
           type="button"
           className="return-primary-btn"
           onClick={() => selectBorrowedRequest(viewingBorrowedRequest)}
-          disabled={confirming || isSchoolClosed()}
+          disabled={confirming || isReturnUnavailable()}
         >
           Select for Return
         </button>
@@ -1339,10 +1359,10 @@ return (
         </div>
       )}
 
-      {isSchoolClosed() && (
+      {isReturnUnavailable() && (
         <div className="return-school-closed-banner" role="alert">
           <strong>Return confirmation is temporarily unavailable</strong>
-          <p>{getSchoolClosedMessage()}</p>
+          <p>{getReturnUnavailableMessage()}</p>
         </div>
       )}
 
@@ -1366,7 +1386,7 @@ return (
                 id="return-camera"
                 value={selectedCameraId}
                 onChange={(event) => setSelectedCameraId(event.target.value)}
-                disabled={scannerOpen || startingScanner || confirming || isSchoolClosed()}
+                disabled={scannerOpen || startingScanner || confirming || isReturnUnavailable()}
               >
                 {cameras.map((camera, index) => (
                   <option key={camera.id} value={camera.id}>
@@ -1388,7 +1408,7 @@ return (
                   startReturnScanner();
                 }
               }}
-              disabled={startingScanner || confirming || isSchoolClosed()}
+              disabled={startingScanner || confirming || isReturnUnavailable()}
             >
               {startingScanner
                 ? "Opening..."
@@ -1401,7 +1421,7 @@ return (
               type="button"
               className="return-secondary-btn"
               onClick={restartReturnScanner}
-              disabled={startingScanner || confirming || isSchoolClosed()}
+              disabled={startingScanner || confirming || isReturnUnavailable()}
             >
               Restart Scanner
             </button>
@@ -1433,14 +1453,14 @@ return (
     clearFieldError("manualItemId");
   }}
   placeholder="Example: item ID or /item/itemId"
-  disabled={confirming || isSchoolClosed()}
+  disabled={confirming || isReturnUnavailable()}
 />
 
             <button
               type="button"
               className="return-secondary-btn"
               onClick={() => findBorrowedRequestByItemId(manualItemId)}
-              disabled={confirming || isSchoolClosed()}
+              disabled={confirming || isReturnUnavailable()}
             >
               Find
             </button>
@@ -1570,7 +1590,7 @@ return (
     clearFieldError("returnCondition");
     clearFieldError("damageLostReport");
   }}
-  disabled={confirming || isSchoolClosed()}
+  disabled={confirming || isReturnUnavailable()}
 >
   <option value="Good">Good</option>
   <option value="Fair">Fair</option>
@@ -1602,7 +1622,7 @@ return (
     clearFieldError("damageLostReport");
   }}
   placeholder="Describe the damage or lost item issue..."
-  disabled={confirming || isSchoolClosed()}
+  disabled={confirming || isReturnUnavailable()}
 />
 
 {fieldErrors.damageLostReport && (
@@ -1615,9 +1635,13 @@ return (
                 type="button"
                 className="return-confirm-btn"
                 onClick={handleReturn}
-                disabled={confirming || isSchoolClosed()}
+                disabled={confirming || isReturnUnavailable()}
               >
-                {confirming ? "Confirming..." : isSchoolClosed() ? "School Closed" : "Confirm Return"}
+                {confirming
+                  ? "Confirming..."
+                  : isReturnUnavailable()
+                    ? "Unavailable"
+                    : "Confirm Return"}
               </button>
             </>
           ) : (
@@ -1674,7 +1698,7 @@ return (
                 type="button"
                 className="return-secondary-btn"
                 onClick={() => fetchBorrowedRequests({ showSuccessToast: true })}
-                disabled={confirming || isSchoolClosed()}
+                disabled={confirming || isReturnUnavailable()}
               >
                 Refresh
               </button>
@@ -1742,7 +1766,7 @@ return (
                           type="button"
                           className="return-secondary-btn"
                           onClick={() => openBorrowedRequestDetails(request)}
-                          disabled={confirming || isSchoolClosed()}
+                          disabled={confirming || isReturnUnavailable()}
                         >
                           Details
                         </button>
@@ -1792,7 +1816,7 @@ return (
                   type="button"
                   className="return-secondary-btn"
                   onClick={() => fetchReturnedRequests({ showSuccessToast: true })}
-                  disabled={confirming || isSchoolClosed()}
+                  disabled={confirming || isReturnUnavailable()}
                 >
                   Refresh
                 </button>

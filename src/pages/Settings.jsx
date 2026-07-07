@@ -46,8 +46,6 @@ function Settings() {
 
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusType, setStatusType] = useState("");
   const [profileFieldErrors, setProfileFieldErrors] = useState({});
   const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
 
@@ -57,26 +55,35 @@ function Settings() {
   const [pendingProfileChanges, setPendingProfileChanges] = useState([]);
   const [schoolClosureReason, setSchoolClosureReason] = useState("");
   const [savingSchoolStatus, setSavingSchoolStatus] = useState(false);
+  const [systemSuspensionReason, setSystemSuspensionReason] = useState("");
+const [savingSystemSuspension, setSavingSystemSuspension] = useState(false);
   const [penaltyRecords, setPenaltyRecords] = useState([]);
 
-  function showStatus(message, type) {
-    setStatusMessage(message);
-    setStatusType(type);
-  }
+function clearInlineStatus() {
+  // Inline Settings banners were replaced by toast notifications.
+}
 
-  function showActionError(shortMessage, error) {
-    const detailedMessage = error?.message
-      ? `${shortMessage}: ${error.message}`
-      : shortMessage;
+function showStatus(message, type) {
+  clearInlineStatus();
 
-    showStatus(detailedMessage, "error");
-    showToast(shortMessage, "error");
-  }
+  const cleanedMessage = String(message || "").trim();
 
-  function showBlockedAction(message) {
-    showStatus(message, "error");
-    showToast(message, "error");
-  }
+  if (!cleanedMessage) return;
+
+  showToast(cleanedMessage, type === "error" ? "error" : "success");
+}
+
+function showActionError(shortMessage, error) {
+  console.error(shortMessage, error);
+
+  clearInlineStatus();
+  showToast(shortMessage, "error");
+}
+
+function showBlockedAction(message) {
+  clearInlineStatus();
+  showToast(message, "error");
+}
 
   function isSuperAdminProfile() {
     return userRecord?.role === "superAdmin";
@@ -85,6 +92,10 @@ function Settings() {
   function isSchoolClosed() {
     return Boolean(schoolStatus?.isSchoolClosed);
   }
+
+  function isSystemSuspended() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
 
   function formatSchoolTimestamp(value) {
     const date = getDateFromValue(value);
@@ -152,154 +163,212 @@ function Settings() {
     return Math.max(dayCount, 0);
   }
 
-  async function extendBorrowedDueDatesForClosure() {
-    const closedAtDate = getDateFromValue(schoolStatus?.closedAt);
-    const closureDays = getClosureDayCount(schoolStatus?.closedAt);
+async function handleUpdateSchoolStatus(nextClosed) {
+  if (!currentUser) {
+    showBlockedAction("No logged-in user found.");
+    return;
+  }
 
-    if (!closedAtDate || closureDays <= 0) {
-      return {
-        closureDays: 0,
-        extendedCount: 0,
-      };
+  if (!isSuperAdminProfile()) {
+    showBlockedAction("Only super admins can change school availability.");
+    return;
+  }
+
+const DEFAULT_SCHOOL_CLOSURE_REASON =
+  "School is closed today. Please come back tomorrow.";
+
+const cleanedReason =
+  String(schoolClosureReason || "").trim() || DEFAULT_SCHOOL_CLOSURE_REASON;
+
+  setSavingSchoolStatus(true);
+  showStatus("", "");
+
+  try {
+    const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
+
+    const basePayload = {
+      isSchoolClosed: nextClosed,
+      updatedAt: serverTimestamp(),
+    };
+
+    const statusPayload = nextClosed
+      ? {
+          ...basePayload,
+          closureReason: cleanedReason,
+          closedAt: serverTimestamp(),
+          closedBy: currentUser.uid,
+          closedByName:
+            userRecord?.fullName || currentUser.email || "Super Admin",
+        }
+      : {
+          ...basePayload,
+          closureReason: "",
+          reopenedAt: serverTimestamp(),
+          reopenedBy: currentUser.uid,
+        };
+
+    await setDoc(schoolStatusRef, statusPayload, { merge: true });
+
+    if (!nextClosed) {
+      setSchoolClosureReason("");
     }
 
-    const closureStartDateKey = formatClosureDateKey(closedAtDate);
-    const borrowRequestsSnapshot = await getDocs(collection(db, "borrowRequests"));
+    const message = nextClosed
+      ? "School Closed Today is now active. Borrowing, item release, and return confirmation are unavailable, but timers will continue running."
+      : "School Closed Today is now inactive. Borrowing, item release, and return confirmation are available again.";
 
-    const borrowedRequestsToExtend = borrowRequestsSnapshot.docs
-      .map((document) => ({
-        id: document.id,
-        ...document.data(),
-      }))
-      .filter((request) => {
-        if (request.approvalStatus !== "Borrowed") return false;
-        if (!request.expectedReturnDate) return false;
+    showStatus(message, "success");
+    showToast(nextClosed ? "School closed today" : "School reopened", "success");
+  } catch (error) {
+    showActionError("Failed to update school status", error);
+  } finally {
+    setSavingSchoolStatus(false);
+  }
+}
 
-        /*
-          Do not extend records that were already overdue before the closure.
-          Example: expectedReturnDate is before the closure start date.
-        */
-        return String(request.expectedReturnDate) >= closureStartDateKey;
-      });
+async function extendBorrowedDueDatesForSystemSuspension() {
+  const suspendedAtDate = getDateFromValue(schoolStatus?.systemSuspendedAt);
+  const suspensionDays = getClosureDayCount(schoolStatus?.systemSuspendedAt);
 
-    await Promise.allSettled(
-      borrowedRequestsToExtend.map(async (request) => {
-        const previousExtendedDays = Number(request.closureExtendedDays || 0);
-        const newExpectedReturnDate = addDaysToDateKey(
-          request.expectedReturnDate,
-          closureDays
-        );
-
-        await updateDoc(doc(db, "borrowRequests", request.id), {
-          expectedReturnDate: newExpectedReturnDate,
-          originalExpectedReturnDate:
-            request.originalExpectedReturnDate || request.expectedReturnDate,
-          closureExtended: true,
-          closureExtendedDays: previousExtendedDays + closureDays,
-          lastClosureExtendedDays: closureDays,
-          closureAdjustedAt: serverTimestamp(),
-          closureAdjustedBy: currentUser.uid,
-          closureAdjustmentReason: `Return date extended by ${closureDays} day${
-            closureDays === 1 ? "" : "s"
-          } because of school closure.`,
-          updatedAt: serverTimestamp(),
-        });
-      })
-    );
-
+  if (!suspendedAtDate || suspensionDays <= 0) {
     return {
-      closureDays,
-      extendedCount: borrowedRequestsToExtend.length,
+      suspensionDays: 0,
+      extendedCount: 0,
     };
   }
 
-  async function handleUpdateSchoolStatus(nextClosed) {
-    if (!currentUser) {
-      showBlockedAction("No logged-in user found.");
-      return;
-    }
+  const suspensionStartDateKey = formatClosureDateKey(suspendedAtDate);
+  const borrowRequestsSnapshot = await getDocs(collection(db, "borrowRequests"));
 
-    if (!isSuperAdminProfile()) {
-      showBlockedAction("Only super admins can change school availability.");
-      return;
-    }
+  const borrowedRequestsToExtend = borrowRequestsSnapshot.docs
+    .map((document) => ({
+      id: document.id,
+      ...document.data(),
+    }))
+    .filter((request) => {
+      if (request.approvalStatus !== "Borrowed") return false;
+      if (!request.expectedReturnDate) return false;
 
-    const cleanedReason = String(schoolClosureReason || "").trim();
+      return String(request.expectedReturnDate) >= suspensionStartDateKey;
+    });
 
-    if (nextClosed && !cleanedReason) {
-      showBlockedAction("Please enter a reason before closing the system.");
-      return;
-    }
+  await Promise.allSettled(
+    borrowedRequestsToExtend.map(async (request) => {
+      const previousExtendedDays = Number(request.systemSuspensionExtendedDays || 0);
+      const newExpectedReturnDate = addDaysToDateKey(
+        request.expectedReturnDate,
+        suspensionDays
+      );
 
-    setSavingSchoolStatus(true);
-    showStatus("", "");
-
-    try {
-      const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
-      let closureExtensionResult = {
-        closureDays: 0,
-        extendedCount: 0,
-      };
-
-      /*
-        When reopening, adjust all currently borrowed items affected by
-        the closure before marking the system open again.
-      */
-      if (!nextClosed && isSchoolClosed()) {
-        closureExtensionResult = await extendBorrowedDueDatesForClosure();
-      }
-
-      const basePayload = {
-        isSchoolClosed: nextClosed,
+      await updateDoc(doc(db, "borrowRequests", request.id), {
+        expectedReturnDate: newExpectedReturnDate,
+        originalExpectedReturnDate:
+          request.originalExpectedReturnDate || request.expectedReturnDate,
+        systemSuspensionExtended: true,
+        systemSuspensionExtendedDays: previousExtendedDays + suspensionDays,
+        lastSystemSuspensionExtendedDays: suspensionDays,
+        systemSuspensionAdjustedAt: serverTimestamp(),
+        systemSuspensionAdjustedBy: currentUser.uid,
+        systemSuspensionAdjustmentReason: `Return date extended by ${suspensionDays} day${
+          suspensionDays === 1 ? "" : "s"
+        } because of system suspension.`,
         updatedAt: serverTimestamp(),
-      };
+      });
+    })
+  );
 
-      const statusPayload = nextClosed
-        ? {
-            ...basePayload,
-            closureReason: cleanedReason,
-            closedAt: serverTimestamp(),
-            closedBy: currentUser.uid,
-            closedByName:
-              userRecord?.fullName || currentUser.email || "Super Admin",
-          }
-        : {
-            ...basePayload,
-            closureReason: "",
-            reopenedAt: serverTimestamp(),
-            reopenedBy: currentUser.uid,
-            lastClosureExtendedDays: closureExtensionResult.closureDays,
-            lastClosureExtendedRequests: closureExtensionResult.extendedCount,
-            lastClosureAdjustedAt: serverTimestamp(),
-          };
+  return {
+    suspensionDays,
+    extendedCount: borrowedRequestsToExtend.length,
+  };
+}
 
-      await setDoc(schoolStatusRef, statusPayload, { merge: true });
-
-      if (!nextClosed) {
-        setSchoolClosureReason("");
-      }
-
-      const reopenDetail =
-        !nextClosed && closureExtensionResult.closureDays > 0
-          ? ` ${closureExtensionResult.extendedCount} borrowed request${
-              closureExtensionResult.extendedCount === 1 ? "" : "s"
-            } were extended by ${closureExtensionResult.closureDays} closure day${
-              closureExtensionResult.closureDays === 1 ? "" : "s"
-            }.`
-          : "";
-
-      const message = nextClosed
-        ? "School Closure Mode is now active. Borrowing, claiming, and returns are paused."
-        : `School Closure Mode is now inactive. Borrowing, claiming, and returns are available again.${reopenDetail}`;
-
-      showStatus(message, "success");
-      showToast(nextClosed ? "System closed" : "System reopened", "success");
-    } catch (error) {
-      showActionError("Failed to update school status", error);
-    } finally {
-      setSavingSchoolStatus(false);
-    }
+async function handleUpdateSystemSuspensionStatus(nextSuspended) {
+  if (!currentUser) {
+    showBlockedAction("No logged-in user found.");
+    return;
   }
+
+  if (!isSuperAdminProfile()) {
+    showBlockedAction("Only super admins can suspend or resume the system.");
+    return;
+  }
+
+  const cleanedReason = String(systemSuspensionReason || "").trim();
+
+  if (nextSuspended && !cleanedReason) {
+    showBlockedAction("Please enter a reason before suspending the system.");
+    return;
+  }
+
+  setSavingSystemSuspension(true);
+  showStatus("", "");
+
+  try {
+    const schoolStatusRef = doc(db, "systemSettings", "schoolStatus");
+
+    let suspensionExtensionResult = {
+      suspensionDays: 0,
+      extendedCount: 0,
+    };
+
+    if (!nextSuspended && isSystemSuspended()) {
+      suspensionExtensionResult = await extendBorrowedDueDatesForSystemSuspension();
+    }
+
+    const basePayload = {
+      isSystemSuspended: nextSuspended,
+      updatedAt: serverTimestamp(),
+    };
+
+    const statusPayload = nextSuspended
+      ? {
+          ...basePayload,
+          systemSuspensionReason: cleanedReason,
+          systemSuspendedAt: serverTimestamp(),
+          systemSuspendedBy: currentUser.uid,
+          systemSuspendedByName:
+            userRecord?.fullName || currentUser.email || "Super Admin",
+        }
+      : {
+          ...basePayload,
+          systemSuspensionReason: "",
+          systemResumedAt: serverTimestamp(),
+          systemResumedBy: currentUser.uid,
+          lastSystemSuspensionExtendedDays:
+            suspensionExtensionResult.suspensionDays,
+          lastSystemSuspensionExtendedRequests:
+            suspensionExtensionResult.extendedCount,
+          lastSystemSuspensionAdjustedAt: serverTimestamp(),
+        };
+
+    await setDoc(schoolStatusRef, statusPayload, { merge: true });
+
+    if (!nextSuspended) {
+      setSystemSuspensionReason("");
+    }
+
+    const resumeDetail =
+      !nextSuspended && suspensionExtensionResult.suspensionDays > 0
+        ? ` ${suspensionExtensionResult.extendedCount} borrowed request${
+            suspensionExtensionResult.extendedCount === 1 ? "" : "s"
+          } were extended by ${suspensionExtensionResult.suspensionDays} suspension day${
+            suspensionExtensionResult.suspensionDays === 1 ? "" : "s"
+          }.`
+        : "";
+
+    const message = nextSuspended
+      ? "System Suspension Mode is now active. All borrowing workflows and timers are paused."
+      : `System Suspension Mode is now inactive. Workflows and timers are resumed.${resumeDetail}`;
+
+    showStatus(message, "success");
+    showToast(nextSuspended ? "System suspended" : "System resumed", "success");
+  } catch (error) {
+    showActionError("Failed to update system suspension", error);
+  } finally {
+    setSavingSystemSuspension(false);
+  }
+}
 
   function markProfileChanged() {
     setProfileTouched(true);
@@ -523,11 +592,11 @@ function Settings() {
   }
 
   function sanitizeMobileNumberInput(value) {
-    return String(value || "").replace(/[^0-9+\-\s()]/g, "");
+    return String(value || "").replace(/[^0-9+\s()-]/g, "");
   }
 
   function cleanMobileNumberForSave(value) {
-    return String(value || "").replace(/[\s()\-]/g, "").trim();
+    return String(value || "").replace(/[\s()-]/g, "").trim();
   }
 
   function isValidMobileNumber(value) {
@@ -1125,10 +1194,6 @@ function Settings() {
     setSchoolClosureReason(String(schoolStatus?.closureReason || ""));
   }, [schoolStatus?.closureReason]);
 
-  const hasSettingsFieldErrors =
-    Object.values(profileFieldErrors).some(Boolean) ||
-    Object.values(passwordFieldErrors).some(Boolean);
-
   const borrowingStatusInfo = getBorrowingStatusInfo();
   const yearSectionLockInfo = getYearSectionLockInfo();
   const mobileNumberLockInfo = getMobileNumberLockInfo();
@@ -1258,11 +1323,7 @@ function Settings() {
         </div>
       </section>
 
-      {statusMessage && !hasSettingsFieldErrors && (
-        <div className={`settings-status settings-status-${statusType}`}>
-          {statusMessage}
-        </div>
-      )}
+{/* Settings success/error messages now appear as toast notifications. */}
 
       <section className="settings-layout">
         <form
@@ -1622,8 +1683,9 @@ function Settings() {
             <div className="settings-section-heading">
               <h2>School Availability</h2>
               <p>
-                Control whether borrowers can submit requests, claim items, or
-                process returns during school closures.
+                Control same-day school closure mode. This disables new borrow
+                requests, item release, and return confirmation, but timers
+                continue running.
               </p>
             </div>
 
@@ -1631,8 +1693,8 @@ function Settings() {
               <span>{isSchoolClosed() ? "Closed" : "Open"}</span>
               <strong>
                 {isSchoolClosed()
-                  ? "Borrowing and returns are paused"
-                  : "Borrowing and returns are available"}
+                  ? "Borrowing, release, and returns are unavailable"
+                  : "Borrowing, release, and returns are available"}
               </strong>
             </div>
 
@@ -1665,14 +1727,14 @@ function Settings() {
                 id="school-closure-reason"
                 value={schoolClosureReason}
                 onChange={(event) => setSchoolClosureReason(event.target.value)}
-                placeholder="Example: School holiday, emergency closure, campus maintenance"
+                placeholder="Optional: Example: Campus maintenance, office unavailable, school activity"
                 disabled={savingSchoolStatus}
               />
 
-              <small>
-                This message will appear to borrowers when they try to borrow,
-                claim, or return items while the school is closed.
-              </small>
+            <small>
+              Optional. If left blank, the system will show: “School is closed today.
+              Please come back tomorrow.” Timers continue running in this mode.
+            </small>
             </div>
 
             <div className="settings-school-status-actions">
@@ -1682,7 +1744,7 @@ function Settings() {
                 onClick={() => handleUpdateSchoolStatus(false)}
                 disabled={savingSchoolStatus || !isSchoolClosed()}
               >
-                {savingSchoolStatus ? "Saving..." : "Open System"}
+                {savingSchoolStatus ? "Saving..." : "Reopen Borrowing"}
               </button>
 
               <button
@@ -1691,13 +1753,96 @@ function Settings() {
                 onClick={() => handleUpdateSchoolStatus(true)}
                 disabled={savingSchoolStatus || isSchoolClosed()}
               >
-                {savingSchoolStatus ? "Saving..." : "Close System"}
+                {savingSchoolStatus ? "Saving..." : "Pause Borrowing Today"}
               </button>
             </div>
           </section>
         )}
 
+{isSuperAdminProfile() && (
+  <section
+    className={`settings-card settings-system-suspension-card ${
+      isSystemSuspended() ? "status-danger" : "status-success"
+    }`}
+  >
+    <div className="settings-section-heading">
+      <h2>System Suspension</h2>
+      <p>
+        Use this for typhoons, calamities, holidays, or official suspensions.
+        This pauses borrowing workflows and also pauses borrowing time.
+      </p>
+    </div>
 
+    <div className="settings-borrowing-status-main">
+      <span>System Status</span>
+      <strong>
+        {isSystemSuspended()
+          ? "Suspended / Paused"
+          : "Running Normally"}
+      </strong>
+    </div>
+
+    <div className="settings-school-status-grid">
+      <div>
+        <span>Suspension Reason</span>
+        <strong>
+          {schoolStatus?.systemSuspensionReason ||
+            "No active system suspension reason"}
+        </strong>
+      </div>
+
+      <div>
+        <span>Last Updated</span>
+        <strong>
+          {formatSchoolTimestamp(
+            schoolStatus?.updatedAt ||
+              schoolStatus?.systemSuspendedAt ||
+              schoolStatus?.systemResumedAt
+          )}
+        </strong>
+      </div>
+    </div>
+
+    <div className="settings-field settings-school-reason-field">
+      <label className="qb-label" htmlFor="system-suspension-reason">
+        Suspension Reason
+      </label>
+
+      <textarea
+        id="system-suspension-reason"
+        value={systemSuspensionReason}
+        onChange={(event) => setSystemSuspensionReason(event.target.value)}
+        placeholder="Example: Typhoon, calamity, holiday, official class suspension"
+        disabled={savingSystemSuspension}
+      />
+
+      <small>
+        This pauses request expiration, claim deadlines, return deadlines, and
+        overdue counting until the system is resumed.
+      </small>
+    </div>
+
+    <div className="settings-school-status-actions">
+      <button
+        type="button"
+        className="settings-secondary-btn"
+        onClick={() => handleUpdateSystemSuspensionStatus(false)}
+        disabled={savingSystemSuspension || !isSystemSuspended()}
+      >
+        {savingSystemSuspension ? "Saving..." : "Resume System"}
+      </button>
+
+      <button
+        type="button"
+        className="settings-primary-btn settings-close-school-btn"
+        onClick={() => handleUpdateSystemSuspensionStatus(true)}
+        disabled={savingSystemSuspension || isSystemSuspended()}
+      >
+        {savingSystemSuspension ? "Saving..." : "Suspend System"}
+      </button>
+    </div>
+  </section>
+)}
         <form
           className="settings-card settings-password-card"
           onSubmit={handleChangePassword}

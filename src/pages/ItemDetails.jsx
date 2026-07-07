@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
+  collection,
   doc,
   getDoc,
   getDocs,
@@ -25,9 +26,6 @@ function ItemDetails() {
   const [showSchoolClosedModal, setShowSchoolClosedModal] = useState(false);
 
   const isBorrower = userData?.role === "borrower";
-  const isSuperAdmin = userData?.role === "superAdmin";
-  const isCategoryAdmin = userData?.role === "categoryAdmin";
-  const isAdmin = isSuperAdmin || isCategoryAdmin;
 
   function showActionError(shortMessage, error) {
     const detailedMessage = error?.message
@@ -43,28 +41,6 @@ function ItemDetails() {
     showToast(message, "error");
   }
 
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLowerCase();
-  }
-
-  function canCategoryAdminAccessItem(targetItem) {
-    if (!isCategoryAdmin) return true;
-
-    const assignedCategories = Array.isArray(userData?.assignedCategories)
-      ? userData.assignedCategories.map(normalizeText)
-      : [];
-
-    const itemCategoryId = normalizeText(targetItem?.categoryId || targetItem?.category || "");
-    const itemCategoryName = normalizeText(
-      targetItem?.categoryName || targetItem?.category || targetItem?.categoryId || ""
-    );
-
-    return (
-      assignedCategories.includes(itemCategoryId) ||
-      assignedCategories.includes(itemCategoryName)
-    );
-  }
 
   function isSchoolClosed() {
     return Boolean(schoolStatus?.isSchoolClosed);

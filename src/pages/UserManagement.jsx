@@ -684,19 +684,6 @@ function validateCsvImportForm() {
   return suspendedDate > new Date();
 }
 
-function formatSuspendedUntilDateTime(value) {
-  const suspendedDate = getDateFromValue(value);
-
-  if (!suspendedDate) return "Not suspended";
-
-  return suspendedDate.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 function isBorrowingRestrictionActive(user) {
   if (user?.role !== "borrower") return false;
   if (user?.canBorrow !== false) return false;

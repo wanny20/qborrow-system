@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   collection,
+  doc,
   getCountFromServer,
   getDocs,
   limit as queryLimit,
   query,
+  serverTimestamp,
+  setDoc,
   where,
 } from "firebase/firestore";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -41,6 +44,7 @@ function Dashboard() {
   const [dismissedDueTodayAlert, setDismissedDueTodayAlert] = useState(false);
   const [dismissedApprovedPickupAlert, setDismissedApprovedPickupAlert] =
     useState(false);
+  const [schoolToggleLoading, setSchoolToggleLoading] = useState(false);
 
   const isSuperAdmin = userData?.role === "superAdmin";
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -50,6 +54,60 @@ function Dashboard() {
   function isSchoolClosed() {
     return Boolean(schoolStatus?.isSchoolClosed);
   }
+
+  function isSystemSuspended() {
+    return Boolean(schoolStatus?.isSystemSuspended);
+  }
+
+  function getSystemSuspensionReason() {
+    return String(schoolStatus?.systemSuspensionReason || "").trim();
+  }
+
+  function getSchoolClosedReason() {
+  return String(schoolStatus?.closureReason || "").trim();
+}
+
+async function handlePauseBorrowingToday() {
+  if (!isSuperAdmin) {
+    showToast("Only super admins can pause borrowing.", "error");
+    return;
+  }
+
+  if (isSchoolClosed() || isSystemSuspended()) {
+    navigate("/settings");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Close school borrowing for today? This disables new borrow requests, item release, and return confirmation, but timers will continue running."
+  );
+
+  if (!confirmed) return;
+
+  setSchoolToggleLoading(true);
+
+  try {
+    await setDoc(
+      doc(db, "systemSettings", "schoolStatus"),
+      {
+        isSchoolClosed: true,
+        closureReason: "School is closed for today.",
+        closedAt: serverTimestamp(),
+        closedBy: userData?.uid || currentUser?.uid || "",
+        closedByName:
+          userData?.fullName || currentUser?.email || "Super Admin",
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    showToast("Borrowing has been paused for today.", "success");
+  } catch (error) {
+    showActionError("Failed to pause borrowing", error);
+  } finally {
+    setSchoolToggleLoading(false);
+  }
+}
 
   const dashboardRoleLabel = isSuperAdmin
     ? "Super Admin"
@@ -98,7 +156,7 @@ function Dashboard() {
   }
 
 function isOverdue(request) {
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return false;
   }
 
@@ -118,7 +176,7 @@ function isOverdue(request) {
 }
 
 function isDueToday(request) {
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return false;
   }
 
@@ -172,10 +230,10 @@ function getEarliestValidDeadlineMs(deadlines) {
 }
 
 function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
-  const closedTime = getTimestampMs(schoolStatus?.closedAt);
-  const reopenedTime = isSchoolClosed()
+  const closedTime = getTimestampMs(schoolStatus?.systemSuspendedAt);
+  const reopenedTime = isSystemSuspended()
     ? Date.now()
-    : getTimestampMs(schoolStatus?.reopenedAt);
+    : getTimestampMs(schoolStatus?.systemResumedAt);
 
   if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
   if (baseDeadlineMs <= closedTime) return 0;
@@ -219,7 +277,7 @@ function getAutoRejectRemainingMs(request) {
 }
 
 function formatAutoRejectRemaining(request) {
-  if (isSchoolClosed()) return "Paused by school closure";
+  if (isSystemSuspended()) return "Paused by system suspension";
 
   const remainingMs = getAutoRejectRemainingMs(request);
 
@@ -236,7 +294,7 @@ function formatAutoRejectRemaining(request) {
 }
 
 function isNearAutoReject(request) {
-  if (isSchoolClosed()) return false;
+  if (isSystemSuspended()) return false;
 
   const remainingMs = getAutoRejectRemainingMs(request);
 
@@ -287,7 +345,7 @@ function getApprovedReleaseRemainingMs(request) {
 }
 
 function formatApprovedReleaseRemaining(request) {
-  if (isSchoolClosed()) return "Paused by school closure";
+  if (isSystemSuspended()) return "Paused by system suspension";
 
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -304,7 +362,7 @@ function formatApprovedReleaseRemaining(request) {
 }
 
 function formatApprovedReleaseDeadline(request) {
-  if (isSchoolClosed()) return "Paused by school closure";
+  if (isSystemSuspended()) return "Paused by system suspension";
 
   const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
@@ -370,7 +428,7 @@ const [
 getDocs(requestsRef),
     ]);
 
-const overdueCount = isSchoolClosed()
+const overdueCount = isSystemSuspended()
   ? 0
   : overdueSnapshot.docs.filter(
       (document) => document.data().approvalStatus === "Borrowed"
@@ -472,7 +530,9 @@ setRequests(mapSnapshot(allRequestsSnapshot));
     userData?.assignedCategories?.join("|"),
     currentUser?.uid,
     schoolStatus?.isSchoolClosed,
-    schoolStatus?.reopenedAt,
+    schoolStatus?.isSystemSuspended,
+    schoolStatus?.systemSuspendedAt,
+    schoolStatus?.systemResumedAt,
   ]);
 
   const visibleItems = useMemo(() => {
@@ -1020,6 +1080,63 @@ const adminUrgentAlerts = [
           </div>
         </div>
       </section>
+
+      {isSuperAdmin && (
+  <section
+    className={`dashboard-school-control ${
+      isSystemSuspended()
+        ? "system-suspended"
+        : isSchoolClosed()
+          ? "closed"
+          : "open"
+    }`}
+    aria-label="School closure quick control"
+  >
+    <div className="dashboard-school-control-copy">
+      <span>
+        {isSystemSuspended()
+          ? "System Suspension Mode Active"
+          : isSchoolClosed()
+            ? "School Closed Today"
+            : "School Status"}
+      </span>
+
+      <h2>
+        {isSystemSuspended()
+          ? "System is suspended"
+          : isSchoolClosed()
+            ? "School borrowing is closed"
+            : "Borrowing is available today"}
+      </h2>
+
+      <p>
+        {isSystemSuspended()
+          ? getSystemSuspensionReason() ||
+            "All borrowing workflows and borrowing timers are currently paused."
+          : isSchoolClosed()
+            ? getSchoolClosedReason() ||
+              "New borrow requests, item release, and return confirmation are unavailable. Timers continue running."
+            : "Use this when campus offices are closed today. This disables borrowing, release, and return actions, but timers continue running."}
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="dashboard-school-control-btn"
+      onClick={handlePauseBorrowingToday}
+      disabled={schoolToggleLoading}
+    >
+      {schoolToggleLoading
+        ? "Saving..."
+        : isSystemSuspended()
+          ? "Manage Suspension"
+          : isSchoolClosed()
+            ? "Manage / Reopen"
+            : "Close School Today"}
+    </button>
+  </section>
+)}
+
 
       <section className="dashboard-stats-grid">
         {(isAdmin ? adminStats : borrowerStats).map((stat) => (
