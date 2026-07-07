@@ -157,6 +157,18 @@ function getSchoolClosedMessage(actionLabel = "This action") {
     : `${actionLabel} is temporarily unavailable because the school is currently closed.`;
 }
 
+function isSystemSuspended() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
+
+function getSystemSuspendedMessage(actionLabel = "This action") {
+  const reason = String(schoolStatus?.systemSuspensionReason || "").trim();
+
+  return reason
+    ? `${actionLabel} is unavailable because the system is suspended: ${reason}`
+    : `${actionLabel} is unavailable because the system is currently suspended.`;
+}
+
 function openConfirmAction(config) {
   setConfirmAction(config);
 }
@@ -378,10 +390,9 @@ function handleStatusFilterChange(value) {
   }
 async function autoRejectExpiredPendingRequests() {
   /*
-    School Closure Mode pauses pending request expiration.
-    Requests should not expire while admins/borrowers cannot continue the workflow.
+    System Suspension Mode pauses pending request expiration.
   */
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return;
   }
 
@@ -522,10 +533,10 @@ function getEarliestValidDeadlineMs(deadlines) {
 }
 
 function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
-  const closedTime = getTimestampMs(schoolStatus?.closedAt);
-  const reopenedTime = isSchoolClosed()
+  const closedTime = getTimestampMs(schoolStatus?.systemSuspendedAt);
+  const reopenedTime = isSystemSuspended()
     ? Date.now()
-    : getTimestampMs(schoolStatus?.reopenedAt);
+    : getTimestampMs(schoolStatus?.systemResumedAt);
 
   if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
   if (baseDeadlineMs <= closedTime) return 0;
@@ -584,7 +595,7 @@ function getApprovedReleaseRemainingMs(request) {
 }
 
 function isApprovedReleaseExpired(request) {
-  if (isSchoolClosed()) return false;
+  if (isSystemSuspended()) return false;
 
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -592,7 +603,7 @@ function isApprovedReleaseExpired(request) {
 }
 
 function isNearReleaseExpire(request) {
-  if (isSchoolClosed()) return false;
+  if (isSystemSuspended()) return false;
 
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -604,7 +615,7 @@ function isNearReleaseExpire(request) {
 }
 
 function formatApprovedReleaseRemaining(request) {
-  if (isSchoolClosed()) return "Paused by school closure";
+  if (isSystemSuspended()) return "Paused by system suspension";
 
   const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -621,7 +632,7 @@ function formatApprovedReleaseRemaining(request) {
 }
 
 function formatApprovedReleaseDeadline(request) {
-  if (isSchoolClosed()) return "Paused by school closure";
+  if (isSystemSuspended()) return "Paused by system suspension";
 
   const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
@@ -848,9 +859,9 @@ async function expireApprovedRequest(request) {
 
 async function autoExpireApprovedRequests() {
   /*
-    School Closure Mode pauses approved request release/claim expiration.
+    System Suspension Mode pauses approved request release/claim expiration.
   */
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return;
   }
 
@@ -879,7 +890,7 @@ async function prepareBorrowRequestsForDisplay() {
     Auto-expire is helpful, but it must not block admins from opening this page.
     If Firestore blocks one old/mismatched record, requests still load normally.
   */
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return;
   }
 
@@ -1070,8 +1081,8 @@ async function handleLoadMoreRequests() {
 async function handleApproveRequest(request) {
   if (hasActiveRequestAction()) return;
 
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage("Approving borrow requests"));
+  if (isSystemSuspended()) {
+    showBlockedAction(getSystemSuspendedMessage("Approving borrow requests"));
     return;
   }
 
@@ -1196,6 +1207,11 @@ async function handleApproveRequest(request) {
 async function handleReleaseRequest(request) {
   if (hasActiveRequestAction()) return;
 
+  if (isSystemSuspended()) {
+    showBlockedAction(getSystemSuspendedMessage("Item release"));
+    return;
+  }
+
   if (isSchoolClosed()) {
     showBlockedAction(getSchoolClosedMessage("Item release"));
     return;
@@ -1310,6 +1326,11 @@ async function handleReleaseRequest(request) {
 async function handleRejectRequest(request) {
   if (hasActiveRequestAction()) return;
 
+  if (isSystemSuspended()) {
+    showBlockedAction(getSystemSuspendedMessage("Rejecting borrow requests"));
+    return;
+  }
+
   if (request.approvalStatus !== "Pending") {
     showBlockedAction("Only pending requests can be rejected.");
     return;
@@ -1408,7 +1429,9 @@ useEffect(() => {
   userData?.role,
   userData?.assignedCategories?.join("|"),
   schoolStatus?.isSchoolClosed,
-  schoolStatus?.reopenedAt,
+  schoolStatus?.isSystemSuspended,
+  schoolStatus?.systemSuspendedAt,
+  schoolStatus?.systemResumedAt,
 ]);
 
   useEffect(() => {
@@ -1543,9 +1566,11 @@ return (
         </div>
       )}
 
-      {isSchoolClosed() && (
+      {(isSystemSuspended() || isSchoolClosed()) && (
         <div className="manage-status manage-status-error" role="alert">
-          {getSchoolClosedMessage("Approving and releasing requests")}
+          {isSystemSuspended()
+            ? getSystemSuspendedMessage("Request management")
+            : getSchoolClosedMessage("Item release")}
         </div>
       )}
 

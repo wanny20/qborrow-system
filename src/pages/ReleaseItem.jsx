@@ -110,6 +110,26 @@ function getSchoolClosedMessage() {
     : "Item release is temporarily unavailable because the school is currently closed.";
 }
 
+function isSystemSuspended() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
+
+function isReleaseUnavailable() {
+  return isSchoolClosed() || isSystemSuspended();
+}
+
+function getReleaseUnavailableMessage() {
+  if (isSystemSuspended()) {
+    const reason = String(schoolStatus?.systemSuspensionReason || "").trim();
+
+    return reason
+      ? `Item release is unavailable because the system is suspended: ${reason}`
+      : "Item release is unavailable because the system is currently suspended.";
+  }
+
+  return getSchoolClosedMessage();
+}
+
 function openConfirmAction(config) {
   setConfirmAction(config);
 }
@@ -303,8 +323,8 @@ async function getCameraList() {
   };
 }
 async function startReleaseScanner() {
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage());
+  if (isReleaseUnavailable()) {
+    showBlockedAction(getReleaseUnavailableMessage());
     return;
   }
 
@@ -638,10 +658,10 @@ async function restartReleaseScanner() {
   }
 
   function getSchoolClosurePauseMs(timerStartMs, baseDeadlineMs) {
-    const closedTime = getTimestampMs(schoolStatus?.closedAt);
-    const reopenedTime = isSchoolClosed()
+    const closedTime = getTimestampMs(schoolStatus?.systemSuspendedAt);
+    const reopenedTime = isSystemSuspended()
       ? Date.now()
-      : getTimestampMs(schoolStatus?.reopenedAt);
+      : getTimestampMs(schoolStatus?.systemResumedAt);
 
     if (!closedTime || !reopenedTime || !baseDeadlineMs) return 0;
     if (baseDeadlineMs <= closedTime) return 0;
@@ -685,7 +705,7 @@ async function restartReleaseScanner() {
   }
 
   function isApprovedReleaseExpired(request) {
-    if (isSchoolClosed()) return false;
+    if (isSystemSuspended()) return false;
 
     const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -693,7 +713,7 @@ async function restartReleaseScanner() {
   }
 
   function formatApprovedReleaseRemaining(request) {
-    if (isSchoolClosed()) return "Paused by school closure";
+    if (isSystemSuspended()) return "Paused by system suspension";
 
     const remainingMs = getApprovedReleaseRemainingMs(request);
 
@@ -710,7 +730,7 @@ async function restartReleaseScanner() {
   }
 
   function formatApprovedReleaseDeadline(request) {
-    if (isSchoolClosed()) return "Paused by school closure";
+    if (isSystemSuspended()) return "Paused by system suspension";
 
     const deadlineTime = getApprovedReleaseDeadlineMs(request);
 
@@ -953,9 +973,9 @@ async function expireApprovedRequest(request) {
 
 async function autoExpireApprovedRequests() {
   /*
-    School Closure Mode pauses approved request release/claim expiration.
+    System Suspension Mode pauses approved request release/claim expiration.
   */
-  if (isSchoolClosed()) {
+  if (isSystemSuspended()) {
     return;
   }
 
@@ -985,7 +1005,7 @@ async function fetchApprovedRequests(options = {}) {
   setLoading(true);
 
   try {
-    if (!isSchoolClosed()) {
+    if (!isSystemSuspended()) {
       await autoExpireApprovedRequests();
     }
 
@@ -1044,8 +1064,8 @@ async function fetchApprovedRequests(options = {}) {
 async function findApprovedRequestByItemId(rawItemId) {
   if (isReleaseBusy()) return;
 
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage());
+  if (isReleaseUnavailable()) {
+    showBlockedAction(getReleaseUnavailableMessage());
     return;
   }
 
@@ -1138,8 +1158,8 @@ showToast("Approved request found. Review details before release.", "success");
 async function handleConfirmRelease() {
   showStatus("", "");
 
-  if (isSchoolClosed()) {
-    showBlockedAction(getSchoolClosedMessage());
+  if (isReleaseUnavailable()) {
+    showBlockedAction(getReleaseUnavailableMessage());
     return;
   }
 
@@ -1281,7 +1301,9 @@ async function handleConfirmRelease() {
     userData?.role,
     userData?.assignedCategories?.join("|"),
     schoolStatus?.isSchoolClosed,
-    schoolStatus?.reopenedAt,
+    schoolStatus?.isSystemSuspended,
+    schoolStatus?.systemSuspendedAt,
+    schoolStatus?.systemResumedAt,
   ]);
 
 useEffect(() => {
@@ -1362,10 +1384,10 @@ return (
         </div>
       )}
 
-      {isSchoolClosed() && (
+      {isReleaseUnavailable() && (
         <div className="release-school-closed-banner" role="alert">
           <strong>Release is temporarily unavailable</strong>
-          <p>{getSchoolClosedMessage()}</p>
+          <p>{getReleaseUnavailableMessage()}</p>
         </div>
       )}
 
@@ -1388,7 +1410,7 @@ return (
       id="release-camera"
       value={selectedCameraId}
       onChange={(event) => setSelectedCameraId(event.target.value)}
-      disabled={scannerOpen || startingScanner || isSchoolClosed()}
+      disabled={scannerOpen || startingScanner || isReleaseUnavailable()}
     >
       {cameras.map((camera, index) => (
         <option key={camera.id} value={camera.id}>
@@ -1409,7 +1431,7 @@ return (
         startReleaseScanner();
       }
     }}
-    disabled={startingScanner || releasing || isSchoolClosed()}
+    disabled={startingScanner || releasing || isReleaseUnavailable()}
   >
     {startingScanner
       ? "Opening..."
@@ -1422,7 +1444,7 @@ return (
     type="button"
     className="release-secondary-btn"
     onClick={restartReleaseScanner}
-    disabled={startingScanner || releasing || isSchoolClosed()}
+    disabled={startingScanner || releasing || isReleaseUnavailable()}
   >
     Restart Scanner
   </button>
@@ -1454,13 +1476,13 @@ return (
                   clearFieldError("manualItemId");
                 }}
                 placeholder="Example: item ID or /item/itemId"
-                disabled={releasing || isSchoolClosed()}
+                disabled={releasing || isReleaseUnavailable()}
               />
             <button
               type="button"
               className="release-secondary-btn"
               onClick={() => findApprovedRequestByItemId(manualItemId)}
-              disabled={releasing || isSchoolClosed()}
+              disabled={releasing || isReleaseUnavailable()}
             >
               Find
             </button>
@@ -1568,9 +1590,13 @@ return (
                 type="button"
                 className="release-confirm-btn"
                 onClick={handleConfirmRelease}
-                disabled={releasing || isSchoolClosed()}
+                disabled={releasing || isReleaseUnavailable()}
               >
-                {releasing ? "Releasing..." : isSchoolClosed() ? "School Closed" : "Confirm Release"}
+                {releasing
+                  ? "Releasing..."
+                  : isReleaseUnavailable()
+                    ? "Unavailable"
+                    : "Confirm Release"}
               </button>
             </>
           ) : (
@@ -1628,7 +1654,7 @@ return (
                 type="button"
                 className="release-secondary-btn"
                 onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
-                disabled={releasing || isSchoolClosed()}
+                disabled={releasing || isReleaseUnavailable()}
               >
                 Refresh
               </button>
@@ -1710,7 +1736,7 @@ return (
                             setFieldErrors({});
                             showToast("Approved request selected.", "success");
                           }}
-                          disabled={releasing || isSchoolClosed() || selectedRequest?.id === request.id}
+                          disabled={releasing || isReleaseUnavailable() || selectedRequest?.id === request.id}
                         >
                           {selectedRequest?.id === request.id ? "Selected" : "Select"}
                         </button>
@@ -1749,7 +1775,7 @@ return (
                   type="button"
                   className="release-secondary-btn"
                   onClick={() => fetchApprovedRequests({ showSuccessToast: true })}
-                  disabled={releasing || isSchoolClosed()}
+                  disabled={releasing || isReleaseUnavailable()}
                 >
                   Refresh
                 </button>

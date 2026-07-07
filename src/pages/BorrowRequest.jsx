@@ -92,6 +92,26 @@ function getSchoolClosedMessage() {
     : "Borrowing is temporarily unavailable because the school is currently closed.";
 }
 
+function isSystemSuspended() {
+  return Boolean(schoolStatus?.isSystemSuspended);
+}
+
+function isBorrowingUnavailable() {
+  return isSchoolClosed() || isSystemSuspended();
+}
+
+function getBorrowingUnavailableMessage() {
+  if (isSystemSuspended()) {
+    const reason = String(schoolStatus?.systemSuspensionReason || "").trim();
+
+    return reason
+      ? `Borrowing is unavailable because the system is suspended: ${reason}`
+      : "Borrowing is unavailable because the system is currently suspended.";
+  }
+
+  return getSchoolClosedMessage();
+}
+
 function clearFieldError(fieldName) {
   setFieldErrors((previousErrors) => ({
     ...previousErrors,
@@ -466,8 +486,8 @@ async function handleSubmitRequest(e) {
 
 showStatus("", "");
 
-if (isSchoolClosed()) {
-  showBlockedAction(getSchoolClosedMessage());
+if (isBorrowingUnavailable()) {
+  showBlockedAction(getBorrowingUnavailableMessage());
   return;
 }
 
@@ -727,10 +747,10 @@ setTimeout(() => {
             </div>
           )}
 
-          {isSchoolClosed() && (
+          {isBorrowingUnavailable() && (
             <div className="borrow-request-school-closed-banner" role="alert">
               <strong>Borrowing is temporarily unavailable</strong>
-              <p>{getSchoolClosedMessage()}</p>
+              <p>{getBorrowingUnavailableMessage()}</p>
             </div>
           )}
 
@@ -810,7 +830,7 @@ onChange={(e) => {
   setPurpose(sanitizedValue);
   clearFieldError("purpose");
 }}
-    disabled={submitting || requestSubmitted || isSchoolClosed()}
+    disabled={submitting || requestSubmitted || isBorrowingUnavailable()}
   />
 
   {fieldErrors.purpose && (
@@ -854,7 +874,7 @@ onChange={(e) => {
   setExpectedReturnDate(e.target.value);
   clearFieldError("expectedReturnDate");
 }}
-    disabled={submitting || requestSubmitted || isSchoolClosed()}
+    disabled={submitting || requestSubmitted || isBorrowingUnavailable()}
   />
 
   {fieldErrors.expectedReturnDate && (
@@ -881,7 +901,7 @@ onChange={(e) => {
 
   navigate(`/item/${itemId}`);
 }}
-              disabled={submitting || requestSubmitted || isSchoolClosed()}
+              disabled={submitting || requestSubmitted || isBorrowingUnavailable()}
             >
               Cancel
             </button>
@@ -893,15 +913,15 @@ onChange={(e) => {
                   submitting ||
                   requestSubmitted ||
                   item?.availability !== "Available" ||
-                  isSchoolClosed()
+                  isBorrowingUnavailable()
                 }
               >
                 {requestSubmitted
                   ? "Submitted"
                   : submitting
                   ? "Submitting..."
-                  : isSchoolClosed()
-                  ? "School Closed"
+                  : isBorrowingUnavailable()
+                  ? "Unavailable"
                   : "Submit Request"}
               </button>
             </div>
