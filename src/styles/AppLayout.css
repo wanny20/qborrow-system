@@ -4207,3 +4207,26 @@ html[data-theme="dark"] .app-school-closed-banner.system-suspended small {
 .app-system-status-modal {
   z-index: 2147483001 !important;
 }
+/* =========================================================
+   APP STATUS BANNER - DARK MODE UPDATED DATE PILL FIX
+   Makes the "Updated: date" pill readable in dark mode.
+========================================================= */
+
+html[data-theme="dark"] .app-school-closed-banner.system-suspended small,
+html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-updated,
+html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-date {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  text-shadow: none !important;
+}
+
+/* Safety: all text inside the updated pill stays black */
+html[data-theme="dark"] .app-school-closed-banner.system-suspended small *,
+html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-updated *,
+html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-date * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}

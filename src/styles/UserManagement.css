@@ -7709,154 +7709,6 @@ html[data-theme="dark"] .user-category-option-text small {
 }
 
 
-
-/* =========================================================
-   FINAL EXISTING USERS FULL-WIDTH DESKTOP TABLE FIX
-   Keep this at the VERY BOTTOM of UserManagement.css.
-   Fixes big white space on large monitors by overriding the
-   older fixed 1180px table width.
-========================================================= */
-
-@media (min-width: 1181px) {
-  html body .app-page-content .user-management-page .user-list-card,
-  html body .user-management-page .user-list-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area,
-  html body .user-management-page .user-table-scroll-area {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    padding-bottom: 0 !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
-  html body .user-management-page .user-table-scroll-area .user-table-header,
-  html body .user-management-page .user-table-scroll-area .user-table-grid,
-  html body .user-management-page .user-table-scroll-area .user-grid {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
-  html body .user-management-page .user-table-scroll-area .user-table-header,
-  html body .user-management-page .user-table-scroll-area .user-card,
-  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    display: grid !important;
-    grid-template-columns:
-      minmax(150px, 1.05fr)
-      minmax(210px, 1.25fr)
-      minmax(80px, 0.55fr)
-      minmax(130px, 0.8fr)
-      minmax(100px, 0.65fr)
-      minmax(150px, 0.75fr)
-      278px !important;
-    gap: 12px !important;
-    align-items: center !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
-  html body .user-management-page .user-table-scroll-area .user-card,
-  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
-    grid-template-areas: "name identity contact category created status actions" !important;
-    overflow: visible !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span:nth-child(6),
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header span:nth-child(7),
-  html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(6),
-  html body .user-management-page .user-table-scroll-area .user-table-header span:nth-child(7) {
-    justify-content: center !important;
-    text-align: center !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-status,
-  html body .user-management-page .user-table-scroll-area .user-table-status {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: visible !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions,
-  html body .user-management-page .user-table-scroll-area .user-actions {
-    width: 278px !important;
-    min-width: 278px !important;
-    max-width: 278px !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    overflow: visible !important;
-    padding: 0 !important;
-    margin: 0 auto !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-card .user-icon-action,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action,
-  html body .user-management-page .user-table-scroll-area .user-actions .user-icon-action,
-  html body .user-management-page .user-table-scroll-area .user-card .user-icon-action,
-  html body .user-management-page .user-table-scroll-area .user-actions button.user-icon-action,
-  html body .user-management-page .user-table-scroll-area .user-card .user-view-btn.user-icon-action {
-    width: 34px !important;
-    min-width: 34px !important;
-    max-width: 34px !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    flex: 0 0 34px !important;
-    border-radius: 12px !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-load-more-row,
-  html body .user-management-page .user-table-scroll-area .user-load-more-row {
-    width: 100% !important;
-  }
-}
-
-/* Keep medium screens scrollable, but do not affect full desktop. */
-@media (min-width: 901px) and (max-width: 1180px) {
-  html body .app-page-content .user-management-page .user-table-scroll-area,
-  html body .user-management-page .user-table-scroll-area {
-    overflow-x: auto !important;
-  }
-
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-header,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-grid,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-card,
-  html body .app-page-content .user-management-page .user-table-scroll-area .user-table-grid .user-card,
-  html body .user-management-page .user-table-scroll-area .user-table-header,
-  html body .user-management-page .user-table-scroll-area .user-table-grid,
-  html body .user-management-page .user-table-scroll-area .user-grid,
-  html body .user-management-page .user-table-scroll-area .user-card,
-  html body .user-management-page .user-table-scroll-area .user-table-grid .user-card {
-    width: 1180px !important;
-    min-width: 1180px !important;
-    max-width: none !important;
-  }
-}
-
-
-
 /* =========================================================
    ABSOLUTE FINAL FIX - EXISTING USERS TABLE HORIZONTAL SCROLL
    Fixes sidebar-squeezed screens where the Actions column is hidden.
@@ -10140,126 +9992,477 @@ html[data-theme="dark"] body .app-page-content .user-management-page
   color: #cbd5e1 !important;
 }
 /* =========================================================
-   USER MANAGEMENT TABLE - DESKTOP HORIZONTAL SCROLL FIX
-   Makes the user table scroll sideways when sidebar is open.
-   Keeps mobile card layout unchanged.
+   USER MANAGEMENT - ABSOLUTE FINAL TABLE SCROLL FIX
+   Uses .user-table-scroll-area as the only horizontal scroll container.
 ========================================================= */
 
 @media (min-width: 901px) {
-  .user-management-page {
+  body .app-page-content .user-management-page,
+  body .app-page-content .user-management-layout,
+  body .app-page-content .user-left-stack,
+  body .app-page-content .user-list-card {
     min-width: 0 !important;
+    max-width: 100% !important;
     overflow-x: hidden !important;
   }
 
-  .user-list-card {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
+  body .app-page-content .user-list-card {
+    width: 100% !important;
   }
 
-  .user-grid,
-  .user-table-grid {
+  body .app-page-content .user-list-card > .user-section-heading,
+  body .app-page-content .user-list-card > .user-tools,
+  body .app-page-content .user-list-card > .user-load-more-row {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    padding-bottom: 10px !important;
-    -webkit-overflow-scrolling: touch !important;
   }
 
-  .user-table-header,
-  .user-table-grid .user-card,
-  .user-grid .user-card,
-  .user-card {
-    min-width: 1120px !important;
-  }
-
-  .user-table-header {
-    width: 1120px !important;
-  }
-
-  .user-table-grid .user-card,
-  .user-grid .user-card {
-    width: 1120px !important;
-  }
-
-  .user-actions {
-    width: 170px !important;
-    max-width: 170px !important;
-    overflow: visible !important;
-  }
-
-  .user-actions button,
-  .user-card .user-view-btn {
-    min-width: 0 !important;
-  }
-
-  .user-grid::-webkit-scrollbar,
-  .user-table-grid::-webkit-scrollbar {
-    height: 10px;
-  }
-
-  .user-grid::-webkit-scrollbar-track,
-  .user-table-grid::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: rgba(30, 41, 59, 0.08);
-  }
-
-  .user-grid::-webkit-scrollbar-thumb,
-  .user-table-grid::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.35);
-  }
-
-  .user-grid::-webkit-scrollbar-thumb:hover,
-  .user-table-grid::-webkit-scrollbar-thumb:hover {
-    background: rgba(37, 99, 235, 0.55);
-  }
-}
-/* VERCEL SAFE USER TABLE SCROLL FIX */
-@media (min-width: 901px) {
-  .user-management-page,
-  .user-management-layout,
-  .user-left-stack,
-  .user-list-card {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-
-  .user-table-grid,
-  .user-grid {
+  body .app-page-content .user-list-card .user-table-scroll-area {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
-    padding-bottom: 12px !important;
+    overflow-y: hidden !important;
+    padding-bottom: 16px !important;
+    margin-top: 10px !important;
     -webkit-overflow-scrolling: touch !important;
   }
 
-  .user-table-header,
-  .user-table-grid .user-card,
-  .user-grid .user-card {
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-header,
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-grid,
+  body .app-page-content .user-list-card .user-table-scroll-area .user-card {
+    width: 1320px !important;
+    min-width: 1320px !important;
+    max-width: none !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-grid,
+  body .app-page-content .user-list-card .user-table-scroll-area .user-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-header,
+  body .app-page-content .user-list-card .user-table-scroll-area .user-card {
+    display: grid !important;
+    grid-template-columns:
+      180px
+      250px
+      110px
+      170px
+      120px
+      180px
+      250px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 12px !important;
+    align-items: center !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-header {
+    position: relative !important;
+    margin-bottom: 10px !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-card {
+    min-height: 58px !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-cells {
+    display: contents !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-cell {
+    display: block !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-table-cell span {
+    display: none !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-actions {
+    width: 250px !important;
+    max-width: 250px !important;
+    overflow: visible !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area .user-actions button,
+  body .app-page-content .user-list-card .user-table-scroll-area .user-view-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    font-size: 0.48rem !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area::-webkit-scrollbar {
+    height: 14px !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area::-webkit-scrollbar-track {
+    border-radius: 999px !important;
+    background: rgba(148, 163, 184, 0.25) !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    background: rgba(37, 99, 235, 0.55) !important;
+  }
+
+  body .app-page-content .user-list-card .user-table-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(37, 99, 235, 0.75) !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT - REAL FINAL TABLE SCROLL FIX
+   Existing Users table scrolls horizontally when sidebar is open.
+========================================================= */
+
+.user-management-page,
+.user-management-page .user-management-layout,
+.user-management-page .user-left-stack,
+.user-management-page .user-list-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.user-management-page .user-list-card {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* Only the table area scrolls sideways */
+.user-management-page .user-table-scroll-area {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding-bottom: 16px !important;
+  margin-top: 10px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+/* Force the table to be wider than the visible card */
+.user-management-page .user-table-scroll-area .user-table-header,
+.user-management-page .user-table-scroll-area .user-table-grid,
+.user-management-page .user-table-scroll-area .user-grid,
+.user-management-page .user-table-scroll-area .user-card,
+.user-management-page .user-table-scroll-area .user-table-grid .user-card {
+  width: 1420px !important;
+  min-width: 1420px !important;
+  max-width: none !important;
+}
+
+/* Same column layout for header and rows */
+.user-management-page .user-table-scroll-area .user-table-header,
+.user-management-page .user-table-scroll-area .user-card,
+.user-management-page .user-table-scroll-area .user-table-grid .user-card {
+  display: grid !important;
+  grid-template-columns:
+    190px
+    260px
+    120px
+    180px
+    130px
+    190px
+    260px !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+/* Keep table grid normal inside scroll wrapper */
+.user-management-page .user-table-scroll-area .user-table-grid,
+.user-management-page .user-table-scroll-area .user-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+/* Make nested cells stay as columns */
+.user-management-page .user-table-scroll-area .user-table-cells {
+  display: contents !important;
+}
+
+.user-management-page .user-table-scroll-area .user-table-contact {
+  grid-area: contact !important;
+}
+
+.user-management-page .user-table-scroll-area .user-table-category {
+  grid-area: category !important;
+}
+
+.user-management-page .user-table-scroll-area .user-table-created {
+  grid-area: created !important;
+}
+
+.user-management-page .user-table-scroll-area .user-table-status {
+  grid-area: status !important;
+}
+
+.user-management-page .user-table-scroll-area .user-actions {
+  grid-area: actions !important;
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+/* Visible scrollbar */
+.user-management-page .user-table-scroll-area::-webkit-scrollbar {
+  height: 14px !important;
+}
+
+.user-management-page .user-table-scroll-area::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(148, 163, 184, 0.25) !important;
+}
+
+.user-management-page .user-table-scroll-area::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.55) !important;
+}
+
+.user-management-page .user-table-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.75) !important;
+}
+
+
+/* =========================================================
+   USER MANAGEMENT - ID BASED TABLE SCROLL FIX
+   This bypasses old duplicate class overrides in this CSS file.
+   Requires the JSX ids:
+   #user-table-scroll-area-final
+   #user-table-wide-inner-final
+========================================================= */
+
+#user-table-scroll-area-final {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  padding-bottom: 18px !important;
+  margin-top: 10px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+}
+
+#user-table-wide-inner-final {
+  display: block !important;
+  width: 1500px !important;
+  min-width: 1500px !important;
+  max-width: 1500px !important;
+}
+
+#user-table-wide-inner-final .user-table-header,
+#user-table-wide-inner-final .user-table-grid,
+#user-table-wide-inner-final .user-grid,
+#user-table-wide-inner-final .user-card,
+#user-table-wide-inner-final .user-table-grid .user-card {
+  width: 1500px !important;
+  min-width: 1500px !important;
+  max-width: 1500px !important;
+}
+
+#user-table-wide-inner-final .user-table-header,
+#user-table-wide-inner-final .user-card,
+#user-table-wide-inner-final .user-table-grid .user-card {
+  display: grid !important;
+  grid-template-columns:
+    190px
+    270px
+    120px
+    180px
+    130px
+    190px
+    280px !important;
+  grid-template-areas: "name identity contact category created status actions" !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+#user-table-wide-inner-final .user-table-grid,
+#user-table-wide-inner-final .user-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+}
+
+#user-table-wide-inner-final .user-table-cells {
+  display: contents !important;
+}
+
+#user-table-wide-inner-final .user-table-contact {
+  grid-area: contact !important;
+}
+
+#user-table-wide-inner-final .user-table-category {
+  grid-area: category !important;
+}
+
+#user-table-wide-inner-final .user-table-created {
+  grid-area: created !important;
+}
+
+#user-table-wide-inner-final .user-table-status {
+  grid-area: status !important;
+}
+
+#user-table-wide-inner-final .user-actions {
+  grid-area: actions !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  margin: 0 !important;
+}
+
+#user-table-wide-inner-final .user-actions button,
+#user-table-wide-inner-final .user-card .user-view-btn {
+  flex: 0 0 38px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+}
+
+#user-table-scroll-area-final::-webkit-scrollbar {
+  height: 16px !important;
+}
+
+#user-table-scroll-area-final::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(148, 163, 184, 0.28) !important;
+}
+
+#user-table-scroll-area-final::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  border: 3px solid rgba(148, 163, 184, 0.28) !important;
+  background: rgba(37, 99, 235, 0.70) !important;
+}
+
+#user-table-scroll-area-final::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.88) !important;
+}
+
+/* Keep mobile/tablet scroll behavior too */
+@media (max-width: 900px) {
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-grid,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
     width: 1180px !important;
     min-width: 1180px !important;
+    max-width: 1180px !important;
   }
 
-  .user-table-grid::-webkit-scrollbar,
-  .user-grid::-webkit-scrollbar {
-    height: 10px;
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    grid-template-columns:
+      150px
+      230px
+      100px
+      150px
+      110px
+      160px
+      220px !important;
   }
 
-  .user-table-grid::-webkit-scrollbar-thumb,
-  .user-grid::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.45);
+  #user-table-wide-inner-final .user-actions {
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
   }
+}
 
-  .user-table-grid::-webkit-scrollbar-track,
-  .user-grid::-webkit-scrollbar-track {
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.08);
-  }
+/* =========================================================
+   USER MANAGEMENT DARK MODE READABILITY FIX
+   Status pill text + dropdown text should be black/readable.
+   Paste at the VERY BOTTOM of UserManagement.css.
+========================================================= */
+
+/* Status pill text must stay black in dark mode */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text *,
+html[data-theme="dark"] .user-management-page .user-table-status .user-borrowing-status-text,
+html[data-theme="dark"] .user-management-page .user-table-status strong.user-borrowing-status-text,
+html[data-theme="dark"] #user-table-wide-inner-final .user-borrowing-status-text,
+html[data-theme="dark"] #user-table-wide-inner-final .user-borrowing-status-text * {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  text-shadow: none !important;
+}
+
+/* Keep status pill backgrounds light so black text is readable */
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-active {
+  background: #bbf7d0 !important;
+  border-color: #22c55e !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  border-color: #f59e0b !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status-account-disabled {
+  background: #fca5a5 !important;
+  border-color: #ef4444 !important;
+}
+
+/* Role dropdown / select text should be black in dark mode */
+html[data-theme="dark"] .user-management-page select,
+html[data-theme="dark"] .user-management-page .user-tools select,
+html[data-theme="dark"] .user-management-page .user-field select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Dropdown choices/options should also be black */
+html[data-theme="dark"] .user-management-page select option,
+html[data-theme="dark"] .user-management-page .user-tools select option,
+html[data-theme="dark"] .user-management-page .user-field select option {
+  background: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+/* Placeholder-like disabled option/readability safety */
+html[data-theme="dark"] .user-management-page select option:disabled {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
 }

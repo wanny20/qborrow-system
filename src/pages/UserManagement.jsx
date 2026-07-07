@@ -3301,7 +3301,14 @@ Showing {filteredUsers.length} of {users.length} loaded account
             </div>
           ) : (
             <>
-              <div className="user-table-scroll-area">
+              <div
+                id="user-table-scroll-area-final"
+                className="user-table-scroll-area"
+              >
+                <div
+                  id="user-table-wide-inner-final"
+                  className="user-table-wide-inner"
+                >
              <div className="user-table-header">
   <span>Name</span>
   <span>Email / Role</span>
@@ -3535,6 +3542,7 @@ Showing {filteredUsers.length} of {users.length} loaded account
                   );
                 })}
               </div>
+                </div>
               </div>
 
               {hasMoreUsers && (
