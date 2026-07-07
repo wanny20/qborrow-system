@@ -10217,3 +10217,49 @@ html[data-theme="dark"] body .app-page-content .user-management-page
     background: rgba(37, 99, 235, 0.55);
   }
 }
+/* VERCEL SAFE USER TABLE SCROLL FIX */
+@media (min-width: 901px) {
+  .user-management-page,
+  .user-management-layout,
+  .user-left-stack,
+  .user-list-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .user-table-grid,
+  .user-grid {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    padding-bottom: 12px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .user-table-header,
+  .user-table-grid .user-card,
+  .user-grid .user-card {
+    width: 1180px !important;
+    min-width: 1180px !important;
+  }
+
+  .user-table-grid::-webkit-scrollbar,
+  .user-grid::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .user-table-grid::-webkit-scrollbar-thumb,
+  .user-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.45);
+  }
+
+  .user-table-grid::-webkit-scrollbar-track,
+  .user-grid::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+  }
+}
