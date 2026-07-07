@@ -10466,3 +10466,211 @@ html[data-theme="dark"] .user-management-page select option:disabled {
   color: #475569 !important;
   -webkit-text-fill-color: #475569 !important;
 }
+/* =========================================================
+   USER MANAGEMENT MOBILE TABLE POLISH
+   Center status text and hide action button labels on mobile.
+========================================================= */
+
+@media (max-width: 900px) {
+  /* Give Status and Actions enough width on mobile table scroll */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-grid,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: 1260px !important;
+    min-width: 1260px !important;
+    max-width: 1260px !important;
+  }
+
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    grid-template-columns:
+      150px
+      230px
+      100px
+      150px
+      110px
+      220px
+      300px !important;
+  }
+
+  /* Center ACTIVE / BORROWING DISABLED text */
+  #user-table-wide-inner-final .user-table-status {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #user-table-wide-inner-final .user-borrowing-status-text,
+  #user-table-wide-inner-final .user-table-status strong {
+    width: 100% !important;
+    min-width: 150px !important;
+    max-width: 190px !important;
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0 12px !important;
+    margin: 0 auto !important;
+    font-size: 0.62rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  /* Actions column */
+  #user-table-wide-inner-final .user-actions {
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  /*
+    Hide action button descriptions like:
+    View, Edit, Disable Borrowing, Disable Account, Reset, Delete.
+    Keep only the icon visible.
+  */
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    text-indent: 0 !important;
+  }
+
+  /* Restore only icons inside buttons */
+  #user-table-wide-inner-final .user-actions button svg,
+  #user-table-wide-inner-final .user-actions button i,
+  #user-table-wide-inner-final .user-actions button span,
+  #user-table-wide-inner-final .user-actions .user-view-btn svg,
+  #user-table-wide-inner-final .user-actions .user-view-btn i,
+  #user-table-wide-inner-final .user-actions .user-view-btn span {
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    text-indent: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #user-table-scroll-area-final {
+    padding-bottom: 14px !important;
+  }
+
+  #user-table-wide-inner-final .user-borrowing-status-text,
+  #user-table-wide-inner-final .user-table-status strong {
+    font-size: 0.58rem !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+  }
+}
+/* =========================================================
+   USER MANAGEMENT MOBILE ACTION ICON CLEANUP
+   Hide action labels and center icons only.
+========================================================= */
+
+@media (max-width: 900px) {
+  #user-table-wide-inner-final .user-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 !important;
+    overflow: hidden !important;
+    text-align: center !important;
+
+    /* Hide normal text nodes like View/Edit/Reset */
+    font-size: 0 !important;
+    line-height: 0 !important;
+    text-indent: 0 !important;
+  }
+
+  /* Hide label wrappers if any exist */
+  #user-table-wide-inner-final .user-actions button small,
+  #user-table-wide-inner-final .user-actions button em,
+  #user-table-wide-inner-final .user-actions button .user-action-label,
+  #user-table-wide-inner-final .user-actions button .action-label,
+  #user-table-wide-inner-final .user-actions button .btn-label {
+    display: none !important;
+  }
+
+  /* Restore only the first icon element */
+  #user-table-wide-inner-final .user-actions button > span:first-child,
+  #user-table-wide-inner-final .user-actions button > svg:first-child,
+  #user-table-wide-inner-final .user-actions button > i:first-child {
+    width: 100% !important;
+    height: 100% !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 1.15rem !important;
+    line-height: 1 !important;
+    text-indent: 0 !important;
+  }
+
+  /* Hide extra spans after the icon */
+  #user-table-wide-inner-final .user-actions button > span:not(:first-child) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button > span:first-child,
+  #user-table-wide-inner-final .user-actions button > svg:first-child,
+  #user-table-wide-inner-final .user-actions button > i:first-child {
+    font-size: 1.05rem !important;
+  }
+}
