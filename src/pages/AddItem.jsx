@@ -77,29 +77,12 @@ function sanitizeItemName(value) {
 }
 
 function sanitizeDescription(value) {
-  // Remove control characters and excessive whitespace, but keep normal punctuation
+  // Keep only printable characters (ASCII printable + Unicode letters, numbers, punctuation, spaces)
+  // This removes all control characters without needing to list them.
   return String(value || "")
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "") // Remove control chars
-    .replace(/\s+/g, " ") // Normalize whitespace
+    .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
-}
-
-function getItemNameError(value) {
-  const sanitized = sanitizeItemName(value);
-  
-  if (!sanitized.trim()) {
-    return "Item name is required.";
-  }
-  
-  if (sanitized.length > 50) {
-    return "Item name must be 50 characters or less."; // changed from 15
-  }
-  
-  if (sanitized !== String(value || "").trim()) {
-    return "Only letters, numbers, spaces, and basic punctuation allowed.";
-  }
-  
-  return "";
 }
 
   function clearFieldError(fieldName) {
