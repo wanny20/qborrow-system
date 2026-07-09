@@ -4468,3 +4468,25 @@ html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scroll
 .release-page .release-released-status-pill {
   margin-inline: auto !important;
 }
+/* =========================================================
+   RELEASE ITEM - BLACK OUTLINE FOR FOR RELEASE TAB REFRESH BUTTON
+   Matches the Borrowed tab refresh button in Return Confirmation.
+   Applies to both desktop and mobile.
+========================================================= */
+
+.release-page .release-section-heading .release-secondary-btn,
+.release-page .release-section-heading > .release-secondary-btn {
+  border: 2px solid var(--qb-border) !important;
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
+}
+/* =========================================================
+   RELEASE ITEM - REFRESH BUTTON BLACK TEXT
+   Override blue text from modern overrides.
+========================================================= */
+
+.release-page .release-section-heading .release-secondary-btn,
+.release-page .release-section-heading > .release-secondary-btn,
+.release-page .release-released-controls .release-secondary-btn {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
