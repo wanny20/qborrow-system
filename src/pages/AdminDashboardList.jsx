@@ -21,6 +21,9 @@ function AdminDashboardList() {
   const [loading, setLoading] = useState(true);
   const [viewingRecord, setViewingRecord] = useState(null);
 
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
   const listConfig = {
@@ -282,6 +285,20 @@ function AdminDashboardList() {
       .sort((a, b) => getCreatedTime(b) - getCreatedTime(a));
   }, [rawRecords, searchTerm, currentList.type]);
 
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, listType]);
+
+  const visibleRecords = useMemo(() => {
+    return filteredRecords.slice(0, visibleCount);
+  }, [filteredRecords, visibleCount]);
+
+  const hasMoreRecords = visibleCount < filteredRecords.length;
+
+  function handleLoadMore() {
+    setVisibleCount((count) => count + PAGE_SIZE);
+  }
+
   function getItemStatusLabel(item) {
     if (item.condition === "Damaged" || item.availability === "Damaged") {
       return "Damaged";
@@ -537,7 +554,12 @@ function AdminDashboardList() {
 
         <div className="admin-list-count-card">
           <span>Showing</span>
-          <strong>{filteredRecords.length}</strong>
+          <strong>
+            {visibleRecords.length}
+            {filteredRecords.length !== visibleRecords.length
+              ? ` / ${filteredRecords.length}`
+              : ""}
+          </strong>
         </div>
       </section>
 
@@ -550,145 +572,192 @@ function AdminDashboardList() {
           </div>
         ) : currentList.type === "items" ? (
           <>
-            <div className="admin-list-compact-header item-table">
-              <span>Item</span>
-              <span>Category</span>
-              <span>Condition</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </div>
+            {/* Scrollable table container - header + rows together */}
+            <div className="admin-list-table-scroll-wrapper">
+              <div className="admin-list-table-scroll">
+                {/* Header INSIDE the scrollable area */}
+                <div className="admin-list-compact-header item-table">
+                  <span>Item</span>
+                  <span>Category</span>
+                  <span>Condition</span>
+                  <span>Status</span>
+                  <span>Actions</span>
+                </div>
 
-            <div className="admin-list-compact-grid">
-              {filteredRecords.map((item) => (
-                <article className="admin-list-compact-row item-table" key={item.id}>
-                  <div className="admin-list-compact-cell admin-list-main-cell">
-                    <span>{item.itemCode || item.id}</span>
-                    <strong>{item.itemName || "Untitled Item"}</strong>
-                    <p>{item.description || "No description available."}</p>
-                  </div>
+                <div className="admin-list-compact-grid">
+                  {visibleRecords.map((item) => (
+                    <article className="admin-list-compact-row item-table" key={item.id}>
+                      <div className="admin-list-compact-cell admin-list-main-cell">
+                        <div className="admin-list-item-preview">
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.itemName || "Item image"}
+                              className="admin-list-item-thumb"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.remove();
+                                const container = e.target.closest('.admin-list-item-preview');
+                                const fallback = container?.querySelector('.admin-list-item-thumb-fallback');
+                                if (fallback) fallback.style.display = 'grid';
+                              }}
+                            />
+                          ) : (
+                            <div className="admin-list-item-thumb-fallback">
+                              <span>📦</span>
+                            </div>
+                          )}
+                          <div className="admin-list-item-info">
+                            <span>{item.itemCode || item.id}</span>
+                            <strong>{item.itemName || "Untitled Item"}</strong>
+                            <p>{item.description || "No description available."}</p>
+                          </div>
+                        </div>
+                      </div>
 
-                  <div className="admin-list-compact-cell">
-                    <span>Category</span>
-                    <strong>{getItemCategoryName(item)}</strong>
-                  </div>
+                      <div className="admin-list-compact-cell">
+                        <span>Category</span>
+                        <strong>{getItemCategoryName(item)}</strong>
+                      </div>
 
-                  <div className="admin-list-compact-cell">
-                    <span>Condition</span>
-                    <strong>{item.condition || "N/A"}</strong>
-                  </div>
+                      <div className="admin-list-compact-cell">
+                        <span>Condition</span>
+                        <strong>{item.condition || "N/A"}</strong>
+                      </div>
 
-                  <div className="admin-list-compact-status">
-                    <strong
-                      className={`admin-list-pill status-${String(
-                        getItemStatusLabel(item)
-                      ).toLowerCase()}`}
-                    >
-                      {getItemStatusLabel(item)}
-                    </strong>
-                  </div>
+                      <div className="admin-list-compact-status">
+                        <strong
+                          className={`admin-list-pill status-${String(
+                            getItemStatusLabel(item)
+                          ).toLowerCase()}`}
+                        >
+                          {getItemStatusLabel(item)}
+                        </strong>
+                      </div>
 
-                  <div className="admin-list-compact-actions">
-                    {renderActionIcon({
-                      label: "Details",
-                      icon: "i",
-                      onClick: () => setViewingRecord(item),
-                    })}
+                      <div className="admin-list-compact-actions">
+                        {renderActionIcon({
+                          label: "Details",
+                          icon: "i",
+                          onClick: () => setViewingRecord(item),
+                        })}
 
-                    {renderActionIcon({
-                      label: "View Item",
-                      icon: "↗",
-                      variant: "primary",
-                      onClick: () => navigate(`/item/${item.id}`),
-                    })}
+                        {renderActionIcon({
+                          label: "View Item",
+                          icon: "↗",
+                          variant: "primary",
+                          onClick: () => navigate(`/item/${item.id}`),
+                        })}
 
-                    {renderActionIcon({
-                      label: "Edit Item",
-                      icon: "✎",
-                      onClick: () => navigate(`/edit-item?id=${item.id}`),
-                    })}
-                  </div>
-                </article>
-              ))}
+                        {renderActionIcon({
+                          label: "Edit Item",
+                          icon: "✎",
+                          onClick: () => navigate(`/edit-item?id=${item.id}`),
+                        })}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
             </div>
           </>
         ) : (
           <>
-            <div className="admin-list-compact-header request-table">
-              <span>Item</span>
-              <span>Borrower</span>
-              <span>Category</span>
-              <span>Expected</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </div>
+            {/* Scrollable table container - header + rows together */}
+            <div className="admin-list-table-scroll-wrapper">
+              <div className="admin-list-table-scroll">
+                {/* Header INSIDE the scrollable area */}
+                <div className="admin-list-compact-header request-table">
+                  <span>Item</span>
+                  <span>Borrower</span>
+                  <span>Category</span>
+                  <span>Expected</span>
+                  <span>Status</span>
+                  <span>Actions</span>
+                </div>
 
-            <div className="admin-list-compact-grid">
-              {filteredRecords.map((request) => (
-                <article className="admin-list-compact-row request-table" key={request.id}>
-                  <div className="admin-list-compact-cell admin-list-main-cell">
-                    <span>{request.itemCode || request.itemId || request.id}</span>
-                    <strong>{request.itemName || "Untitled Item"}</strong>
-                    <p>{request.purpose || "No purpose provided."}</p>
-                  </div>
+                <div className="admin-list-compact-grid">
+                  {visibleRecords.map((request) => (
+                    <article className="admin-list-compact-row request-table" key={request.id}>
+                      <div className="admin-list-compact-cell admin-list-main-cell">
+                        <span>{request.itemCode || request.itemId || request.id}</span>
+                        <strong>{request.itemName || "Untitled Item"}</strong>
+                        <p>{request.purpose || "No purpose provided."}</p>
+                      </div>
 
-                  <div className="admin-list-compact-cell admin-list-borrower-cell">
-                    <span>{request.borrowerEmail || "No email"}</span>
-                    <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
-                  </div>
+                      <div className="admin-list-compact-cell admin-list-borrower-cell">
+                        <span>{request.borrowerEmail || "No email"}</span>
+                        <strong>{request.borrowerName || "Unnamed Borrower"}</strong>
+                      </div>
 
-                  <div className="admin-list-compact-cell">
-                    <span>Category</span>
-                    <strong>{getRequestCategoryName(request)}</strong>
-                  </div>
+                      <div className="admin-list-compact-cell">
+                        <span>Category</span>
+                        <strong>{getRequestCategoryName(request)}</strong>
+                      </div>
 
-                  <div className="admin-list-compact-cell">
-                    <span>Expected</span>
-                    <strong>{request.expectedReturnDate || "Not set"}</strong>
-                  </div>
+                      <div className="admin-list-compact-cell">
+                        <span>Expected</span>
+                        <strong>{request.expectedReturnDate || "Not set"}</strong>
+                      </div>
 
-                  <div className="admin-list-compact-status">
-                    <strong
-                      className={`admin-list-pill status-${String(
-                        getRequestStatusLabel(request)
-                      ).toLowerCase()}`}
-                    >
-                      {getRequestStatusLabel(request)}
-                    </strong>
-                  </div>
+                      <div className="admin-list-compact-status">
+                        <strong
+                          className={`admin-list-pill status-${String(
+                            getRequestStatusLabel(request)
+                          ).toLowerCase()}`}
+                        >
+                          {getRequestStatusLabel(request)}
+                        </strong>
+                      </div>
 
-                  <div className="admin-list-compact-actions">
-                    {renderActionIcon({
-                      label: "Details",
-                      icon: "i",
-                      onClick: () => setViewingRecord(request),
-                    })}
+                      <div className="admin-list-compact-actions">
+                        {renderActionIcon({
+                          label: "Details",
+                          icon: "i",
+                          onClick: () => setViewingRecord(request),
+                        })}
 
-                    {request.itemId &&
-                      renderActionIcon({
-                        label: "View Item",
-                        icon: "↗",
-                        variant: "primary",
-                        onClick: () => navigate(`/item/${request.itemId}`),
-                      })}
+                        {request.itemId &&
+                          renderActionIcon({
+                            label: "View Item",
+                            icon: "↗",
+                            variant: "primary",
+                            onClick: () => navigate(`/item/${request.itemId}`),
+                          })}
 
-                    {request.approvalStatus === "Pending" &&
-                      renderActionIcon({
-                        label: "Manage Request",
-                        icon: "✓",
-                        onClick: () => navigate("/manage-requests"),
-                      })}
+                        {request.approvalStatus === "Pending" &&
+                          renderActionIcon({
+                            label: "Manage Request",
+                            icon: "✓",
+                            onClick: () => navigate("/manage-requests"),
+                          })}
 
-                    {request.approvalStatus === "Borrowed" &&
-                      renderActionIcon({
-                        label: "Return Item",
-                        icon: "↩",
-                        onClick: () => navigate("/return-confirmation"),
-                      })}
-                  </div>
-                </article>
-              ))}
+                        {request.approvalStatus === "Borrowed" &&
+                          renderActionIcon({
+                            label: "Return Item",
+                            icon: "↩",
+                            onClick: () => navigate("/return-confirmation"),
+                          })}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
             </div>
           </>
+        )}
+
+        {/* Load More - ALWAYS visible, never scrolls */}
+        {hasMoreRecords && (
+          <div className="admin-list-load-more">
+            <button
+              type="button"
+              className="admin-list-load-more-btn"
+              onClick={handleLoadMore}
+            >
+              Load More 
+            </button>
+          </div>
         )}
       </section>
     </div>

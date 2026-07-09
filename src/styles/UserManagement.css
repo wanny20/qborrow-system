@@ -10674,3 +10674,1071 @@ html[data-theme="dark"] .user-management-page select option:disabled {
     font-size: 1.05rem !important;
   }
 }
+/* =========================================================
+   USER MANAGEMENT MOBILE ACTION BUTTON WIDTH FIX
+   Prevents action icons from being cut in mobile table view.
+========================================================= */
+
+@media (max-width: 900px) {
+  /* Make the mobile table wider so the Actions column has enough space */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-grid,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: 1360px !important;
+    min-width: 1360px !important;
+    max-width: 1360px !important;
+  }
+
+  /* Give the Actions column enough width */
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    grid-template-columns:
+      150px
+      220px
+      90px
+      130px
+      110px
+      180px
+      360px !important;
+  }
+
+  /* Prevent the row from clipping the action buttons */
+  #user-table-wide-inner-final .user-card {
+    overflow: visible !important;
+  }
+
+  #user-table-wide-inner-final .user-actions {
+    width: 360px !important;
+    min-width: 360px !important;
+    max-width: 360px !important;
+
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+
+    overflow: visible !important;
+    padding-right: 12px !important;
+  }
+
+  /* Make each icon button compact but not cut */
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 42px !important;
+
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+
+  /* Keep only icons visible and centered */
+  #user-table-wide-inner-final .user-actions button > span:first-child,
+  #user-table-wide-inner-final .user-actions button > svg:first-child,
+  #user-table-wide-inner-final .user-actions button > i:first-child {
+    display: grid !important;
+    place-items: center !important;
+
+    width: 100% !important;
+    height: 100% !important;
+
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button > span:not(:first-child) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  #user-table-wide-inner-final .user-actions {
+    width: 350px !important;
+    min-width: 350px !important;
+    max-width: 350px !important;
+    gap: 7px !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex-basis: 40px !important;
+
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+}
+/* =========================================================
+   FIX: Mobile action buttons cut off - increase actions column width
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+@media (max-width: 900px) {
+  /* Widen the whole table so the Actions column has room */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: 1440px !important;
+    min-width: 1440px !important;
+    max-width: 1440px !important;
+  }
+
+  /* Expand the Actions column from 360px → 440px */
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    grid-template-columns:
+      150px
+      220px
+      90px
+      130px
+      110px
+      180px
+      440px !important;
+  }
+
+  /* Let the row grow vertically and stop clipping its children */
+  #user-table-wide-inner-final .user-card {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 56px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Actions container: wide enough and no overflow clipping */
+  #user-table-wide-inner-final .user-actions {
+    width: 440px !important;
+    min-width: 440px !important;
+    max-width: 440px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  /* Each action button: fixed size, not clipped */
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure the table cell wrappers don't clip */
+  #user-table-wide-inner-final .user-card .user-table-cells {
+    overflow: visible !important;
+  }
+}
+
+/* Very small screens: shrink buttons slightly but keep them visible */
+@media (max-width: 520px) {
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+  }
+
+  #user-table-wide-inner-final .user-actions {
+    gap: 6px !important;
+  }
+}
+/* =========================================================
+   FINAL: Center status pill text under Status column
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Status pill text alignment – desktop */
+.user-management-page .user-table-status .user-borrowing-status-text,
+.user-management-page .user-table-grid .user-card .user-table-status .user-borrowing-status-text,
+#user-table-wide-inner-final .user-table-status .user-borrowing-status-text {
+  text-align: center !important;
+  justify-content: center !important;
+  align-items: center !important;
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 80px !important;
+  margin: 0 auto !important;
+}
+
+/* Make the containing status cell center the pill */
+.user-management-page .user-table-status,
+#user-table-wide-inner-final .user-table-status,
+.user-management-page .user-table-grid .user-card .user-table-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Force the strong element inside status to be centered too */
+.user-management-page .user-table-status strong.user-borrowing-status-text,
+#user-table-wide-inner-final .user-table-status strong.user-borrowing-status-text {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+
+/* Mobile: keep centered */
+@media (max-width: 920px) {
+  .user-management-page .user-table-status,
+  #user-table-wide-inner-final .user-table-status {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .user-management-page .user-borrowing-status-text,
+  #user-table-wide-inner-final .user-borrowing-status-text {
+    text-align: center !important;
+    justify-content: center !important;
+  }
+}
+/* =========================================================
+   FIX: Remove right white space on mobile table rows
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Mobile: shrink table width to fit content, not fixed wide */
+@media (max-width: 920px) {
+  /* Override the fixed width on the scroll wrapper's inner container */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-grid,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Let the header and rows size to their content */
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    /* Use tighter column widths that fit the content */
+    grid-template-columns:
+      minmax(100px, 1.2fr)
+      minmax(130px, 1.4fr)
+      minmax(60px, 0.6fr)
+      minmax(80px, 0.8fr)
+      minmax(70px, 0.6fr)
+      minmax(100px, 0.9fr)
+      minmax(160px, auto) !important; /* Actions column auto-width */
+    gap: 6px !important;
+  }
+
+  /* Actions column: no extra space */
+  #user-table-wide-inner-final .user-actions {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    gap: 4px !important;
+  }
+
+  /* Status pill: keep centered but not too wide */
+  #user-table-wide-inner-final .user-borrowing-status-text {
+    min-width: 60px !important;
+    max-width: 120px !important;
+    font-size: 0.45rem !important;
+    padding: 0 6px !important;
+  }
+
+  /* Action buttons: compact */
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 32px !important;
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    font-size: 0 !important;
+  }
+
+  /* Keep the scroll area, but let content decide width */
+  #user-table-scroll-area-final {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Remove any forced min-width that causes white space */
+  .user-management-page .user-list-card .user-table-scroll-area .user-table-header,
+  .user-management-page .user-list-card .user-table-scroll-area .user-grid,
+  .user-management-page .user-list-card .user-table-scroll-area .user-table-grid {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+/* Very small phones: even tighter */
+@media (max-width: 520px) {
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    grid-template-columns:
+      minmax(80px, 1.1fr)
+      minmax(110px, 1.3fr)
+      minmax(50px, 0.5fr)
+      minmax(70px, 0.7fr)
+      minmax(60px, 0.5fr)
+      minmax(80px, 0.8fr)
+      minmax(140px, auto) !important;
+    gap: 4px !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+  }
+}
+/* =========================================================
+   HARD FIX: Existing Users mobile table row alignment
+   Keeps full row from NAME ... ACTIONS visible in horizontal scroll
+========================================================= */
+
+@media (max-width: 920px) {
+  /* only scroll container */
+  #user-table-scroll-area-final {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* one stable table width */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-card {
+    width: 1180px !important;
+    min-width: 1180px !important;
+    max-width: 1180px !important;
+  }
+
+  /* exact same columns for header + rows */
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card {
+    display: grid !important;
+    grid-template-columns: 130px 190px 90px 120px 100px 140px 230px !important;
+    grid-template-areas: "name identity contact category created status actions" !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  /* critical: do not clip row grid */
+  #user-table-wide-inner-final .user-card {
+    overflow: visible !important;
+    min-height: 54px !important;
+    height: auto !important;
+  }
+
+  /* keep nested cells in grid columns */
+  #user-table-wide-inner-final .user-table-cells {
+    display: contents !important;
+  }
+
+  #user-table-wide-inner-final .user-table-contact { grid-area: contact !important; }
+  #user-table-wide-inner-final .user-table-category { grid-area: category !important; }
+  #user-table-wide-inner-final .user-table-created { grid-area: created !important; }
+  #user-table-wide-inner-final .user-table-status {
+    grid-area: status !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  #user-table-wide-inner-final .user-actions {
+    grid-area: actions !important;
+    width: 230px !important;
+    min-width: 230px !important;
+    max-width: 230px !important;
+    display: flex !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+    overflow: visible !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+  }
+}/* =========================================================
+   MOBILE: show Name, Email/Role, Status, Actions only
+   + center all column data
+========================================================= */
+@media (max-width: 920px) {
+  /* Keep horizontal scroll */
+  #user-table-scroll-area-final {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 10px !important;
+  }
+
+  /* Stable 4-column table width */
+  #user-table-wide-inner-final,
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-table-grid,
+  #user-table-wide-inner-final .user-grid,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    width: 920px !important;
+    min-width: 920px !important;
+    max-width: 920px !important;
+  }
+
+  /* 4 columns: name | identity | status | actions */
+  #user-table-wide-inner-final .user-table-header,
+  #user-table-wide-inner-final .user-card,
+  #user-table-wide-inner-final .user-table-grid .user-card {
+    display: grid !important;
+    grid-template-columns: 1fr 1.25fr 0.85fr 1fr !important;
+    grid-template-areas: "name identity status actions" !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  /* Header: only show Name(1), Email/Role(2), Status(6), Actions(7) */
+  #user-table-wide-inner-final .user-table-header span:nth-child(3),
+  #user-table-wide-inner-final .user-table-header span:nth-child(4),
+  #user-table-wide-inner-final .user-table-header span:nth-child(5) {
+    display: none !important;
+  }
+
+  #user-table-wide-inner-final .user-table-header span:nth-child(1) {
+    grid-area: name !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #user-table-wide-inner-final .user-table-header span:nth-child(2) {
+    grid-area: identity !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #user-table-wide-inner-final .user-table-header span:nth-child(6) {
+    grid-area: status !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #user-table-wide-inner-final .user-table-header span:nth-child(7) {
+    grid-area: actions !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* Hide non-needed cells */
+  #user-table-wide-inner-final .user-table-contact,
+  #user-table-wide-inner-final .user-table-category,
+  #user-table-wide-inner-final .user-table-created {
+    display: none !important;
+  }
+
+  /* Name centered */
+  #user-table-wide-inner-final .user-card h3 {
+    grid-area: name !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Email/Role centered */
+  #user-table-wide-inner-final .user-card-topline {
+    grid-area: identity !important;
+    display: grid !important;
+    justify-items: center !important;
+    align-content: center !important;
+    text-align: center !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+
+  #user-table-wide-inner-final .user-card-topline > span {
+    text-align: center !important;
+    margin-inline: auto !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Status centered */
+  #user-table-wide-inner-final .user-table-status {
+    grid-area: status !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #user-table-wide-inner-final .user-borrowing-status-text {
+    margin-inline: auto !important;
+  }
+
+  /* Actions centered */
+  #user-table-wide-inner-final .user-actions {
+    grid-area: actions !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+
+  #user-table-wide-inner-final .user-actions button,
+  #user-table-wide-inner-final .user-actions .user-view-btn {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+  }
+}
+/* =========================================================
+   EDIT MODAL MOBILE INPUT CLIP FIX
+   Prevent bottom field (e.g., Mobile Number) from being cut by sticky actions
+========================================================= */
+
+.user-edit-modal {
+  overflow-x: hidden !important;
+}
+
+.user-edit-modal .user-edit-panel-modal,
+.user-edit-modal .user-borrower-details-grid {
+  overflow: visible !important;
+}
+
+/* Reserve space for the sticky footer action bar */
+.user-edit-modal .user-edit-panel-modal {
+  padding-bottom: 96px !important;
+}
+
+/* Mobile needs extra bottom spacing */
+@media (max-width: 620px) {
+  .user-edit-modal .user-edit-panel-modal {
+    padding-bottom: 132px !important;
+  }
+}
+/* =========================================================
+   EDIT MODAL MOBILE INPUT CLIP FIX - TIGHT SPACING VERSION
+========================================================= */
+
+.user-edit-modal {
+  overflow-x: hidden !important;
+}
+
+.user-edit-modal .user-edit-panel-modal,
+.user-edit-modal .user-borrower-details-grid {
+  overflow: visible !important;
+}
+
+/* Minimal reserved space for sticky footer */
+.user-edit-modal .user-edit-panel-modal {
+  padding-bottom: 56px !important;
+}
+
+@media (max-width: 620px) {
+  .user-edit-modal .user-edit-panel-modal {
+    padding-bottom: 20  px !important;
+  }
+}
+/* =========================================================
+   VIEW MODAL: X close button blends with design
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Clean X button - blends with modal */
+.user-view-modal .user-modal-close-x,
+.user-view-modal .user-modal-close-btn.user-modal-close-x {
+  position: absolute !important;
+  top: 16px !important;
+  right: 18px !important;
+  z-index: 10 !important;
+
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  border: 1.5px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+
+  color: #64748b !important;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  transition: all 160ms ease !important;
+  cursor: pointer !important;
+}
+
+/* Hover effect */
+.user-view-modal .user-modal-close-x:hover,
+.user-view-modal .user-modal-close-btn.user-modal-close-x:hover {
+  background: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  color: #0f172a !important;
+  transform: rotate(90deg) scale(1.05) !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .user-view-modal .user-modal-close-x,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x {
+  background: rgba(30, 41, 59, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-modal-close-x:hover,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x:hover {
+  background: rgba(51, 65, 85, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #ffffff !important;
+}
+
+/* Mobile: keep it touch-friendly but slightly smaller */
+@media (max-width: 620px) {
+  .user-view-modal .user-modal-close-x,
+  .user-view-modal .user-modal-close-btn.user-modal-close-x {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    font-size: 1.2rem !important;
+    top: 12px !important;
+    right: 14px !important;
+  }
+}
+/* =========================================================
+   VIEW MODAL: Clean X close button - no spin, visible outline
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* Clean X button - visible but blends with design */
+.user-view-modal .user-modal-close-x,
+.user-view-modal .user-modal-close-btn.user-modal-close-x {
+  position: absolute !important;
+  top: 16px !important;
+  right: 18px !important;
+  z-index: 10 !important;
+
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  /* Visible outline but not harsh */
+  border: 2px solid #d1d5db !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+
+  color: #6b7280 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 1.3rem !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  transition: all 160ms ease !important;
+  cursor: pointer !important;
+
+  /* NO spin on hover */
+  transform: none !important;
+}
+
+/* Hover effect - subtle lift, no spin */
+.user-view-modal .user-modal-close-x:hover,
+.user-view-modal .user-modal-close-btn.user-modal-close-x:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Dark mode support */
+html[data-theme="dark"] .user-view-modal .user-modal-close-x,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x {
+  background: rgba(30, 41, 59, 0.92) !important;
+  border-color: rgba(100, 116, 139, 0.45) !important;
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-modal-close-x:hover,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x:hover {
+  background: rgba(51, 65, 85, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.6) !important;
+  color: #f8fafc !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Mobile: slightly smaller */
+@media (max-width: 620px) {
+  .user-view-modal .user-modal-close-x,
+  .user-view-modal .user-modal-close-btn.user-modal-close-x {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    font-size: 1.1rem !important;
+    top: 12px !important;
+    right: 14px !important;
+  }
+}
+/* =========================================================
+   DARK MODE: View modal pill outlines removed + text readable
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* ---------- Remove rectangle outlines from pills in dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-view-role-row strong,
+html[data-theme="dark"] .user-view-modal .user-view-role-row span,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-borrower,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-categoryAdmin,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-superAdmin,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Make all detail text readable in dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-section-heading h2 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-section-heading p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-grid div {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-grid span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-grid strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-note {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-note span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-note p {
+  color: #e2e8f0 !important;
+}
+
+/* ---------- Penalty history card dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-penalty-history-card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border: 1px solid rgba(148, 163, 84, 0.15) !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-history-heading strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-history-heading p {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-empty {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-item {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(148, 163, 184, 0.15) !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-item strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-item span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-item p {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-penalty-meta span {
+  color: #94a3b8 !important;
+}
+
+/* ---------- Borrowing banner dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-view-borrowing-banner {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border: 1px solid rgba(251, 191, 36, 0.2) !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-borrowing-banner strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-borrowing-banner p {
+  color: #cbd5e1 !important;
+}
+
+/* ---------- Bottom actions dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-view-actions .user-secondary-btn {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-actions .user-secondary-btn:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-actions .user-primary-btn {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-actions .user-primary-btn:hover {
+  background: #2563eb !important;
+}
+
+/* ---------- X close button dark mode cleanup ---------- */
+html[data-theme="dark"] .user-view-modal .user-modal-close-x,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-modal-close-x:hover,
+html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-x:hover {
+  background: rgba(51, 65, 85, 0.95) !important;
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  color: #f8fafc !important;
+}
+/* =========================================================
+   DARK MODE: Remove pill outlines + fixed pill size
+   Paste at the VERY BOTTOM of UserManagement.css
+========================================================= */
+
+/* ---------- Remove ALL outlines/borders from pills in dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-view-role-row strong,
+html[data-theme="dark"] .user-view-modal .user-view-role-row span,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-borrower,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-categoryAdmin,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-superAdmin,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row strong,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row span,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-borrower,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-categoryAdmin,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-superAdmin,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text {
+  border: 0 !important;
+  border-color: transparent !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ---------- Fix pill backgrounds in dark mode ---------- */
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-borrower,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-borrower {
+  background: #bbf7d0 !important;
+  color: #052e16 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-categoryAdmin,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-categoryAdmin {
+  background: #fde68a !important;
+  color: #422006 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-role-row .role-superAdmin,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .role-superAdmin {
+  background: #60a5fa !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text.status-active,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text.status-active {
+  background: #bbf7d0 !important;
+  color: #052e16 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text.status-temporarily-restricted,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text.status-temporarily-restricted {
+  background: #fde68a !important;
+  color: #422006 !important;
+}
+
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-view-modal .user-view-role-row .user-borrowing-status-text.status-account-disabled,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text.status-borrowing-disabled,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text.status-suspended,
+html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-status-text.status-account-disabled {
+  background: #fca5a5 !important;
+  color: #450a0a !important;
+}
+
+/* ---------- Force pills to same size regardless of screen ---------- */
+.user-view-modal .user-view-role-row strong,
+.user-view-modal .user-view-role-row span,
+.user-view-modal .user-view-role-row .user-borrowing-status-text,
+.user-edit-modal .user-view-role-row strong,
+.user-edit-modal .user-view-role-row span,
+.user-edit-modal .user-view-role-row .user-borrowing-status-text {
+  min-height: 32px !important;
+  min-width: 100px !important;
+  max-width: 180px !important;
+  padding: 0 16px !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.05em !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+}
+
+/* ---------- Make sure the pills stay in a flex row ---------- */
+.user-view-modal .user-view-role-row,
+.user-edit-modal .user-view-role-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin: 0 0 16px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* ---------- Mobile: slightly smaller but still consistent ---------- */
+@media (max-width: 620px) {
+  .user-view-modal .user-view-role-row strong,
+  .user-view-modal .user-view-role-row span,
+  .user-view-modal .user-view-role-row .user-borrowing-status-text,
+  .user-edit-modal .user-view-role-row strong,
+  .user-edit-modal .user-view-role-row span,
+  .user-edit-modal .user-view-role-row .user-borrowing-status-text {
+    min-height: 28px !important;
+    min-width: 80px !important;
+    max-width: 140px !important;
+    padding: 0 12px !important;
+    font-size: 0.62rem !important;
+  }
+} 

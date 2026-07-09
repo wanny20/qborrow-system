@@ -69,6 +69,22 @@ function AddItem() {
     showToast(message, "error");
   }
 
+function sanitizeItemName(value) {
+  // Allow letters, numbers, spaces, periods, hyphens, apostrophes, ampersands
+  // Remove emojis and other special characters
+  // DO NOT trim spaces – users should be able to type spaces freely
+  return String(value || "").replace(/[^\p{L}\p{N}\s.'\-&]/gu, "");
+}
+
+function sanitizeDescription(value) {
+  // Keep only printable characters (ASCII printable + Unicode letters, numbers, punctuation, spaces)
+  // This removes all control characters without needing to list them.
+  return String(value || "")
+    .replace(/[^\x20-\x7E\u00A0-\uFFFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
   function clearFieldError(fieldName) {
     setFieldErrors((previousErrors) => ({
       ...previousErrors,
@@ -78,11 +94,15 @@ function AddItem() {
 
   function validateAddItemForm() {
     const errors = {};
-
-    if (!itemName.trim()) {
-      errors.itemName = "Item name is required.";
-    }
-
+    const sanitizedName = sanitizeItemName(itemName);
+  
+  if (!sanitizedName.trim()) {
+    errors.itemName = "Item name is required.";
+  } else if (sanitizedName.length > 50) {
+    errors.itemName = "Item name must be 50 characters or less.";
+  } else if (sanitizedName !== String(itemName || "").trim()) {
+    errors.itemName = "Only letters, numbers, spaces, and basic punctuation allowed.";
+  }
     if (!categoryId) {
       errors.categoryId = "Category is required.";
     }
@@ -304,13 +324,29 @@ function AddItem() {
     setFieldErrors((previousErrors) => {
       const nextErrors = { ...previousErrors };
 
-      if (fieldName === "itemName") {
-        if (!itemName.trim()) {
-          nextErrors.itemName = "Item name is required.";
-        } else {
-          delete nextErrors.itemName;
-        }
-      }
+if (fieldName === "itemName") {
+  const sanitized = sanitizeItemName(itemName);
+  
+  if (!sanitized.trim()) {
+    nextErrors.itemName = "Item name is required.";
+  } else if (sanitized.length > 50) {
+    nextErrors.itemName = "Item name must be 50 characters or less.";
+  } else if (sanitized !== String(itemName || "").trim()) {
+    nextErrors.itemName = "Only letters, numbers, spaces, and basic punctuation allowed.";
+  } else {
+    delete nextErrors.itemName;
+  }
+}
+
+if (fieldName === "description") {
+  const sanitized = sanitizeDescription(description);
+  
+  if (sanitized.length > 500) {
+    nextErrors.description = "Description must be 500 characters or less.";
+  } else {
+    delete nextErrors.description;
+  }
+}
 
       if (fieldName === "categoryId") {
         if (!categoryId) {
@@ -368,7 +404,6 @@ function AddItem() {
           delete nextErrors.maintenanceReason;
         }
       }
-
       return nextErrors;
     });
   }
@@ -662,21 +697,32 @@ function AddItem() {
                 Item Name <span className="required-star">*</span>
               </label>
 
-              <input
-                id="item-name"
-                type="text"
-                className={fieldErrors.itemName ? "input-error" : ""}
-                placeholder="Example: Projector"
-                value={itemName}
-                onFocus={() => clearFieldError("itemName")}
-                onBlur={() => validateAddItemField("itemName")}
-                onChange={(e) => {
-                  markFormChanged();
-                  setItemName(e.target.value);
-                  clearFieldError("itemName");
-                }}
-                disabled={submitting}
-              />
+<input
+  id="item-name"
+  type="text"
+  className={fieldErrors.itemName ? "input-error" : ""}
+  placeholder="Example: Projector"
+  value={itemName}
+  maxLength={50}
+  onFocus={() => clearFieldError("itemName")}
+  onBlur={() => validateAddItemField("itemName")}
+  onChange={(e) => {
+    const rawValue = e.target.value;
+    const sanitized = sanitizeItemName(rawValue);
+    
+    markFormChanged();
+    setItemName(sanitized);
+    clearFieldError("itemName");
+    
+    if (sanitized !== rawValue && rawValue.trim()) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        itemName: "Only letters, numbers, spaces, and basic punctuation allowed.",
+      }));
+    }
+  }}
+  disabled={submitting}
+/>
 
               {fieldErrors.itemName && (
                 <p className="field-error-message">{fieldErrors.itemName}</p>
@@ -728,22 +774,44 @@ function AddItem() {
               </p>
             </div>
 
-            <div className="add-item-field add-item-description-field">
-              <label className="qb-label" htmlFor="description">
-                Description
-              </label>
+<div className="add-item-field add-item-description-field">
+  <label className="qb-label" htmlFor="description">
+    Description
+    <span className="add-item-char-counter">
+      {description.length}/500
+    </span>
+  </label>
 
-              <textarea
-                id="description"
-                placeholder="Describe the item, included accessories, or notes..."
-                value={description}
-                onChange={(e) => {
-                  markFormChanged();
-                  setDescription(e.target.value);
-                }}
-                disabled={submitting}
-              />
-            </div>
+  <textarea
+    id="description"
+    placeholder="Describe the item, included accessories, or notes..."
+    value={description}
+    maxLength={500}
+    className={fieldErrors.description ? "input-error" : ""}
+    onChange={(e) => {
+      const rawValue = e.target.value;
+      const sanitized = sanitizeDescription(rawValue);
+      
+      markFormChanged();
+      setDescription(sanitized);
+      clearFieldError("description");
+      
+      if (sanitized.length > 500) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          description: "Description must be 500 characters or less.",
+        }));
+      }
+    }}
+    onFocus={() => clearFieldError("description")}
+    onBlur={() => validateAddItemField("description")}
+    disabled={submitting}
+  />
+
+  {fieldErrors.description && (
+    <p className="field-error-message">{fieldErrors.description}</p>
+  )}
+</div>
 
             <div className="add-item-grid">
               <div className="add-item-field">

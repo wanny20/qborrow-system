@@ -1317,3 +1317,31 @@ html[data-theme="dark"] .add-item-maintenance-field textarea {
   background-color: var(--qb-input, #111827);
   color: var(--qb-foreground, #e5e7eb);
 }
+/* =========================================================
+   ADD ITEM - CHARACTER COUNTER
+   Paste at the VERY BOTTOM of AddItem.css
+========================================================= */
+
+.add-item-char-counter {
+  margin-left: auto !important;
+  color: var(--add-muted) !important;
+  font-family: var(--qb-heading-font, inherit) !important;
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.add-item-description-field .qb-label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.add-item-field input[type="text"] {
+  font-family: Inter, system-ui, sans-serif !important;
+}
+
+html[data-theme="dark"] .add-item-char-counter {
+  color: #94a3b8 !important;
+}

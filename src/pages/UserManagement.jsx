@@ -3868,14 +3868,14 @@ onClick={confirmDiscardEditChanges}
             aria-label="User details"
           >
             <section className="user-view-modal">
-              <button
-                type="button"
-                className="user-modal-close-btn"
-                onClick={() => setViewingUser(null)}
-                aria-label="Close user details"
-              >
-                Close
-              </button>
+            <button
+              type="button"
+              className="user-modal-close-btn user-modal-close-x"
+              onClick={() => setViewingUser(null)}
+              aria-label="Close user details"
+            >
+              ×
+            </button>
 
               <div className="user-section-heading">
                 <h2>{viewingUser.fullName || "No name"}</h2>
@@ -4032,14 +4032,6 @@ onClick={confirmDiscardEditChanges}
                       : "Restore Borrowing Access"}
                   </button>
                 )}
-
-                <button
-                  type="button"
-                  className="user-secondary-btn"
-                  onClick={() => setViewingUser(null)}
-                >
-                  Close
-                </button>
               </div>
             </section>
           </div>
