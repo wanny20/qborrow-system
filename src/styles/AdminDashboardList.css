@@ -1122,16 +1122,13 @@
     min-height: 0 !important;
   }
 
-  .admin-list-compact-cell {
-    display: grid !important;
-    grid-template-columns: 120px minmax(0, 1fr) !important;
-    gap: 8px !important;
-    align-items: center !important;
-    border: 2px solid var(--qb-border) !important;
-    border-radius: 12px !important;
-    background: var(--qb-bg) !important;
-    padding: 8px 10px !important;
-  }
+.admin-list-compact-cell {
+  display: grid !important;
+  grid-template-columns: 120px minmax(0, 1fr) !important;
+  gap: 8px !important;
+  align-items: center !important;
+  padding: 4px 0 !important;
+}
 
   .admin-list-compact-cell span {
     display: block !important;
@@ -1804,17 +1801,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
    - Keeps the Actions buttons inside the row outline.
 ========================================================= */
 
-/* Only the table panel should handle horizontal overflow */
-.admin-list-page .admin-list-panel {
-  width: 100% !important;
-  max-width: 100% !important;
-  overflow-x: auto !important;
-  overflow-y: visible !important;
-  padding: 16px 16px 18px !important;
-  -webkit-overflow-scrolling: touch !important;
-  scrollbar-width: thin !important;
-}
-
 /* Keep the grid from stretching past the panel without a scroll area */
 .admin-list-page .admin-list-compact-grid {
   width: 100% !important;
@@ -1826,7 +1812,7 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
 .admin-list-page .admin-list-compact-header.item-table,
 .admin-list-page .admin-list-compact-row.item-table {
   width: 100% !important;
-  min-width: 920px !important;
+  min-width: 874px !important;
   max-width: none !important;
   display: grid !important;
   grid-template-columns:
@@ -1834,7 +1820,7 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
     minmax(140px, 1fr)
     minmax(110px, 0.72fr)
     minmax(120px, 0.72fr)
-    178px !important;
+    132px !important;
   gap: 10px !important;
   align-items: center !important;
   box-sizing: border-box !important;
@@ -1844,7 +1830,7 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
 .admin-list-page .admin-list-compact-header.request-table,
 .admin-list-page .admin-list-compact-row.request-table {
   width: 100% !important;
-  min-width: 1040px !important;
+  min-width: 994px !important;
   max-width: none !important;
   display: grid !important;
   grid-template-columns:
@@ -1853,7 +1839,7 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
     minmax(135px, 0.82fr)
     minmax(120px, 0.7fr)
     minmax(120px, 0.7fr)
-    178px !important;
+    132px !important;
   gap: 10px !important;
   align-items: center !important;
   box-sizing: border-box !important;
@@ -1871,9 +1857,9 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
 
 /* Actions column: fixed width, inside the row, no clipping */
 .admin-list-page .admin-list-compact-actions {
-  width: 178px !important;
-  min-width: 178px !important;
-  max-width: 178px !important;
+  width: 146px !important;
+  min-width: 146px !important;
+  max-width: 146px !important;
   justify-self: end !important;
   display: flex !important;
   align-items: center !important;
@@ -1904,9 +1890,9 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
 /* Header action label aligned with buttons */
 .admin-list-page .admin-list-compact-header.item-table span:last-child,
 .admin-list-page .admin-list-compact-header.request-table span:last-child {
-  width: 178px !important;
-  min-width: 178px !important;
-  max-width: 178px !important;
+  width: 146px !important;
+  min-width: 146px !important;
+  max-width: 146px !important;
   justify-self: end !important;
   text-align: center !important;
 }
@@ -1946,187 +1932,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-
-/* Override older mobile rules that converted this into stacked cards */
-@media (max-width: 1180px) {
-  .admin-list-page .admin-list-panel {
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-  }
-
-  .admin-list-page .admin-list-compact-header {
-    display: grid !important;
-  }
-
-  .admin-list-page .admin-list-compact-header.item-table,
-  .admin-list-page .admin-list-compact-row.item-table {
-    grid-template-columns:
-      230px
-      140px
-      110px
-      120px
-      178px !important;
-  }
-
-  .admin-list-page .admin-list-compact-header.request-table,
-  .admin-list-page .admin-list-compact-row.request-table {
-    grid-template-columns:
-      210px
-      210px
-      135px
-      120px
-      120px
-      178px !important;
-  }
-
-  .admin-list-page .admin-list-compact-cell {
-    display: block !important;
-    border: 0 !important;
-    outline: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-
-  .admin-list-page .admin-list-compact-cell span {
-    display: none !important;
-  }
-
-  .admin-list-page .admin-list-main-cell > span,
-  .admin-list-page .admin-list-borrower-cell > span {
-    display: block !important;
-  }
-
-  .admin-list-page .admin-list-compact-cell strong {
-    white-space: nowrap !important;
-    overflow-wrap: normal !important;
-  }
-
-  .admin-list-page .admin-list-compact-actions {
-    width: 178px !important;
-    min-width: 178px !important;
-    max-width: 178px !important;
-    justify-content: flex-end !important;
-  }
-
-  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn,
-  .admin-list-page .admin-list-icon-btn {
-    width: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
-    height: 38px !important;
-    min-height: 38px !important;
-    max-height: 38px !important;
-    flex-basis: 38px !important;
-  }
-}
-
-@media (max-width: 760px) {
-  .admin-list-page .admin-list-panel {
-    padding: 10px 10px 14px !important;
-    border-radius: 18px !important;
-  }
-
-  .admin-list-page .admin-list-compact-header.item-table,
-  .admin-list-page .admin-list-compact-row.item-table {
-    min-width: 790px !important;
-    grid-template-columns:
-      210px
-      125px
-      100px
-      112px
-      160px !important;
-    gap: 7px !important;
-  }
-
-  .admin-list-page .admin-list-compact-header.request-table,
-  .admin-list-page .admin-list-compact-row.request-table {
-    min-width: 900px !important;
-    grid-template-columns:
-      190px
-      190px
-      120px
-      105px
-      105px
-      160px !important;
-    gap: 7px !important;
-  }
-
-  .admin-list-page .admin-list-compact-row {
-    min-height: 54px !important;
-    padding: 7px 9px !important;
-    border-radius: 14px !important;
-  }
-
-  .admin-list-page .admin-list-compact-header {
-    padding: 7px 9px !important;
-    border-radius: 14px !important;
-  }
-
-  .admin-list-page .admin-list-compact-header span {
-    font-size: 0.46rem !important;
-  }
-
-  .admin-list-page .admin-list-compact-cell strong {
-    font-size: 0.58rem !important;
-  }
-
-  .admin-list-page .admin-list-main-cell > span,
-  .admin-list-page .admin-list-borrower-cell > span,
-  .admin-list-page .admin-list-main-cell p {
-    font-size: 0.46rem !important;
-  }
-
-  .admin-list-page .admin-list-compact-actions,
-  .admin-list-page .admin-list-compact-header.item-table span:last-child,
-  .admin-list-page .admin-list-compact-header.request-table span:last-child {
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
-  }
-
-  .admin-list-page .admin-list-compact-actions {
-    gap: 5px !important;
-  }
-
-  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn,
-  .admin-list-page .admin-list-icon-btn {
-    width: 32px !important;
-    min-width: 32px !important;
-    max-width: 32px !important;
-    height: 32px !important;
-    min-height: 32px !important;
-    max-height: 32px !important;
-    flex-basis: 32px !important;
-    border-radius: 10px !important;
-  }
-}
-
-/* Scrollbar styling */
-.admin-list-page .admin-list-panel::-webkit-scrollbar {
-  height: 8px !important;
-}
-
-.admin-list-page .admin-list-panel::-webkit-scrollbar-track {
-  border-radius: 999px !important;
-  background: rgba(37, 99, 235, 0.12) !important;
-}
-
-.admin-list-page .admin-list-panel::-webkit-scrollbar-thumb {
-  border-radius: 999px !important;
-  background: rgba(37, 99, 235, 0.45) !important;
-}
-
-/* Dark mode scrollbar */
-html[data-theme="dark"] .admin-list-page .admin-list-panel::-webkit-scrollbar-track {
-  background: rgba(147, 197, 253, 0.10) !important;
-}
-
-html[data-theme="dark"] .admin-list-page .admin-list-panel::-webkit-scrollbar-thumb {
-  background: rgba(147, 197, 253, 0.38) !important;
-}
-
-
 
 /* =========================================================
    ADMIN DASHBOARD LIST - MOBILE HEADER + SEARCH/SHOWING COMPACT FIX
@@ -2335,4 +2140,966 @@ html[data-theme="dark"] .admin-list-page .admin-list-count-card span {
 html[data-theme="dark"] .admin-list-page .admin-list-count-card strong {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+/* =========================================================
+   ADMIN DASHBOARD LIST - ITEM THUMBNAIL IMAGES
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* Container for image + text */
+.admin-list-item-preview {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+/* Thumbnail image - small square */
+.admin-list-item-thumb {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(30, 41, 59, 0.12) !important;
+  background: #f1f5f9 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Fallback when no image */
+.admin-list-item-thumb-fallback {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(30, 41, 59, 0.12) !important;
+  background: linear-gradient(135deg, #dbeafe, #fef9c3) !important;
+  flex-shrink: 0 !important;
+}
+
+.admin-list-item-thumb-fallback span {
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 1.2rem !important;
+  font-weight: 950 !important;
+  color: #1e293b !important;
+  line-height: 1 !important;
+}
+
+/* Item info text wraps around the image */
+.admin-list-item-info {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.admin-list-item-info span {
+  display: block !important;
+  margin-bottom: 2px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.54rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.admin-list-item-info strong {
+  display: block !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.admin-list-item-info p {
+  margin: 4px 0 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 1 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Mobile: slightly smaller thumbnail */
+@media (max-width: 760px) {
+  .admin-list-item-thumb,
+  .admin-list-item-thumb-fallback {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-list-item-thumb-fallback span {
+    font-size: 1rem !important;
+  }
+
+  .admin-list-item-info strong {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-list-item-info p {
+    font-size: 0.56rem !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .admin-list-item-thumb {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] .admin-list-item-thumb-fallback {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+}
+
+html[data-theme="dark"] .admin-list-item-thumb-fallback span {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .admin-list-item-info strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .admin-list-item-info p {
+  color: #94a3b8 !important;
+}
+/* =========================================================
+   ADMIN DASHBOARD LIST - ITEM THUMBNAIL (CLEAN)
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+.admin-list-item-preview {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+/* Thumbnail image */
+.admin-list-item-thumb {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
+  object-fit: cover !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(30, 41, 59, 0.12) !important;
+  background: #f1f5f9 !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+/* Fallback placeholder (box icon) */
+.admin-list-item-thumb-fallback {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 10px !important;
+  border: 2px solid rgba(30, 41, 59, 0.12) !important;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+  flex-shrink: 0 !important;
+}
+
+.admin-list-item-thumb-fallback span {
+  font-family: var(--qb-heading-font, Inter, system-ui, sans-serif) !important;
+  font-size: 1.5rem !important;
+  line-height: 1 !important;
+  color: #94a3b8 !important;
+}
+
+/* Item info */
+.admin-list-item-info {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.admin-list-item-info span {
+  display: block !important;
+  margin-bottom: 2px !important;
+  color: var(--qb-muted-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.54rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.admin-list-item-info strong {
+  display: block !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.admin-list-item-info p {
+  margin: 4px 0 0 !important;
+  color: var(--qb-muted-foreground) !important;
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 1 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .admin-list-item-thumb,
+  .admin-list-item-thumb-fallback {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    max-width: 42px !important;
+    max-height: 42px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-list-item-thumb-fallback span {
+    font-size: 1.2rem !important;
+  }
+
+  .admin-list-item-info strong {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-list-item-info p {
+    font-size: 0.56rem !important;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .admin-list-item-thumb {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] .admin-list-item-thumb-fallback {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: linear-gradient(135deg, #1e293b, #2d3a4f) !important;
+}
+
+html[data-theme="dark"] .admin-list-item-thumb-fallback span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .admin-list-item-info strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .admin-list-item-info p {
+  color: #94a3b8 !important;
+}
+/* =========================================================
+   ADMIN LIST MODAL - ALWAYS ABOVE SIDEBAR
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* Backdrop covers everything including sidebar */
+.admin-list-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important; /* Very high to beat sidebar */
+  width: 100vw !important;
+  height: 100dvh !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+  background: rgba(15, 23, 42, 0.56) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+/* Modal card sits above backdrop */
+.admin-list-modal-card {
+  position: relative !important;
+  z-index: 1000000 !important; /* Even higher than backdrop */
+  width: min(880px, calc(100vw - 48px)) !important;
+  max-height: calc(100dvh - 48px) !important;
+  overflow-y: auto !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 28px !important;
+  background: #ffffff !important;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.32) !important;
+  padding: 24px !important;
+  color: var(--qb-foreground) !important;
+  margin: 0 !important;
+}
+
+/* Keep sidebar behind when modal is open */
+body:has(.admin-list-modal-backdrop) .app-sidebar,
+body:has(.admin-list-modal-backdrop) .sidebar,
+body:has(.admin-list-modal-backdrop) .app-sidebar *,
+body:has(.admin-list-modal-backdrop) .sidebar * {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* Prevent page scroll behind modal */
+html:has(.admin-list-modal-backdrop),
+body:has(.admin-list-modal-backdrop) {
+  overflow: hidden !important;
+}
+
+/* Ensure modal content is not clipped */
+.admin-list-modal-card * {
+  max-width: 100% !important;
+}
+
+/* Dark mode modal */
+html[data-theme="dark"] .admin-list-modal-backdrop {
+  background: rgba(2, 6, 23, 0.72) !important;
+}
+
+html[data-theme="dark"] .admin-list-modal-card {
+  background: #111827 !important;
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Close button stays visible */
+.admin-list-modal-close {
+  position: absolute !important;
+  top: 18px !important;
+  right: 18px !important;
+  z-index: 1000001 !important; /* Above everything */
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid var(--qb-border) !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12) !important;
+  color: var(--qb-foreground) !important;
+  font-family: var(--qb-heading-font) !important;
+  font-size: 1.4rem !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: all 160ms ease !important;
+}
+
+.admin-list-modal-close:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+  transform: rotate(90deg) scale(1.05) !important;
+}
+
+html[data-theme="dark"] .admin-list-modal-close {
+  background: #1e293b !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .admin-list-modal-close:hover {
+  background: #334155 !important;
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  color: #f8fafc !important;
+}
+
+/* Mobile modal adjustments */
+@media (max-width: 760px) {
+  .admin-list-modal-backdrop {
+    padding: 16px !important;
+  }
+
+  .admin-list-modal-card {
+    width: calc(100vw - 32px) !important;
+    max-height: calc(100dvh - 32px) !important;
+    border-radius: 22px !important;
+    padding: 18px !important;
+  }
+
+  .admin-list-modal-close {
+    top: 14px !important;
+    right: 14px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    font-size: 1.2rem !important;
+  }
+}
+/* =========================================================
+   FORCE CENTER - STATUS & ACTIONS COLUMNS (FINAL FIX)
+   High specificity to override ALL existing rules.
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* ---------- HEADER ALIGNMENT ---------- */
+
+/* Status header: force center */
+.admin-list-page .admin-list-compact-header.item-table span:nth-child(5),
+.admin-list-page .admin-list-compact-header.request-table span:nth-child(5) {
+  justify-content: center !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Actions header: force center */
+.admin-list-page .admin-list-compact-header.item-table span:nth-child(6),
+.admin-list-page .admin-list-compact-header.request-table span:nth-child(6) {
+  justify-content: center !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* ---------- STATUS PILL CENTERING ---------- */
+
+/* The status cell container */
+.admin-list-page .admin-list-compact-row .admin-list-compact-status,
+.admin-list-page .admin-list-compact-row.item-table .admin-list-compact-status,
+.admin-list-page .admin-list-compact-row.request-table .admin-list-compact-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* The status pill itself */
+.admin-list-page .admin-list-compact-row .admin-list-compact-status .admin-list-pill,
+.admin-list-page .admin-list-compact-row.item-table .admin-list-compact-status .admin-list-pill,
+.admin-list-page .admin-list-compact-row.request-table .admin-list-compact-status .admin-list-pill {
+  margin: 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* ---------- ACTIONS ICON CENTERING ---------- */
+
+/* The actions cell container */
+.admin-list-page .admin-list-compact-row .admin-list-compact-actions,
+.admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions,
+.admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 8px !important;
+}
+
+/* Individual action buttons */
+.admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn,
+.admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn,
+.admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn {
+  flex: 0 0 38px !important;
+  margin: 0 !important;
+}
+
+/* ---------- OVERRIDE DESKTOP RULES ---------- */
+
+/* Prevent justify-self from interfering */
+.admin-list-page .admin-list-compact-row .admin-list-compact-actions {
+  justify-self: center !important;
+}
+
+/* ---------- OVERRIDE MOBILE RULES ---------- */
+
+@media (max-width: 1180px) {
+  .admin-list-page .admin-list-compact-row .admin-list-compact-status,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-status,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-status {
+    display: grid !important;
+    grid-template-columns: 100px 1fr !important;
+    gap: 8px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-status .admin-list-pill,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-status .admin-list-pill,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-status .admin-list-pill {
+    margin: 0 !important;
+    justify-self: flex-start !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions {
+    display: grid !important;
+    grid-template-columns: 100px 1fr !important;
+    gap: 8px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn {
+    justify-self: flex-start !important;
+  }
+}
+/* =========================================================
+   FIX: STATUS HEADER ONLY - FORCE CENTER
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+/* Target the STATUS header in the item table ONLY */
+.admin-list-page .admin-list-compact-header.item-table span:nth-child(4) {
+  justify-content: center !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Also ensure the Status column header in request table stays centered too */
+.admin-list-page .admin-list-compact-header.request-table span:nth-child(5) {
+  justify-content: center !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Override any parent grid that might be interfering */
+.admin-list-page .admin-list-compact-header.item-table {
+  justify-items: stretch !important;
+}
+
+.admin-list-page .admin-list-compact-header.item-table span {
+  width: 100% !important;
+}
+
+/* Ensure the header cell can be centered */
+.admin-list-page .admin-list-compact-header.item-table span:nth-child(4) {
+  justify-self: center !important;
+}
+
+/* Also handle the Actions header to keep it centered */
+.admin-list-page .admin-list-compact-header.item-table span:nth-child(5) {
+  justify-content: center !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+/* =========================================================
+   MOBILE: Clean Action Icons
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+@media (max-width: 760px) {
+  /* Force action buttons to be clean icons only - no text labels */
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    padding: 4px 0 !important;
+  }
+
+  /* Each action button should be a clean square icon */
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn {
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    flex: 0 0 36px !important;
+    
+    display: inline-grid !important;
+    place-items: center !important;
+    
+    border-radius: 10px !important;
+    border: 1.5px solid rgba(30, 41, 59, 0.18) !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06) !important;
+    
+    transition: all 160ms ease !important;
+  }
+
+  /* Only the icon span should be visible */
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn span,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn span,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn span {
+    display: grid !important;
+    place-items: center !important;
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
+    color: currentColor !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide any text labels on mobile */
+  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn .admin-list-action-label,
+  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn .action-label,
+  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn .btn-label,
+  .admin-list-page .admin-list-compact-actions .admin-list-icon-btn > span:not(:first-child) {
+    display: none !important;
+  }
+
+  /* Touch-friendly hover state */
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn:active {
+    transform: scale(0.92) !important;
+    background: #eff6ff !important;
+  }
+
+  /* Primary variant (View Item) */
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-primary {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-primary:active {
+    background: #1d4ed8 !important;
+  }
+
+  /* Dark mode */
+  html[data-theme="dark"] .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn {
+    background: #1e293b !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    color: #e2e8f0 !important;
+  }
+
+  html[data-theme="dark"] .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn:active {
+    background: #2d3a4f !important;
+  }
+
+  html[data-theme="dark"] .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-primary {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+  }
+
+  html[data-theme="dark"] .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-primary:active {
+    background: #1d4ed8 !important;
+  }
+}
+
+/* Even smaller phones */
+@media (max-width: 480px) {
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    flex: 0 0 32px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn span,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn span,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn span {
+    font-size: 0.95rem !important;
+  }
+
+  .admin-list-page .admin-list-compact-actions {
+    gap: 5px !important;
+  }
+}
+
+
+/* =========================================================
+   ADMIN DASHBOARD LIST - ACTIONS ROW LAYOUT FIX (761-1180px)
+   The "FORCE CENTER" block above switches .admin-list-compact-actions
+   to a 2-column grid (100px 1fr), which only fits 2 of the 3 icon
+   buttons on one line. Restore a simple single-row flex layout here
+   so all 3 icons stay aligned on one line, right up against the
+   status pill, with no leftover column width to their right.
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+@media (max-width: 1180px) {
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions {
+    display: flex !important;
+    grid-template-columns: none !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  .admin-list-page .admin-list-compact-row .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions .admin-list-icon-btn,
+  .admin-list-page .admin-list-compact-row.request-table .admin-list-compact-actions .admin-list-icon-btn {
+    justify-self: auto !important;
+  }
+}
+
+
+/* =========================================================
+   ADMIN DASHBOARD LIST - LOAD MORE BUTTON
+   Paste at the VERY BOTTOM of AdminDashboardList.css
+========================================================= */
+
+.admin-list-page .admin-list-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.admin-list-page .admin-list-load-more-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--qb-border);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 0 var(--qb-border);
+  background: #ffffff;
+  color: var(--qb-foreground);
+  padding: 0 22px;
+  font-family: var(--qb-heading-font);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--qb-ease-bounce),
+    box-shadow 180ms var(--qb-ease-bounce),
+    background 160ms ease;
+}
+
+.admin-list-page .admin-list-load-more-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--qb-border);
+  background: var(--qb-bg);
+}
+
+.admin-list-page .admin-list-load-more-btn:active {
+  transform: translate(0, 0);
+  box-shadow: 1px 1px 0 0 var(--qb-border);
+}
+
+@media (max-width: 760px) {
+  .admin-list-page .admin-list-load-more {
+    margin-top: 12px;
+  }
+
+  .admin-list-page .admin-list-load-more-btn {
+    width: 100%;
+    min-height: 42px;
+    font-size: 0.66rem;
+    padding: 0 16px;
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-load-more-btn,
+html[data-theme="dark"] body .admin-list-page .admin-list-load-more-btn {
+  border-color: rgba(203, 213, 225, 0.34) !important;
+  background: #0b1220 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .app-page-content .admin-list-page .admin-list-load-more-btn:hover,
+html[data-theme="dark"] body .admin-list-page .admin-list-load-more-btn:hover {
+  border-color: rgba(96, 165, 250, 0.55) !important;
+  background: #172033 !important;
+  transform: translateY(-1px) !important;
+}
+/* =========================================================
+   FIX: Entire table scrolls together, Load More stays fixed
+   REPLACE the old scrollbar/overflow rules with this
+========================================================= */
+
+/* Remove scroll from panel itself */
+.admin-list-page .admin-list-panel {
+  overflow: visible !important;
+  padding: 16px !important;
+}
+
+/* Scroll wrapper - handles horizontal scroll for header + rows together */
+.admin-list-page .admin-list-table-scroll-wrapper {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 4px !important;
+}
+
+.admin-list-page .admin-list-table-scroll-wrapper::-webkit-scrollbar {
+  height: 8px !important;
+}
+
+.admin-list-page .admin-list-table-scroll-wrapper::-webkit-scrollbar-track {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.12) !important;
+}
+
+.admin-list-page .admin-list-table-scroll-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(37, 99, 235, 0.45) !important;
+}
+
+/* The scrollable content - header + rows together */
+.admin-list-page .admin-list-table-scroll {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Header is now inside scrollable area - keep it visible */
+.admin-list-page .admin-list-compact-header {
+  flex-shrink: 0 !important;
+  margin-bottom: 8px !important;
+}
+
+.admin-list-page .admin-list-compact-grid {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Load More - stays fixed below scroll */
+.admin-list-page .admin-list-load-more {
+  display: flex !important;
+  justify-content: center !important;
+  margin-top: 0 !important;
+  padding: 8px 0 4px 0 !important;
+  position: relative !important;
+  z-index: 2 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Dark mode scrollbar */
+html[data-theme="dark"] .admin-list-page .admin-list-table-scroll-wrapper::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10) !important;
+}
+
+html[data-theme="dark"] .admin-list-page .admin-list-table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38) !important;
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .admin-list-page .admin-list-panel {
+    padding: 12px !important;
+  }
+
+  .admin-list-page .admin-list-table-scroll-wrapper {
+    margin-bottom: 8px !important;
+  }
+
+  .admin-list-page .admin-list-load-more {
+    padding: 4px 0 4px 0 !important;
+  }
+
+  .admin-list-page .admin-list-load-more-btn {
+    width: 100% !important;
+  }
+}
+
+/* =========================================================
+   FIX: Category/Condition showing as "S…"/"V…"
+   WITHOUT breaking the horizontal-scroll table on mobile.
+
+   Root cause: on screens <=1180px, an older rule split every cell
+   into a "120px label + 1fr value" mini-grid (meant for a stacked
+   card layout), but a different unconditional patch was ALSO
+   forcing the full 5/6-column desktop grid to apply at every
+   width. Category/Condition columns are ~110-140px wide - once the
+   120px label column ate most of that, the value had almost no
+   room left, so it rendered as a single letter + ellipsis.
+
+   Fix: keep the table as an actual table (header + columns) at
+   every width, and stop cells from splitting into a label+value
+   grid - the header row already labels the columns, so each cell
+   just shows its value at full column width. The existing
+   .admin-list-table-scroll-wrapper (overflow-x: auto) still lets
+   you swipe sideways to see every column, same as before.
+========================================================= */
+
+@media (max-width: 1180px) {
+  .admin-list-page .admin-list-compact-header.item-table,
+  .admin-list-page .admin-list-compact-header.request-table {
+    display: grid !important;
+  }
+
+  .admin-list-page .admin-list-compact-cell {
+    display: block !important;
+  }
+
+  .admin-list-page .admin-list-compact-cell span {
+    display: none !important;
+  }
+
+  .admin-list-page .admin-list-compact-cell strong {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .admin-list-page .admin-list-table-scroll-wrapper {
+    overflow-x: auto !important;
+  }
 }

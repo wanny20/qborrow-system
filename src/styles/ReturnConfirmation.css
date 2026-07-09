@@ -4709,3 +4709,76 @@ html[data-theme="dark"] .return-page .return-table-scroll-area::-webkit-scrollba
     box-shadow: none !important;
   }
 }
+/* =========================================================
+   RETURNED ITEMS MOBILE: date filter + refresh in one row
+   and refresh button without heavy outline
+========================================================= */
+@media (max-width: 860px) {
+  .return-page .return-returned-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+
+  .return-page .return-returned-actions select {
+    min-height: 32px !important;
+    height: 32px !important;
+    border-radius: 999px !important;
+    padding: 0 10px !important;
+    font-size: 0.56rem !important;
+    width: 100% !important;
+  }
+
+  .return-page .return-returned-actions .return-secondary-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    min-width: 76px !important;
+    width: auto !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.52rem !important;
+    white-space: nowrap !important;
+
+    /* remove outlined look to match Release page */
+    border: 1px solid #bfdbfe !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #2563eb !important;
+  }
+
+  .return-page .return-returned-actions .return-secondary-btn:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12) !important;
+    background: #eff6ff !important;
+  }
+}
+/* =========================================================
+   BORROWED TAB: match refresh button style with Returned tab
+========================================================= */
+@media (max-width: 860px) {
+  .return-page .return-section-heading > .return-secondary-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    min-width: 76px !important;
+    width: auto !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.52rem !important;
+    white-space: nowrap !important;
+
+    /* remove heavy outlined look */
+    border: 1px solid #bfdbfe !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #2563eb !important;
+  }
+
+  .return-page .return-section-heading > .return-secondary-btn:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12) !important;
+    background: #eff6ff !important;
+  }
+}

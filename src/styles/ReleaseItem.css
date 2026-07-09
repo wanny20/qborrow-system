@@ -4404,3 +4404,67 @@ html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scroll
     box-shadow: none !important;
   }
 } 
+/* =========================================================
+   RELEASED ITEMS MOBILE: date filter + refresh in one compact row
+========================================================= */
+@media (max-width: 860px) {
+  .release-page .release-released-controls {
+    width: auto !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    align-items: center !important;
+  }
+
+  .release-page .release-released-controls select {
+    min-height: 32px !important;
+    height: 32px !important;
+    border-radius: 999px !important;
+    padding: 0 10px !important;
+    font-size: 0.56rem !important;
+    width: 100% !important;
+  }
+
+  .release-page .release-released-controls .release-secondary-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    min-width: 76px !important;
+    width: auto !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.52rem !important;
+    white-space: nowrap !important;
+  }
+}
+/* =========================================================
+   RELEASED ITEMS: align STATUS header to status pill only
+   (no grid/template changes)
+========================================================= */
+@media (max-width: 860px) {
+  .release-page .release-released-table-header span:nth-child(6) {
+    justify-self: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+}
+/* =========================================================
+   RELEASED ITEMS: align STATUS header with status pills
+   (desktop + mobile, no table structure changes)
+========================================================= */
+
+/* Header label alignment */
+.release-page .release-released-table-header span:nth-child(6) {
+  justify-self: center !important;
+  text-align: center !important;
+}
+
+/* Status cell alignment */
+.release-page .release-released-status-cell {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.release-page .release-released-status-pill {
+  margin-inline: auto !important;
+}
