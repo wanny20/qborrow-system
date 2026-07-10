@@ -774,6 +774,35 @@ function handleViewAdminBorrowRequestAlert() {
   const schoolClosureMessage = getSchoolClosureMessage();
   const systemSuspended = isSystemSuspendedNow();
   const systemSuspensionMessage = getSystemSuspensionMessage();
+
+  // Outlet context object is memoized so its reference only changes when one
+  // of its actual values changes. Without this, every AppLayout re-render
+  // (notifications, alerts, suspension timers, etc.) creates a brand-new
+  // context object, which makes any child page effect keyed on that context
+  // re-fire even though nothing meaningful changed - causing pages like
+  // BorrowRequest to keep reloading/flickering.
+  const outletContextValue = useMemo(
+    () => ({
+      userData,
+      schoolStatus,
+      schoolClosed,
+      schoolClosureMessage,
+      systemSuspended,
+      systemSuspensionMessage,
+      setUnsavedChanges,
+      guardedNavigate,
+    }),
+    [
+      userData,
+      schoolStatus,
+      schoolClosed,
+      schoolClosureMessage,
+      systemSuspended,
+      systemSuspensionMessage,
+      setUnsavedChanges,
+      guardedNavigate,
+    ]
+  );
   const activeSystemStatusMode = getActiveSystemStatusMode();
   useEffect(() => {
   const activeMode = getActiveSystemStatusMode();
@@ -2256,18 +2285,7 @@ function renderSidebarGroup({ groupName, title, icon, links }) {
   </div>
 )}
 
-          <Outlet
-  context={{
-    userData,
-    schoolStatus,
-    schoolClosed,
-    schoolClosureMessage,
-    systemSuspended,
-    systemSuspensionMessage,
-    setUnsavedChanges,
-    guardedNavigate,
-  }}
-/>
+          <Outlet context={outletContextValue} />
         </div>
       </main>
       {showSystemStatusLoginModal && activeSystemStatusMode && (

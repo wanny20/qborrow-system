@@ -221,6 +221,18 @@ function getEndOfDateKeyMs(dateKey) {
   return date.getTime();
 }
 
+// Returns the 11:59:59.999 PM cutoff on the same calendar day as the given
+// timestamp (in the borrower's local time), used for the pending-request
+// same-day auto-reject deadline.
+function getEndOfDayMs(timestampMs) {
+  if (!timestampMs) return 0;
+
+  const date = new Date(timestampMs);
+  date.setHours(23, 59, 59, 999);
+
+  return date.getTime();
+}
+
 function getEarliestValidDeadlineMs(deadlines) {
   const validDeadlines = deadlines.filter(
     (deadline) => typeof deadline === "number" && deadline > 0
@@ -259,7 +271,7 @@ function getPendingRequestDeadlineMs(request) {
     createdTime
       ? getDeadlineWithSchoolClosurePause(
           createdTime,
-          createdTime + AUTO_REJECT_MS
+          getEndOfDayMs(createdTime)
         )
       : 0,
     getDeadlineWithSchoolClosurePause(createdTime, expectedReturnEnd),
@@ -645,7 +657,7 @@ const adminUrgentAlerts = [
   {
     title: "Near Auto-Expire",
     count: nearAutoRejectRequests.length,
-    description: "Pending requests close to the 24-hour auto-expire limit.",
+    description: "Pending requests close to the same-day auto-expire cutoff.",
     tone: "pink",
     path: "/manage-requests?status=Pending",
     items: nearAutoRejectRequests.slice(0, 3),
