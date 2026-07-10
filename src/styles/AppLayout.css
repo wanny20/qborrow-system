@@ -2876,6 +2876,21 @@ html[data-theme="dark"] .app-page-content :where(
   pointer-events: none !important;
 }
 
+/* =========================================================
+   FIX: MY REQUESTS DETAILS MODAL MUST COVER SIDEBAR
+   Keeps sidebar behind when a My Borrow Requests details modal is open.
+========================================================= */
+.app-layout:has(.my-requests-modal-backdrop) .app-main-content {
+  position: relative !important;
+  z-index: 1000000 !important;
+}
+
+.app-layout:has(.my-requests-modal-backdrop) .app-sidebar,
+.app-layout:has(.my-requests-modal-backdrop) .app-sidebar-backdrop {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
 .notifications-modal-backdrop {
   z-index: 1000001 !important;
 }
