@@ -190,6 +190,26 @@ service cloud.firestore {
           "updatedAt"
         ]);
 
+      // Lets a borrower clear their OWN restriction, but only once it has
+      // actually expired, and only to the exact "cleared" values below.
+      // They cannot use this to extend, fake, or shorten a suspension, and
+      // cannot touch any other user's document (isOwner already enforces that).
+      // Requires suspendedUntil to be stored as a real Firestore Timestamp -
+      // string dates can't be safely compared against request.time here.
+      allow update: if isOwner(userId) &&
+        hasOnlyChangedFields([
+          "canBorrow",
+          "suspendedUntil",
+          "suspensionReason",
+          "updatedAt"
+        ]) &&
+        resource.data.canBorrow == false &&
+        resource.data.suspendedUntil is timestamp &&
+        resource.data.suspendedUntil < request.time &&
+        request.resource.data.canBorrow == true &&
+        request.resource.data.suspendedUntil == "" &&
+        request.resource.data.suspensionReason == "";
+
       allow delete: if isSuperAdmin();
     }
 

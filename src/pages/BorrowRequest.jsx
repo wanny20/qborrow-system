@@ -320,6 +320,23 @@ function validateBorrowRequestField(fieldName) {
     return suspendedUntilDate > now;
   }
 
+  // canBorrow is a flag an admin sets manually and it does NOT auto-reset when
+  // suspendedUntil passes (only an admin action in UserManagement clears it).
+  // So a timed suspension (suspendedUntil is set) must expire based on that
+  // date, even while canBorrow is still stuck at false. Only an indefinite
+  // disable (canBorrow: false with no suspendedUntil) should keep blocking.
+  function isBorrowingRestricted() {
+    if (currentUserData?.canBorrow !== false) return false;
+
+    const suspendedUntilDate = getSuspendedUntilDate(
+      currentUserData?.suspendedUntil
+    );
+
+    if (!suspendedUntilDate) return true;
+
+    return suspendedUntilDate > new Date();
+  }
+
   function getSuspendedUntilLabel() {
     const suspendedUntilDate = getSuspendedUntilDate(
       currentUserData?.suspendedUntil
@@ -508,7 +525,7 @@ let submittedSuccessfully = false;
         return;
     }
 
-    if (currentUserData?.canBorrow === false || isBorrowerSuspended()) {
+    if (isBorrowingRestricted()) {
         showBlockedAction(getBorrowRestrictionMessage());
         return;
     }
