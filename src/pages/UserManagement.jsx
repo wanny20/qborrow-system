@@ -822,6 +822,14 @@ function isTemporaryBorrowingRestriction(user) {
   );
 }
 
+// Deliberately still keyed off the raw canBorrow flag, not
+// isBorrowingRestrictionActive(): "Restore Access" is the safe, side-effect-
+// free cleanup action (just clears the stale flags, doesn't touch
+// overdueCount). That's exactly what you want for a user whose timed
+// restriction already expired but whose canBorrow is still stuck at false.
+// Gating this on expiration instead would push that same user onto the
+// "Reset Suspension" path, which also zeroes their overdueCount - an
+// unrelated, more destructive action nobody asked for here.
 function shouldShowRestoreBorrowingAccess(user) {
   return user?.role === "borrower" && user?.canBorrow === false;
 }
@@ -831,19 +839,21 @@ function getBorrowingStatusLabel(user) {
     return user?.isActive === false ? "Account Disabled" : "Active";
   }
 
+  // canBorrow/suspensionReason are only ever cleared by an admin action, so a
+  // timed restriction/suspension can expire (suspendedUntil passes) while
+  // those fields are still stuck from when it was created. Route everything
+  // through isBorrowingRestrictionActive() first, since that's the function
+  // that actually checks the suspendedUntil date - otherwise the badge stays
+  // on "Temporarily Restricted"/"Borrowing Disabled" forever.
+  if (!isBorrowingRestrictionActive(user)) {
+    return isUserSuspended(user) ? "Suspended" : "Active";
+  }
+
   if (isTemporaryBorrowingRestriction(user)) {
     return "Temporarily Restricted";
   }
 
-  if (user?.canBorrow === false) {
-    return "Borrowing Disabled";
-  }
-
-  if (isUserSuspended(user)) {
-    return "Suspended";
-  }
-
-  return "Active";
+  return "Borrowing Disabled";
 }
 
 function getBorrowingStatusClass(user) {
@@ -1710,7 +1720,12 @@ async function handleToggleAccountStatus(user) {
 }
 
 async function handleToggleBorrowing(user) {
-  const nextValue = user.canBorrow === false;
+  // Use the same expiration-aware check as the status badge, not the raw
+  // canBorrow flag - otherwise this button can show "Enable Borrow" right
+  // next to an "Active" badge for a user whose timed restriction already
+  // expired but whose canBorrow flag hasn't been cleared yet, and clicking
+  // it would silently do the opposite of what the label says.
+  const nextValue = isBorrowingRestrictionActive(user);
 
   openConfirmAction({
     title: nextValue ? "Enable Borrowing?" : "Disable Borrowing?",
@@ -1726,17 +1741,19 @@ async function handleToggleBorrowing(user) {
       try {
         const userRef = doc(db, "users", user.id);
 
+        // Always clear any old suspension data here, in both directions.
+        // This is a direct manual admin action (not a timed suspension), so
+        // a leftover suspendedUntil/suspensionReason from a previous
+        // restriction should never linger - if it's a past date and we
+        // later set canBorrow back to false without clearing it, the
+        // expiration check would wrongly treat the fresh disable as already
+        // expired.
         const updatePayload = {
           canBorrow: nextValue,
+          suspendedUntil: "",
+          suspensionReason: "",
           updatedAt: serverTimestamp(),
         };
-
-        // Important:
-        // When enabling borrowing again, remove old temporary restriction data.
-        if (nextValue) {
-          updatePayload.suspendedUntil = "";
-          updatePayload.suspensionReason = "";
-        }
 
         await updateDoc(userRef, updatePayload);
 
@@ -1752,8 +1769,8 @@ async function handleToggleBorrowing(user) {
             ? {
                 ...previousUser,
                 canBorrow: nextValue,
-                suspendedUntil: nextValue ? "" : previousUser.suspendedUntil,
-                suspensionReason: nextValue ? "" : previousUser.suspensionReason,
+                suspendedUntil: "",
+                suspensionReason: "",
               }
             : previousUser
         );
@@ -3459,17 +3476,17 @@ Showing {filteredUsers.length} of {users.length} loaded account
   <button
     type="button"
     className={`${
-      user.canBorrow === false ? "user-primary-btn" : "user-warning-btn"
+      isBorrowingRestrictionActive(user) ? "user-primary-btn" : "user-warning-btn"
     } user-icon-action user-action-borrow`}
     onClick={() => handleToggleBorrowing(user)}
     disabled={updatingId === user.id || user.isActive === false}
-    aria-label={user.canBorrow === false ? "Enable borrowing" : "Disable borrowing"}
-    title={user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
-    data-tooltip={user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
+    aria-label={isBorrowingRestrictionActive(user) ? "Enable borrowing" : "Disable borrowing"}
+    title={isBorrowingRestrictionActive(user) ? "Enable Borrow" : "Disable Borrow"}
+    data-tooltip={isBorrowingRestrictionActive(user) ? "Enable Borrow" : "Disable Borrow"}
   >
-    <span className="user-action-symbol" aria-hidden="true">{user.canBorrow === false ? "✓" : "⊘"}</span>
+    <span className="user-action-symbol" aria-hidden="true">{isBorrowingRestrictionActive(user) ? "✓" : "⊘"}</span>
     <span className="user-action-label">
-      {user.canBorrow === false ? "Enable Borrow" : "Disable Borrow"}
+      {isBorrowingRestrictionActive(user) ? "Enable Borrow" : "Disable Borrow"}
     </span>
   </button>
 

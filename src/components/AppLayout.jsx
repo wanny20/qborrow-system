@@ -1128,6 +1128,43 @@ useEffect(() => {
   suspensionClock,
 ]);
 
+// canBorrow/suspensionReason only ever get cleared by an admin action - they
+// don't auto-reset when suspendedUntil passes. isCurrentUserSuspended()
+// above already knows the suspension is over (that's how the "Borrowing
+// Restored" banner appears), so once it flips to false while canBorrow is
+// still stuck at false, write the actual cleared state back to Firestore.
+// This needs the matching self-clear rule in firestore.rules; if that isn't
+// deployed yet (or suspendedUntil isn't stored as a real Timestamp), the
+// write is rejected and silently no-ops - the app still works fine either
+// way, this just stops the admin dashboard from showing a stale status.
+useEffect(() => {
+  if (userData?.role !== "borrower" || !userData?.uid) return;
+  if (userData?.canBorrow !== false) return;
+
+  const suspendedUntilDate = getSuspendedUntilDate(userData?.suspendedUntil);
+
+  // No end date means an indefinite manual disable - only an admin can lift that.
+  if (!suspendedUntilDate) return;
+  if (suspendedUntilDate > new Date(suspensionClock)) return;
+
+  const userRef = doc(db, "users", userData.uid);
+
+  updateDoc(userRef, {
+    canBorrow: true,
+    suspendedUntil: "",
+    suspensionReason: "",
+    updatedAt: serverTimestamp(),
+  }).catch((error) => {
+    console.warn("Could not auto-clear expired suspension:", error);
+  });
+}, [
+  userData?.uid,
+  userData?.role,
+  userData?.canBorrow,
+  userData?.suspendedUntil,
+  suspensionClock,
+]);
+
 useEffect(() => {
   if (!userData?.uid) {
     setShowAccountDisabledAlert(false);
