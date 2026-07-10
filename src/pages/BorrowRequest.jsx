@@ -481,7 +481,8 @@ function validateBorrowRequestField(fieldName) {
     });
 
     return () => unsubscribe();
-  }, [itemId, navigate, outletContext?.userData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId, navigate, outletContext?.userData?.uid]);
 
 useEffect(() => {
   setUnsavedChanges?.(
