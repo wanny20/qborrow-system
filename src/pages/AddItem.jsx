@@ -38,6 +38,7 @@ function AddItem() {
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [imageFileName, setImageFileName] = useState("");
   const [cropSourceFile, setCropSourceFile] = useState(null);
 
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -54,6 +55,19 @@ function AddItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  useEffect(() => {
+    if (!statusMessage) {
+      return undefined;
+    }
+
+    const dismissTimer = setTimeout(() => {
+      setStatusMessage("");
+      setStatusType("");
+    }, 5000);
+
+    return () => clearTimeout(dismissTimer);
+  }, [statusMessage, statusType]);
 
   function showActionError(shortMessage, error) {
     const detailedMessage = error?.message
@@ -420,6 +434,7 @@ if (fieldName === "description") {
     setMaintenanceReason("");
     setImageFile(null);
     setImagePreview("");
+    setImageFileName("");
     setCropSourceFile(null);
     setFieldErrors({});
 
@@ -450,6 +465,7 @@ if (fieldName === "description") {
       return;
     }
 
+    setImageFileName(file.name);
     setCropSourceFile(file);
   }
 
@@ -677,7 +693,16 @@ if (fieldName === "description") {
           className={`add-item-status add-item-status-${statusType}`}
           role="status"
         >
-          {statusMessage}
+          <span className="add-item-status-text">{statusMessage}</span>
+
+          <button
+            type="button"
+            className="add-item-status-close"
+            aria-label="Dismiss notification"
+            onClick={() => showStatus("", "")}
+          >
+            &times;
+          </button>
         </div>
       )}
 
@@ -1001,13 +1026,20 @@ if (fieldName === "description") {
                 Item Image
               </label>
 
-              <input
-                id="item-image"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                disabled={submitting}
-              />
+              <div className={`qb-file-input${submitting ? " qb-file-input-disabled" : ""}`}>
+                <input
+                  id="item-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={submitting}
+                  className="qb-file-input-native"
+                />
+                <span className="qb-file-input-button">Choose File</span>
+                <span className="qb-file-input-name">
+                  {imageFileName || "No file chosen"}
+                </span>
+              </div>
 
               <p>
                 Optional. The image will be manually cropped into a square and

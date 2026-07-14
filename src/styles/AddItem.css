@@ -120,17 +120,62 @@
   overflow-wrap: anywhere;
 }
 
-/* Status */
+/* Status (floating popup toast) */
 
 .add-item-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
   border: 1px solid var(--add-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--add-surface);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.07);
-  padding: 12px 14px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+  padding: 14px 40px 14px 16px;
   font-size: 0.82rem;
   font-weight: 850;
   line-height: 1.45;
+  animation: add-item-toast-in 0.28s ease-out;
+}
+
+@keyframes add-item-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-item-status-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.add-item-status-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 4px;
+}
+
+.add-item-status-close:hover {
+  opacity: 1;
 }
 
 .add-item-status-success {
@@ -143,6 +188,15 @@
   border-color: rgba(239, 68, 68, 0.26);
   background: #fef2f2;
   color: #991b1b;
+}
+
+@media (max-width: 440px) {
+  .add-item-status {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
 }
 
 /* Layout */
@@ -257,12 +311,69 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-.add-item-field input[type="file"] {
+/* Custom file input: shows "Choose File" + the selected file name
+   (or "No file chosen") instead of relying on the browser's native
+   label, which loses sync with the actual selection once the file
+   goes through the crop step. */
+.qb-file-input {
+  position: relative;
   display: flex;
   align-items: center;
-  height: auto;
-  padding: 10px 12px;
+  gap: 10px;
+  min-height: 44px;
+  border: 1px solid var(--add-border);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: var(--add-surface);
+  overflow: hidden;
   cursor: pointer;
+}
+
+.qb-file-input-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.qb-file-input-button {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--add-blue-strong);
+  font-size: 0.7rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.qb-file-input-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--add-muted);
+  pointer-events: none;
+}
+
+.qb-file-input-disabled {
+  opacity: 0.76;
+  cursor: not-allowed;
+}
+
+.qb-file-input-disabled .qb-file-input-native {
+  cursor: not-allowed;
+}
+
+.qb-file-input:focus-within {
+  border-color: var(--add-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .add-item-field input:disabled,
@@ -414,7 +525,7 @@
 
 .add-item-preview-media {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -429,7 +540,7 @@
 .add-item-preview-media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .add-item-preview-media span {
@@ -644,7 +755,7 @@
   }
 
   .add-item-preview-media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 1 / 1;
     border-radius: 18px;
   }
 }
@@ -658,7 +769,7 @@
   }
 
   .add-item-preview-media {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 1 / 1;
   }
 }
 
@@ -836,9 +947,13 @@ html[data-theme="dark"] .add-item-fixed-category-card {
     padding: 10px 11px !important;
   }
 
-  .add-item-field input[type="file"] {
+  .qb-file-input {
     min-height: 38px !important;
-    padding: 7px 10px !important;
+    padding: 0 10px !important;
+  }
+
+  .qb-file-input-name {
+    font-size: 0.68rem !important;
   }
 
   .add-item-field p {
@@ -868,8 +983,8 @@ html[data-theme="dark"] .add-item-fixed-category-card {
   }
 
   .add-item-preview-media {
-    height: 195px !important;
-    aspect-ratio: auto !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
     border-radius: 20px !important;
     border: 1.5px solid rgba(30, 41, 59, 0.26) !important;
     box-shadow: none !important;

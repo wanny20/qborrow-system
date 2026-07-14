@@ -318,11 +318,73 @@
   outline: none;
 }
 
-.settings-field input[type="file"] {
+/* Custom file input: shows "Choose File" + the selected file name
+   (or "No file chosen") instead of relying on the browser's native
+   label, which loses sync with the actual selection once the file
+   goes through the crop step. */
+.qb-file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-height: 40px;
-  padding: 8px 10px;
-  font-size: 0.72rem;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: var(--settings-surface);
+  overflow: hidden;
   cursor: pointer;
+}
+
+.qb-file-input-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.qb-file-input-button {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--settings-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.qb-file-input-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--settings-muted);
+  pointer-events: none;
+}
+
+.qb-file-input-disabled {
+  opacity: 0.76;
+  cursor: not-allowed;
+}
+
+.qb-file-input-disabled .qb-file-input-native {
+  cursor: not-allowed;
+}
+
+.qb-file-input.input-error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.qb-file-input:focus-within {
+  border-color: rgba(37, 99, 235, 0.52);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .settings-field input[readonly] {
@@ -967,9 +1029,8 @@ html[data-theme="dark"] .settings-borrowing-status-main strong {
   font-size: 0.78rem;
 }
 
-.settings-field input[type="file"] {
+.qb-file-input {
   min-height: 44px;
-  padding: 9px 10px;
 }
 
 .settings-page .settings-profile-card .settings-primary-btn {

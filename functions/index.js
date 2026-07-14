@@ -542,6 +542,148 @@ exports.deleteUserCompletely = onCall(async (request) => {
   };
 });
 
+function isValidEmailFormat(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+exports.updateUserEmail = onCall(async (request) => {
+  await requireSuperAdmin(request);
+
+  const targetUid = cleanText(request.data && request.data.uid);
+  const newEmail = cleanText(request.data && request.data.email).toLowerCase();
+
+  if (!targetUid) {
+    throw new HttpsError("invalid-argument", "User UID is required.");
+  }
+
+  if (!newEmail || !isValidEmailFormat(newEmail)) {
+    throw new HttpsError("invalid-argument", "A valid email address is required.");
+  }
+
+  const userRef = db.collection("users").doc(targetUid);
+  const userSnap = await userRef.get();
+
+  if (!userSnap.exists) {
+    throw new HttpsError("not-found", "User document does not exist.");
+  }
+
+  const userData = userSnap.data();
+
+  if (userData.role === "superAdmin") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Super admin accounts cannot be edited here."
+    );
+  }
+
+  if ((userData.email || "").toLowerCase() === newEmail) {
+    return {
+      success: true,
+      message: "Email unchanged.",
+      email: newEmail,
+    };
+  }
+
+  const emailTaken =
+    (await authEmailExists(newEmail)) ||
+    (await userFieldExists("email", newEmail)) ||
+    (await userFieldExists("emailLower", newEmail));
+
+  if (emailTaken) {
+    throw new HttpsError("already-exists", "This email is already registered.");
+  }
+
+  try {
+    await admin.auth().updateUser(targetUid, {
+      email: newEmail,
+      emailVerified: false,
+    });
+  } catch (error) {
+    if (
+      error.code === "auth/email-already-exists" ||
+      error.code === "auth/email-already-in-use"
+    ) {
+      throw new HttpsError("already-exists", "This email is already registered.");
+    }
+
+    if (error.code === "auth/invalid-email") {
+      throw new HttpsError("invalid-argument", "Invalid email address.");
+    }
+
+    throw new HttpsError("internal", error.message || "Unable to update email.");
+  }
+
+  await userRef.update({
+    email: newEmail,
+    emailLower: newEmail,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return {
+    success: true,
+    message: "Email updated successfully.",
+    email: newEmail,
+  };
+});
+
+exports.updateUserPassword = onCall(async (request) => {
+  await requireSuperAdmin(request);
+
+  const targetUid = cleanText(request.data && request.data.uid);
+  const newPassword = String((request.data && request.data.password) || "");
+
+  if (!targetUid) {
+    throw new HttpsError("invalid-argument", "User UID is required.");
+  }
+
+  if (newPassword.length < 6) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Password must be at least 6 characters."
+    );
+  }
+
+  const userRef = db.collection("users").doc(targetUid);
+  const userSnap = await userRef.get();
+
+  if (!userSnap.exists) {
+    throw new HttpsError("not-found", "User document does not exist.");
+  }
+
+  const userData = userSnap.data();
+
+  if (userData.role === "superAdmin") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Super admin accounts cannot be edited here."
+    );
+  }
+
+  try {
+    await admin.auth().updateUser(targetUid, { password: newPassword });
+  } catch (error) {
+    if (error.code === "auth/weak-password") {
+      throw new HttpsError("invalid-argument", "Password is too weak.");
+    }
+
+    throw new HttpsError("internal", error.message || "Unable to update password.");
+  }
+
+  // Mirrors the same-day-login hygiene pattern used for newly created
+  // borrowers: force the target user to set their own password on next
+  // login instead of silently keeping the admin-typed one forever.
+  await userRef.update({
+    mustChangePassword: true,
+    passwordChangedAt: "",
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return {
+    success: true,
+    message: "Password updated successfully.",
+  };
+});
+
 exports.bulkCreateBorrowers = onCall(async (request) => {
   const currentUser = await requireSuperAdmin(request);
 
