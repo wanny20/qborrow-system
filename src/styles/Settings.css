@@ -2964,3 +2964,33 @@ html[data-theme="dark"] .settings-page .settings-system-suspension-card .setting
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+/* =========================================================
+   DARK MODE FIX: SETTINGS HEADER + PROFILE PREVIEW CONTRAST
+   Header card and borrower profile-preview box were still
+   using their light-mode gradient backgrounds in dark mode,
+   which washed out against the (already-correct) light text.
+   Paste at the VERY BOTTOM of Settings.css.
+========================================================= */
+
+html[data-theme="dark"] .settings-page > .settings-header.settings-header-compact > .settings-header-content {
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(15, 23, 42, 0.97) 48%, rgba(250, 204, 21, 0.08)),
+    var(--qb-surface, #111827) !important;
+}
+
+html[data-theme="dark"] .settings-page .settings-profile-preview {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background:
+    radial-gradient(circle at top right, rgba(250, 204, 21, 0.10), transparent 36%),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 23, 42, 0.90)),
+    var(--qb-surface, #111827) !important;
+}
+
+html[data-theme="dark"] .settings-page .settings-profile-preview h3 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .settings-page .settings-profile-preview span {
+  color: #cbd5e1 !important;
+}

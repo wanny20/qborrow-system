@@ -4684,6 +4684,114 @@ html[data-theme="dark"] .user-tool-active .user-category-table-wrap {
 html[data-theme="dark"] .user-tool-active .user-category-table thead {
   background: #111827 !important;
 }
+
+/* =========================================================
+   EDIT CATEGORY NAME - action column icon + modal
+========================================================= */
+
+/* Room for two icon buttons side by side */
+.user-tool-active .user-category-table th:last-child,
+.user-tool-active .user-category-table td:last-child {
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
+}
+
+.user-category-action-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Edit icon button - keep the same icon-button shape as delete,
+   but give it its own color/icon/tooltip so it doesn't inherit
+   the delete button's look. Extra class selector = higher
+   specificity than the generic td:last-child button rules above. */
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn {
+  border: 1px solid #bfdbfe !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn::before {
+  content: "✎" !important;
+  font-size: 1.05rem !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn::after {
+  content: "Edit category name" !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn:hover:not(:disabled) {
+  background: #bfdbfe !important;
+  transform: translateY(-1px) !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn:disabled {
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #94a3b8 !important;
+  opacity: 0.75 !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn:disabled::before {
+  content: "✎" !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn:disabled::after {
+  content: "Edit category name" !important;
+}
+
+/* Locked variant wins over the generic :disabled rules above because it
+   has an extra class in the selector (higher specificity). Used when a
+   category has an active (Pending/Approved/Borrowed) request, so the
+   name can't change mid-transaction. */
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn.user-edit-category-locked:disabled {
+  border-color: #fde68a !important;
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn.user-edit-category-locked:disabled::before {
+  content: "🔒" !important;
+  font-size: 0.95rem !important;
+}
+
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn.user-edit-category-locked:disabled::after {
+  content: "Cannot rename - active borrow request" !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table td:last-child button.user-edit-category-btn.user-edit-category-locked:disabled {
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  background: rgba(120, 53, 15, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table td:last-child button.user-edit-category-btn {
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  background: rgba(37, 99, 235, 0.18) !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .user-tool-active .user-category-table td:last-child button.user-edit-category-btn:disabled {
+  background: #172033 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #64748b !important;
+}
+
+/* Edit category modal - reuses .user-edit-modal card, just narrower */
+.user-edit-category-modal {
+  width: min(480px, 100%) !important;
+}
+
+.user-category-char-count {
+  text-align: right !important;
+  margin-top: 4px !important;
+}
+
 /* =========================================================
    FINAL FIX - IMPORT CSV COMPACT PAGE
 ========================================================= */
@@ -11742,3 +11850,79 @@ html[data-theme="dark"] .user-edit-modal .user-view-role-row .user-borrowing-sta
     font-size: 0.62rem !important;
   }
 } 
+/* =========================================================
+   FIX: Category action buttons — tooltip overlap on row 1
+   + icon centering
+   (Overrides the earlier "FINAL FIX" tooltip rules further up
+   this file. Kept as one block instead of touching every old
+   patch, so it's easy to revert.)
+========================================================= */
+
+/* Tooltip: always sit to the LEFT of the button, vertically
+   centered on the row. This keeps it inside that row's own
+   vertical space on every row (including row 1), so it can
+   never cover the row above or below it. */
+.user-tool-active .user-category-table td:last-child button::after {
+  top: 50% !important;
+  bottom: auto !important;
+  right: calc(100% + 8px) !important;
+  left: auto !important;
+  transform: translateY(-50%) translateX(4px) !important;
+}
+
+.user-tool-active .user-category-table td:last-child button:hover::after {
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Cancel out the old "flip below the button" exception that
+   was applied to the first row — it's what was overlapping
+   row 2. Row 1 now uses the same left-side tooltip as every
+   other row. */
+.user-tool-active .user-category-table tbody tr:first-child td:last-child button::after {
+  top: 50% !important;
+  bottom: auto !important;
+  right: calc(100% + 8px) !important;
+  left: auto !important;
+  transform: translateY(-50%) translateX(4px) !important;
+}
+
+.user-tool-active .user-category-table tbody tr:first-child td:last-child button:hover::after {
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Icon centering: emoji glyphs (pen/lock/trash) sit slightly
+   off from the button's true center because they're centered
+   by their font line-box, not their visible ink. Force
+   flex-centering on the button and nudge the glyph itself so
+   it lands dead-center regardless of which icon it is. */
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table td:last-child button,
+.user-tool-active .user-category-table td:last-child button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.user-tool-active .user-category-table td:last-child button::before {
+  display: inline-block !important;
+  line-height: 1 !important;
+  transform: translateY(0.5px) !important;
+}
+
+/* =========================================================
+   FIX: "Cannot rename - active borrow request" tooltip
+   unreadable — text was longer than the pill's max-width,
+   so it spilled out past the dark background onto the icons.
+   Let this one wrap onto two lines inside a wider box instead
+   of forcing it onto one unreadable line.
+========================================================= */
+.user-tool-active .user-category-table td:last-child button.user-edit-category-btn.user-edit-category-locked:disabled::after {
+  white-space: normal !important;
+  width: 190px !important;
+  max-width: 190px !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  line-height: 1.3 !important;
+  padding: 8px 12px !important;
+}

@@ -309,17 +309,6 @@ function validateBorrowRequestField(fieldName) {
     return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
   }
 
-  function isBorrowerSuspended() {
-    const suspendedUntilDate = getSuspendedUntilDate(
-      currentUserData?.suspendedUntil
-    );
-
-    if (!suspendedUntilDate) return false;
-
-    const now = new Date();
-    return suspendedUntilDate > now;
-  }
-
   // canBorrow is a flag an admin sets manually and it does NOT auto-reset when
   // suspendedUntil passes (only an admin action in UserManagement clears it).
   // So a timed suspension (suspendedUntil is set) must expire based on that
