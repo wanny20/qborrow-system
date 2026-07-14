@@ -40,6 +40,7 @@ function EditItem() {
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [imageFileName, setImageFileName] = useState("");
   const [cropSourceFile, setCropSourceFile] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,19 @@ function EditItem() {
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  useEffect(() => {
+    if (!statusMessage) {
+      return undefined;
+    }
+
+    const dismissTimer = setTimeout(() => {
+      setStatusMessage("");
+      setStatusType("");
+    }, 5000);
+
+    return () => clearTimeout(dismissTimer);
+  }, [statusMessage, statusType]);
 
   function showActionError(shortMessage, error) {
   const detailedMessage = error?.message
@@ -357,6 +371,7 @@ function validateEditItemForm() {
       setImageUrl(item.imageUrl || "");
       setImagePreview(item.imageUrl || "");
       setImageFile(null);
+      setImageFileName("");
       setCropSourceFile(null);
     } catch (error) {
       showActionError("Failed to load item", error);
@@ -385,6 +400,7 @@ showBlockedAction("Image is too large. Please upload an image below 5MB.");
 return;
     }
 
+    setImageFileName(file.name);
     setCropSourceFile(file);
   }
 
@@ -679,7 +695,16 @@ setTimeout(() => {
           className={`edit-item-status edit-item-status-${statusType}`}
           role="status"
         >
-          {statusMessage}
+          <span className="edit-item-status-text">{statusMessage}</span>
+
+          <button
+            type="button"
+            className="edit-item-status-close"
+            aria-label="Dismiss notification"
+            onClick={() => showStatus("", "")}
+          >
+            &times;
+          </button>
         </div>
       )}
 
@@ -961,13 +986,20 @@ onChange={(e) => {
                   Replace Item Image
                 </label>
 
-                <input
-                  id="item-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  disabled={submitting}
-                />
+                <div className={`qb-file-input${submitting ? " qb-file-input-disabled" : ""}`}>
+                  <input
+                    id="item-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={submitting}
+                    className="qb-file-input-native"
+                  />
+                  <span className="qb-file-input-button">Choose File</span>
+                  <span className="qb-file-input-name">
+                    {imageFileName || "No file chosen"}
+                  </span>
+                </div>
 
                 <p>
                   Optional. Upload only if you want to replace the image. The

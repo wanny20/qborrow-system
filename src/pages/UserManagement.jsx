@@ -132,6 +132,12 @@ const createUserSubmitLockRef = useRef(false);
   const [editSection, setEditSection] = useState("");
   const [editMobileNumber, setEditMobileNumber] = useState("");
 
+  const [editNewPassword, setEditNewPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [showEditNewPassword, setShowEditNewPassword] = useState(false);
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
+  const [settingPasswordId, setSettingPasswordId] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusMessage, setStatusMessage] = useState("");
@@ -1925,6 +1931,11 @@ async function handleDeleteCategory(category) {
     setEditYearLevel(user.yearLevel || "");
     setEditSection(user.section || "");
     setEditMobileNumber(user.mobileNumber || "");
+
+    setEditNewPassword("");
+    setEditConfirmPassword("");
+    setShowEditNewPassword(false);
+    setPasswordFieldErrors({});
   }
 
   function cancelEditingUser() {
@@ -1943,6 +1954,11 @@ async function handleDeleteCategory(category) {
     setEditSection("");
     setEditMobileNumber("");
     setEditTouched(false);
+
+    setEditNewPassword("");
+    setEditConfirmPassword("");
+    setShowEditNewPassword(false);
+    setPasswordFieldErrors({});
   }
 
   function confirmDiscardEditChanges() {
@@ -2001,11 +2017,24 @@ if (editRole === "categoryAdmin") {
 setUpdatingId(user.id);
 
     try {
+      const cleanedEditEmail = editEmail.trim().toLowerCase();
+      const emailChanged = cleanedEditEmail !== (user.email || "").toLowerCase();
+
+      // Email lives in both Firebase Auth (the actual login credential) and
+      // the Firestore user doc. Writing it with a plain updateDoc would only
+      // change what Firestore displays while the user keeps logging in with
+      // their old email - so email changes go through a Cloud Function that
+      // updates Auth first and only then mirrors it into Firestore.
+      if (emailChanged) {
+        const updateUserEmail = httpsCallable(functions, "updateUserEmail");
+
+        await updateUserEmail({ uid: user.id, email: cleanedEditEmail });
+      }
+
       const userRef = doc(db, "users", user.id);
 
       await updateDoc(userRef, {
         fullName: editFullName.trim(),
-        email: editEmail.trim().toLowerCase(),
         role: editRole,
         assignedCategories:
           editRole === "categoryAdmin"
@@ -2026,6 +2055,55 @@ setUpdatingId(user.id);
       setUpdatingId("");
     }
   }
+
+function validateEditPasswordForm() {
+  const errors = {};
+
+  if (!editNewPassword) {
+    errors.editNewPassword = "New password is required.";
+  } else if (editNewPassword.length < 6) {
+    errors.editNewPassword = "Password must be at least 6 characters.";
+  }
+
+  if (editNewPassword && editConfirmPassword !== editNewPassword) {
+    errors.editConfirmPassword = "Passwords do not match.";
+  }
+
+  setPasswordFieldErrors(errors);
+
+  return Object.keys(errors).length === 0;
+}
+
+async function handleSetUserPassword(user) {
+  if (!validateEditPasswordForm()) {
+    return;
+  }
+
+  openConfirmAction({
+    title: "Set New Password?",
+    message: `Set a new password for ${user.fullName || user.email}? They will be asked to change it after logging in.`,
+    confirmText: "Set Password",
+    onConfirm: async () => {
+      setSettingPasswordId(user.id);
+
+      try {
+        const updateUserPassword = httpsCallable(functions, "updateUserPassword");
+
+        await updateUserPassword({ uid: user.id, password: editNewPassword });
+
+        showToast("Password updated successfully", "success");
+        setEditNewPassword("");
+        setEditConfirmPassword("");
+        setShowEditNewPassword(false);
+        setPasswordFieldErrors({});
+      } catch (error) {
+        showActionError("Failed to update password", error);
+      } finally {
+        setSettingPasswordId("");
+      }
+    },
+  });
+}
 
 async function handleToggleAccountStatus(user) {
   if (user.role === "superAdmin") {
@@ -4121,13 +4199,14 @@ onClick={confirmDiscardEditChanges}
                   {getRoleLabel(editingUser.role)}
                 </strong>
 
-                <span>{editingUser.email || "No email"}</span>
+                <span title={editingUser.email || ""}>{editingUser.email || "No email"}</span>
               </div>
 
              <div
   className="user-edit-panel user-edit-panel-modal"
   onChange={markEditChanged}
 >
+                <div className="user-edit-name-email-row">
                 <div className="user-field">
                   <label className="qb-label" htmlFor="edit-full-name">
                     Full Name <span className="required-star">*</span>
@@ -4182,8 +4261,9 @@ onClick={confirmDiscardEditChanges}
                     onChange={(e) => {
                       setEditEmail(e.target.value);
                       clearEditFieldError("editEmail");
+                      markEditChanged();
                     }}
-                    disabled={true}
+                    disabled={updatingId === editingUser.id}
                   />
 
                   {editFieldErrors.editEmail && (
@@ -4191,6 +4271,7 @@ onClick={confirmDiscardEditChanges}
                       {editFieldErrors.editEmail}
                     </p>
                   )}
+                </div>
                 </div>
 
                 <div className="user-field">
@@ -4486,6 +4567,101 @@ onClick={confirmDiscardEditChanges}
                     )}
                   </div>
                 )}
+              </div>
+
+              <div className="user-edit-panel user-edit-password-panel">
+                <div className="user-edit-password-panel-header">
+                  <strong>Set New Password</strong>
+                  <span>Optional — leave blank to keep the current password</span>
+                </div>
+
+                <div className="user-edit-password-fields">
+                  <div className="user-field">
+                    <label className="qb-label" htmlFor="edit-new-password">
+                      New Password
+                    </label>
+
+                    <div className="user-password-field-wrapper">
+                      <input
+                        id="edit-new-password"
+                        type={showEditNewPassword ? "text" : "password"}
+                        className={passwordFieldErrors.editNewPassword ? "input-error" : ""}
+                        placeholder="New password"
+                        value={editNewPassword}
+                        autoComplete="new-password"
+                        onFocus={() =>
+                          setPasswordFieldErrors((previousErrors) => {
+                            const nextErrors = { ...previousErrors };
+                            delete nextErrors.editNewPassword;
+                            return nextErrors;
+                          })
+                        }
+                        onChange={(e) => setEditNewPassword(e.target.value)}
+                        disabled={settingPasswordId === editingUser.id}
+                      />
+
+                      <button
+                        type="button"
+                        className="user-password-toggle-btn"
+                        onClick={() => setShowEditNewPassword((previous) => !previous)}
+                        disabled={settingPasswordId === editingUser.id}
+                      >
+                        {showEditNewPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
+
+                    {passwordFieldErrors.editNewPassword && (
+                      <p className="field-error-message">
+                        {passwordFieldErrors.editNewPassword}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="user-field">
+                    <label className="qb-label" htmlFor="edit-confirm-password">
+                      Confirm Password
+                    </label>
+
+                    <input
+                      id="edit-confirm-password"
+                      type={showEditNewPassword ? "text" : "password"}
+                      className={passwordFieldErrors.editConfirmPassword ? "input-error" : ""}
+                      placeholder="Re-enter password"
+                      value={editConfirmPassword}
+                      autoComplete="new-password"
+                      onFocus={() =>
+                        setPasswordFieldErrors((previousErrors) => {
+                          const nextErrors = { ...previousErrors };
+                          delete nextErrors.editConfirmPassword;
+                          return nextErrors;
+                        })
+                      }
+                      onChange={(e) => setEditConfirmPassword(e.target.value)}
+                      disabled={settingPasswordId === editingUser.id}
+                    />
+
+                    {passwordFieldErrors.editConfirmPassword && (
+                      <p className="field-error-message">
+                        {passwordFieldErrors.editConfirmPassword}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="user-view-actions">
+                  <button
+                    type="button"
+                    className="user-secondary-btn"
+                    onClick={() => handleSetUserPassword(editingUser)}
+                    disabled={
+                      settingPasswordId === editingUser.id || !editNewPassword
+                    }
+                  >
+                    {settingPasswordId === editingUser.id
+                      ? "Setting Password..."
+                      : "Set Password"}
+                  </button>
+                </div>
               </div>
 
               <div className="user-view-actions user-edit-modal-actions">

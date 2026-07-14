@@ -521,6 +521,23 @@
   box-shadow: 3px 3px 0 rgba(239, 68, 68, 0.25);
 }
 
+.user-edit-password-panel {
+  margin-top: 4px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.user-edit-password-hint {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 /* =========================
    Tools / Filters
 ========================= */
@@ -11450,14 +11467,18 @@ html[data-theme="dark"] .user-management-page select option:disabled {
   overflow: visible !important;
 }
 
-/* Minimal reserved space for sticky footer */
+/* Minimal reserved space for sticky footer.
+   (Kept small — the sticky action bar reserves its own space via its
+   own margin/padding, so this no longer needs to be large. A large
+   value here just pushed the Set New Password card far down,
+   creating a big empty gap above it.) */
 .user-edit-modal .user-edit-panel-modal {
-  padding-bottom: 56px !important;
+  padding-bottom: 8px !important;
 }
 
 @media (max-width: 620px) {
   .user-edit-modal .user-edit-panel-modal {
-    padding-bottom: 20  px !important;
+    padding-bottom: 12px !important;
   }
 }
 /* =========================================================
@@ -11981,4 +12002,149 @@ body .app-page-content .user-management-page
   z-index: 2;
   background: transparent;
   margin-top: 8px;
+}
+
+/* =========================================================
+   FIX: Edit User modal — long email overflowing the role pill
+   + more compact, professional layout now that the Set New
+   Password card lives in the same modal.
+   This block is intentionally last so it wins over the older
+   "force pills to same size" rule further up the file, which
+   applied a hard max-width + nowrap to the email text with no
+   truncation, so long emails rendered past their pill and on
+   top of the role badge next to it.
+========================================================= */
+
+/* The role badge (BORROWER / MINI ADMIN / SUPER ADMIN) keeps its
+   fixed pill sizing. The email next to it gets its own rule so it
+   can shrink to fit the row and truncate cleanly instead of
+   overflowing on top of the role badge. */
+.user-view-modal .user-view-role-row span:not(.user-borrowing-status-text),
+.user-edit-modal .user-view-role-row span:not(.user-borrowing-status-text) {
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: 1 1 240px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  justify-content: flex-start !important;
+}
+
+@media (max-width: 620px) {
+  .user-view-modal .user-view-role-row span:not(.user-borrowing-status-text),
+  .user-edit-modal .user-view-role-row span:not(.user-borrowing-status-text) {
+    flex-basis: 100% !important;
+  }
+}
+
+/* Full Name + Email side by side to save vertical space now that
+   there's a password card further down the modal. */
+.user-edit-modal .user-edit-name-email-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 620px) {
+  .user-edit-modal .user-edit-name-email-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tighten the overall panel rhythm a little now that it holds
+   more content (name/email row, role, borrower details, and the
+   password card). */
+.user-edit-modal .user-edit-panel-modal {
+  gap: 8px !important;
+}
+
+.user-edit-modal .user-section-heading {
+  margin: 0 0 8px !important;
+}
+
+.user-edit-modal .user-view-role-row {
+  margin: 0 0 10px !important;
+}
+
+/* Set New Password card — swap the dashed placeholder look for a
+   compact, professional card that matches the rest of the modal. */
+.user-edit-modal .user-edit-password-panel {
+  margin: 4px 0 0 !important;
+  padding: 12px 14px !important;
+  border: 1.5px solid #dbe4f3 !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+}
+
+.user-edit-modal .user-edit-password-panel-header {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 0 0 10px !important;
+}
+
+/* Remove the black rectangle outline around the Full Name / Email row
+   and around the Set New Password header. */
+.user-edit-modal .user-edit-name-email-row,
+.user-edit-modal .user-edit-password-panel-header,
+.user-edit-modal .user-edit-password-panel-header * {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.user-edit-modal .user-edit-password-panel-header strong {
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  color: var(--qb-foreground, #172033) !important;
+}
+
+.user-edit-modal .user-edit-password-panel-header span {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+}
+
+.user-edit-modal .user-edit-password-fields {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.user-edit-modal .user-edit-password-panel .user-field {
+  margin-bottom: 0 !important;
+}
+
+.user-edit-modal .user-edit-password-panel .user-view-actions {
+  margin-top: 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  justify-content: flex-end !important;
+}
+
+.user-edit-modal .user-edit-password-panel .user-secondary-btn {
+  min-width: 150px !important;
+  min-height: 38px !important;
+  font-size: 0.72rem !important;
+}
+
+@media (max-width: 620px) {
+  .user-edit-modal .user-edit-password-fields {
+    grid-template-columns: 1fr !important;
+  }
+
+  .user-edit-modal .user-edit-password-panel .user-secondary-btn {
+    width: 100% !important;
+  }
+}
+
+html[data-theme="dark"] .user-edit-modal .user-edit-password-panel {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: rgba(148, 163, 184, 0.08) !important;
+}
+
+html[data-theme="dark"] .user-edit-modal .user-edit-password-panel-header strong {
+  color: #f8fafc !important;
 }

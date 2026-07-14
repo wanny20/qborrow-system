@@ -38,6 +38,7 @@ function Settings() {
   const [photoPreview, setPhotoPreview] = useState("");
   const [croppedPhotoBlob, setCroppedPhotoBlob] = useState(null);
   const [croppedPhotoSize, setCroppedPhotoSize] = useState(0);
+  const [photoFileName, setPhotoFileName] = useState("");
   const [cropSourceFile, setCropSourceFile] = useState(null);
 
   const [passwordCurrent, setPasswordCurrent] = useState("");
@@ -966,6 +967,7 @@ async function handleUpdateSystemSuspensionStatus(nextSuspended) {
       return;
     }
 
+    setPhotoFileName(file.name);
     setCropSourceFile(file);
   }
 
@@ -1088,6 +1090,7 @@ async function handleUpdateSystemSuspensionStatus(nextSuspended) {
       setMobileNumber(getBorrowerMobileNumber(updatedUserData));
       setCroppedPhotoBlob(null);
       setCroppedPhotoSize(0);
+      setPhotoFileName("");
       setProfileFieldErrors({});
       setProfileTouched(false);
       setPendingProfileChanges([]);
@@ -1405,15 +1408,25 @@ async function handleUpdateSystemSuspensionStatus(nextSuspended) {
                 Profile Picture
               </label>
 
-              <input
-                id="profile-photo"
-                type="file"
-                className={profileFieldErrors.profilePhoto ? "input-error" : ""}
-                accept="image/*"
-                onFocus={() => clearProfileFieldError("profilePhoto")}
-                onChange={handlePhotoChange}
-                disabled={savingProfile}
-              />
+              <div
+                className={`qb-file-input${
+                  profileFieldErrors.profilePhoto ? " input-error" : ""
+                }${savingProfile ? " qb-file-input-disabled" : ""}`}
+              >
+                <input
+                  id="profile-photo"
+                  type="file"
+                  accept="image/*"
+                  onFocus={() => clearProfileFieldError("profilePhoto")}
+                  onChange={handlePhotoChange}
+                  disabled={savingProfile}
+                  className="qb-file-input-native"
+                />
+                <span className="qb-file-input-button">Choose File</span>
+                <span className="qb-file-input-name">
+                  {photoFileName || "No file chosen"}
+                </span>
+              </div>
 
               {profileFieldErrors.profilePhoto && (
                 <p className="field-error-message">{profileFieldErrors.profilePhoto}</p>

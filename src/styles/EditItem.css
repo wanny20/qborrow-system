@@ -174,17 +174,62 @@
   overflow-wrap: anywhere;
 }
 
-/* Status / empty */
+/* Status / empty (floating popup toast) */
 
 .edit-item-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
   border: 1px solid var(--edit-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--edit-surface);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.07);
-  padding: 12px 14px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+  padding: 14px 40px 14px 16px;
   font-size: 0.82rem;
   font-weight: 850;
   line-height: 1.45;
+  animation: edit-item-toast-in 0.28s ease-out;
+}
+
+@keyframes edit-item-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.edit-item-status-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.edit-item-status-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 4px;
+}
+
+.edit-item-status-close:hover {
+  opacity: 1;
 }
 
 .edit-item-status-success {
@@ -197,6 +242,15 @@
   border-color: rgba(239, 68, 68, 0.26);
   background: #fef2f2;
   color: #991b1b;
+}
+
+@media (max-width: 440px) {
+  .edit-item-status {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
 }
 
 .edit-item-empty {
@@ -323,9 +377,69 @@
   line-height: 1.45;
 }
 
-.edit-item-field input[type="file"] {
-  height: auto;
-  padding: 10px 12px;
+/* Custom file input: shows "Choose File" + the selected file name
+   (or "No file chosen") instead of relying on the browser's native
+   label, which loses sync with the actual selection once the file
+   goes through the crop step. */
+.qb-file-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border: 1px solid var(--edit-border);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: var(--edit-surface);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.qb-file-input-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.qb-file-input-button {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--edit-blue-strong);
+  font-size: 0.7rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.qb-file-input-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--edit-muted);
+  pointer-events: none;
+}
+
+.qb-file-input-disabled {
+  opacity: 0.76;
+  cursor: not-allowed;
+}
+
+.qb-file-input-disabled .qb-file-input-native {
+  cursor: not-allowed;
+}
+
+.qb-file-input:focus-within {
+  border-color: var(--edit-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .edit-item-field select {
@@ -499,7 +613,7 @@
 
 .edit-item-preview-media {
   width: 100%;
-  height: 230px;
+  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -726,7 +840,7 @@
   }
 
   .edit-item-preview-media {
-    height: 205px;
+    aspect-ratio: 1 / 1;
     border-radius: 18px;
   }
 
@@ -744,7 +858,7 @@
   }
 
   .edit-item-preview-media {
-    height: 185px;
+    aspect-ratio: 1 / 1;
   }
 }
 
@@ -880,9 +994,13 @@ html[data-theme="dark"] .edit-item-fixed-category-card {
     line-height: 1.35 !important;
   }
 
-  .edit-item-field input[type="file"] {
-    min-height: auto !important;
-    padding: 8px 10px !important;
+  .qb-file-input {
+    min-height: 40px !important;
+    padding: 0 10px !important;
+  }
+
+  .qb-file-input-name {
+    font-size: 0.68rem !important;
   }
 
   .edit-item-field p {
@@ -924,7 +1042,8 @@ html[data-theme="dark"] .edit-item-fixed-category-card {
 
 /* Preview compact sizing */
 .edit-item-preview-media {
-  height: 205px !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
   border: 1.5px solid rgba(30, 41, 59, 0.26) !important;
   box-shadow: none !important;
 }
@@ -1122,9 +1241,13 @@ html[data-theme="dark"] .edit-item-preview-media {
     padding: 10px 11px !important;
   }
 
-  .edit-item-field input[type="file"] {
+  .qb-file-input {
     min-height: 38px !important;
-    padding: 7px 10px !important;
+    padding: 0 10px !important;
+  }
+
+  .qb-file-input-name {
+    font-size: 0.66rem !important;
   }
 
   .edit-item-field p {
@@ -1157,7 +1280,8 @@ html[data-theme="dark"] .edit-item-preview-media {
 
   /* Preview compact but still readable */
   .edit-item-preview-media {
-    height: 195px !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
     border-radius: 20px !important;
   }
 
