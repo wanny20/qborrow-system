@@ -1078,7 +1078,7 @@ async function handleDeleteItem(item) {
     return "unknown";
   }
 
-  const totalItems = filteredItems.length;
+  const totalItems = roleVisibleItems.length;
 
   const availableItems = filteredItems.filter(
     (item) => item.availability === "Available"
@@ -1181,13 +1181,10 @@ return (
           >
             <option value="All">All Availability</option>
             <option value="Available">Available</option>
-            {!isBorrower && <option value="Reserved">Reserved</option>}
-            {!isBorrower && <option value="Borrowed">Borrowed</option>}
-            {!isBorrower && <option value="Under Maintenance">Under Maintenance</option>}
-            {!isBorrower && <option value="Unavailable">Unavailable</option>}
-            {!isBorrower && <option value="Damaged">Damaged</option>}
-            {!isBorrower && <option value="Lost">Lost</option>}
-            {!isBorrower && <option value="DamagedLost">Damaged/Lost</option>}
+            <option value="Borrowed">Borrowed</option>
+            {isAdmin && <option value="Reserved">Reserved</option>}
+            {isAdmin && <option value="Under Maintenance">Under Maintenance</option>}
+            {isAdmin && <option value="DamagedLost">Damaged/Lost</option>}
           </select>
         </div>
 
@@ -1225,7 +1222,7 @@ return (
         <div>
           <span className="inventory-summary-icon">Σ</span>
           <h3>{totalItems}</h3>
-          <p>{isBorrower ? "Borrowable Items" : "Visible Items"}</p>
+          <p>Total Items</p>
         </div>
 
         <div>

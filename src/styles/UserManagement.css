@@ -462,6 +462,44 @@
   opacity: 0.72;
 }
 
+.user-password-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.user-password-field-wrapper input {
+  padding-right: 42px !important;
+}
+
+.user-password-toggle-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.user-password-toggle-btn:hover {
+  color: var(--qb-foreground);
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.user-password-toggle-btn:focus-visible {
+  outline: 2px solid var(--qb-accent);
+  outline-offset: 2px;
+}
+
 .required-star {
   margin-left: 4px;
   color: #dc2626;
@@ -4136,8 +4174,8 @@ html[data-theme="dark"] .user-edit-modal select {
 
 @media (max-width: 620px) {
   .user-view-modal.user-edit-modal {
-    width: calc(100vw - 22px) !important;
-    max-height: calc(100dvh - 22px) !important;
+    width: calc(100vw - 36px) !important;
+    max-height: calc(100dvh - 36px) !important;
     padding: 16px !important;
   }
 
