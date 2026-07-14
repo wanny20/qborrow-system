@@ -28,6 +28,19 @@ const USERS_PAGE_SIZE = 5;
 const USER_TYPES = ["Student", "Faculty", "Staff"];
 const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
 
+const CATEGORY_NAME_MAX_LENGTH = 50;
+// Letters and spaces only - no numbers, no symbols/punctuation, no emoji.
+const CATEGORY_NAME_ALLOWED_PATTERN = /^[A-Za-z ]+$/;
+// Broad emoji / pictograph detection so a clearer message can be shown
+// instead of falling through to the generic "symbol" error.
+const EMOJI_PATTERN =
+  /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\uFE0F]/u;
+// Requests still "in flight" - renaming a category while one of these is
+// open could make the request look wrong mid-transaction to the borrower
+// or the approving admin. Returned/Rejected/Cancelled/Expired are done
+// and safe to leave untouched.
+const ACTIVE_REQUEST_STATUSES = ["Pending", "Approved", "Borrowed"];
+
 function UserManagement() {
 const navigate = useNavigate();
 const outletContext = useOutletContext() || {};
@@ -83,6 +96,11 @@ const createUserSubmitLockRef = useRef(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCategoryList, setShowCategoryList] = useState(false);
   const [activeUserTool, setActiveUserTool] = useState("");
+
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [categoryEditFieldErrors, setCategoryEditFieldErrors] = useState({});
+  const [savingCategoryEdit, setSavingCategoryEdit] = useState(false);
 
   const [csvFileName, setCsvFileName] = useState("");
   const [csvBorrowers, setCsvBorrowers] = useState([]);
@@ -333,8 +351,10 @@ function validateCategoryField(fieldName) {
     const nextErrors = { ...previousErrors };
 
     if (fieldName === "newCategoryName") {
-      if (!newCategoryName.trim()) {
-        nextErrors.newCategoryName = "Category name is required.";
+      const error = getCategoryNameError(newCategoryName);
+
+      if (error) {
+        nextErrors.newCategoryName = error;
       } else {
         delete nextErrors.newCategoryName;
       }
@@ -601,15 +621,136 @@ if (fullNameError) {
 
 
 function validateAddCategoryForm() {
-  const errors = {};
+  const error = getCategoryNameError(newCategoryName);
 
-  if (!newCategoryName.trim()) {
-    errors.newCategoryName = "Category name is required.";
+  setCategoryFieldErrors(error ? { newCategoryName: error } : {});
+
+  return !error;
+}
+
+// Shared rule check for both adding and renaming a category.
+// excludeCategoryId lets the currently-edited category skip the
+// "duplicate name" check against itself.
+function getCategoryNameError(rawName, excludeCategoryId) {
+  const trimmedName = String(rawName || "").trim();
+
+  if (!trimmedName) {
+    return "Category name is required.";
   }
 
-  setCategoryFieldErrors(errors);
+  if (trimmedName.length > CATEGORY_NAME_MAX_LENGTH) {
+    return `Category name must be ${CATEGORY_NAME_MAX_LENGTH} characters or fewer.`;
+  }
 
-  return Object.keys(errors).length === 0;
+  if (EMOJI_PATTERN.test(trimmedName)) {
+    return "Emoji are not allowed in category names.";
+  }
+
+  if (!CATEGORY_NAME_ALLOWED_PATTERN.test(trimmedName)) {
+    return "Only letters and spaces are allowed (no numbers or symbols).";
+  }
+
+  const isDuplicate = categories.some(
+    (category) =>
+      category.id !== excludeCategoryId &&
+      normalizeText(category.name) === normalizeText(trimmedName)
+  );
+
+  if (isDuplicate) {
+    return "A category with this name already exists.";
+  }
+
+  return "";
+}
+
+function clearCategoryEditFieldError(fieldName) {
+  setCategoryEditFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    [fieldName]: "",
+  }));
+}
+
+function validateCategoryEditField() {
+  const error = getCategoryNameError(editCategoryName, editingCategory?.id);
+
+  setCategoryEditFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    editCategoryName: error,
+  }));
+
+  return error;
+}
+
+function validateEditCategoryForm() {
+  const error = getCategoryNameError(editCategoryName, editingCategory?.id);
+
+  setCategoryEditFieldErrors(error ? { editCategoryName: error } : {});
+
+  return !error;
+}
+
+function startEditingCategory(category) {
+  const usage = getCategoryUsage(category.id);
+
+  if (!usage.canEditName) return;
+
+  setEditingCategory(category);
+  setEditCategoryName(category.name || "");
+  setCategoryEditFieldErrors({});
+}
+
+function cancelEditingCategory() {
+  if (savingCategoryEdit) return;
+
+  setEditingCategory(null);
+  setEditCategoryName("");
+  setCategoryEditFieldErrors({});
+}
+
+async function handleUpdateCategoryName(event) {
+  event.preventDefault();
+
+  if (!editingCategory) return;
+
+  const usage = getCategoryUsage(editingCategory.id);
+
+  if (!usage.canEditName) {
+    showBlockedAction(
+      "This category now has an active borrow request. Try again once it's resolved."
+    );
+    cancelEditingCategory();
+    return;
+  }
+
+  const isValid = validateEditCategoryForm();
+
+  if (!isValid) return;
+
+  const trimmedName = editCategoryName.trim();
+
+  if (trimmedName === editingCategory.name) {
+    cancelEditingCategory();
+    return;
+  }
+
+  setSavingCategoryEdit(true);
+  showStatus("", "");
+
+  try {
+    await updateDoc(doc(db, "categories", editingCategory.id), {
+      name: trimmedName,
+    });
+
+    showToast("Category Updated", "success");
+    setEditingCategory(null);
+    setEditCategoryName("");
+    setCategoryEditFieldErrors({});
+    fetchData();
+  } catch (error) {
+    showActionError("Failed to update category", error);
+  } finally {
+    setSavingCategoryEdit(false);
+  }
 }
 
 function validateCsvImportForm() {
@@ -1526,7 +1667,21 @@ async function handleAddCategory(event) {
       fetchData();
 
     } catch (error) {
-      showActionError("Failed to add category", error);
+      const backendMessage = String(error?.message || "");
+      const isDuplicateName =
+        error?.code === "already-exists" ||
+        /already exists/i.test(backendMessage) ||
+        /duplicate/i.test(backendMessage);
+
+      if (isDuplicateName) {
+        // Specific, friendly toast only - no inline page banner for this case.
+        showToast("You already have a category with this name.", "error");
+        setCategoryFieldErrors({
+          newCategoryName: "A category with this name already exists.",
+        });
+      } else {
+        showActionError("Failed to add category", error);
+      }
     } finally {
       setCategoryAction("");
     }
@@ -2295,11 +2450,24 @@ fetchData();
       return requestCategory === normalizedCategoryId;
     }).length;
 
+    const activeRequestCount = borrowRequests.filter((request) => {
+      const requestCategory = normalizeText(
+        request.categoryId || request.category
+      );
+
+      return (
+        requestCategory === normalizedCategoryId &&
+        ACTIVE_REQUEST_STATUSES.includes(request.approvalStatus)
+      );
+    }).length;
+
     return {
       itemCount,
       adminCount,
       requestCount,
+      activeRequestCount,
       canDelete: itemCount === 0 && adminCount === 0 && requestCount === 0,
+      canEditName: activeRequestCount === 0,
     };
   }
 
@@ -2950,6 +3118,7 @@ onChange={(e) => {
     className={categoryFieldErrors.newCategoryName ? "input-error" : ""}
     placeholder="Example: Audio Visual Items"
     value={newCategoryName}
+    maxLength={CATEGORY_NAME_MAX_LENGTH}
     onFocus={() => clearCategoryFieldError("newCategoryName")}
     onBlur={() => validateCategoryField("newCategoryName")}
     onChange={(event) => {
@@ -2958,6 +3127,10 @@ onChange={(e) => {
     }}
     disabled={categoryAction === "add"}
   />
+
+  <p className="user-small-note user-category-char-count">
+    {newCategoryName.trim().length}/{CATEGORY_NAME_MAX_LENGTH} characters
+  </p>
 
   {categoryFieldErrors.newCategoryName && (
     <p className="field-error-message">
@@ -3033,21 +3206,38 @@ onChange={(e) => {
                 </td>
 
                 <td>
-                  <button
-                    type="button"
-                    className={
-                      usage.canDelete
-                        ? "user-danger-btn"
-                        : "user-secondary-btn"
-                    }
-                    onClick={() => handleDeleteCategory(category)}
-                    disabled={
-                      !usage.canDelete ||
-                      categoryAction === category.id
-                    }
-                  >
-                    {categoryAction === category.id ? "Deleting..." : "Delete"}
-                  </button>
+                  <div className="user-category-action-cell">
+                    <button
+                      type="button"
+                      className={
+                        usage.canEditName
+                          ? "user-edit-category-btn"
+                          : "user-edit-category-btn user-edit-category-locked"
+                      }
+                      onClick={() =>
+                        usage.canEditName && startEditingCategory(category)
+                      }
+                      disabled={!usage.canEditName || Boolean(categoryAction)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        usage.canDelete
+                          ? "user-danger-btn"
+                          : "user-secondary-btn"
+                      }
+                      onClick={() => handleDeleteCategory(category)}
+                      disabled={
+                        !usage.canDelete ||
+                        categoryAction === category.id
+                      }
+                    >
+                      {categoryAction === category.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
@@ -3055,6 +3245,87 @@ onChange={(e) => {
         </tbody>
       </table>
     )}
+  </div>
+)}
+
+{editingCategory && (
+  <div
+    className="user-view-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Edit category name"
+  >
+    <section className="user-edit-modal user-edit-category-modal">
+      <button
+        type="button"
+        className="user-modal-close-btn user-modal-close-x"
+        onClick={cancelEditingCategory}
+        disabled={savingCategoryEdit}
+        aria-label="Close edit category"
+      >
+        ×
+      </button>
+
+      <div className="user-section-heading">
+        <h2>Edit Category Name</h2>
+        <p>Rename this category. Item counts, admins, and requests stay the same.</p>
+      </div>
+
+      <form onSubmit={handleUpdateCategoryName} noValidate>
+        <div className="user-field">
+          <label className="qb-label" htmlFor="edit-category-name">
+            Category Name <span className="required-star">*</span>
+          </label>
+
+          <input
+            id="edit-category-name"
+            type="text"
+            className={
+              categoryEditFieldErrors.editCategoryName ? "input-error" : ""
+            }
+            value={editCategoryName}
+            maxLength={CATEGORY_NAME_MAX_LENGTH}
+            onFocus={() => clearCategoryEditFieldError("editCategoryName")}
+            onBlur={validateCategoryEditField}
+            onChange={(event) => {
+              setEditCategoryName(event.target.value);
+              clearCategoryEditFieldError("editCategoryName");
+            }}
+            disabled={savingCategoryEdit}
+            autoFocus
+          />
+
+          <p className="user-small-note user-category-char-count">
+            {editCategoryName.trim().length}/{CATEGORY_NAME_MAX_LENGTH} characters
+          </p>
+
+          {categoryEditFieldErrors.editCategoryName && (
+            <p className="field-error-message">
+              {categoryEditFieldErrors.editCategoryName}
+            </p>
+          )}
+        </div>
+
+        <div className="user-view-actions user-edit-modal-actions">
+          <button
+            type="button"
+            className="user-secondary-btn"
+            onClick={cancelEditingCategory}
+            disabled={savingCategoryEdit}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="user-primary-btn"
+            disabled={savingCategoryEdit}
+          >
+            {savingCategoryEdit ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
+    </section>
   </div>
 )}
           </section>
