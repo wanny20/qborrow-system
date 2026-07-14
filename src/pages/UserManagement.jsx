@@ -31,6 +31,16 @@ const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
 const CATEGORY_NAME_MAX_LENGTH = 50;
 // Letters and spaces only - no numbers, no symbols/punctuation, no emoji.
 const CATEGORY_NAME_ALLOWED_PATTERN = /^[A-Za-z ]+$/;
+
+// Edit User modal field limits - Full Name: 50 chars, letters/spaces only.
+const EDIT_FULL_NAME_MAX_LENGTH = 50;
+const EDIT_FULL_NAME_ALLOWED_PATTERN = /^[\p{L}][\p{L}\s]*$/u;
+// Edit User modal field limits - Student Number: 20 digits only, no letters/symbols.
+const STUDENT_NUMBER_MAX_LENGTH = 20;
+const STUDENT_NUMBER_ALLOWED_PATTERN = /^[0-9]*$/;
+// Edit User modal field limits - Section: 50 chars, letters/numbers/spaces, no symbols.
+const SECTION_MAX_LENGTH = 50;
+const SECTION_ALLOWED_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N}\s]*$/u;
 // Broad emoji / pictograph detection so a clearer message can be shown
 // instead of falling through to the generic "symbol" error.
 const EMOJI_PATTERN =
@@ -82,6 +92,7 @@ const createUserSubmitLockRef = useRef(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
   const [role, setRole] = useState("borrower");
   const [assignedCategories, setAssignedCategories] = useState([]);
 
@@ -108,6 +119,8 @@ const createUserSubmitLockRef = useRef(false);
 
   const [editingUserId, setEditingUserId] = useState("");
   const [viewingUser, setViewingUser] = useState(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("borrower");
   const [editAssignedCategories, setEditAssignedCategories] = useState([]);
 
@@ -395,6 +408,46 @@ function validateEditUserField(fieldName) {
   setEditFieldErrors((previousErrors) => {
     const nextErrors = { ...previousErrors };
 
+    if (fieldName === "editFullName") {
+      const editFullNameError = getEditFullNameError(editFullName);
+
+      if (editFullNameError) {
+        nextErrors.editFullName = editFullNameError;
+      } else {
+        delete nextErrors.editFullName;
+      }
+    }
+
+    if (fieldName === "editStudentNumber") {
+      const editStudentNumberError = getStudentNumberError(editStudentNumber);
+
+      if (editStudentNumberError) {
+        nextErrors.editStudentNumber = editStudentNumberError;
+      } else {
+        delete nextErrors.editStudentNumber;
+      }
+    }
+
+    if (fieldName === "editSection") {
+      const editSectionError = getSectionError(editSection);
+
+      if (editSectionError) {
+        nextErrors.editSection = editSectionError;
+      } else {
+        delete nextErrors.editSection;
+      }
+    }
+
+    if (fieldName === "editEmail") {
+      if (!editEmail.trim()) {
+        nextErrors.editEmail = "Email is required.";
+      } else if (!isValidEmail(editEmail)) {
+        nextErrors.editEmail = "Please enter a valid email address.";
+      } else {
+        delete nextErrors.editEmail;
+      }
+    }
+
     if (fieldName === "editRole") {
       if (!editRole) {
         nextErrors.editRole = "Role is required.";
@@ -448,6 +501,32 @@ function validateEditUserField(fieldName) {
 
 function validateEditUserForm() {
   const errors = {};
+
+  const editFullNameError = getEditFullNameError(editFullName);
+
+  if (editFullNameError) {
+    errors.editFullName = editFullNameError;
+  }
+
+  if (editRole === "borrower" && editUserType === "Student") {
+    const editStudentNumberError = getStudentNumberError(editStudentNumber);
+
+    if (editStudentNumberError) {
+      errors.editStudentNumber = editStudentNumberError;
+    }
+
+    const editSectionError = getSectionError(editSection);
+
+    if (editSectionError) {
+      errors.editSection = editSectionError;
+    }
+  }
+
+  if (!editEmail.trim()) {
+    errors.editEmail = "Email is required.";
+  } else if (!isValidEmail(editEmail)) {
+    errors.editEmail = "Please enter a valid email address.";
+  }
 
   if (!editRole) {
     errors.editRole = "Role is required.";
@@ -561,6 +640,27 @@ async function getCreateDuplicateError() {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+}
+
+async function getEditDuplicateError(userId) {
+  const cleanedEmail = editEmail.trim().toLowerCase();
+
+  if (cleanedEmail) {
+    const usersRef = collection(db, "users");
+    const emailSnapshot = await getDocs(
+      firestoreQuery(usersRef, where("email", "==", cleanedEmail), limit(1))
+    );
+
+    const emailTakenByAnotherUser = emailSnapshot.docs.some(
+      (docSnapshot) => docSnapshot.id !== userId
+    );
+
+    if (emailTakenByAnotherUser) {
+      return "This email is already registered. Please use a different email address.";
+    }
+  }
+
+  return "";
 }
 
 function validateCreateUserForm() {
@@ -1523,10 +1623,87 @@ function sanitizePersonNameInput(value) {
   return String(value || "").replace(/[^\p{L}\s.'-]/gu, "");
 }
 
+// --- Edit User modal field sanitizers/validators ---
+// These are intentionally separate from the Create User rules above so the
+// stricter Edit User limits (name: 50 chars/letters+spaces only, student
+// number: digits only, section: no symbols) don't change behavior anywhere
+// else in the system.
+
+function sanitizeEditFullNameInput(value) {
+  return String(value || "")
+    .replace(/[^\p{L}\s-]/gu, "")
+    .slice(0, EDIT_FULL_NAME_MAX_LENGTH);
+}
+
+function getEditFullNameError(value) {
+  const cleanedValue = String(value || "").trim();
+
+  if (!cleanedValue) {
+    return "Full name is required.";
+  }
+
+  if (cleanedValue.length > EDIT_FULL_NAME_MAX_LENGTH) {
+    return `Full name must be ${EDIT_FULL_NAME_MAX_LENGTH} characters or fewer.`;
+  }
+
+  if (!EDIT_FULL_NAME_ALLOWED_PATTERN.test(cleanedValue)) {
+    return "Full name can only contain letters and spaces (no numbers or symbols).";
+  }
+
+  return "";
+}
+
+function sanitizeStudentNumberInput(value) {
+  return String(value || "")
+    .replace(/[^0-9]/g, "")
+    .slice(0, STUDENT_NUMBER_MAX_LENGTH);
+}
+
+function getStudentNumberError(value) {
+  const cleanedValue = String(value || "").trim();
+
+  // Student number is optional - only validate format when something was entered.
+  if (!cleanedValue) return "";
+
+  if (!STUDENT_NUMBER_ALLOWED_PATTERN.test(cleanedValue)) {
+    return "Student number can only contain numbers.";
+  }
+
+  if (cleanedValue.length > STUDENT_NUMBER_MAX_LENGTH) {
+    return `Student number must be ${STUDENT_NUMBER_MAX_LENGTH} digits or fewer.`;
+  }
+
+  return "";
+}
+
+function sanitizeSectionInput(value) {
+  return String(value || "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .slice(0, SECTION_MAX_LENGTH);
+}
+
+function getSectionError(value) {
+  const cleanedValue = String(value || "").trim();
+
+  // Section is optional - only validate format when something was entered.
+  if (!cleanedValue) return "";
+
+  if (cleanedValue.length > SECTION_MAX_LENGTH) {
+    return `Section must be ${SECTION_MAX_LENGTH} characters or fewer.`;
+  }
+
+  if (!SECTION_ALLOWED_PATTERN.test(cleanedValue)) {
+    return "Section can only contain letters, numbers, and spaces (no symbols).";
+  }
+
+  return "";
+}
+
 function resetCreateForm() {
   setFullName("");
   setEmail("");
   setTemporaryPassword("");
+  setShowTemporaryPassword(false);
   setRole("borrower");
   setAssignedCategories([]);
   setCreateFieldErrors({});
@@ -1543,7 +1720,6 @@ async function handleCreateUser(e) {
 
   createUserSubmitLockRef.current = true;
   setCreating(true);
-  showStatus("", "");
 
   try {
     const isValid = validateCreateUserForm();
@@ -1555,7 +1731,7 @@ async function handleCreateUser(e) {
     const duplicateError = await getCreateDuplicateError();
 
     if (duplicateError) {
-      showStatus(duplicateError, "error");
+      showToast(duplicateError, "error");
       return;
     }
 
@@ -1595,7 +1771,7 @@ async function handleCreateUser(e) {
     await fetchData();
   } catch (error) {
     if (error.code === "auth/email-already-in-use") {
-      showStatus(
+      showToast(
         "This email is already registered. Please use a different email address.",
         "error"
       );
@@ -1608,7 +1784,12 @@ async function handleCreateUser(e) {
       return;
     }
 
-    showActionError("Failed to create user", error);
+    const shortMessage = "Failed to create user";
+    const detailedMessage = error?.message
+      ? `${shortMessage}: ${error.message}`
+      : shortMessage;
+
+    showToast(detailedMessage, "error");
   } finally {
     createUserSubmitLockRef.current = false;
     setCreating(false);
@@ -1728,6 +1909,8 @@ async function handleDeleteCategory(category) {
     setEditTouched(false);
     setEditFieldErrors({});
     setEditingUserId(user.id);
+    setEditFullName(user.fullName || "");
+    setEditEmail(user.email || "");
     setEditRole(user.role || "borrower");
     setEditAssignedCategories(
       Array.isArray(user.assignedCategories)
@@ -1747,6 +1930,8 @@ async function handleDeleteCategory(category) {
   function cancelEditingUser() {
     setEditFieldErrors({});
     setEditingUserId("");
+    setEditFullName("");
+    setEditEmail("");
     setEditRole("borrower");
     setEditAssignedCategories([]);
 
@@ -1786,6 +1971,17 @@ if (!isValid) {
   return;
 }
 
+const emailConflict = await getEditDuplicateError(user.id);
+
+if (emailConflict) {
+  setEditFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    editEmail: emailConflict,
+  }));
+  showToast(emailConflict, "error");
+  return;
+}
+
 if (editRole === "categoryAdmin") {
   const categoryConflict = await getCategoryAssignmentConflictFromServer(
     editAssignedCategories[0],
@@ -1808,6 +2004,8 @@ setUpdatingId(user.id);
       const userRef = doc(db, "users", user.id);
 
       await updateDoc(userRef, {
+        fullName: editFullName.trim(),
+        email: editEmail.trim().toLowerCase(),
         role: editRole,
         assignedCategories:
           editRole === "categoryAdmin"
@@ -2790,20 +2988,65 @@ onChange={(e) => {
     Temporary Password <span className="required-star">*</span>
   </label>
 
-  <input
-    id="temporary-password"
-    type="password"
-    className={createFieldErrors.temporaryPassword ? "input-error" : ""}
-    placeholder="At least 6 characters"
-    value={temporaryPassword}
-    onFocus={() => clearCreateFieldError("temporaryPassword")}
-    onBlur={() => validateCreateField("temporaryPassword")}
-    onChange={(e) => {
-      setTemporaryPassword(e.target.value);
-      clearCreateFieldError("temporaryPassword");
-    }}
-    disabled={creating}
-  />
+  <div className="user-password-field-wrapper">
+    <input
+      id="temporary-password"
+      type={showTemporaryPassword ? "text" : "password"}
+      className={createFieldErrors.temporaryPassword ? "input-error" : ""}
+      placeholder="At least 6 characters"
+      value={temporaryPassword}
+      onFocus={() => clearCreateFieldError("temporaryPassword")}
+      onBlur={() => validateCreateField("temporaryPassword")}
+      onChange={(e) => {
+        setTemporaryPassword(e.target.value);
+        clearCreateFieldError("temporaryPassword");
+      }}
+      disabled={creating}
+    />
+
+    <button
+      type="button"
+      className="user-password-toggle-btn"
+      onClick={() => setShowTemporaryPassword((previous) => !previous)}
+      aria-label={
+        showTemporaryPassword ? "Hide temporary password" : "Show temporary password"
+      }
+      aria-pressed={showTemporaryPassword}
+      tabIndex={-1}
+    >
+      {showTemporaryPassword ? (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M3 3l18 18M10.58 10.58a2 2 0 002.83 2.83M9.88 5.09A9.77 9.77 0 0112 5c5 0 9 4 10 7-.4 1.15-1.13 2.34-2.12 3.42M6.53 6.53C4.4 8 2.9 9.94 2 12c1 3 5 7 10 7 1.28 0 2.5-.24 3.62-.68"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+        </svg>
+      )}
+    </button>
+  </div>
 
   {createFieldErrors.temporaryPassword && (
     <p className="field-error-message">
@@ -3886,6 +4129,71 @@ onClick={confirmDiscardEditChanges}
   onChange={markEditChanged}
 >
                 <div className="user-field">
+                  <label className="qb-label" htmlFor="edit-full-name">
+                    Full Name <span className="required-star">*</span>
+                  </label>
+
+                  <input
+                    id="edit-full-name"
+                    type="text"
+                    className={editFieldErrors.editFullName ? "input-error" : ""}
+                    placeholder="Example: Juan Dela Cruz"
+                    value={editFullName}
+                    maxLength={EDIT_FULL_NAME_MAX_LENGTH}
+                    onFocus={() => clearEditFieldError("editFullName")}
+                    onBlur={() => validateEditUserField("editFullName")}
+                    onChange={(e) => {
+                      const sanitizedName = sanitizeEditFullNameInput(e.target.value);
+
+                      setEditFullName(sanitizedName);
+                      clearEditFieldError("editFullName");
+
+                      if (sanitizedName !== e.target.value) {
+                        setEditFieldErrors((previousErrors) => ({
+                          ...previousErrors,
+                          editFullName:
+                            "Full name can only contain letters and spaces (no numbers or symbols).",
+                        }));
+                      }
+                    }}
+                    disabled={updatingId === editingUser.id}
+                  />
+
+                  {editFieldErrors.editFullName && (
+                    <p className="field-error-message">
+                      {editFieldErrors.editFullName}
+                    </p>
+                  )}
+                </div>
+
+                <div className="user-field">
+                  <label className="qb-label" htmlFor="edit-email">
+                    Email <span className="required-star">*</span>
+                  </label>
+
+                  <input
+                    id="edit-email"
+                    type="email"
+                    className={editFieldErrors.editEmail ? "input-error" : ""}
+                    placeholder="example@email.com"
+                    value={editEmail}
+                    onFocus={() => clearEditFieldError("editEmail")}
+                    onBlur={() => validateEditUserField("editEmail")}
+                    onChange={(e) => {
+                      setEditEmail(e.target.value);
+                      clearEditFieldError("editEmail");
+                    }}
+                    disabled={true}
+                  />
+
+                  {editFieldErrors.editEmail && (
+                    <p className="field-error-message">
+                      {editFieldErrors.editEmail}
+                    </p>
+                  )}
+                </div>
+
+                <div className="user-field">
                   <label className="qb-label">
                     Edit Role <span className="required-star">*</span>
                   </label>
@@ -3961,10 +4269,38 @@ onClick={confirmDiscardEditChanges}
 
                           <input
                             type="text"
+                            inputMode="numeric"
+                            className={
+                              editFieldErrors.editStudentNumber ? "input-error" : ""
+                            }
                             value={editStudentNumber}
-                            onChange={(e) => setEditStudentNumber(e.target.value)}
+                            maxLength={STUDENT_NUMBER_MAX_LENGTH}
+                            onFocus={() => clearEditFieldError("editStudentNumber")}
+                            onBlur={() => validateEditUserField("editStudentNumber")}
+                            onChange={(e) => {
+                              const sanitizedNumber = sanitizeStudentNumberInput(
+                                e.target.value
+                              );
+
+                              setEditStudentNumber(sanitizedNumber);
+                              clearEditFieldError("editStudentNumber");
+
+                              if (sanitizedNumber !== e.target.value) {
+                                setEditFieldErrors((previousErrors) => ({
+                                  ...previousErrors,
+                                  editStudentNumber:
+                                    "Student number can only contain numbers.",
+                                }));
+                              }
+                            }}
                             disabled={updatingId === editingUser.id}
                           />
+
+                          {editFieldErrors.editStudentNumber && (
+                            <p className="field-error-message">
+                              {editFieldErrors.editStudentNumber}
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <div className="user-field">
@@ -4014,10 +4350,37 @@ onClick={confirmDiscardEditChanges}
 
                             <input
                               type="text"
+                              className={
+                                editFieldErrors.editSection ? "input-error" : ""
+                              }
                               value={editSection}
-                              onChange={(e) => setEditSection(e.target.value)}
+                              maxLength={SECTION_MAX_LENGTH}
+                              onFocus={() => clearEditFieldError("editSection")}
+                              onBlur={() => validateEditUserField("editSection")}
+                              onChange={(e) => {
+                                const sanitizedSection = sanitizeSectionInput(
+                                  e.target.value
+                                );
+
+                                setEditSection(sanitizedSection);
+                                clearEditFieldError("editSection");
+
+                                if (sanitizedSection !== e.target.value) {
+                                  setEditFieldErrors((previousErrors) => ({
+                                    ...previousErrors,
+                                    editSection:
+                                      "Section can only contain letters, numbers, and spaces (no symbols).",
+                                  }));
+                                }
+                              }}
                               disabled={updatingId === editingUser.id}
                             />
+
+                            {editFieldErrors.editSection && (
+                              <p className="field-error-message">
+                                {editFieldErrors.editSection}
+                              </p>
+                            )}
                           </div>
                         </>
                       )}

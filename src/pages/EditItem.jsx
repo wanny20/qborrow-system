@@ -380,8 +380,8 @@ showBlockedAction("Please upload an image file only.");
 return;;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-showBlockedAction("Image is too large. Please upload an image below 8MB.");
+    if (file.size > 5 * 1024 * 1024) {
+showBlockedAction("Image is too large. Please upload an image below 5MB.");
 return;
     }
 
@@ -627,7 +627,7 @@ setTimeout(() => {
         <ImageCropModal
           file={cropSourceFile}
           title="Crop Replacement Image"
-          outputSize={800}
+          outputSize={500}
           maxOutputBytes={450 * 1024}
           onCancel={() => setCropSourceFile(null)}
           onCropComplete={handleItemCropComplete}
