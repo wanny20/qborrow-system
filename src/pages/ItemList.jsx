@@ -1078,17 +1078,17 @@ async function handleDeleteItem(item) {
     return "unknown";
   }
 
-  const totalItems = roleVisibleItems.length;
+  const totalItems = filteredItems.length;
 
-  const availableItems = roleVisibleItems.filter(
+  const availableItems = filteredItems.filter(
     (item) => item.availability === "Available"
   ).length;
 
-  const borrowedItems = roleVisibleItems.filter(
+  const borrowedItems = filteredItems.filter(
     (item) => item.availability === "Borrowed"
   ).length;
 
-  const unavailableItems = roleVisibleItems.filter(
+  const unavailableItems = filteredItems.filter(
     (item) =>
       item.availability === "Unavailable" ||
       item.availability === "Under Maintenance" ||
