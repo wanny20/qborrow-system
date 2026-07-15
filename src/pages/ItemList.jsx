@@ -148,7 +148,7 @@ function isDeleteBusy() {
   }
 
   function getItemCategoryName(item) {
-    return item.categoryName || item.category || item.categoryId || "Uncategorized";
+    return getCategoryNameById(getItemCategoryId(item));
   }
 
   function getItemCode(item) {
@@ -1527,7 +1527,12 @@ return (
                   </p>
 
                   <div className="inventory-meta-row">
-                    <span>{getItemCategoryName(item)}</span>
+                    <span
+                      className="inventory-card-category"
+                      title={getItemCategoryName(item)}
+                    >
+                      {getItemCategoryName(item)}
+                    </span>
 
                     <span
                       className={`condition-pill ${getConditionClass(

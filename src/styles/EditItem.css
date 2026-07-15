@@ -488,6 +488,8 @@
 
 .edit-item-fixed-category-card {
   min-height: 82px;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 6px;
   border: 1px solid rgba(37, 99, 235, 0.18);
@@ -509,12 +511,15 @@
 
 .edit-item-fixed-category-card strong {
   display: block;
+  max-width: 100%;
   color: var(--edit-ink);
   font-family: var(--qb-heading-font, inherit);
   font-size: 0.95rem;
   font-weight: 900;
   line-height: 1.18;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .edit-item-fixed-category-card p {

@@ -8357,6 +8357,19 @@ html[data-theme="dark"] body .app-page-content .reports-page .reports-history-co
   box-shadow: none !important;
 }
 
+/* The "Search History" card background was hard-coded to white and had no
+   dark-mode override (only border/shadow were overridden above), so it
+   stayed white and washed out the labels in dark mode. */
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls {
+  background: rgba(15, 23, 42, 0.6) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls .qb-label,
+html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls label {
+  color: #f8fafc !important;
+}
+
 html[data-theme="dark"] body .app-page-content .reports-page .reports-export-control-grid input,
 html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls input,
 html[data-theme="dark"] body .app-page-content .reports-page .reports-history-controls select {
@@ -8921,4 +8934,18 @@ html[data-theme="dark"] body .app-page-content .reports-page
     min-height: 26px !important;
     font-size: 0.48rem !important;
   }
+}
+
+/* Remove the black container behind the date controls in Dark Mode */
+html[data-theme="dark"] .reports-control-export-panel {
+    background: transparent !important;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .reports-export-control-grid {
+    background: transparent !important;
+}
+
+html[data-theme="dark"] .reports-export-range-row {
+    background: transparent !important;
 }

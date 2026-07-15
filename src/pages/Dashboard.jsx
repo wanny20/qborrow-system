@@ -39,6 +39,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [dashboardCounts, setDashboardCounts] = useState(emptyDashboardCounts);
   const [borrowerSearch, setBorrowerSearch] = useState("");
   const [dismissedDueTodayAlert, setDismissedDueTodayAlert] = useState(false);
@@ -128,8 +129,16 @@ async function handlePauseBorrowingToday() {
     return record.categoryId || record.category || "";
   }
 
+  function getCategoryNameById(categoryId) {
+    const category = categories.find(
+      (categoryItem) => normalizeText(categoryItem.id) === normalizeText(categoryId)
+    );
+
+    return category?.name || categoryId || "Unknown";
+  }
+
   function getCategoryName(record) {
-    return record.categoryName || record.category || record.categoryId || "Uncategorized";
+    return getCategoryNameById(getCategoryId(record));
   }
 
   function canCategoryAdminSee(record) {
@@ -515,10 +524,17 @@ setRequests(mapSnapshot(allRequestsSnapshot));
     setDashboardCounts(emptyDashboardCounts);
   }
 
+  async function fetchCategories() {
+    const categoriesSnapshot = await getDocs(collection(db, "categories"));
+    setCategories(categoriesSnapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+
   async function fetchDashboardData() {
     setLoading(true);
 
     try {
+      fetchCategories();
+
       if (isSuperAdmin) {
         await fetchSuperAdminDashboardData();
       } else if (isCategoryAdmin) {
@@ -1079,7 +1095,7 @@ const adminUrgentAlerts = [
                 Assigned:{" "}
                 {Array.isArray(userData?.assignedCategories) &&
                 userData.assignedCategories.length > 0
-                  ? userData.assignedCategories.join(", ")
+                  ? userData.assignedCategories.map(getCategoryNameById).join(", ")
                   : "No assigned categories"}
               </div>
             )}

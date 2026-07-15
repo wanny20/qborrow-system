@@ -3103,3 +3103,29 @@ html[data-theme="dark"] .admin-list-page .admin-list-table-scroll-wrapper::-webk
     overflow-x: auto !important;
   }
 }
+/* =========================================================
+   ADMIN DASHBOARD LIST LOADING - DARK MODE FIX
+   Matches dashboard loading card style.
+   Preserves original logo colors.
+========================================================= */
+
+html[data-theme="dark"] .admin-list-loading {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .admin-list-loading-card {
+  background: #1a2333 !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.35) !important;
+  border-radius: 28px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .admin-list-loading-card h2,
+html[data-theme="dark"] .admin-list-loading-card p {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .admin-list-loading-card img {
+  filter: drop-shadow(0 12px 22px rgba(37, 99, 235, 0.3)) !important;
+}

@@ -155,6 +155,14 @@ function sanitizeDescription(value) {
     return String(value || "").trim().toLowerCase();
   }
 
+  function getCategoryNameById(categoryId) {
+    const category = categories.find(
+      (categoryItem) => normalizeText(categoryItem.id) === normalizeText(categoryId)
+    );
+
+    return category?.name || categoryId || "Unknown";
+  }
+
   function getTodayDate() {
     const date = new Date();
     const timezoneOffset = date.getTimezoneOffset() * 60000;
@@ -663,9 +671,11 @@ if (fieldName === "description") {
             {isCategoryAdmin && (
               <div className="add-item-assigned-note">
                 Assigned categories:{" "}
-                {Array.isArray(userData?.assignedCategories) &&
-                userData.assignedCategories.length > 0
-                  ? userData.assignedCategories.join(", ")
+                {loadingCategories
+                  ? "Loading..."
+                  : Array.isArray(userData?.assignedCategories) &&
+                    userData.assignedCategories.length > 0
+                  ? userData.assignedCategories.map(getCategoryNameById).join(", ")
                   : "No assigned categories yet"}
               </div>
             )}
@@ -852,7 +862,13 @@ if (fieldName === "description") {
                   >
                     <span>Fixed Assigned Category</span>
 
-                    <strong>
+                    <strong
+                      title={
+                        !loadingCategories && selectedCategory?.name
+                          ? selectedCategory.name
+                          : undefined
+                      }
+                    >
                       {loadingCategories
                         ? "Loading category..."
                         : selectedCategory?.name || "No assigned category"}

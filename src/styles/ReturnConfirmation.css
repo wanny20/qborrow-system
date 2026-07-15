@@ -5247,3 +5247,29 @@ html[data-theme="dark"] .release-page .release-released-controls select:focus {
     gap: 6px !important;
   }
 }
+/* =========================================================
+   RETURN CONFIRMATION LOADING DARK MODE FIX
+   Makes the loading card match the Dashboard dark mode.
+========================================================= */
+
+html[data-theme="dark"] .return-loading {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .return-loading-card {
+  background: #1a2333 !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.35) !important;
+  border-radius: 28px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .return-loading-card h2,
+html[data-theme="dark"] .return-loading-card p {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .return-loading-card img {
+  filter: none !important;
+  /* Keeps the original logo colors */
+}

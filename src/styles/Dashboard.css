@@ -3307,3 +3307,56 @@ html[data-theme="dark"] .dashboard-school-control.system-suspended .dashboard-sc
 .dashboard-page .dashboard-school-control {
   display: none !important;
 }
+/* =========================================================
+   DASHBOARD LOADING DARK MODE FIX
+========================================================= */
+
+html[data-theme="dark"] .dashboard-loading-card {
+  background: #1a2333 !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: var(--qb-foreground, #f8fafc) !important;
+}
+
+html[data-theme="dark"] .dashboard-loading-card h2,
+html[data-theme="dark"] .dashboard-loading-card p {
+  color: var(--qb-foreground, #f8fafc) !important;
+}
+
+html[data-theme="dark"] .dashboard-loading-card img {
+  filter: brightness(0) invert(1) drop-shadow(0 12px 22px rgba(37, 99, 235, 0.3)) !important;
+}
+/* =========================================================
+   DASHBOARD LOADING - MATCH VIEW ITEMS LOADING STYLE
+   Makes the loading card look identical to the inventory loading
+   card in dark mode.
+========================================================= */
+
+html[data-theme="dark"] .dashboard-loading {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .dashboard-loading-card {
+  background: #1a2333 !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.35) !important;
+  border-radius: 28px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .dashboard-loading-card h2,
+html[data-theme="dark"] .dashboard-loading-card p {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .dashboard-loading-card img {
+  filter: brightness(0) invert(1) drop-shadow(0 12px 22px rgba(37, 99, 235, 0.3)) !important;
+}
+/* =========================================================
+   DASHBOARD LOADING LOGO - PRESERVE ORIGINAL COLORS
+   Prevents the logo from turning white in dark mode.
+========================================================= */
+
+html[data-theme="dark"] .dashboard-loading-card img {
+  filter: drop-shadow(0 12px 22px rgba(37, 99, 235, 0.3)) !important;
+  /* Removes brightness(0) invert(1) – keeps original logo colors */
+}
