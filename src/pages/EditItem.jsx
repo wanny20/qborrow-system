@@ -153,7 +153,7 @@ function validateEditItemForm() {
   }
 
   function sanitizeMaintenanceReason(value) {
-    return String(value || "").replace(/[<>`]/g, "").trim();
+    return String(value || "").replace(/[<>`]/g, "");
   }
 
   function getItemDamagedLostStatus(item) {
