@@ -156,6 +156,26 @@ async function createScannerFriendlyImageFile(file) {
     type: "image/png",
   });
 }
+  function computeQrBoxSize(viewfinderWidth, viewfinderHeight) {
+    // Scan box scales with the actual rendered preview size instead of a
+    // fixed 240px box. The final min() clamps against the real container
+    // dimensions so the box can never exceed the visible camera preview,
+    // even on the smallest mobile breakpoints where the video shrinks to
+    // ~180px tall.
+    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+    const preferredEdge = Math.max(120, Math.floor(minEdge * 0.75));
+    const boxEdge = Math.min(
+      preferredEdge,
+      viewfinderWidth - 16,
+      viewfinderHeight - 16
+    );
+
+    return {
+      width: boxEdge,
+      height: boxEdge,
+    };
+  }
+
   function extractItemIdentifier(scannedText) {
     const text = String(scannedText || "").trim();
 
@@ -242,12 +262,14 @@ async function createScannerFriendlyImageFile(file) {
       await scanner.start(
         cameraId,
         {
-          fps: 10,
-          qrbox: {
-            width: 240,
-            height: 240,
+          fps: 18,
+          qrbox: computeQrBoxSize,
+          disableFlip: true,
+          videoConstraints: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "environment",
           },
-          aspectRatio: 1.333,
         },
         async (decodedText) => {
           await handleDetectedValue(decodedText);
