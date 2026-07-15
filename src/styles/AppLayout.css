@@ -1790,8 +1790,16 @@ html[data-theme="dark"] .app-logout-confirm-card,
 html[data-theme="dark"] .app-suspended-alert-card,
 html[data-theme="dark"] .app-restored-alert-card,
 html[data-theme="dark"] .app-disabled-alert-card {
-  background: var(--qb-surface);
+  /* --qb-surface (#111827) sits almost on top of the page background
+     (#0f172a), so with no border/shadow adjustment the modal used to
+     disappear into the dark backdrop. Lighten it a step and give it a
+     visible border + glow so it reads clearly as a foreground element. */
+  background: #1a2333;
+  border-color: rgba(148, 163, 184, 0.35);
   color: var(--qb-foreground);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(96, 165, 250, 0.12);
 }
 
 html[data-theme="dark"] .app-topbar {
@@ -2153,6 +2161,27 @@ html[data-theme="dark"] .app-sidebar-section-list .app-nav-icon,
 html[data-theme="dark"] .app-nav-group-icon {
   background: #172033 !important;
   border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+/* The base rules above (~line 2066 and ~2078) force `filter: none` on every
+   sidebar sub-link icon, which is correct in light mode (black icon on a
+   white chip) but makes the icon invisible in dark mode, since the chip
+   background becomes dark (#172033) while the PNG icon stays black.
+   Re-invert the icon to white specifically for the non-active state in dark
+   mode. The active state keeps its white chip background (set below), so it
+   is intentionally left un-inverted. */
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:not(.active) .app-nav-icon img {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.92;
+}
+
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link.active .app-nav-icon {
+  background: #ffffff !important;
+  border-color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link.active .app-nav-icon img {
+  filter: none !important;
 }
 /* =========================================================
    APP TOPBAR CLEANUP + QUICK DARK MODE
@@ -3919,18 +3948,21 @@ html[data-theme="dark"] .app-school-closed-banner small {
 }
 
 html[data-theme="dark"] .app-system-status-modal {
-  border-color: rgba(148, 163, 184, 0.48);
+  border-color: rgba(148, 163, 184, 0.55);
   background:
     radial-gradient(circle at 92% 10%, rgba(250, 204, 21, 0.16), transparent 25%),
-    linear-gradient(135deg, #1e293b, #0f172a 58%, #111827);
-  box-shadow: none;
+    linear-gradient(135deg, #24314a, #0f172a 58%, #111827);
+  /* box-shadow: none made the modal blend into the dark backdrop; give it
+     a visible colored offset shadow like the light-mode version has. */
+  box-shadow: 10px 10px 0 rgba(37, 99, 235, 0.35);
 }
 
 html[data-theme="dark"] .app-system-status-modal-backdrop.system-suspended .app-system-status-modal {
-  border-color: rgba(248, 113, 113, 0.65);
+  border-color: rgba(248, 113, 113, 0.7);
   background:
     radial-gradient(circle at 92% 10%, rgba(248, 113, 113, 0.2), transparent 26%),
-    linear-gradient(135deg, #1f1720, #0f172a 50%, #1e1b1b);
+    linear-gradient(135deg, #2a1c1f, #0f172a 50%, #1e1b1b);
+  box-shadow: 10px 10px 0 rgba(220, 38, 38, 0.35);
 }
 
 html[data-theme="dark"] .app-system-status-modal-content h2,
