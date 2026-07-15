@@ -100,9 +100,14 @@ function markFormChanged() {
 
 function validateEditItemForm() {
   const errors = {};
+  const sanitizedName = sanitizeItemName(itemName);
 
-  if (!itemName.trim()) {
+  if (!sanitizedName.trim()) {
     errors.itemName = "Item name is required.";
+  } else if (sanitizedName.length > 50) {
+    errors.itemName = "Item name must be 50 characters or less.";
+  } else if (sanitizedName !== String(itemName || "").trim()) {
+    errors.itemName = "Only letters, numbers, spaces, and basic punctuation allowed.";
   }
 
   if (!categoryId) {
@@ -150,6 +155,13 @@ function validateEditItemForm() {
 
   function isMaintenanceStatus(value) {
     return String(value || "") === "Under Maintenance";
+  }
+
+  function sanitizeItemName(value) {
+    // Allow letters, numbers, spaces, periods, hyphens, apostrophes, ampersands
+    // Remove emojis and other special characters
+    // DO NOT trim spaces – users should be able to type spaces freely
+    return String(value || "").replace(/[^\p{L}\p{N}\s.'\-&]/gu, "");
   }
 
   function sanitizeMaintenanceReason(value) {
@@ -255,8 +267,14 @@ function validateEditItemForm() {
     const nextErrors = { ...previousErrors };
 
     if (fieldName === "itemName") {
-      if (!itemName.trim()) {
+      const sanitized = sanitizeItemName(itemName);
+
+      if (!sanitized.trim()) {
         nextErrors.itemName = "Item name is required.";
+      } else if (sanitized.length > 50) {
+        nextErrors.itemName = "Item name must be 50 characters or less.";
+      } else if (sanitized !== String(itemName || "").trim()) {
+        nextErrors.itemName = "Only letters, numbers, spaces, and basic punctuation allowed.";
       } else {
         delete nextErrors.itemName;
       }
@@ -756,12 +774,23 @@ setTimeout(() => {
     type="text"
     className={fieldErrors.itemName ? "input-error" : ""}
     value={itemName}
+    maxLength={50}
     onFocus={() => clearFieldError("itemName")}
     onBlur={() => validateEditItemField("itemName")}
 onChange={(e) => {
+  const rawValue = e.target.value;
+  const sanitized = sanitizeItemName(rawValue);
+
   markFormChanged();
-  setItemName(e.target.value);
+  setItemName(sanitized);
   clearFieldError("itemName");
+
+  if (sanitized !== rawValue && rawValue.trim()) {
+    setFieldErrors((prev) => ({
+      ...prev,
+      itemName: "Only letters, numbers, spaces, and basic punctuation allowed.",
+    }));
+  }
 }}
     disabled={submitting}
     placeholder="Example: Projector"
