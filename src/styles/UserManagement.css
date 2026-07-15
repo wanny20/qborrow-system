@@ -9554,17 +9554,21 @@ body .app-page-content .user-management-page
 .user-category-table th:nth-child(3),
 body .app-page-content .user-management-page
 .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-.user-category-table th:nth-child(4),
-body .app-page-content .user-management-page
-.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
 .user-category-table td:nth-child(2),
 body .app-page-content .user-management-page
 .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-.user-category-table td:nth-child(3),
+.user-category-table td:nth-child(3) {
+  width: 68px !important;
+  text-align: center !important;
+}
+
+body .app-page-content .user-management-page
+.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+.user-category-table th:nth-child(4),
 body .app-page-content .user-management-page
 .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
 .user-category-table td:nth-child(4) {
-  width: 68px !important;
+  width: 96px !important;
   text-align: center !important;
 }
 
@@ -9574,16 +9578,6 @@ body .app-page-content .user-management-page
 body .app-page-content .user-management-page
 .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
 .user-category-table td:nth-child(5) {
-  width: 96px !important;
-  text-align: center !important;
-}
-
-body .app-page-content .user-management-page
-.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-.user-category-table th:nth-child(6),
-body .app-page-content .user-management-page
-.user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-.user-category-table td:nth-child(6) {
   width: 70px !important;
   text-align: center !important;
 }
@@ -9779,17 +9773,20 @@ body .app-page-content .user-management-page
   .user-category-table th:nth-child(3),
   body .app-page-content .user-management-page
   .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-  .user-category-table th:nth-child(4),
-  body .app-page-content .user-management-page
-  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
   .user-category-table td:nth-child(2),
   body .app-page-content .user-management-page
   .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-  .user-category-table td:nth-child(3),
+  .user-category-table td:nth-child(3) {
+    width: 56px !important;
+  }
+
+  body .app-page-content .user-management-page
+  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
+  .user-category-table th:nth-child(4),
   body .app-page-content .user-management-page
   .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
   .user-category-table td:nth-child(4) {
-    width: 56px !important;
+    width: 82px !important;
   }
 
   body .app-page-content .user-management-page
@@ -9798,15 +9795,6 @@ body .app-page-content .user-management-page
   body .app-page-content .user-management-page
   .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
   .user-category-table td:nth-child(5) {
-    width: 82px !important;
-  }
-
-  body .app-page-content .user-management-page
-  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-  .user-category-table th:nth-child(6),
-  body .app-page-content .user-management-page
-  .user-admin-card.user-tool-modal-card.user-tool-active:has(.user-category-table-wrap)
-  .user-category-table td:nth-child(6) {
     width: 58px !important;
   }
 

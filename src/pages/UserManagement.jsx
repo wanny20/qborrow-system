@@ -455,8 +455,17 @@ function validateEditUserField(fieldName) {
     }
 
     if (fieldName === "editRole") {
+      const editingUser = users.find((user) => user.id === editingUserId);
+
       if (!editRole) {
         nextErrors.editRole = "Role is required.";
+      } else if (
+        editingUser?.role === "borrower" &&
+        (editRole === "categoryAdmin" || editRole === "superAdmin") &&
+        getActiveBorrowRequestCountForUser(editingUserId) > 0
+      ) {
+        nextErrors.editRole =
+          "This borrower has an active borrow request and cannot be switched to an admin role until it is returned, rejected, or cancelled.";
       } else {
         delete nextErrors.editRole;
       }
@@ -536,6 +545,17 @@ function validateEditUserForm() {
 
   if (!editRole) {
     errors.editRole = "Role is required.";
+  } else {
+    const editingUser = users.find((user) => user.id === editingUserId);
+
+    if (
+      editingUser?.role === "borrower" &&
+      (editRole === "categoryAdmin" || editRole === "superAdmin") &&
+      getActiveBorrowRequestCountForUser(editingUserId) > 0
+    ) {
+      errors.editRole =
+        "This borrower has an active borrow request and cannot be switched to an admin role until it is returned, rejected, or cancelled.";
+    }
   }
 
   if (editRole === "categoryAdmin" && categories.length === 0) {
@@ -992,6 +1012,16 @@ function formatPenaltyDateTime(value) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function getActiveBorrowRequestCountForUser(userId) {
+  if (!userId) return 0;
+
+  return borrowRequests.filter(
+    (request) =>
+      request.borrowerId === userId &&
+      ACTIVE_REQUEST_STATUSES.includes(request.approvalStatus)
+  ).length;
 }
 
 function getPenaltyRecordsForUser(userId) {
@@ -1879,14 +1909,14 @@ async function handleDeleteCategory(category) {
 
   if (!usage.canDelete) {
     showBlockedAction(
-      "This category cannot be deleted because it is still used by items, admins, or borrow requests."
+      "This category cannot be deleted because it is still used by items, admins, or active borrow requests."
     );
     return;
   }
 
   openConfirmAction({
     title: "Delete Category?",
-    message: `Delete category "${category.name}"? This is allowed only because it has no items, admins, or borrow requests.`,
+    message: `Delete category "${category.name}"? This is allowed only because it has no items, admins, or active borrow requests.`,
     confirmText: "Delete Category",
     danger: true,
     onConfirm: async () => {
@@ -1984,6 +2014,22 @@ async function handleSaveUserChanges(user) {
   const isValid = validateEditUserForm();
 
 if (!isValid) {
+  return;
+}
+
+if (
+  user.role === "borrower" &&
+  (editRole === "categoryAdmin" || editRole === "superAdmin") &&
+  getActiveBorrowRequestCountForUser(user.id) > 0
+) {
+  const blockedRoleMessage =
+    "This borrower has an active borrow request and cannot be switched to an admin role until it is returned, rejected, or cancelled.";
+
+  setEditFieldErrors((previousErrors) => ({
+    ...previousErrors,
+    editRole: blockedRoleMessage,
+  }));
+  showToast(blockedRoleMessage, "error");
   return;
 }
 
@@ -2707,7 +2753,7 @@ fetchData();
       return itemCategory === normalizedCategoryId;
     }).length;
 
-    const adminCount = users.filter((user) => {
+    const adminCount = getCategoryAssignmentUsers().filter((user) => {
       const assigned = Array.isArray(user.assignedCategories)
         ? user.assignedCategories.map(normalizeText)
         : [];
@@ -2742,7 +2788,8 @@ fetchData();
       adminCount,
       requestCount,
       activeRequestCount,
-      canDelete: itemCount === 0 && adminCount === 0 && requestCount === 0,
+      canDelete:
+        itemCount === 0 && adminCount === 0 && activeRequestCount === 0,
       canEditName: activeRequestCount === 0,
     };
   }
@@ -3493,7 +3540,6 @@ onChange={(e) => {
             <th>Category</th>
             <th>Items</th>
             <th>Admins</th>
-            <th>Requests</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -3512,7 +3558,6 @@ onChange={(e) => {
 
                 <td>{usage.itemCount}</td>
                 <td>{usage.adminCount}</td>
-                <td>{usage.requestCount}</td>
 
                 <td>
                   <span
