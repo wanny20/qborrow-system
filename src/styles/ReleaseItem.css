@@ -4490,3 +4490,118 @@ html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scroll
   color: #0f172a !important;
   -webkit-text-fill-color: #0f172a !important;
 }
+
+/* =========================================================
+   FINAL FIX — RELEASED ITEMS TABLE NEVER BLEEDS OUTSIDE THE CARD
+   The old fixed-pixel column widths (145/155/105/135/120/115px)
+   could add up to more than the card's width, so row/header
+   borders spilled past the rounded card edge. This replaces
+   those with fluid columns that always sum to 100% of the card,
+   and tightens up the row/header sizing to be more compact.
+========================================================= */
+
+.release-page .release-queue-panel {
+  overflow: hidden !important;
+}
+
+/* Base: tighter row/header sizing at every breakpoint */
+.release-page .release-released-table-header {
+  padding: 7px 10px !important;
+  margin-bottom: 6px !important;
+  border-radius: 14px 14px 8px 8px !important;
+}
+
+.release-page .release-released-table-grid {
+  gap: 6px !important;
+}
+
+.release-page .release-released-row {
+  min-height: 46px !important;
+  padding: 7px 10px !important;
+  border-radius: 12px !important;
+}
+
+.release-page .release-released-table-header span {
+  font-size: 0.5rem !important;
+  white-space: nowrap !important;
+}
+
+.release-page .release-released-cell strong {
+  font-size: 0.66rem !important;
+}
+
+.release-page .release-released-item-cell span,
+.release-page .release-released-borrower-cell span {
+  font-size: 0.46rem !important;
+  margin-bottom: 2px !important;
+}
+
+.release-page .release-released-status-pill {
+  min-height: 24px !important;
+  font-size: 0.44rem !important;
+  padding: 0 8px !important;
+}
+
+/* Desktop / tablet (≥861px): fluid columns that always sum to
+   100% of the card width, so nothing spills past the edge. */
+@media (min-width: 861px) {
+  .release-page .release-table-scroll-area {
+    overflow-x: visible !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-table-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-row {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns:
+      minmax(100px, 1.3fr)
+      minmax(110px, 1.3fr)
+      minmax(80px, 0.85fr)
+      minmax(90px, 1fr)
+      minmax(90px, 0.95fr)
+      minmax(80px, 0.85fr) !important;
+    gap: 6px !important;
+  }
+}
+
+/* Narrow desktop / small tablet: shrink further so nothing
+   gets cut off before the layout switches to mobile cards. */
+@media (min-width: 861px) and (max-width: 1180px) {
+  .release-page .release-released-cell strong {
+    font-size: 0.6rem !important;
+  }
+
+  .release-page .release-released-status-pill {
+    font-size: 0.4rem !important;
+    padding: 0 6px !important;
+  }
+}
+
+/* Mobile (≤860px): keep the horizontally-scrollable table, just
+   more compact than before. */
+@media (max-width: 860px) {
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-table-grid {
+    width: 720px !important;
+    min-width: 720px !important;
+  }
+
+  .release-page .release-table-scroll-area .release-released-table-header,
+  .release-page .release-table-scroll-area .release-released-row {
+    grid-template-columns:
+      minmax(120px, 1.1fr)
+      minmax(130px, 1.15fr)
+      95px
+      110px
+      105px
+      95px !important;
+    gap: 6px !important;
+  }
+}
