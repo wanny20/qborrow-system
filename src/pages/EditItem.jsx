@@ -814,7 +814,9 @@ onChange={(e) => {
     >
       <span>Fixed Assigned Category</span>
 
-      <strong>{selectedCategory?.name || "No assigned category"}</strong>
+      <strong title={selectedCategory?.name || undefined}>
+        {selectedCategory?.name || "No assigned category"}
+      </strong>
 
       <p>
         Category admins cannot manually change the item category. This item can

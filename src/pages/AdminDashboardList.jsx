@@ -93,7 +93,7 @@ function AdminDashboardList() {
   }
 
   function getItemCategoryName(item) {
-    return item.categoryName || item.category || item.categoryId || "Uncategorized";
+    return getCategoryNameById(getItemCategoryId(item));
   }
 
   function getRequestCategoryId(request) {
@@ -101,12 +101,7 @@ function AdminDashboardList() {
   }
 
   function getRequestCategoryName(request) {
-    return (
-      request.categoryName ||
-      request.category ||
-      request.categoryId ||
-      "Uncategorized"
-    );
+    return getCategoryNameById(getRequestCategoryId(request));
   }
 
   function getCategoryNameById(categoryId) {

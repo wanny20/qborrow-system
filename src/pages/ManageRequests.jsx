@@ -122,6 +122,13 @@ function ManageRequests() {
   const [confirmAction, setConfirmAction] = useState(null);
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
+const [categories, setCategories] = useState([]);
+
+async function fetchCategories() {
+  const snap = await getDocs(collection(db, "categories"));
+  setCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   const isAdmin =
     userData?.role === "superAdmin" || userData?.role === "categoryAdmin";
@@ -147,6 +154,24 @@ function showBlockedAction(message) {
 
 function isSchoolClosed() {
   return Boolean(schoolStatus?.isSchoolClosed);
+}
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getCategoryNameById(categoryId) {
+  const category = categories.find(
+    (c) => normalizeText(c.id) === normalizeText(categoryId)
+  );
+  return category?.name || categoryId || "Unknown";
+}
+
+function getRequestCategoryId(request) {
+  return request.categoryId || request.category || "";
+}
+
+function getRequestCategoryName(request) {
+  return getCategoryNameById(getRequestCategoryId(request));
 }
 
 function getSchoolClosedMessage(actionLabel = "This action") {
@@ -216,23 +241,6 @@ function hasActiveRequestAction() {
 function isRequestActionLoading(requestId, actionType) {
   return actionLoadingId === requestId && actionLoadingType === actionType;
 }
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLowerCase();
-  }
-
-  function getRequestCategoryId(request) {
-    return request.categoryId || request.category || "";
-  }
-
-  function getRequestCategoryName(request) {
-    return (
-      request.categoryName ||
-      request.category ||
-      request.categoryId ||
-      "Uncategorized"
-    );
-  }
 
   function cleanDisplay(value, fallback = "Not set") {
     const cleanedValue = String(value || "").trim();
@@ -1426,6 +1434,7 @@ useEffect(() => {
 
   async function loadRequests() {
     try {
+      fetchCategories();
       await prepareBorrowRequestsForDisplay();
       await fetchRequests();
     } catch (error) {
@@ -1556,7 +1565,7 @@ return (
           Assigned categories:{" "}
           {Array.isArray(userData?.assignedCategories) &&
           userData.assignedCategories.length > 0
-            ? userData.assignedCategories.join(", ")
+            ? userData.assignedCategories.map(getCategoryNameById).join(", ")
             : "No assigned categories yet"}
         </div>
       )}

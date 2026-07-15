@@ -720,9 +720,7 @@ button:disabled,
 .inventory-table-days {
   max-width: 100%;
   min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  box-sizing: border-box;
   overflow: hidden;
   border: 1px solid rgba(30, 41, 59, 0.18);
   border-radius: 999px;
@@ -731,13 +729,29 @@ button:disabled,
   padding: 0 10px;
   font-size: 0.72rem;
   font-weight: 850;
-  line-height: 1;
+  line-height: 30px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Category text can be arbitrarily long, so this pill must be a
+   block-level box that fills (and is clipped to) the table cell's
+   fixed width. An inline-flex pill sizes to fit its content and
+   ignores overflow/ellipsis, which let long names spill into the
+   next column (see screenshot). Matches how AdminDashboardList
+   truncates long category values with "...". */
+.inventory-table-category {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
 .inventory-table-days {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 54px;
+  line-height: 1;
 }
 
 /* Pills */
@@ -1033,6 +1047,26 @@ button:disabled,
   font-weight: 850;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* Category text on the borrower card can be arbitrarily long. An
+   inline-flex pill sizes itself to fit its content and ignores
+   overflow/ellipsis, which let long category names spill outside
+   the card (see screenshot). Overriding it as a shrinkable flex
+   item with min-width: 0 lets it truncate with "..." instead,
+   while the condition pill next to it keeps its normal size. */
+.inventory-meta-row > span.inventory-card-category {
+  display: inline-block;
+  align-self: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  line-height: 24px;
+  text-align: center;
 }
 
 .inventory-actions {
@@ -1777,6 +1811,10 @@ html[data-theme="dark"] .inventory-icon-action[data-tooltip]::before {
     min-height: 26px;
     padding: 0 8px;
     font-size: 0.56rem;
+  }
+
+  .inventory-table-category {
+    line-height: 26px;
   }
 
   .inventory-table-actions {
@@ -2854,6 +2892,17 @@ html[data-theme="dark"] .inventory-page .inventory-item-description,
 html[data-theme="dark"] .inventory-page .inventory-meta-row > span {
   color: #dbeafe !important;
   -webkit-text-fill-color: #dbeafe !important;
+}
+
+/* The category pill keeps its light (#f8fafc) background even in dark
+   mode (see .inventory-meta-row > span base rule), so the light-blue
+   text color above is nearly invisible on it. Force dark text just for
+   this pill so it stays readable against its light background. */
+html[data-theme="dark"] .inventory-page .inventory-meta-row > span.inventory-card-category {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  background: #e2e8f0 !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
 }
 
 /* Mobile dark mode spacing remains compact */

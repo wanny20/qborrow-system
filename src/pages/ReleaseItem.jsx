@@ -78,6 +78,13 @@ function ReleaseItem() {
   const [confirmAction, setConfirmAction] = useState(null);
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
+const [categories, setCategories] = useState([]);
+
+async function fetchCategories() {
+  const snap = await getDocs(collection(db, "categories"));
+  setCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
   const isCategoryAdmin = userData?.role === "categoryAdmin";
 
   function showStatus(message, type) {
@@ -96,6 +103,25 @@ const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 function showBlockedAction(message) {
   showStatus(message, "error");
   showToast(message, "error");
+}
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getCategoryNameById(categoryId) {
+  const category = categories.find(
+    (c) => normalizeText(c.id) === normalizeText(categoryId)
+  );
+  return category?.name || categoryId || "Unknown";
+}
+
+function getRequestCategoryId(request) {
+  return request.categoryId || request.category || "";
+}
+
+function getRequestCategoryName(request) {
+  return getCategoryNameById(getRequestCategoryId(request));
 }
 
 function isSchoolClosed() {
@@ -421,19 +447,6 @@ async function restartReleaseScanner() {
   showToast("Restarting scanner...", "success");
   await startReleaseScanner();
 }
-
-  function getRequestCategoryId(request) {
-    return request.categoryId || request.category || "";
-  }
-
-  function getRequestCategoryName(request) {
-    return (
-      request.categoryName ||
-      request.category ||
-      request.categoryId ||
-      "Uncategorized"
-    );
-  }
 
 
   function getRequestItemImageUrl(request) {
@@ -1316,6 +1329,7 @@ async function handleConfirmRelease() {
   useEffect(() => {
     if (!userData?.role) return;
 
+    fetchCategories();
     fetchApprovedRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -1383,7 +1397,7 @@ return (
           Assigned categories:{" "}
           {Array.isArray(userData?.assignedCategories) &&
           userData.assignedCategories.length > 0
-            ? userData.assignedCategories.join(", ")
+            ? userData.assignedCategories.map(getCategoryNameById).join(", ")
             : "No assigned categories yet"}
         </div>
       )}
@@ -1682,7 +1696,7 @@ return (
             </div>
 
             {visibleApprovedRequests.length === 0 ? (
-              <div className="release-empty">
+              <div className="release-empty release-empty-dark">
                 <img src="/qborrow-logo.png" alt="QBorrow Logo" />
                 <h2>No approved requests</h2>
                 <p>No items are currently waiting for release.</p>

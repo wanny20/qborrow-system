@@ -401,6 +401,8 @@
 
 .add-item-fixed-category-card {
   min-height: 82px;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   gap: 6px;
   border: 1px solid rgba(37, 99, 235, 0.18);
@@ -422,11 +424,15 @@
 
 .add-item-fixed-category-card strong {
   display: block;
+  max-width: 100%;
   color: var(--add-ink);
   font-family: var(--qb-heading-font, inherit);
   font-size: 0.95rem;
   font-weight: 900;
   line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .add-item-fixed-category-card p {
@@ -797,6 +803,16 @@ html[data-theme="dark"] .add-item-header-back-btn,
 html[data-theme="dark"] .add-item-fixed-category-card {
   background-color: var(--qb-input, #111827);
   color: var(--qb-foreground, #e5e7eb);
+}
+
+/* .add-item-assigned-note keeps its light translucent-white background
+   in dark mode, but its text color follows --qb-foreground, which is
+   light gray in dark mode -- light text on a light pill is unreadable.
+   Force a dark, opaque pill so the text stays legible. */
+html[data-theme="dark"] .add-item-assigned-note {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
 }
 
 

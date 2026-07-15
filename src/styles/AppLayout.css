@@ -4277,3 +4277,71 @@ html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-d
   -webkit-text-fill-color: #000000 !important;
   text-shadow: none !important;
 }
+/* =========================================================
+   SIDEBAR DARK MODE HOVER - BLACK TEXT FOR READABILITY
+   Paste at the VERY BOTTOM of AppLayout.css
+========================================================= */
+
+/* Group headers (Dashboard, Admin Menu, Reports, User Management) */
+html[data-theme="dark"] .app-sidebar-section-toggle:hover {
+  background: #eff6ff !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-toggle:hover .app-nav-text {
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-toggle:hover .app-nav-group-icon {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-toggle:hover .app-nav-group-icon > span {
+  color: #0f172a !important;
+}
+
+/* Sub-items under each group */
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:hover {
+  background: #eff6ff !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:hover .app-nav-text {
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:hover .app-nav-icon {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:hover .app-nav-icon img {
+  filter: none !important;
+}
+
+/* Also handle standalone nav links (non-group) */
+html[data-theme="dark"] .app-sidebar-nav a:hover:not(.app-sidebar-section-toggle),
+html[data-theme="dark"] .app-sidebar-nav .app-nav-link:hover:not(.app-sidebar-section-toggle) {
+  background: #eff6ff !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-nav a:hover:not(.app-sidebar-section-toggle) .app-nav-text,
+html[data-theme="dark"] .app-sidebar-nav .app-nav-link:hover:not(.app-sidebar-section-toggle) .app-nav-text {
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-nav a:hover:not(.app-sidebar-section-toggle) .app-nav-icon,
+html[data-theme="dark"] .app-sidebar-nav .app-nav-link:hover:not(.app-sidebar-section-toggle) .app-nav-icon {
+  background: #ffffff !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="dark"] .app-sidebar-nav a:hover:not(.app-sidebar-section-toggle) .app-nav-icon img,
+html[data-theme="dark"] .app-sidebar-nav .app-nav-link:hover:not(.app-sidebar-section-toggle) .app-nav-icon img {
+  filter: none !important;
+}

@@ -10594,28 +10594,29 @@ html[data-theme="dark"] .user-management-page .user-borrowing-status-text.status
   border-color: #ef4444 !important;
 }
 
-/* Role dropdown / select text should be black in dark mode */
+/* Role dropdown / select: dark surface, light text */
 html[data-theme="dark"] .user-management-page select,
 html[data-theme="dark"] .user-management-page .user-tools select,
 html[data-theme="dark"] .user-management-page .user-field select {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
 }
 
-/* Dropdown choices/options should also be black */
+/* Dropdown choices/options should match the dark surface */
 html[data-theme="dark"] .user-management-page select option,
 html[data-theme="dark"] .user-management-page .user-tools select option,
 html[data-theme="dark"] .user-management-page .user-field select option {
-  background: #ffffff !important;
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
 }
 
-/* Placeholder-like disabled option/readability safety */
+/* Disabled option readability */
 html[data-theme="dark"] .user-management-page select option:disabled {
-  color: #475569 !important;
-  -webkit-text-fill-color: #475569 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
 }
 /* =========================================================
    USER MANAGEMENT MOBILE TABLE POLISH
@@ -12135,4 +12136,126 @@ html[data-theme="dark"] .user-edit-modal .user-edit-password-panel {
 
 html[data-theme="dark"] .user-edit-modal .user-edit-password-panel-header strong {
   color: #f8fafc !important;
+}
+/* =========================================================
+   USER MANAGEMENT — DARK MODE PATCH (round 2)
+   Several cards were hard-coded to a near-white background with
+   !important and no theme guard (in the "QBORROW MODERN REDESIGN
+   OVERRIDES" section), so they stayed light even in dark mode while
+   their text inherited the dark theme's light foreground color —
+   producing low/no-contrast text on a light card. This block gives
+   each of those cards an explicit dark surface. Selectors are scoped
+   under ".user-management-page" so they out-specificity the
+   unguarded rules regardless of source order.
+========================================================= */
+
+html[data-theme="dark"] .user-management-page .user-empty,
+html[data-theme="dark"] .user-management-page .user-csv-preview,
+html[data-theme="dark"] .user-management-page .user-csv-template,
+html[data-theme="dark"] .user-management-page .user-csv-format-panel,
+html[data-theme="dark"] .user-management-page .user-import-guide-card,
+html[data-theme="dark"] .user-management-page .user-import-results,
+html[data-theme="dark"] .user-management-page .user-management-status {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+/* "Download the sample CSV" card had its own extra white gradient */
+html[data-theme="dark"] .user-management-page .user-import-guide-card:first-child {
+  background:
+    linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(251, 191, 36, 0.12)),
+    rgba(15, 23, 42, 0.7) !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-empty h2,
+html[data-theme="dark"] .user-management-page .user-import-guide-card strong,
+html[data-theme="dark"] .user-management-page .user-csv-format-panel strong,
+html[data-theme="dark"] .user-management-page .user-csv-preview strong {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-empty p,
+html[data-theme="dark"] .user-management-page .user-import-guide-card p,
+html[data-theme="dark"] .user-management-page .user-csv-format-panel p,
+html[data-theme="dark"] .user-management-page .user-csv-preview span,
+html[data-theme="dark"] .user-management-page .user-import-results span,
+html[data-theme="dark"] .user-management-page .user-import-results p {
+  color: #94a3b8 !important;
+}
+
+/* "Important Notes" callout sits inside .user-csv-format-panel; keep its
+   amber tint but on a dark base instead of washing out to white */
+html[data-theme="dark"] .user-management-page .user-import-notes {
+  background: rgba(250, 204, 21, 0.08) !important;
+  border-color: rgba(250, 204, 21, 0.35) !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-import-notes ul {
+  color: #cbd5e1 !important;
+}
+
+/* CSV header chip pills */
+html[data-theme="dark"] .user-management-page .user-csv-header-grid span {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  color: #f8fafc !important;
+}
+
+/* =========================================================
+   USER MANAGEMENT — DARK MODE PATCH (round 3)
+   1) Upload Borrower CSV card: the native file picker and the
+      "Clear" button were hard-coded white with no dark-mode guard.
+   2) Existing Users toolbar: the Search Users input and Refresh
+      button were also hard-coded white (only the Role <select>
+      had a dark rule, and that one intentionally kept a white/black
+      look — now switched to match the rest of the dark theme above).
+========================================================= */
+
+/* Secondary-style buttons: Clear, Refresh, Download Sample CSV, etc. */
+html[data-theme="dark"] .user-management-page .user-secondary-btn,
+html[data-theme="dark"] .user-management-page .user-refresh-btn,
+html[data-theme="dark"] .user-management-page .user-view-btn,
+html[data-theme="dark"] .user-management-page .user-management-header-back-btn,
+html[data-theme="dark"] .user-management-page .user-tool-dashboard-btn,
+html[data-theme="dark"] .user-management-page .user-category-toggle-btn {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-secondary-btn:hover:not(:disabled),
+html[data-theme="dark"] .user-management-page .user-refresh-btn:hover:not(:disabled),
+html[data-theme="dark"] .user-management-page .user-view-btn:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+
+/* Borrower CSV file picker */
+html[data-theme="dark"] .user-management-page .user-field input[type="file"] {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-field input[type="file"]::file-selector-button,
+html[data-theme="dark"] .user-management-page .user-field input[type="file"]::-webkit-file-upload-button {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #1d4ed8 !important;
+  color: #f8fafc !important;
+  padding: 8px 14px !important;
+  margin-right: 10px !important;
+  cursor: pointer;
+}
+
+/* Existing Users toolbar: Search Users input */
+html[data-theme="dark"] .user-management-page .user-tools input {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .user-management-page .user-tools input::placeholder {
+  color: #94a3b8 !important;
 }

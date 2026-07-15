@@ -4605,3 +4605,50 @@ html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scroll
     gap: 6px !important;
   }
 }
+/* =========================================================
+   RELEASE ITEM LOADING DARK MODE FIX
+   Makes the loading card match the Dashboard dark mode.
+========================================================= */
+
+html[data-theme="dark"] .release-loading {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .release-loading-card {
+  background: #1a2333 !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.35) !important;
+  border-radius: 28px !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .release-loading-card h2,
+html[data-theme="dark"] .release-loading-card p {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .release-loading-card img {
+  filter: none !important;
+  /* Keeps the original logo colors */ 
+}
+
+/* Dark empty state for For Release tab */
+.release-empty-dark {
+  background: #1e293b !important;          /* dark slate background */
+  border-color: #334155 !important;
+  box-shadow: 0 10px 0 rgba(15, 23, 42, 0.10) !important;
+}
+
+.release-empty-dark h2,
+.release-empty-dark p {
+  color: #ffffff !important;
+}
+
+.release-empty-dark img {
+  filter: brightness(0) invert(1);         /* turns the logo white in light mode */
+}
+
+/* Dark mode override: keep the logo normal (not inverted) */
+html[data-theme="dark"] .release-empty-dark img {
+  filter: none !important;
+}

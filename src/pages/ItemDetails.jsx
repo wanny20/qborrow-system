@@ -25,6 +25,8 @@ function ItemDetails() {
   const [statusMessage, setStatusMessage] = useState("");
   const [showSchoolClosedModal, setShowSchoolClosedModal] = useState(false);
 
+  const [categories, setCategories] = useState([]);
+
   const isBorrower = userData?.role === "borrower";
 
   function showActionError(shortMessage, error) {
@@ -64,14 +66,11 @@ function ItemDetails() {
     navigate(`/borrow-request/${item.id}`);
   }
 
-  function getCategoryName(targetItem = item) {
-    return (
-      targetItem?.categoryName ||
-      targetItem?.category ||
-      targetItem?.categoryId ||
-      "Uncategorized"
-    );
-  }
+function getCategoryName(targetItem = item) {
+  const categoryId = targetItem?.categoryId || targetItem?.category;
+  const category = categories.find((c) => c.id === categoryId);
+  return category?.name || targetItem?.categoryName || "Uncategorized";
+}
 
   function getItemCode(targetItem = item) {
     return targetItem?.itemCode || targetItem?.id || "No code";
@@ -155,6 +154,12 @@ function ItemDetails() {
       setLoading(false);
     }
   }
+
+  async function fetchCategories() {
+  const snap = await getDocs(collection(db, "categories"));
+  setCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+useEffect(() => { fetchCategories(); }, []);
 
   useEffect(() => {
     fetchItem();

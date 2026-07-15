@@ -65,6 +65,13 @@ function ReturnConfirmation() {
   const [confirmAction, setConfirmAction] = useState(null);
 const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
+const [categories, setCategories] = useState([]);
+
+async function fetchCategories() {
+  const snap = await getDocs(collection(db, "categories"));
+  setCategories(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+}
+
   const returnLockRef = useRef(false);
   const scannerRef = useRef(null);
   const scannerRunningRef = useRef(false);
@@ -76,6 +83,25 @@ const [confirmActionLoading, setConfirmActionLoading] = useState(false);
     setStatusMessage(message);
     setStatusType(type);
   }
+
+  function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getCategoryNameById(categoryId) {
+  const category = categories.find(
+    (c) => normalizeText(c.id) === normalizeText(categoryId)
+  );
+  return category?.name || categoryId || "Unknown";
+}
+
+function getRequestCategoryId(request) {
+  return request.categoryId || request.category || "";
+}
+
+function getRequestCategoryName(request) {
+  return getCategoryNameById(getRequestCategoryId(request));
+}
 
   function showActionError(shortMessage, error) {
   const detailedMessage = error?.message
@@ -626,19 +652,6 @@ function clearSelectedReturnRequest() {
     return "Returned";
   }
 
-  function getRequestCategoryId(request) {
-    return request.categoryId || request.category || "";
-  }
-
-  function getRequestCategoryName(request) {
-    return (
-      request.categoryName ||
-      request.category ||
-      request.categoryId ||
-      "Uncategorized"
-    );
-  }
-
   function cleanDisplay(value, fallback = "Not set") {
     const cleanedValue = String(value || "").trim();
     return cleanedValue || fallback;
@@ -1170,6 +1183,7 @@ async function handleReturn() {
 }
 
   useEffect(() => {
+    fetchCategories();
     fetchBorrowedRequests();
     fetchReturnedRequests();
   }, []);
@@ -1358,7 +1372,7 @@ return (
           Assigned categories:{" "}
           {Array.isArray(userData?.assignedCategories) &&
           userData.assignedCategories.length > 0
-            ? userData.assignedCategories.join(", ")
+            ? userData.assignedCategories.map(getCategoryNameById).join(", ")
             : "No assigned categories yet"}
         </div>
       )}
