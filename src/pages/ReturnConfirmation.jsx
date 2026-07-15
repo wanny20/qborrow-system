@@ -339,6 +339,25 @@ function clearSelectedReturnRequest() {
     }
   }
 
+  function computeQrBoxSize(viewfinderWidth, viewfinderHeight) {
+    // Scan box scales with the actual rendered preview size instead of a
+    // fixed 250px box. The final clamp guarantees the box never exceeds the
+    // real container dimensions, since this page's compact mobile layout
+    // shrinks the video down to ~105-130px tall.
+    const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+    const preferredEdge = Math.max(90, Math.floor(minEdge * 0.75));
+    const boxEdge = Math.min(
+      preferredEdge,
+      viewfinderWidth - 16,
+      viewfinderHeight - 16
+    );
+
+    return {
+      width: boxEdge,
+      height: boxEdge,
+    };
+  }
+
   async function getCameraList() {
     const devices = await Html5Qrcode.getCameras();
 
@@ -400,12 +419,14 @@ function clearSelectedReturnRequest() {
       scannerRef.current = scanner;
 
       const scannerConfig = {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
+        fps: 18,
+        qrbox: computeQrBoxSize,
+        disableFlip: true,
+        videoConstraints: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "environment",
         },
-        aspectRatio: 1.333,
       };
 
       const cameraResult = await getCameraList();
@@ -1503,6 +1524,23 @@ return (
                 >
                   {getOverdueStatus(selectedRequest.expectedReturnDate)}
                 </strong>
+              </div>
+
+              <div className="return-selected-item-preview">
+                {getRequestItemImageUrl(selectedRequest) ? (
+                  <img
+                    src={getRequestItemImageUrl(selectedRequest)}
+                    alt={selectedRequest.itemName || "Selected item"}
+                  />
+                ) : (
+                  <span>{getRequestItemInitial(selectedRequest)}</span>
+                )}
+
+                <div>
+                  <span>Item Photo</span>
+                  <strong>{selectedRequest.itemName || "Untitled Item"}</strong>
+                  <p>{selectedRequest.itemCode || selectedRequest.itemId || "No item code"}</p>
+                </div>
               </div>
 
               <h3>{selectedRequest.itemName}</h3>
