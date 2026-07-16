@@ -392,7 +392,7 @@
 }
 
 .reports-summary-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .reports-request-summary {
@@ -1151,7 +1151,10 @@ html[data-theme="dark"] .reports-header-back-btn {
 
 @media (max-width: 1280px) {
   .reports-summary-grid,
-  .reports-request-summary,
+  .reports-request-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .reports-statistics-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2830,7 +2833,7 @@ html[data-theme="dark"] .reports-panel > p {
 }
 
 .reports-summary-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .reports-request-summary {
@@ -3589,7 +3592,10 @@ html[data-theme="dark"] .reports-header-back-btn {
 
 @media (max-width: 1280px) {
   .reports-summary-grid,
-  .reports-request-summary,
+  .reports-request-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .reports-statistics-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -5203,7 +5209,7 @@ body .app-page-content .reports-page .reports-request-summary {
 }
 
 body .app-page-content .reports-page .reports-summary-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
 }
 
 body .app-page-content .reports-page .reports-request-summary {
@@ -5492,7 +5498,10 @@ html[data-theme="dark"] body .app-page-content .reports-page .reports-empty {
 /* Responsive compact fallback */
 @media (max-width: 1280px) {
   body .app-page-content .reports-page .reports-summary-grid,
-  body .app-page-content .reports-page .reports-request-summary,
+  body .app-page-content .reports-page .reports-request-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
   body .app-page-content .reports-page .reports-statistics-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
@@ -8948,4 +8957,185 @@ html[data-theme="dark"] .reports-export-control-grid {
 
 html[data-theme="dark"] .reports-export-range-row {
     background: transparent !important;
+}
+
+/* =========================
+   Available / Borrowed Items Module
+========================= */
+
+.reports-availability-controls {
+  grid-template-columns: minmax(0, 1fr) 180px 180px 132px;
+}
+
+.reports-availability-summary-grid {
+  margin-bottom: 14px;
+}
+
+.reports-availability-table-header,
+.reports-availability-table-row {
+  display: grid;
+  grid-template-columns:
+    minmax(170px, 1.3fr)
+    minmax(120px, 0.9fr)
+    110px
+    100px
+    minmax(140px, 1.1fr)
+    95px;
+  gap: 8px;
+  align-items: center;
+}
+
+.reports-availability-table-header {
+  border: 1px solid var(--reports-border);
+  border-radius: 18px 18px 10px 10px;
+  background: var(--reports-blue-soft);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.reports-availability-table-header span {
+  color: var(--reports-muted);
+  font-size: 0.56rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reports-availability-table-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.reports-availability-table-row {
+  min-height: 62px;
+  border: 1px solid var(--reports-border);
+  border-radius: 16px;
+  background: var(--reports-surface);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  padding: 10px 12px;
+}
+
+.reports-availability-table-row:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.reports-availability-table-cell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  min-width: 0;
+}
+
+.reports-availability-table-cell span {
+  display: none;
+}
+
+.reports-availability-item-cell span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--reports-muted);
+  font-size: 0.52rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-availability-table-cell strong {
+  margin-top: 0;
+  display: block;
+  overflow: hidden;
+  color: var(--reports-text);
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-availability-table-status {
+  display: grid;
+  align-items: center;
+}
+
+.reports-availability-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--reports-muted);
+}
+
+.reports-availability-pill.availability-available {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+.reports-availability-pill.availability-reserved {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+.reports-availability-pill.availability-borrowed {
+  background: rgba(37, 99, 235, 0.14);
+  color: #1d4ed8;
+}
+
+.reports-availability-overdue-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+  font-size: 0.5rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reports-availability-table-actions {
+  display: grid;
+  align-items: center;
+}
+
+.reports-availability-table-actions .reports-secondary-btn {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+html[data-theme="dark"] .reports-availability-table-row {
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .reports-availability-pill {
+  background: rgba(148, 163, 184, 0.16);
+}
+
+@media (max-width: 900px) {
+  .reports-availability-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-availability-table-header {
+    display: none;
+  }
+
+  .reports-availability-table-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .reports-availability-table-cell span {
+    display: block;
+  }
 }

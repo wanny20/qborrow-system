@@ -330,6 +330,10 @@ const activeSidebarPath = (() => {
     return "/my-requests";
   }
 
+  if (currentPath.startsWith("/my-overdue-items")) {
+    return "/my-overdue-items";
+  }
+
   if (currentPath.startsWith("/notifications")) {
     return "/notifications";
   }
@@ -1445,6 +1449,12 @@ async function confirmLogout() {
       fallbackIcon: "▣",
       path: "/my-requests",
     },
+    {
+      label: "My Overdue Items",
+      icon: "/icons/reports.png",
+      fallbackIcon: "!",
+      path: "/my-overdue-items",
+    },
   ];
 
   const adminLinks = [
@@ -1506,6 +1516,12 @@ async function confirmLogout() {
       fallbackIcon: "DL",
       path: "/reports?module=damagedLostItems",
     },
+    {
+      label: "Available/Borrowed Items",
+      icon: "/icons/items.png",
+      fallbackIcon: "A/B",
+      path: "/reports?module=availableBorrowedItems",
+    },
   ];
 
   const superAdminLinks = [
@@ -1540,7 +1556,7 @@ function getActiveSidebarGroupName() {
     return "dashboard";
   }
 
-  if (["/scan-qr", "/my-requests"].includes(activeSidebarPath)) {
+  if (["/scan-qr", "/my-requests", "/my-overdue-items"].includes(activeSidebarPath)) {
     return "borrower";
   }
 
