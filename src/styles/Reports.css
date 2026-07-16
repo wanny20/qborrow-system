@@ -5173,7 +5173,7 @@ body .app-page-content .reports-page .reports-export-range-row {
 body .app-page-content .reports-page .reports-date-range-note,
 body .app-page-content .reports-page .reports-assigned-note {
   min-height: 34px !important;
-  margin-top: 0 !important;
+  margin-top: 10px !important;
   border: 0 !important;
   border-radius: 999px !important;
   background: rgba(37, 99, 235, 0.10) !important;
@@ -7527,7 +7527,7 @@ html[data-theme="dark"] .reports-page .reports-late-overdue-type-cell strong {
   width: 100%;
   min-width: 0;
   padding: 12px 0 14px;
-  margin: 0;
+  margin: 0 0 8px 0;   /* add bottom margin */
   border-top: 1px solid var(--reports-border);
   background: var(--reports-surface);
 }
@@ -9007,12 +9007,15 @@ html[data-theme="dark"] .reports-export-range-row {
 }
 
 .reports-availability-table-row {
+  position: relative;
+  isolation: isolate;
   min-height: 62px;
   border: 1px solid var(--reports-border);
   border-radius: 16px;
   background: var(--reports-surface);
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
   padding: 10px 12px;
+  overflow: hidden;
 }
 
 .reports-availability-table-row:hover {
@@ -9104,11 +9107,18 @@ html[data-theme="dark"] .reports-export-range-row {
 .reports-availability-table-actions {
   display: grid;
   align-items: center;
+  justify-items: center;
 }
 
 .reports-availability-table-actions .reports-secondary-btn {
   min-height: 32px;
   padding: 0 10px;
+  box-shadow: none;
+}
+
+.reports-availability-table-actions .reports-secondary-btn:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
 }
 
 html[data-theme="dark"] .reports-availability-table-row {
@@ -9125,17 +9135,198 @@ html[data-theme="dark"] .reports-availability-pill {
   }
 }
 
+/* =========================================================
+   AVAILABLE / BORROWED ITEMS - TABLE-ONLY SCROLL FINAL FIX
+   Requires Reports.jsx wrapper:
+   <div className="reports-availability-table-scroll"> around only
+   .reports-availability-table-header + .reports-availability-table-grid.
+
+   Fix:
+   - Title, "Showing" text, search/status/category filters stay fixed.
+   - Load More button stays fixed.
+   - Only the actual table header + rows scroll sideways, same pattern
+     used for the Borrowing History table and Late/Overdue table.
+========================================================= */
+
+.reports-page .reports-panel:has(.reports-availability-table-scroll) {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.reports-page .reports-availability-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 8px;
+  margin-top: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  position: relative;
+}
+
+.reports-page .reports-availability-table-scroll .reports-availability-table-header,
+.reports-page .reports-availability-table-scroll .reports-availability-table-grid,
+.reports-page .reports-availability-table-scroll .reports-availability-table-row {
+  max-width: none;
+}
+
+.reports-page .reports-availability-table-scroll::-webkit-scrollbar {
+  height: 7px;
+}
+
+.reports-page .reports-availability-table-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.reports-page .reports-availability-table-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.45);
+}
+
+@media (max-width: 900px) {
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header,
+  .reports-page .reports-availability-table-scroll .reports-availability-table-row {
+    width: 841px !important;
+    min-width: 841px !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns:
+      170px
+      130px
+      110px
+      110px
+      160px
+      95px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-grid {
+    width: 841px !important;
+    min-width: 841px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header {
+    display: grid !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-cell span {
+    display: none !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-actions .reports-secondary-btn {
+    width: 79px;
+    min-width: 79px;
+    min-height: 30px;
+    padding: 0 6px;
+    font-size: 0.62rem;
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 760px) {
-  .reports-availability-table-header {
-    display: none;
+  .reports-page .reports-panel:has(.reports-availability-table-scroll) {
+    padding: 10px;
+    border-radius: 18px;
   }
 
-  .reports-availability-table-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header,
+  .reports-page .reports-availability-table-scroll .reports-availability-table-row {
+    width: 752px !important;
+    min-width: 752px !important;
+    grid-template-columns:
+      150px
+      110px
+      100px
+      100px
+      140px
+      90px !important;
   }
 
-  .reports-availability-table-cell span {
-    display: block;
+  .reports-page .reports-availability-table-scroll .reports-availability-table-grid {
+    width: 752px !important;
+    min-width: 752px !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header {
+    padding: 10px;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-row {
+    min-height: 56px;
+    padding: 9px 10px;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-cell strong {
+    font-size: 0.68rem;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-item-cell span {
+    font-size: 0.5rem;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-pill {
+    font-size: 0.56rem;
+    min-height: 25px;
+    padding: 0 9px;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-actions .reports-secondary-btn {
+    width: 74px;
+    min-width: 74px;
+    min-height: 28px;
+    padding: 0 6px;
+    font-size: 0.58rem;
+    box-shadow: none;
+  }
+}
+
+html[data-theme="dark"] .reports-page .reports-availability-table-scroll::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10);
+}
+
+html[data-theme="dark"] .reports-page .reports-availability-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38);
+}
+
+/* =========================================================
+   AVAILABLE / BORROWED ITEMS - SUMMARY CARDS FIT (NO RIGHT GAP)
+   Only 3 stat cards (Available / Reserved / Borrowed), so use a
+   3-column grid instead of the shared 4-column summary grid to
+   avoid leaving an empty column on the right, on both desktop
+   and mobile.
+========================================================= */
+
+.reports-availability-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-summary-grid.reports-availability-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: unset !important;
+    overflow-x: visible !important;
+  }
+
+  .reports-page .reports-summary-grid.reports-availability-summary-grid > div {
+    width: auto !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .reports-page .reports-summary-grid.reports-availability-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .reports-page .reports-summary-grid.reports-availability-summary-grid > div {
+    width: auto !important;
+    min-width: 0 !important;
   }
 }
