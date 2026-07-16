@@ -809,6 +809,46 @@ html[data-theme="dark"] .overdue-items-modal-close {
   color: #e5e7eb;
 }
 
+html[data-theme="dark"] .overdue-items-tools input {
+  background: #0f172a !important;
+  border-color: rgba(203, 213, 225, 0.42) !important;
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] .overdue-items-tools input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .overdue-items-tools input:focus {
+  border-color: var(--oi-primary) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25) !important;
+}
+
+html[data-theme="dark"] .overdue-items-secondary-btn,
+html[data-theme="dark"] .overdue-items-refresh-btn,
+html[data-theme="dark"] .overdue-items-header-back-btn {
+  background: #1e293b !important;
+  border-color: rgba(203, 213, 225, 0.42) !important;
+  color: #e5e7eb !important;
+}
+
+html[data-theme="dark"] .overdue-items-secondary-btn:hover:not(:disabled),
+html[data-theme="dark"] .overdue-items-refresh-btn:hover:not(:disabled),
+html[data-theme="dark"] .overdue-items-header-back-btn:hover:not(:disabled) {
+  background: #263244 !important;
+  border-color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .overdue-items-primary-btn {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] .overdue-items-primary-btn:hover:not(:disabled) {
+  background: #2563eb !important;
+}
+
 @media (max-width: 920px) {
   .overdue-items-summary-grid {
     display: flex;
