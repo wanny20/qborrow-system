@@ -15,7 +15,10 @@ const REPORT_MODULES = [
   { key: "borrowingHistory", label: "Borrowing History" },
   { key: "overdueItems", label: "Late / Overdue Returns" },
   { key: "damagedLostItems", label: "Damaged/Lost/Maintenance Items" },
+  { key: "availableBorrowedItems", label: "Available / Borrowed Items" },
 ];
+
+const AVAILABLE_BORROWED_PAGE_SIZE = 10;
 
 function getValidReportModule(moduleKey) {
   return REPORT_MODULES.some((moduleItem) => moduleItem.key === moduleKey)
@@ -48,6 +51,14 @@ const [dateTo, setDateTo] = useState("");
   );
   const [viewingHistoryRequest, setViewingHistoryRequest] = useState(null);
   const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
+  const [viewingAvailableBorrowedItem, setViewingAvailableBorrowedItem] = useState(null);
+
+  const [availableBorrowedSearchTerm, setAvailableBorrowedSearchTerm] = useState("");
+  const [availableBorrowedStatusFilter, setAvailableBorrowedStatusFilter] = useState("All");
+  const [availableBorrowedCategoryFilter, setAvailableBorrowedCategoryFilter] = useState("All");
+  const [visibleAvailableBorrowedCount, setVisibleAvailableBorrowedCount] = useState(
+    AVAILABLE_BORROWED_PAGE_SIZE
+  );
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
   function isSchoolClosed() {
@@ -419,6 +430,40 @@ function getLateOverdueReturnType(request) {
   return "Late / Overdue";
 }
 
+function getItemActiveBorrowRequest(item) {
+  if (item.availability !== "Borrowed") return null;
+
+  const activeRequests = requests.filter((request) => {
+    const matchesItem =
+      request.itemId === item.id ||
+      (request.itemCode && request.itemCode === item.itemCode) ||
+      (!request.itemId && request.itemName === item.itemName);
+
+    return matchesItem && request.approvalStatus === "Borrowed";
+  });
+
+  if (activeRequests.length === 0) return null;
+
+  return activeRequests.sort(
+    (a, b) => getCreatedTime(b) - getCreatedTime(a)
+  )[0];
+}
+
+function getItemBorrowerName(item) {
+  const activeRequest = getItemActiveBorrowRequest(item);
+  return activeRequest?.borrowerName || activeRequest?.borrowerEmail || "Not set";
+}
+
+function getItemBorrowerExpectedReturn(item) {
+  const activeRequest = getItemActiveBorrowRequest(item);
+  return activeRequest?.expectedReturnDate || "Not set";
+}
+
+function isItemCurrentlyOverdue(item) {
+  const activeRequest = getItemActiveBorrowRequest(item);
+  return activeRequest ? checkOverdue(activeRequest) : false;
+}
+
 function resetDateRange() {
   setDateFrom("");
   setDateTo("");
@@ -508,6 +553,16 @@ useEffect(() => {
   setVisibleLateOverdueCount(LATE_OVERDUE_REPORT_PAGE_SIZE);
 }, [dateFrom, dateTo, activeReportModule]);
 
+useEffect(() => {
+  setVisibleAvailableBorrowedCount(AVAILABLE_BORROWED_PAGE_SIZE);
+}, [
+  availableBorrowedSearchTerm,
+  availableBorrowedStatusFilter,
+  availableBorrowedCategoryFilter,
+  dateFrom,
+  dateTo,
+]);
+
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
       canCategoryAdminSeeCategory(
@@ -542,6 +597,10 @@ const visibleRequests = useMemo(() => {
 
   const damagedLostItems = visibleItems.filter((item) =>
     isDamagedLostItemInsideDateRange(item)
+  );
+
+  const availableBorrowedItemsAll = visibleItems.filter((item) =>
+    ["Available", "Reserved", "Borrowed"].includes(item.availability)
   );
 
   const overdueRequests = visibleRequests.filter((request) =>
@@ -672,6 +731,61 @@ function handleLoadMoreHistory() {
   setVisibleHistoryCount((currentCount) =>
     Math.min(currentCount + REPORTS_HISTORY_PAGE_SIZE, filteredHistory.length)
   );
+}
+
+const filteredAvailableBorrowedItems = availableBorrowedItemsAll
+  .filter((item) => {
+    const searchableText = `
+      ${item.itemName || ""}
+      ${item.itemCode || item.id || ""}
+      ${getItemCategoryName(item)}
+      ${getItemBorrowerName(item)}
+    `.toLowerCase();
+
+    const matchesSearch = searchableText.includes(
+      availableBorrowedSearchTerm.toLowerCase()
+    );
+
+    const matchesStatus =
+      availableBorrowedStatusFilter === "All" ||
+      item.availability === availableBorrowedStatusFilter;
+
+    const matchesCategory =
+      availableBorrowedCategoryFilter === "All" ||
+      getItemCategoryId(item) === availableBorrowedCategoryFilter;
+
+    return matchesSearch && matchesStatus && matchesCategory;
+  })
+  .sort((a, b) => {
+    const order = { Borrowed: 0, Reserved: 1, Available: 2 };
+    const orderDiff =
+      (order[a.availability] ?? 3) - (order[b.availability] ?? 3);
+
+    if (orderDiff !== 0) return orderDiff;
+
+    return String(a.itemName || "").localeCompare(String(b.itemName || ""));
+  });
+
+const displayedAvailableBorrowedItems = filteredAvailableBorrowedItems.slice(
+  0,
+  visibleAvailableBorrowedCount
+);
+const hasMoreAvailableBorrowedItems =
+  visibleAvailableBorrowedCount < filteredAvailableBorrowedItems.length;
+
+function handleLoadMoreAvailableBorrowedItems() {
+  setVisibleAvailableBorrowedCount((currentCount) =>
+    Math.min(
+      currentCount + AVAILABLE_BORROWED_PAGE_SIZE,
+      filteredAvailableBorrowedItems.length
+    )
+  );
+}
+
+function clearAvailableBorrowedFilters() {
+  setAvailableBorrowedSearchTerm("");
+  setAvailableBorrowedStatusFilter("All");
+  setAvailableBorrowedCategoryFilter("All");
 }
 
 function handlePrintReport() {
@@ -904,6 +1018,53 @@ function handleExportDamagedLostCsv() {
     showActionSuccess("Damaged / Lost / Maintenance Items Exported");
   } catch (error) {
     showActionError("Failed to export damaged, lost, or under maintenance items", error);
+  }
+}
+
+function handleExportAvailableBorrowedCsv() {
+  if (filteredAvailableBorrowedItems.length === 0) {
+    showToast("No available/borrowed item records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = [
+      "Item Code",
+      "Item Name",
+      "Category",
+      "Availability",
+      "Condition",
+      "Current Borrower",
+      "Expected Return Date",
+      "Overdue",
+      "Item ID",
+    ];
+
+    const rows = filteredAvailableBorrowedItems.map((item) => [
+      item.itemCode || item.id,
+      item.itemName || "Untitled Item",
+      getItemCategoryName(item),
+      item.availability || "N/A",
+      item.condition || "Unknown",
+      item.availability === "Borrowed" ? getItemBorrowerName(item) : "N/A",
+      item.availability === "Borrowed"
+        ? getItemBorrowerExpectedReturn(item)
+        : "N/A",
+      item.availability === "Borrowed" && isItemCurrentlyOverdue(item)
+        ? "Yes"
+        : "No",
+      item.id,
+    ]);
+
+    downloadCsvFile(
+      `qborrow-available-borrowed-items-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Available / Borrowed Items Exported");
+  } catch (error) {
+    showActionError("Failed to export available/borrowed items", error);
   }
 }
 
@@ -1418,6 +1579,52 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+
+  <section className="reports-print-section">
+    <h2>Available / Borrowed Items</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Availability</th>
+          <th>Condition</th>
+          <th>Current Borrower</th>
+          <th>Expected Return</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {availableBorrowedItemsAll.length === 0 ? (
+          <tr>
+            <td colSpan="7">No available or borrowed items.</td>
+          </tr>
+        ) : (
+          availableBorrowedItemsAll.map((item) => (
+            <tr key={item.id}>
+              <td>{item.itemCode || item.id}</td>
+              <td>{item.itemName || "Untitled Item"}</td>
+              <td>{getItemCategoryName(item)}</td>
+              <td>{item.availability || "N/A"}</td>
+              <td>{item.condition || "Unknown"}</td>
+              <td>
+                {item.availability === "Borrowed"
+                  ? getItemBorrowerName(item)
+                  : "N/A"}
+              </td>
+              <td>
+                {item.availability === "Borrowed"
+                  ? getItemBorrowerExpectedReturn(item)
+                  : "N/A"}
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
 </div>
       {viewingHistoryRequest && (
   <div
@@ -1589,6 +1796,95 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     </section>
   </div>
 )}
+
+{viewingAvailableBorrowedItem && (
+  <div
+    className="reports-damaged-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    onClick={() => setViewingAvailableBorrowedItem(null)}
+  >
+    <section
+      className="reports-damaged-modal-card"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="reports-damaged-modal-close"
+        onClick={() => setViewingAvailableBorrowedItem(null)}
+        aria-label="Close item details"
+      >
+        ×
+      </button>
+
+      <div className="reports-damaged-modal-heading">
+        <span>{viewingAvailableBorrowedItem.itemCode || viewingAvailableBorrowedItem.id}</span>
+        <h2>{viewingAvailableBorrowedItem.itemName || "Untitled Item"}</h2>
+        <p>Live availability and current borrower information.</p>
+      </div>
+
+      <div className="reports-damaged-modal-grid">
+        <div>
+          <span>Category</span>
+          <strong>{getItemCategoryName(viewingAvailableBorrowedItem)}</strong>
+        </div>
+
+        <div>
+          <span>Availability</span>
+          <strong>{viewingAvailableBorrowedItem.availability || "N/A"}</strong>
+        </div>
+
+        <div>
+          <span>Condition</span>
+          <strong>{viewingAvailableBorrowedItem.condition || "Unknown"}</strong>
+        </div>
+
+        <div>
+          <span>Item ID</span>
+          <strong>{viewingAvailableBorrowedItem.id}</strong>
+        </div>
+
+        {viewingAvailableBorrowedItem.availability === "Borrowed" && (
+          <>
+            <div>
+              <span>Current Borrower</span>
+              <strong>{getItemBorrowerName(viewingAvailableBorrowedItem)}</strong>
+            </div>
+
+            <div>
+              <span>Expected Return Date</span>
+              <strong>{getItemBorrowerExpectedReturn(viewingAvailableBorrowedItem)}</strong>
+            </div>
+
+            <div>
+              <span>Overdue Status</span>
+              <strong>
+                {isItemCurrentlyOverdue(viewingAvailableBorrowedItem)
+                  ? "Currently Overdue"
+                  : "On Track"}
+              </strong>
+            </div>
+          </>
+        )}
+
+        <div>
+          <span>Max Borrow Days</span>
+          <strong>{viewingAvailableBorrowedItem.maxBorrowDays || "Not set"}</strong>
+        </div>
+      </div>
+
+      <div className="reports-damaged-modal-actions">
+        <button
+          type="button"
+          className="reports-secondary-btn"
+          onClick={() => setViewingAvailableBorrowedItem(null)}
+        >
+          Close
+        </button>
+      </div>
+    </section>
+  </div>
+)}
  <section className="reports-header reports-header-compact">
   <div className="reports-header-content">
 <div className="reports-header-text">
@@ -1630,6 +1926,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
           : activeReportModule === "damagedLostItems"
           ? "Filter damaged/lost items by recorded date, refresh the data, or export damaged/lost records as CSV."
+          : activeReportModule === "availableBorrowedItems"
+          ? "Search and filter every available, reserved, or currently borrowed item, and export the live inventory status as CSV."
           : "Filter frequently borrowed items by date range and refresh the data."}
       </p>
     </div>
@@ -1728,6 +2026,17 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         Export Damaged / Lost / Maintenance
       </button>
     )}
+
+    {activeReportModule === "availableBorrowedItems" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-inline-export-btn"
+        onClick={handleExportAvailableBorrowedCsv}
+        disabled={filteredAvailableBorrowedItems.length === 0}
+      >
+        Export Available / Borrowed
+      </button>
+    )}
   </div>
 
   {activeReportModule === "dashboard" && (
@@ -1766,6 +2075,15 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         disabled={damagedLostItems.length === 0}
       >
         Export Damaged / Lost / Maintenance
+      </button>
+
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportAvailableBorrowedCsv}
+        disabled={availableBorrowedItemsAll.length === 0}
+      >
+        Export Available / Borrowed
       </button>
     </div>
   )}
@@ -1809,9 +2127,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <h3>{damagedLostItems.length}</h3>
           <p>Damaged/Lost/Maintenance</p>
         </div>
-      </section>
 
-      <section className="reports-request-summary">
         <div>
           <span>?</span>
           <h3>{pendingRequests.length}</h3>
@@ -1822,24 +2138,6 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <span>✓</span>
           <h3>{approvedRequests.length}</h3>
           <p>Approved</p>
-        </div>
-
-        <div>
-          <span>↗</span>
-          <h3>{borrowedRequests.length}</h3>
-          <p>Active Borrowed</p>
-        </div>
-
-        <div>
-          <span>↩</span>
-          <h3>{returnedRequests.length}</h3>
-          <p>Returned</p>
-        </div>
-
-        <div>
-          <span>×</span>
-          <h3>{closedRequests.length}</h3>
-          <p>Closed</p>
         </div>
       </section>
 
@@ -2398,6 +2696,196 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     </div>
   </>
 )}
+      </section>
+)}
+
+{activeReportModule === "availableBorrowedItems" && (
+      <section className="reports-panel reports-module-panel reports-availability-panel">
+        <div className="reports-section-heading">
+          <div>
+            <h2>Available / Borrowed Items</h2>
+            <p>
+              Showing {displayedAvailableBorrowedItems.length} of{" "}
+              {filteredAvailableBorrowedItems.length} matched item
+              {filteredAvailableBorrowedItems.length === 1 ? "" : "s"}.
+            </p>
+          </div>
+        </div>
+
+        <div className="reports-summary-grid reports-availability-summary-grid">
+          <div>
+            <span>✓</span>
+            <h3>
+              {availableBorrowedItemsAll.filter((item) => item.availability === "Available").length}
+            </h3>
+            <p>Available</p>
+          </div>
+
+          <div>
+            <span>◷</span>
+            <h3>
+              {availableBorrowedItemsAll.filter((item) => item.availability === "Reserved").length}
+            </h3>
+            <p>Reserved</p>
+          </div>
+
+          <div>
+            <span>↗</span>
+            <h3>
+              {availableBorrowedItemsAll.filter((item) => item.availability === "Borrowed").length}
+            </h3>
+            <p>Borrowed</p>
+          </div>
+        </div>
+
+        <div className="reports-history-controls reports-availability-controls">
+          <div>
+            <label className="qb-label" htmlFor="reports-availability-search">
+              Search Items
+            </label>
+
+            <input
+              id="reports-availability-search"
+              type="text"
+              placeholder="Search item, code, category, borrower..."
+              value={availableBorrowedSearchTerm}
+              onChange={(event) => setAvailableBorrowedSearchTerm(event.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="qb-label" htmlFor="reports-availability-status-filter">
+              Status
+            </label>
+
+            <select
+              id="reports-availability-status-filter"
+              value={availableBorrowedStatusFilter}
+              onChange={(event) => setAvailableBorrowedStatusFilter(event.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Available">Available</option>
+              <option value="Reserved">Reserved</option>
+              <option value="Borrowed">Borrowed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="qb-label" htmlFor="reports-availability-category-filter">
+              Category
+            </label>
+
+            <select
+              id="reports-availability-category-filter"
+              value={availableBorrowedCategoryFilter}
+              onChange={(event) => setAvailableBorrowedCategoryFilter(event.target.value)}
+            >
+              <option value="All">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name || category.id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="reports-secondary-btn reports-clear-history-filter-btn"
+            onClick={clearAvailableBorrowedFilters}
+            disabled={
+              !availableBorrowedSearchTerm &&
+              availableBorrowedStatusFilter === "All" &&
+              availableBorrowedCategoryFilter === "All"
+            }
+          >
+            Clear Filter
+          </button>
+        </div>
+
+        {filteredAvailableBorrowedItems.length === 0 ? (
+          <div className="reports-empty">
+            <img src="/qborrow-logo.png" alt="QBorrow Logo" />
+            <h2>No matching items</h2>
+            <p>Try changing the search keyword, status, or category filter.</p>
+          </div>
+        ) : (
+          <>
+            <div className="reports-availability-table-header">
+              <span>Item</span>
+              <span>Category</span>
+              <span>Availability</span>
+              <span>Condition</span>
+              <span>Current Borrower</span>
+              <span>Action</span>
+            </div>
+
+            <div className="reports-availability-table-grid">
+              {displayedAvailableBorrowedItems.map((item) => (
+                <article className="reports-availability-table-row" key={item.id}>
+                  <div className="reports-availability-table-cell reports-availability-item-cell">
+                    <span>{item.itemCode || item.id}</span>
+                    <strong>{item.itemName || "Untitled Item"}</strong>
+                  </div>
+
+                  <div className="reports-availability-table-cell">
+                    <span>Category</span>
+                    <strong>{getItemCategoryName(item)}</strong>
+                  </div>
+
+                  <div className="reports-availability-table-status">
+                    <strong
+                      className={`reports-availability-pill availability-${item.availability
+                        ?.toLowerCase()
+                        .replace(/\s+/g, "-")}`}
+                    >
+                      {item.availability || "N/A"}
+                    </strong>
+                  </div>
+
+                  <div className="reports-availability-table-cell">
+                    <span>Condition</span>
+                    <strong>{item.condition || "Unknown"}</strong>
+                  </div>
+
+                  <div className="reports-availability-table-cell">
+                    <span>Current Borrower</span>
+                    <strong>
+                      {item.availability === "Borrowed"
+                        ? getItemBorrowerName(item)
+                        : "—"}
+                    </strong>
+                    {item.availability === "Borrowed" && isItemCurrentlyOverdue(item) && (
+                      <span className="reports-availability-overdue-tag">Overdue</span>
+                    )}
+                  </div>
+
+                  <div className="reports-availability-table-actions">
+                    <button
+                      type="button"
+                      className="reports-secondary-btn"
+                      onClick={() => setViewingAvailableBorrowedItem(item)}
+                    >
+                      Details
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            {hasMoreAvailableBorrowedItems && (
+              <div className="reports-load-more-row">
+                <button
+                  type="button"
+                  className="reports-secondary-btn"
+                  onClick={handleLoadMoreAvailableBorrowedItems}
+                >
+                  Load More Items
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </section>
 )}
     </div>

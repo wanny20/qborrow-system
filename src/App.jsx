@@ -15,6 +15,7 @@ import Reports from "./pages/Reports";
 import ScanQR from "./pages/ScanQR";
 import Notifications from "./pages/Notifications";
 import MyRequests from "./pages/MyRequests";
+import OverdueItems from "./pages/OverdueItems";
 import UserManagement from "./pages/UserManagement";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/AppLayout";
@@ -64,6 +65,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["borrower"]}>
                 <MyRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-overdue-items"
+            element={
+              <ProtectedRoute allowedRoles={["borrower"]}>
+                <OverdueItems />
               </ProtectedRoute>
             }
           />
