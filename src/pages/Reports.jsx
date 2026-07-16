@@ -1913,21 +1913,18 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </div>
 </section>
 
+{activeReportModule !== "damagedLostItems" && activeReportModule !== "availableBorrowedItems" && (
 <section className="reports-panel reports-export-panel reports-control-export-panel">
   <div className="reports-section-heading">
     <div>
       <h2>Report Controls & Export</h2>
       <p>
         {activeReportModule === "dashboard"
-          ? "Filter reports by date range, print a PDF copy, or download report records as CSV files."
+          ? "Filter reports by date range or download report records as CSV files."
           : activeReportModule === "borrowingHistory"
           ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV."
           : activeReportModule === "overdueItems"
           ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
-          : activeReportModule === "damagedLostItems"
-          ? "Filter damaged/lost items by recorded date, refresh the data, or export damaged/lost records as CSV."
-          : activeReportModule === "availableBorrowedItems"
-          ? "Search and filter every available, reserved, or currently borrowed item, and export the live inventory status as CSV."
           : "Filter frequently borrowed items by date range and refresh the data."}
       </p>
     </div>
@@ -1984,16 +1981,6 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <strong>{getDateRangeLabel()}</strong>
     </div>
 
-    {activeReportModule === "dashboard" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-print-btn reports-inline-print-btn"
-        onClick={handlePrintReport}
-      >
-        Print / Save PDF
-      </button>
-    )}
-
     {activeReportModule === "borrowingHistory" && (
       <button
         type="button"
@@ -2016,27 +2003,6 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </button>
     )}
 
-    {activeReportModule === "damagedLostItems" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-inline-export-btn"
-        onClick={handleExportDamagedLostCsv}
-        disabled={damagedLostItems.length === 0}
-      >
-        Export Damaged / Lost / Maintenance
-      </button>
-    )}
-
-    {activeReportModule === "availableBorrowedItems" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-inline-export-btn"
-        onClick={handleExportAvailableBorrowedCsv}
-        disabled={filteredAvailableBorrowedItems.length === 0}
-      >
-        Export Available / Borrowed
-      </button>
-    )}
   </div>
 
   {activeReportModule === "dashboard" && (
@@ -2071,15 +2037,6 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <button
         type="button"
         className="reports-secondary-btn"
-        onClick={handleExportDamagedLostCsv}
-        disabled={damagedLostItems.length === 0}
-      >
-        Export Damaged / Lost / Maintenance
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn"
         onClick={handleExportAvailableBorrowedCsv}
         disabled={availableBorrowedItemsAll.length === 0}
       >
@@ -2088,6 +2045,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     </div>
   )}
 </section>
+)}
 
 {activeReportModule === "dashboard" && (
   <>
@@ -2811,66 +2769,68 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           </div>
         ) : (
           <>
-            <div className="reports-availability-table-header">
-              <span>Item</span>
-              <span>Category</span>
-              <span>Availability</span>
-              <span>Condition</span>
-              <span>Current Borrower</span>
-              <span>Action</span>
-            </div>
+            <div className="reports-availability-table-scroll" aria-label="Available / Borrowed items table">
+              <div className="reports-availability-table-header">
+                <span>Item</span>
+                <span>Category</span>
+                <span>Availability</span>
+                <span>Condition</span>
+                <span>Current Borrower</span>
+                <span>Action</span>
+              </div>
 
-            <div className="reports-availability-table-grid">
-              {displayedAvailableBorrowedItems.map((item) => (
-                <article className="reports-availability-table-row" key={item.id}>
-                  <div className="reports-availability-table-cell reports-availability-item-cell">
-                    <span>{item.itemCode || item.id}</span>
-                    <strong>{item.itemName || "Untitled Item"}</strong>
-                  </div>
+              <div className="reports-availability-table-grid">
+                {displayedAvailableBorrowedItems.map((item) => (
+                  <article className="reports-availability-table-row" key={item.id}>
+                    <div className="reports-availability-table-cell reports-availability-item-cell">
+                      <span>{item.itemCode || item.id}</span>
+                      <strong>{item.itemName || "Untitled Item"}</strong>
+                    </div>
 
-                  <div className="reports-availability-table-cell">
-                    <span>Category</span>
-                    <strong>{getItemCategoryName(item)}</strong>
-                  </div>
+                    <div className="reports-availability-table-cell">
+                      <span>Category</span>
+                      <strong>{getItemCategoryName(item)}</strong>
+                    </div>
 
-                  <div className="reports-availability-table-status">
-                    <strong
-                      className={`reports-availability-pill availability-${item.availability
-                        ?.toLowerCase()
-                        .replace(/\s+/g, "-")}`}
-                    >
-                      {item.availability || "N/A"}
-                    </strong>
-                  </div>
+                    <div className="reports-availability-table-status">
+                      <strong
+                        className={`reports-availability-pill availability-${item.availability
+                          ?.toLowerCase()
+                          .replace(/\s+/g, "-")}`}
+                      >
+                        {item.availability || "N/A"}
+                      </strong>
+                    </div>
 
-                  <div className="reports-availability-table-cell">
-                    <span>Condition</span>
-                    <strong>{item.condition || "Unknown"}</strong>
-                  </div>
+                    <div className="reports-availability-table-cell">
+                      <span>Condition</span>
+                      <strong>{item.condition || "Unknown"}</strong>
+                    </div>
 
-                  <div className="reports-availability-table-cell">
-                    <span>Current Borrower</span>
-                    <strong>
-                      {item.availability === "Borrowed"
-                        ? getItemBorrowerName(item)
-                        : "—"}
-                    </strong>
-                    {item.availability === "Borrowed" && isItemCurrentlyOverdue(item) && (
-                      <span className="reports-availability-overdue-tag">Overdue</span>
-                    )}
-                  </div>
+                    <div className="reports-availability-table-cell">
+                      <span>Current Borrower</span>
+                      <strong>
+                        {item.availability === "Borrowed"
+                          ? getItemBorrowerName(item)
+                          : "—"}
+                      </strong>
+                      {item.availability === "Borrowed" && isItemCurrentlyOverdue(item) && (
+                        <span className="reports-availability-overdue-tag">Overdue</span>
+                      )}
+                    </div>
 
-                  <div className="reports-availability-table-actions">
-                    <button
-                      type="button"
-                      className="reports-secondary-btn"
-                      onClick={() => setViewingAvailableBorrowedItem(item)}
-                    >
-                      Details
-                    </button>
-                  </div>
-                </article>
-              ))}
+                    <div className="reports-availability-table-actions">
+                      <button
+                        type="button"
+                        className="reports-secondary-btn"
+                        onClick={() => setViewingAvailableBorrowedItem(item)}
+                      >
+                        Details
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
 
             {hasMoreAvailableBorrowedItems && (
