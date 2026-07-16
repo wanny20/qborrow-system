@@ -5173,7 +5173,7 @@ body .app-page-content .reports-page .reports-export-range-row {
 body .app-page-content .reports-page .reports-date-range-note,
 body .app-page-content .reports-page .reports-assigned-note {
   min-height: 34px !important;
-  margin-top: 0 !important;
+  margin-top: 10px !important;
   border: 0 !important;
   border-radius: 999px !important;
   background: rgba(37, 99, 235, 0.10) !important;
