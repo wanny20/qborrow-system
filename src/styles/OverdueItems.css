@@ -413,7 +413,7 @@
     minmax(140px, 1fr)
     128px
     120px
-    110px
+    130px
     90px;
   gap: 8px;
   align-items: center;
@@ -434,6 +434,11 @@
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.overdue-items-table-header span:nth-child(5),
+.overdue-items-table-header span:nth-child(6) {
+  text-align: center;
 }
 
 .overdue-items-table-body {
@@ -479,7 +484,7 @@
 
 .overdue-item-table-cell strong {
   display: block;
-  color: #0f172a;
+  color: var(--oi-text);
   font-size: 0.78rem;
   font-weight: 900;
   line-height: 1.25;
@@ -492,6 +497,7 @@
 .overdue-item-table-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .overdue-item-table-actions button {

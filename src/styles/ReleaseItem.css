@@ -2329,6 +2329,26 @@ html[data-theme="dark"] .release-page .release-purpose-box span {
   -webkit-text-fill-color: #cbd5e1 !important;
 }
 
+/* ---------- "For Release" / "Released Items" empty state readable ----------
+   .release-empty never had a dark-mode override, so it kept the light
+   "modern override" background (#f8fafc / rgba(255,255,255,0.96)) even in
+   dark mode. Matching it to .release-empty-selected's dark treatment. */
+html[data-theme="dark"] .release-page .release-empty {
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .release-page .release-empty h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .release-page .release-empty p {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+}
+
 /* ---------- Mobile table still clean ---------- */
 @media (max-width: 860px) {
   html[data-theme="dark"] .release-page .release-approved-table-header {
@@ -3146,6 +3166,19 @@ html[data-theme="dark"] .release-released-controls select,
 html[data-theme="dark"] .release-released-row {
   background: var(--qb-bg);
   color: var(--qb-foreground);
+}
+
+/* =========================================================
+   RELEASE ITEM TABS - DARK MODE VISIBILITY FIX
+   The "box-shadow: none !important" from the modern override
+   (above) stripped the raised-pill shadow that the Return
+   Confirmation tabs still have, making the inactive "For
+   Release" / "Released Items" tab blend invisibly into the
+   dark background. Restoring the same shadow used by
+   .return-tab-btn brings the two pages back in sync.
+========================================================= */
+html[data-theme="dark"] .release-tab-btn {
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
 }
 
 html[data-theme="dark"] .release-released-table-header {
@@ -4492,6 +4525,36 @@ html[data-theme="dark"] .release-page .release-table-scroll-area::-webkit-scroll
 }
 
 /* =========================================================
+   RELEASE ITEM - REFRESH BUTTON DARK MODE VISIBILITY FIX
+   The dark-mode wildcard rule on .release-section-heading *
+   strips background/border to transparent for everything
+   inside the heading (including this button), while the
+   black-text rule above still forces near-black text — so in
+   dark mode the button became invisible (dark text on a
+   transparent/dark background). Restoring the same white
+   pill + blue text treatment Return Confirmation's Refresh
+   button already gets in dark mode.
+========================================================= */
+
+html[data-theme="dark"] .release-page .release-section-heading .release-secondary-btn,
+html[data-theme="dark"] .release-page .release-section-heading > .release-secondary-btn,
+html[data-theme="dark"] .release-page .release-released-controls .release-secondary-btn {
+  border: 2px solid rgba(148, 163, 184, 0.42) !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 var(--qb-border) !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+
+html[data-theme="dark"] .release-page .release-section-heading .release-secondary-btn:hover:not(:disabled),
+html[data-theme="dark"] .release-page .release-section-heading > .release-secondary-btn:hover:not(:disabled),
+html[data-theme="dark"] .release-page .release-released-controls .release-secondary-btn:hover:not(:disabled) {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+/* =========================================================
    FINAL FIX — RELEASED ITEMS TABLE NEVER BLEEDS OUTSIDE THE CARD
    The old fixed-pixel column widths (145/155/105/135/120/115px)
    could add up to more than the card's width, so row/header
@@ -4630,25 +4693,4 @@ html[data-theme="dark"] .release-loading-card p {
 html[data-theme="dark"] .release-loading-card img {
   filter: none !important;
   /* Keeps the original logo colors */ 
-}
-
-/* Dark empty state for For Release tab */
-.release-empty-dark {
-  background: #1e293b !important;          /* dark slate background */
-  border-color: #334155 !important;
-  box-shadow: 0 10px 0 rgba(15, 23, 42, 0.10) !important;
-}
-
-.release-empty-dark h2,
-.release-empty-dark p {
-  color: #ffffff !important;
-}
-
-.release-empty-dark img {
-  filter: brightness(0) invert(1);         /* turns the logo white in light mode */
-}
-
-/* Dark mode override: keep the logo normal (not inverted) */
-html[data-theme="dark"] .release-empty-dark img {
-  filter: none !important;
 }

@@ -1017,7 +1017,9 @@ async function handleDeleteItem(item) {
         (item.availability === "Damaged" ||
           item.availability === "Lost" ||
           item.condition === "Damaged" ||
-          item.condition === "Lost"));
+          item.condition === "Lost")) ||
+      (availabilityFilter === "Unavailable" &&
+        (!item.availability || item.availability === "Unavailable"));
 
     const matchesCategory =
       categoryFilter === "All" ||
@@ -1185,6 +1187,7 @@ return (
             {isAdmin && <option value="Reserved">Reserved</option>}
             {isAdmin && <option value="Under Maintenance">Under Maintenance</option>}
             {isAdmin && <option value="DamagedLost">Damaged/Lost</option>}
+            {isAdmin && <option value="Unavailable">Unavailable</option>}
           </select>
         </div>
 

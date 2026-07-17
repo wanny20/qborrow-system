@@ -691,7 +691,7 @@ const adminUrgentAlerts = [
     count: overdueRequests.length,
     description: "Borrowed items past expected return date.",
     tone: "red",
-    path: "/manage-requests?status=Overdue",
+    path: "/return-confirmation",
     items: overdueRequests.slice(0, 3),
   },
 ];
@@ -1239,7 +1239,7 @@ const adminUrgentAlerts = [
 )}
 
       {isAdmin ? (
-        <section className="dashboard-main-grid">
+        <section className="dashboard-main-grid dashboard-main-grid-single">
           <div className="dashboard-panel">
             <div className="dashboard-panel-heading">
               <div>
@@ -1263,37 +1263,6 @@ const adminUrgentAlerts = [
                   <span>→</span>
                 </button>
               ))}
-            </div>
-          </div>
-
-          <div className="dashboard-panel">
-            <div className="dashboard-panel-heading">
-              <div>
-                <h2>Needs Attention</h2>
-                <p>Important admin indicators.</p>
-              </div>
-            </div>
-
-            <div className="dashboard-attention-list">
-              <button type="button" onClick={() => navigate("/manage-requests")}>
-                <span>Pending Requests</span>
-                <strong>{pendingRequestsValue}</strong>
-              </button>
-
-              <button type="button" onClick={() => navigate("/reports")}>
-                <span>Overdue Records</span>
-                <strong>{overdueRequestsValue}</strong>
-              </button>
-
-              <button type="button" onClick={() => navigate("/reports")}>
-                <span>Damaged/Lost Items</span>
-                <strong>{damagedLostItemsValue}</strong>
-              </button>
-
-              <button type="button" onClick={() => navigate("/items?availability=Under%20Maintenance")}>
-                <span>Under Maintenance</span>
-                <strong>{maintenanceItemsValue}</strong>
-              </button>
             </div>
           </div>
         </section>
