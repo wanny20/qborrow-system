@@ -464,6 +464,34 @@ function isItemCurrentlyOverdue(item) {
   return activeRequest ? checkOverdue(activeRequest) : false;
 }
 
+function getItemDamagedLostRequest(item) {
+  if (!item.damagedLostRequestId) return null;
+
+  return (
+    requests.find((request) => request.id === item.damagedLostRequestId) ||
+    null
+  );
+}
+
+function getItemDamagedLostBorrowerName(item) {
+  const damagedLostRequest = getItemDamagedLostRequest(item);
+
+  if (!damagedLostRequest) {
+    return "Not applicable";
+  }
+
+  return (
+    damagedLostRequest.borrowerName ||
+    damagedLostRequest.borrowerEmail ||
+    "Unnamed Borrower"
+  );
+}
+
+function getItemDamagedLostBorrowerEmail(item) {
+  const damagedLostRequest = getItemDamagedLostRequest(item);
+  return damagedLostRequest?.borrowerEmail || "";
+}
+
 function resetDateRange() {
   setDateFrom("");
   setDateTo("");
@@ -994,6 +1022,8 @@ function handleExportDamagedLostCsv() {
       "Availability",
       "Condition",
       "Damaged/Lost/Maintenance Date",
+      "Returned By (Borrower)",
+      "Borrower Email",
       "Report/Reason",
       "Item ID",
     ];
@@ -1005,6 +1035,8 @@ function handleExportDamagedLostCsv() {
       item.availability || "N/A",
       item.condition || item.availability || "N/A",
       getItemDamagedLostDate(item) || "No recorded date",
+      getItemDamagedLostBorrowerName(item),
+      getItemDamagedLostBorrowerEmail(item) || "No email",
       item.damagedLostReport || item.maintenanceReason || "No report recorded",
       item.id,
     ]);
@@ -1557,13 +1589,15 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Category</th>
           <th>Availability</th>
           <th>Condition</th>
+          <th>Reported Date</th>
+          <th>Borrower</th>
         </tr>
       </thead>
 
       <tbody>
         {damagedLostItems.length === 0 ? (
           <tr>
-            <td colSpan="5">No damaged, lost, or under maintenance items.</td>
+            <td colSpan="7">No damaged, lost, or under maintenance items.</td>
           </tr>
         ) : (
           damagedLostItems.map((item) => (
@@ -1573,6 +1607,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
               <td>{getItemCategoryName(item)}</td>
               <td>{item.availability || "N/A"}</td>
               <td>{item.condition || item.availability || "N/A"}</td>
+              <td>{getItemDamagedLostDate(item) || "No recorded date"}</td>
+              <td>{getItemDamagedLostBorrowerName(item)}</td>
             </tr>
           ))
         )}
@@ -1779,6 +1815,28 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         </div>
 
         <div>
+          <span>Reported Date</span>
+          <strong>{getItemDamagedLostDate(viewingDamagedItem) || "No recorded date"}</strong>
+        </div>
+
+        <div>
+          <span>Returned By (Borrower)</span>
+          <strong>{getItemDamagedLostBorrowerName(viewingDamagedItem)}</strong>
+          {getItemDamagedLostBorrowerEmail(viewingDamagedItem) && (
+            <p>{getItemDamagedLostBorrowerEmail(viewingDamagedItem)}</p>
+          )}
+        </div>
+
+        <div>
+          <span>Report / Reason</span>
+          <strong>
+            {viewingDamagedItem.damagedLostReport ||
+              viewingDamagedItem.maintenanceReason ||
+              "No report recorded"}
+          </strong>
+        </div>
+
+        <div>
           <span>Item ID</span>
           <strong>{viewingDamagedItem.id}</strong>
         </div>
@@ -1913,7 +1971,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </div>
 </section>
 
-{activeReportModule !== "damagedLostItems" && activeReportModule !== "availableBorrowedItems" && (
+{activeReportModule !== "availableBorrowedItems" && (
 <section className="reports-panel reports-export-panel reports-control-export-panel">
   <div className="reports-section-heading">
     <div>
@@ -1925,6 +1983,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV."
           : activeReportModule === "overdueItems"
           ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
+          : activeReportModule === "damagedLostItems"
+          ? "Filter damaged, lost, and under-maintenance items by the date they were reported, refresh the data, or export the records as CSV."
           : "Filter frequently borrowed items by date range and refresh the data."}
       </p>
     </div>
@@ -2000,6 +2060,17 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         disabled={lateOverdueReturnRecords.length === 0}
       >
         Export Late / Overdue
+      </button>
+    )}
+
+    {activeReportModule === "damagedLostItems" && (
+      <button
+        type="button"
+        className="reports-secondary-btn reports-inline-export-btn"
+        onClick={handleExportDamagedLostCsv}
+        disabled={damagedLostItems.length === 0}
+      >
+        Export Damaged / Lost / Maintenance
       </button>
     )}
 
@@ -2612,6 +2683,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <span>Item</span>
       <span>Category</span>
       <span>Availability</span>
+      <span>Reported Date</span>
+      <span>Borrower</span>
       <span>Condition</span>
       <span>Action</span>
     </div>
@@ -2632,6 +2705,16 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <div className="reports-damaged-table-cell">
             <span>Availability</span>
             <strong>{item.availability || "N/A"}</strong>
+          </div>
+
+          <div className="reports-damaged-table-cell">
+            <span>Reported Date</span>
+            <strong>{getItemDamagedLostDate(item) || "No recorded date"}</strong>
+          </div>
+
+          <div className="reports-damaged-table-cell">
+            <span>Borrower</span>
+            <strong>{getItemDamagedLostBorrowerName(item)}</strong>
           </div>
 
           <div className="reports-damaged-table-status">
