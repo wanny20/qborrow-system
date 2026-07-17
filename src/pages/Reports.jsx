@@ -19,6 +19,7 @@ const REPORT_MODULES = [
 ];
 
 const AVAILABLE_BORROWED_PAGE_SIZE = 10;
+const DAMAGED_LOST_PAGE_SIZE = 10;
 
 function getValidReportModule(moduleKey) {
   return REPORT_MODULES.some((moduleItem) => moduleItem.key === moduleKey)
@@ -58,6 +59,9 @@ const [dateTo, setDateTo] = useState("");
   const [availableBorrowedCategoryFilter, setAvailableBorrowedCategoryFilter] = useState("All");
   const [visibleAvailableBorrowedCount, setVisibleAvailableBorrowedCount] = useState(
     AVAILABLE_BORROWED_PAGE_SIZE
+  );
+  const [visibleDamagedLostCount, setVisibleDamagedLostCount] = useState(
+    DAMAGED_LOST_PAGE_SIZE
   );
 
   const isCategoryAdmin = userData?.role === "categoryAdmin";
@@ -329,6 +333,58 @@ function isDamagedLostItemInsideDateRange(item) {
 
   return true;
 }
+
+/*
+  The Damaged/Lost/Maintenance REPORT (module page, its details modal, its print
+  section, and its CSV export) is a historical log: an item should still appear
+  for the date it was reported even if it has since been fixed and marked back
+  to Available. isDamagedLostItem()/isDamagedLostItemInsideDateRange() above stay
+  "current status only" on purpose, since the dashboard-wide rate/chart/summary
+  cards need to reflect what's broken right now, not history.
+*/
+function hasDamagedLostRecord(item) {
+  return Boolean(
+    item.damagedLostDate ||
+      item.damagedLostAt ||
+      item.maintenanceStartedDate ||
+      item.maintenanceStartedAt
+  );
+}
+
+function isDamagedLostReportItem(item) {
+  return hasDamagedLostRecord(item) || isDamagedLostItem(item);
+}
+
+function isDamagedLostReportItemInsideDateRange(item) {
+  if (!isDamagedLostReportItem(item)) return false;
+
+  const damagedLostDate = getItemDamagedLostDate(item);
+
+  if (!damagedLostDate) {
+    return !dateFrom && !dateTo;
+  }
+
+  if (dateFrom && damagedLostDate < dateFrom) {
+    return false;
+  }
+
+  if (dateTo && damagedLostDate > dateTo) {
+    return false;
+  }
+
+  return true;
+}
+
+function isItemStillDamagedLost(item) {
+  return isDamagedLostItem(item);
+}
+
+function getDamagedLostReportStatusLabel(item) {
+  return isItemStillDamagedLost(item)
+    ? item.condition || item.availability || "Still Damaged/Lost/Maintenance"
+    : "Resolved";
+}
+
 function formatDateForInput(dateValue) {
   if (!dateValue) return "";
 
@@ -582,6 +638,10 @@ useEffect(() => {
 }, [dateFrom, dateTo, activeReportModule]);
 
 useEffect(() => {
+  setVisibleDamagedLostCount(DAMAGED_LOST_PAGE_SIZE);
+}, [dateFrom, dateTo, activeReportModule]);
+
+useEffect(() => {
   setVisibleAvailableBorrowedCount(AVAILABLE_BORROWED_PAGE_SIZE);
 }, [
   availableBorrowedSearchTerm,
@@ -626,6 +686,23 @@ const visibleRequests = useMemo(() => {
   const damagedLostItems = visibleItems.filter((item) =>
     isDamagedLostItemInsideDateRange(item)
   );
+
+  const damagedLostReportItems = visibleItems.filter((item) =>
+    isDamagedLostReportItemInsideDateRange(item)
+  );
+
+  const displayedDamagedLostItems = damagedLostReportItems.slice(
+    0,
+    visibleDamagedLostCount
+  );
+  const hasMoreDamagedLostItems =
+    visibleDamagedLostCount < damagedLostReportItems.length;
+
+  function handleLoadMoreDamagedLostItems() {
+    setVisibleDamagedLostCount((currentCount) =>
+      Math.min(currentCount + DAMAGED_LOST_PAGE_SIZE, damagedLostReportItems.length)
+    );
+  }
 
   const availableBorrowedItemsAll = visibleItems.filter((item) =>
     ["Available", "Reserved", "Borrowed"].includes(item.availability)
@@ -1009,7 +1086,7 @@ function handleExportOverdueItemsCsv() {
 }
 
 function handleExportDamagedLostCsv() {
-  if (damagedLostItems.length === 0) {
+  if (damagedLostReportItems.length === 0) {
     showToast("No damaged, lost, or under maintenance item records to export", "error");
     return;
   }
@@ -1019,6 +1096,7 @@ function handleExportDamagedLostCsv() {
       "Item Code",
       "Item Name",
       "Category",
+      "Report Status",
       "Availability",
       "Condition",
       "Damaged/Lost/Maintenance Date",
@@ -1028,10 +1106,11 @@ function handleExportDamagedLostCsv() {
       "Item ID",
     ];
 
-    const rows = damagedLostItems.map((item) => [
+    const rows = damagedLostReportItems.map((item) => [
       item.itemCode || item.id,
       item.itemName || "Untitled Item",
       getItemCategoryName(item),
+      getDamagedLostReportStatusLabel(item),
       item.availability || "N/A",
       item.condition || item.availability || "N/A",
       getItemDamagedLostDate(item) || "No recorded date",
@@ -1587,6 +1666,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Item Code</th>
           <th>Item Name</th>
           <th>Category</th>
+          <th>Report Status</th>
           <th>Availability</th>
           <th>Condition</th>
           <th>Reported Date</th>
@@ -1595,16 +1675,17 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </thead>
 
       <tbody>
-        {damagedLostItems.length === 0 ? (
+        {damagedLostReportItems.length === 0 ? (
           <tr>
-            <td colSpan="7">No damaged, lost, or under maintenance items.</td>
+            <td colSpan="8">No damaged, lost, or under maintenance items.</td>
           </tr>
         ) : (
-          damagedLostItems.map((item) => (
+          damagedLostReportItems.map((item) => (
             <tr key={item.id}>
               <td>{item.itemCode || item.id}</td>
               <td>{item.itemName || "Untitled Item"}</td>
               <td>{getItemCategoryName(item)}</td>
+              <td>{getDamagedLostReportStatusLabel(item)}</td>
               <td>{item.availability || "N/A"}</td>
               <td>{item.condition || item.availability || "N/A"}</td>
               <td>{getItemDamagedLostDate(item) || "No recorded date"}</td>
@@ -1800,6 +1881,19 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
 
       <div className="reports-damaged-modal-grid">
         <div>
+          <span>Report Status</span>
+          <strong
+            className={`reports-damage-pill ${
+              isItemStillDamagedLost(viewingDamagedItem)
+                ? "reports-damage-pill-active"
+                : "reports-damage-pill-resolved"
+            }`}
+          >
+            {getDamagedLostReportStatusLabel(viewingDamagedItem)}
+          </strong>
+        </div>
+
+        <div>
           <span>Category</span>
           <strong>{getItemCategoryName(viewingDamagedItem)}</strong>
         </div>
@@ -1984,7 +2078,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           : activeReportModule === "overdueItems"
           ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
           : activeReportModule === "damagedLostItems"
-          ? "Filter damaged, lost, and under-maintenance items by the date they were reported, refresh the data, or export the records as CSV."
+          ? "Filter damaged, lost, and under-maintenance items by the date they were reported (resolved items still show for that date), refresh the data, or export the records as CSV."
           : "Filter frequently borrowed items by date range and refresh the data."}
       </p>
     </div>
@@ -2068,7 +2162,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         type="button"
         className="reports-secondary-btn reports-inline-export-btn"
         onClick={handleExportDamagedLostCsv}
-        disabled={damagedLostItems.length === 0}
+        disabled={damagedLostReportItems.length === 0}
       >
         Export Damaged / Lost / Maintenance
       </button>
@@ -2665,76 +2759,111 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
         <div className="reports-section-heading">
           <div>
             <h2>Damaged / Lost / Maintenance Items</h2>
-            <p>Items currently marked as damaged, lost, or under maintenance.</p>
+            <p>
+              Showing {displayedDamagedLostItems.length} of{" "}
+              {damagedLostReportItems.length} item
+              {damagedLostReportItems.length === 1 ? "" : "s"} reported as
+              damaged, lost, or under maintenance in this date range,
+              including items that have since been resolved.
+            </p>
           </div>
 
         </div>
         
 
-        {damagedLostItems.length === 0 ? (
+        {damagedLostReportItems.length === 0 ? (
           <div className="reports-empty">
             <img src="/qborrow-logo.png" alt="QBorrow Logo" />
             <h2>No damaged, lost, or under maintenance items</h2>
-            <p>Your visible inventory has no damaged, lost, or under maintenance records.</p>
+            <p>Your visible inventory has no damaged, lost, or under maintenance records for this range.</p>
           </div>
 ) : (
   <>
-    <div className="reports-damaged-table-header">
-      <span>Item</span>
-      <span>Category</span>
-      <span>Availability</span>
-      <span>Reported Date</span>
-      <span>Borrower</span>
-      <span>Condition</span>
-      <span>Action</span>
+    <div className="reports-damaged-table-scroll" aria-label="Damaged / Lost / Maintenance items table">
+      <div className="reports-damaged-table-header">
+        <span>Item</span>
+        <span>Category</span>
+        <span>Reported Date</span>
+        <span>Borrower</span>
+        <span>Report Status</span>
+        <span>Availability</span>
+        <span>Condition</span>
+        <span>Action</span>
+      </div>
+
+      <div className="reports-damaged-table-grid">
+        {displayedDamagedLostItems.map((item) => (
+          <article className="reports-damaged-table-row" key={item.id}>
+            <div className="reports-damaged-table-cell reports-damaged-item-cell">
+              <span>{item.itemCode || item.id}</span>
+              <strong>{item.itemName || "Untitled Item"}</strong>
+            </div>
+
+            <div className="reports-damaged-table-cell">
+              <span>Category</span>
+              <strong>{getItemCategoryName(item)}</strong>
+            </div>
+
+            <div className="reports-damaged-table-cell">
+              <span>Reported Date</span>
+              <strong>{getItemDamagedLostDate(item) || "No recorded date"}</strong>
+            </div>
+
+            <div className="reports-damaged-table-cell">
+              <span>Borrower</span>
+              <strong>{getItemDamagedLostBorrowerName(item)}</strong>
+            </div>
+
+            <div className="reports-damaged-table-status">
+              <strong
+                className={`reports-damage-pill ${
+                  isItemStillDamagedLost(item)
+                    ? "reports-damage-pill-active"
+                    : "reports-damage-pill-resolved"
+                }`}
+              >
+                {getDamagedLostReportStatusLabel(item)}
+              </strong>
+            </div>
+
+            <div className="reports-damaged-table-cell">
+              <span>Availability</span>
+              <strong>{item.availability || "N/A"}</strong>
+            </div>
+
+            <div className="reports-damaged-table-cell">
+              <span>Condition</span>
+              <strong>{item.condition || item.availability || "N/A"}</strong>
+            </div>
+
+            <div className="reports-damaged-table-actions">
+              <button
+                type="button"
+                className="reports-damaged-icon-btn"
+                data-tooltip="View Details"
+                title="View Details"
+                aria-label={`View details for ${item.itemName || "item"}`}
+                onClick={() => setViewingDamagedItem(item)}
+              >
+                <span aria-hidden="true">i</span>
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
 
-    <div className="reports-damaged-table-grid">
-      {damagedLostItems.map((item) => (
-        <article className="reports-damaged-table-row" key={item.id}>
-          <div className="reports-damaged-table-cell reports-damaged-item-cell">
-            <span>{item.itemCode || item.id}</span>
-            <strong>{item.itemName || "Untitled Item"}</strong>
-          </div>
-
-          <div className="reports-damaged-table-cell">
-            <span>Category</span>
-            <strong>{getItemCategoryName(item)}</strong>
-          </div>
-
-          <div className="reports-damaged-table-cell">
-            <span>Availability</span>
-            <strong>{item.availability || "N/A"}</strong>
-          </div>
-
-          <div className="reports-damaged-table-cell">
-            <span>Reported Date</span>
-            <strong>{getItemDamagedLostDate(item) || "No recorded date"}</strong>
-          </div>
-
-          <div className="reports-damaged-table-cell">
-            <span>Borrower</span>
-            <strong>{getItemDamagedLostBorrowerName(item)}</strong>
-          </div>
-
-          <div className="reports-damaged-table-status">
-            <strong className="reports-damage-pill">
-              {item.condition || item.availability || "N/A"}
-            </strong>
-          </div>
-
-          <div className="reports-damaged-table-actions">
-            <button
-              type="button"
-              className="reports-secondary-btn"
-              onClick={() => setViewingDamagedItem(item)}
-            >
-              Details
-            </button>
-          </div>
-        </article>
-      ))}
-    </div>
+    {hasMoreDamagedLostItems && (
+      <div className="reports-load-more-row">
+        <button
+          type="button"
+          className="reports-secondary-btn"
+          onClick={handleLoadMoreDamagedLostItems}
+        >
+          Load More Items
+        </button>
+      </div>
+    )}
   </>
 )}
       </section>
@@ -2905,10 +3034,13 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
                     <div className="reports-availability-table-actions">
                       <button
                         type="button"
-                        className="reports-secondary-btn"
+                        className="reports-availability-icon-btn"
+                        data-tooltip="View Details"
+                        title="View Details"
+                        aria-label={`View details for ${item.itemName || "item"}`}
                         onClick={() => setViewingAvailableBorrowedItem(item)}
                       >
-                        Details
+                        <span aria-hidden="true">i</span>
                       </button>
                     </div>
                   </article>

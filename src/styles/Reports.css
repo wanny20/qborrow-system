@@ -789,9 +789,15 @@
 .status-rejected,
 .status-cancelled,
 .status-overdue,
-.reports-damage-pill {
+.reports-damage-pill,
+.reports-damage-pill-active {
   background: var(--reports-danger-soft);
   color: #991b1b;
+}
+
+.reports-damage-pill-resolved {
+  background: var(--reports-success-soft);
+  color: #166534;
 }
 
 /* =========================
@@ -817,13 +823,14 @@
 .reports-damaged-table-row {
   display: grid;
   grid-template-columns:
-    minmax(160px, 1.3fr)
+    minmax(150px, 1.2fr)
+    minmax(100px, 0.8fr)
+    108px
     minmax(110px, 0.9fr)
-    100px
-    112px
-    minmax(120px, 1fr)
-    112px
-    95px;
+    118px
+    92px
+    92px
+    128px;
   gap: 8px;
   align-items: center;
 }
@@ -906,13 +913,22 @@
 .reports-damaged-table-actions {
   display: grid;
   align-items: center;
+  justify-content: stretch;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .reports-history-table-actions .reports-secondary-btn,
 .reports-damaged-table-actions .reports-secondary-btn {
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 8px;
   font-size: 0.56rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* =========================
@@ -3233,9 +3249,15 @@ html[data-theme="dark"] .reports-panel > p {
 .status-rejected,
 .status-cancelled,
 .status-overdue,
-.reports-damage-pill {
+.reports-damage-pill,
+.reports-damage-pill-active {
   background: var(--reports-danger-soft);
   color: #991b1b;
+}
+
+.reports-damage-pill-resolved {
+  background: var(--reports-success-soft);
+  color: #166534;
 }
 
 /* =========================
@@ -3261,13 +3283,14 @@ html[data-theme="dark"] .reports-panel > p {
 .reports-damaged-table-row {
   display: grid;
   grid-template-columns:
-    minmax(160px, 1.3fr)
+    minmax(150px, 1.2fr)
+    minmax(100px, 0.8fr)
+    108px
     minmax(110px, 0.9fr)
-    100px
-    112px
-    minmax(120px, 1fr)
-    112px
-    95px;
+    118px
+    92px
+    92px
+    128px;
   gap: 8px;
   align-items: center;
 }
@@ -3350,13 +3373,22 @@ html[data-theme="dark"] .reports-panel > p {
 .reports-damaged-table-actions {
   display: grid;
   align-items: center;
+  justify-content: stretch;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .reports-history-table-actions .reports-secondary-btn,
 .reports-damaged-table-actions .reports-secondary-btn {
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 8px;
   font-size: 0.56rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* =========================
@@ -9335,4 +9367,527 @@ html[data-theme="dark"] .reports-page .reports-availability-table-scroll::-webki
     width: auto !important;
     min-width: 0 !important;
   }
+}
+
+/* =========================================================
+   DAMAGED / LOST / MAINTENANCE ITEMS - ICON ACTION + SCROLL FIX
+   Paste at the VERY BOTTOM of Reports.css
+
+   Mirrors the same pattern used for Borrowing History (icon button)
+   and Available / Borrowed Items (sideways-scrolling table on mobile):
+   - Details button becomes a compact icon so it fits in the row.
+   - Title, "Showing" text, and Load More button stay fixed in place.
+   - Only the table header + rows scroll sideways on small screens,
+     instead of collapsing/wrapping awkwardly.
+========================================================= */
+
+/* Narrow the action column now that it only holds an icon */
+.reports-page .reports-damaged-table-header,
+.reports-page .reports-damaged-table-row {
+  grid-template-columns:
+    minmax(150px, 1.2fr)
+    minmax(100px, 0.8fr)
+    108px
+    minmax(110px, 0.9fr)
+    118px
+    92px
+    92px
+    64px;
+}
+
+.reports-page .reports-panel:has(.reports-damaged-table-scroll) {
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+.reports-page .reports-damaged-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 8px;
+  margin-top: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  position: relative;
+}
+
+.reports-page .reports-damaged-table-scroll .reports-damaged-table-header,
+.reports-page .reports-damaged-table-scroll .reports-damaged-table-grid,
+.reports-page .reports-damaged-table-scroll .reports-damaged-table-row {
+  max-width: none;
+}
+
+.reports-page .reports-damaged-table-scroll::-webkit-scrollbar {
+  height: 7px;
+}
+
+.reports-page .reports-damaged-table-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+}
+
+.reports-page .reports-damaged-table-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.45);
+}
+
+html[data-theme="dark"] .reports-page .reports-damaged-table-scroll::-webkit-scrollbar-track {
+  background: rgba(147, 197, 253, 0.10);
+}
+
+html[data-theme="dark"] .reports-page .reports-damaged-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.38);
+}
+
+@media (max-width: 900px) {
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-header,
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-row {
+    width: 932px !important;
+    min-width: 932px !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns:
+      170px
+      120px
+      100px
+      130px
+      100px
+      85px
+      85px
+      60px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-grid {
+    width: 932px !important;
+    min-width: 932px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-header {
+    display: grid !important;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-cell span {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-panel:has(.reports-damaged-table-scroll) {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-header,
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-row {
+    width: 834px !important;
+    min-width: 834px !important;
+    box-sizing: border-box !important;
+    grid-template-columns:
+      150px
+      105px
+      90px
+      115px
+      90px
+      75px
+      75px
+      56px !important;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-grid {
+    width: 834px !important;
+    min-width: 834px !important;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-header {
+    padding: 10px;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-row {
+    min-height: 56px;
+    padding: 9px 10px;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-table-cell strong {
+    font-size: 0.68rem;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damaged-item-cell span {
+    font-size: 0.5rem;
+  }
+
+  .reports-page .reports-damaged-table-scroll .reports-damage-pill {
+    font-size: 0.56rem;
+    min-height: 25px;
+    padding: 0 9px;
+  }
+}
+
+/* Details icon button (matches Borrowing History's icon action button) */
+.reports-page .reports-damaged-table-actions {
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 8 !important;
+}
+
+.reports-page .reports-damaged-table-row {
+  overflow: visible !important;
+}
+
+.reports-page .reports-damaged-table-row:hover {
+  position: relative !important;
+  z-index: 25 !important;
+}
+
+.reports-page .reports-damaged-icon-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 12px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.18) !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease !important;
+}
+
+.reports-page .reports-damaged-icon-btn span {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+}
+
+.reports-page .reports-damaged-icon-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  background: #1d4ed8 !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.2) !important;
+}
+
+.reports-page .reports-damaged-icon-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28) !important;
+  outline-offset: 3px !important;
+}
+
+/* Tooltip appears to the left so it does not get clipped at the right edge */
+.reports-page .reports-damaged-icon-btn::after {
+  content: attr(data-tooltip) !important;
+  position: absolute !important;
+  right: calc(100% + 10px) !important;
+  top: 50% !important;
+  transform: translateY(-50%) translateX(6px) !important;
+  z-index: 99999 !important;
+  min-width: max-content !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22) !important;
+  padding: 7px 10px !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease !important;
+}
+
+.reports-page .reports-damaged-icon-btn:hover::after,
+.reports-page .reports-damaged-icon-btn:focus-visible::after {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Hide any leftover text button in the action cell */
+.reports-page .reports-damaged-table-actions > .reports-secondary-btn {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-damaged-icon-btn {
+    width: 29px !important;
+    min-width: 29px !important;
+    max-width: 29px !important;
+    height: 29px !important;
+    min-height: 29px !important;
+    max-height: 29px !important;
+    border-radius: 10px !important;
+  }
+
+  .reports-page .reports-damaged-icon-btn span {
+    font-size: 0.78rem !important;
+  }
+
+  .reports-page .reports-damaged-icon-btn::after {
+    right: calc(100% + 8px) !important;
+    padding: 6px 9px !important;
+    font-size: 0.52rem !important;
+  }
+}
+
+html[data-theme="dark"] .reports-page .reports-damaged-icon-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-damaged-icon-btn:hover {
+  background: #1d4ed8 !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-damaged-icon-btn::after {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #020617 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+/* =========================================================
+   AVAILABLE / BORROWED ITEMS - DETAILS ICON BUTTON
+   Paste at the VERY BOTTOM of Reports.css
+
+   Mirrors the Borrowing History / Damaged-Lost icon button pattern:
+   - Details button becomes a compact icon so it fits in the row.
+   - Shows "View Details" on hover.
+   - Action column narrowed to fit the icon instead of full text button.
+========================================================= */
+
+.reports-availability-table-header,
+.reports-availability-table-row {
+  grid-template-columns:
+    minmax(170px, 1.3fr)
+    minmax(120px, 0.9fr)
+    110px
+    100px
+    minmax(140px, 1.1fr)
+    64px;
+}
+
+.reports-page .reports-availability-table-actions {
+  display: grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 8 !important;
+}
+
+.reports-page .reports-availability-table-row {
+  overflow: visible !important;
+}
+
+.reports-page .reports-availability-table-row:hover {
+  position: relative !important;
+  z-index: 25 !important;
+}
+
+.reports-page .reports-availability-icon-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  position: relative !important;
+  overflow: visible !important;
+  border: 2px solid #1e293b !important;
+  border-radius: 12px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.18) !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  cursor: pointer !important;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease !important;
+}
+
+.reports-page .reports-availability-icon-btn span {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+}
+
+.reports-page .reports-availability-icon-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  background: #1d4ed8 !important;
+  box-shadow: 5px 5px 0 rgba(15, 23, 42, 0.2) !important;
+}
+
+.reports-page .reports-availability-icon-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28) !important;
+  outline-offset: 3px !important;
+}
+
+/* Tooltip appears to the left so it does not get clipped at the right edge */
+.reports-page .reports-availability-icon-btn::after {
+  content: attr(data-tooltip) !important;
+  position: absolute !important;
+  right: calc(100% + 10px) !important;
+  top: 50% !important;
+  transform: translateY(-50%) translateX(6px) !important;
+  z-index: 99999 !important;
+  min-width: max-content !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  border-radius: 999px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22) !important;
+  padding: 7px 10px !important;
+  font-size: 0.62rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease !important;
+}
+
+.reports-page .reports-availability-icon-btn:hover::after,
+.reports-page .reports-availability-icon-btn:focus-visible::after {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(-50%) translateX(0) !important;
+}
+
+/* Hide any leftover text button in the action cell */
+.reports-page .reports-availability-table-actions > .reports-secondary-btn {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header,
+  .reports-page .reports-availability-table-scroll .reports-availability-table-row {
+    width: 810px !important;
+    min-width: 810px !important;
+    box-sizing: border-box !important;
+    grid-template-columns:
+      170px
+      130px
+      110px
+      110px
+      160px
+      64px !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-grid {
+    width: 810px !important;
+    min-width: 810px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .reports-page .reports-availability-table-scroll .reports-availability-table-header,
+  .reports-page .reports-availability-table-scroll .reports-availability-table-row {
+    width: 726px !important;
+    min-width: 726px !important;
+    box-sizing: border-box !important;
+    grid-template-columns:
+      150px
+      110px
+      100px
+      100px
+      140px
+      60px !important;
+  }
+
+  .reports-page .reports-availability-table-scroll .reports-availability-table-grid {
+    width: 726px !important;
+    min-width: 726px !important;
+  }
+
+  .reports-page .reports-availability-icon-btn {
+    width: 29px !important;
+    min-width: 29px !important;
+    max-width: 29px !important;
+    height: 29px !important;
+    min-height: 29px !important;
+    max-height: 29px !important;
+    border-radius: 10px !important;
+  }
+
+  .reports-page .reports-availability-icon-btn span {
+    font-size: 0.78rem !important;
+  }
+
+  .reports-page .reports-availability-icon-btn::after {
+    right: calc(100% + 8px) !important;
+    padding: 6px 9px !important;
+    font-size: 0.52rem !important;
+  }
+}
+
+html[data-theme="dark"] .reports-page .reports-availability-icon-btn {
+  border-color: rgba(226, 232, 240, 0.38) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-availability-icon-btn:hover {
+  background: #1d4ed8 !important;
+}
+
+html[data-theme="dark"] .reports-page .reports-availability-icon-btn::after {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: #020617 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
