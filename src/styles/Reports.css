@@ -817,10 +817,12 @@
 .reports-damaged-table-row {
   display: grid;
   grid-template-columns:
-    minmax(170px, 1.4fr)
-    minmax(130px, 1fr)
-    120px
-    120px
+    minmax(160px, 1.3fr)
+    minmax(110px, 0.9fr)
+    100px
+    112px
+    minmax(120px, 1fr)
+    112px
     95px;
   gap: 8px;
   align-items: center;
@@ -1080,7 +1082,8 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.reports-history-modal-grid p {
+.reports-history-modal-grid p,
+.reports-damaged-modal-grid p {
   margin: 4px 0 0;
   color: var(--reports-muted);
   font-size: 0.74rem;
@@ -3258,10 +3261,12 @@ html[data-theme="dark"] .reports-panel > p {
 .reports-damaged-table-row {
   display: grid;
   grid-template-columns:
-    minmax(170px, 1.4fr)
-    minmax(130px, 1fr)
-    120px
-    120px
+    minmax(160px, 1.3fr)
+    minmax(110px, 0.9fr)
+    100px
+    112px
+    minmax(120px, 1fr)
+    112px
     95px;
   gap: 8px;
   align-items: center;
@@ -3521,7 +3526,8 @@ html[data-theme="dark"] .reports-panel > p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.reports-history-modal-grid p {
+.reports-history-modal-grid p,
+.reports-damaged-modal-grid p {
   margin: 4px 0 0;
   color: var(--reports-muted);
   font-size: 0.74rem;
