@@ -5273,3 +5273,76 @@ html[data-theme="dark"] .return-loading-card img {
   filter: none !important;
   /* Keeps the original logo colors */
 }
+/* =========================================================
+   RETURN CONFIRMATION - DARK MODE FIX FOR BORROWED TABLE
+========================================================= */
+
+html[data-theme="dark"] .return-page .return-borrowed-table-header,
+html[data-theme="dark"] .return-page .return-borrowed-row {
+  background: #111827 !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .return-page .return-borrowed-row.selected {
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(250, 204, 21, 0.12)),
+    #111827 !important;
+  border-color: #60a5fa !important;
+}
+
+html[data-theme="dark"] .return-page .return-borrowed-table-header span {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .return-page .return-borrowed-cell strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .return-page .return-borrowed-item-cell span,
+html[data-theme="dark"] .return-page .return-borrowed-borrower-cell span {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+}
+
+/* mobile stacked-card variant of the same cells */
+html[data-theme="dark"] .return-page .return-borrowed-cell {
+  background: #1e293b !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+/* =========================================================
+   RETURN CONFIRMATION - REMOVE BOXED CELL BACKGROUND
+   IN TABLE-ROW LAYOUT (fixes rectangle behind item/borrower/
+   category/date text, most visible in dark mode)
+========================================================= */
+
+.return-page .return-table-scroll-area .return-borrowed-cell,
+.return-page .return-table-scroll-area .return-returned-cell {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Cover the non-scroll-area table too, in case it renders without
+   the .return-table-scroll-area wrapper at this width */
+@media (min-width: 761px) and (max-width: 900px) {
+  .return-page .return-borrowed-cell,
+  .return-page .return-returned-cell {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}
+
+html[data-theme="dark"] .return-page .return-table-scroll-area .return-borrowed-cell,
+html[data-theme="dark"] .return-page .return-table-scroll-area .return-returned-cell,
+html[data-theme="dark"] .return-page .return-borrowed-cell,
+html[data-theme="dark"] .return-page .return-returned-cell {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}

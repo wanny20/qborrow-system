@@ -545,6 +545,20 @@
   gap: 18px;
 }
 
+.dashboard-main-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboard-main-grid-single .dashboard-panel {
+  max-width: none;
+}
+
+@media (min-width: 900px) {
+  .dashboard-main-grid-single .dashboard-action-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
 .dashboard-panel {
   min-width: 0;
   border: 1px solid rgba(226, 232, 240, 0.95);
@@ -3337,4 +3351,25 @@ html[data-theme="dark"] .dashboard-loading-card img {
 html[data-theme="dark"] .dashboard-loading-card img {
   filter: drop-shadow(0 12px 22px rgba(37, 99, 235, 0.3)) !important;
   /* Removes brightness(0) invert(1) – keeps original logo colors */
+}
+/* =========================================================
+   DASHBOARD - SINGLE PANEL (NEEDS ATTENTION REMOVED)
+   With only Quick Actions left in the row, force it to take the
+   full width instead of the old 2-panel 50/50 split, and lay the
+   action buttons out in 3 columns so they fill the space cleanly.
+========================================================= */
+.dashboard-page .dashboard-main-grid-single {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.dashboard-page .dashboard-main-grid-single .dashboard-panel {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+@media (min-width: 900px) {
+  .dashboard-page .dashboard-main-grid-single .dashboard-action-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
 }

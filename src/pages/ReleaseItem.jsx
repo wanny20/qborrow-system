@@ -1696,7 +1696,7 @@ return (
             </div>
 
             {visibleApprovedRequests.length === 0 ? (
-              <div className="release-empty release-empty-dark">
+              <div className="release-empty">
                 <img src="/qborrow-logo.png" alt="QBorrow Logo" />
                 <h2>No approved requests</h2>
                 <p>No items are currently waiting for release.</p>
