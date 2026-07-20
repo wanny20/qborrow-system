@@ -462,11 +462,6 @@
     grid-template-columns: 1fr;
   }
 }
-/* =========================================================
-   FINAL ADMIN DASHBOARD LIST MOBILE RESPONSIVE FIX
-   Paste at the very bottom of AdminDashboardList.css
-========================================================= */
-
 .admin-list-page {
   width: 100%;
   max-width: 100%;
@@ -1204,13 +1199,6 @@
     width: 100% !important;
   }
 }
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - DARK MODE CARD OPTIMIZATION
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 /* Keep this page from inheriting light card backgrounds in night mode */
 html[data-theme="dark"] body .app-page-content .admin-list-page,
 html[data-theme="dark"] body .admin-list-page {
@@ -1511,14 +1499,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-modal-close {
   color: #991b1b !important;
   box-shadow: none !important;
 }
-
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - ICON ACTION BUTTONS
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 .admin-list-page .admin-list-compact-actions {
   display: flex !important;
   align-items: center !important;
@@ -1705,14 +1685,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
     font-size: 0.9rem !important;
   }
 }
-
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - ACTIONS COLUMN ALIGNMENT FIX
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 /* Use one shared column template for header and rows */
 .admin-list-page .admin-list-compact-header.item-table,
 .admin-list-page .admin-list-compact-row.item-table {
@@ -1787,20 +1759,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
     justify-content: flex-start !important;
   }
 }
-
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - TABLE OVERLAP / ACTION CLIPPING FIX
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-
-   Fix:
-   - Prevents the table rows from overflowing/cutting the Actions column.
-   - Header and data rows use the same column widths.
-   - The table area becomes horizontally scrollable when the screen is narrow.
-   - Keeps the Actions buttons inside the row outline.
-========================================================= */
-
 /* Keep the grid from stretching past the panel without a scroll area */
 .admin-list-page .admin-list-compact-grid {
   width: 100% !important;
@@ -1932,18 +1890,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-icon-btn::after {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - MOBILE HEADER + SEARCH/SHOWING COMPACT FIX
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-
-   Fix:
-   - Mobile title card keeps Back to Dashboard on the right side.
-   - Search input and Showing card are now in one compact row.
-   - Showing card is visually inside/attached with the search form area.
-   - Reduces vertical space on small screens.
-========================================================= */
-
 @media (max-width: 760px) {
   /* Title card: text left, back button right */
   .admin-list-page .admin-list-header-compact .admin-list-header-content {
@@ -2141,11 +2087,6 @@ html[data-theme="dark"] .admin-list-page .admin-list-count-card strong {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
-/* =========================================================
-   ADMIN DASHBOARD LIST - ITEM THUMBNAIL IMAGES
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 /* Container for image + text */
 .admin-list-item-preview {
   display: flex !important;
@@ -2285,11 +2226,6 @@ html[data-theme="dark"] .admin-list-item-info strong {
 html[data-theme="dark"] .admin-list-item-info p {
   color: #94a3b8 !important;
 }
-/* =========================================================
-   ADMIN DASHBOARD LIST - ITEM THUMBNAIL (CLEAN)
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 .admin-list-item-preview {
   display: flex !important;
   align-items: flex-start !important;
@@ -2428,11 +2364,6 @@ html[data-theme="dark"] .admin-list-item-info strong {
 html[data-theme="dark"] .admin-list-item-info p {
   color: #94a3b8 !important;
 }
-/* =========================================================
-   ADMIN LIST MODAL - ALWAYS ABOVE SIDEBAR
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 /* Backdrop covers everything including sidebar */
 .admin-list-modal-backdrop {
   position: fixed !important;
@@ -2566,14 +2497,6 @@ html[data-theme="dark"] .admin-list-modal-close:hover {
     font-size: 1.2rem !important;
   }
 }
-/* =========================================================
-   FORCE CENTER - STATUS & ACTIONS COLUMNS (FINAL FIX)
-   High specificity to override ALL existing rules.
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
-/* ---------- HEADER ALIGNMENT ---------- */
-
 /* Status header: force center */
 .admin-list-page .admin-list-compact-header.item-table span:nth-child(5),
 .admin-list-page .admin-list-compact-header.request-table span:nth-child(5) {
@@ -2685,11 +2608,6 @@ html[data-theme="dark"] .admin-list-modal-close:hover {
     justify-self: flex-start !important;
   }
 }
-/* =========================================================
-   FIX: STATUS HEADER ONLY - FORCE CENTER
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 /* Target the STATUS header in the item table ONLY */
 .admin-list-page .admin-list-compact-header.item-table span:nth-child(4) {
   justify-content: center !important;
@@ -2734,10 +2652,6 @@ html[data-theme="dark"] .admin-list-modal-close:hover {
   align-items: center !important;
   width: 100% !important;
 }
-/* =========================================================
-   MOBILE: Clean Action Icons
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
 
 @media (max-width: 760px) {
   /* Force action buttons to be clean icons only - no text labels */
@@ -2865,18 +2779,6 @@ html[data-theme="dark"] .admin-list-modal-close:hover {
     gap: 5px !important;
   }
 }
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - ACTIONS ROW LAYOUT FIX (761-1180px)
-   The "FORCE CENTER" block above switches .admin-list-compact-actions
-   to a 2-column grid (100px 1fr), which only fits 2 of the 3 icon
-   buttons on one line. Restore a simple single-row flex layout here
-   so all 3 icons stay aligned on one line, right up against the
-   status pill, with no leftover column width to their right.
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 @media (max-width: 1180px) {
   .admin-list-page .admin-list-compact-row .admin-list-compact-actions,
   .admin-list-page .admin-list-compact-row.item-table .admin-list-compact-actions,
@@ -2893,13 +2795,6 @@ html[data-theme="dark"] .admin-list-modal-close:hover {
     justify-self: auto !important;
   }
 }
-
-
-/* =========================================================
-   ADMIN DASHBOARD LIST - LOAD MORE BUTTON
-   Paste at the VERY BOTTOM of AdminDashboardList.css
-========================================================= */
-
 .admin-list-page .admin-list-load-more {
   display: flex;
   justify-content: center;
@@ -2968,11 +2863,6 @@ html[data-theme="dark"] body .admin-list-page .admin-list-load-more-btn:hover {
   background: #172033 !important;
   transform: translateY(-1px) !important;
 }
-/* =========================================================
-   FIX: Entire table scrolls together, Load More stays fixed
-   REPLACE the old scrollbar/overflow rules with this
-========================================================= */
-
 /* Remove scroll from panel itself */
 .admin-list-page .admin-list-panel {
   overflow: visible !important;
@@ -3058,26 +2948,6 @@ html[data-theme="dark"] .admin-list-page .admin-list-table-scroll-wrapper::-webk
     width: 100% !important;
   }
 }
-
-/* =========================================================
-   FIX: Category/Condition showing as "S…"/"V…"
-   WITHOUT breaking the horizontal-scroll table on mobile.
-
-   Root cause: on screens <=1180px, an older rule split every cell
-   into a "120px label + 1fr value" mini-grid (meant for a stacked
-   card layout), but a different unconditional patch was ALSO
-   forcing the full 5/6-column desktop grid to apply at every
-   width. Category/Condition columns are ~110-140px wide - once the
-   120px label column ate most of that, the value had almost no
-   room left, so it rendered as a single letter + ellipsis.
-
-   Fix: keep the table as an actual table (header + columns) at
-   every width, and stop cells from splitting into a label+value
-   grid - the header row already labels the columns, so each cell
-   just shows its value at full column width. The existing
-   .admin-list-table-scroll-wrapper (overflow-x: auto) still lets
-   you swipe sideways to see every column, same as before.
-========================================================= */
 
 @media (max-width: 1180px) {
   .admin-list-page .admin-list-compact-header.item-table,
