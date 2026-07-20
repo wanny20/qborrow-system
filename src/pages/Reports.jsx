@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -50,6 +50,7 @@ const [dateTo, setDateTo] = useState("");
   const [visibleLateOverdueCount, setVisibleLateOverdueCount] = useState(
     LATE_OVERDUE_REPORT_PAGE_SIZE
   );
+  const printRootRef = useRef(null);
   const [viewingHistoryRequest, setViewingHistoryRequest] = useState(null);
   const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
   const [viewingAvailableBorrowedItem, setViewingAvailableBorrowedItem] = useState(null);
@@ -894,7 +895,126 @@ function clearAvailableBorrowedFilters() {
 }
 
 function handlePrintReport() {
-  window.print();
+  const printSource = printRootRef.current;
+
+  if (!printSource) {
+    window.print();
+    return;
+  }
+
+  const printWindow = window.open("", "_blank", "width=1200,height=900");
+
+  if (!printWindow) {
+    // Popup blocked — fall back to the old in-page print, which at least
+    // works once the user allows popups for this site.
+    showToast?.(
+      "Your browser blocked the report print window. Please allow popups for this site and try again.",
+      "error"
+    );
+    window.print();
+    return;
+  }
+
+  const printDocument = printWindow.document;
+
+  printDocument.open();
+  printDocument.write(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>QBorrow Report</title>
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 10mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+        color: #111827;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .reports-print-header {
+        border-bottom: 2px solid #111827;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+      }
+
+      .reports-print-header h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .reports-print-header p,
+      .reports-print-header span,
+      .reports-print-header strong {
+        display: block;
+        margin-top: 3px;
+        font-size: 10px;
+      }
+
+      .reports-print-section {
+        page-break-inside: avoid;
+        margin-bottom: 14px;
+      }
+
+      .reports-print-section h2 {
+        margin: 0 0 6px;
+        font-size: 14px;
+      }
+
+      .reports-print-section table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8px;
+        table-layout: fixed;
+      }
+
+      .reports-print-section th,
+      .reports-print-section td {
+        border: 1px solid #111827;
+        padding: 3px 4px;
+        text-align: left;
+        vertical-align: top;
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+
+      .reports-print-section th {
+        background: #e5e7eb;
+        color: #111827;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    ${printSource.innerHTML}
+  </body>
+</html>`);
+  printDocument.close();
+
+  // Give the popup a moment to lay out the content before invoking print,
+  // since document.write() finishes synchronously but layout/paint doesn't.
+  let hasPrinted = false;
+  const triggerPrint = () => {
+    if (hasPrinted) return;
+    hasPrinted = true;
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  printWindow.onload = triggerPrint;
+
+  // Some browsers (notably ones that block onload for document.write'd
+  // content) never fire onload — fall back to a short timer as well.
+  setTimeout(triggerPrint, 300);
 }
 function getCsvDateStamp() {
   return new Date().toISOString().slice(0, 10);
@@ -1179,6 +1299,34 @@ function handleExportAvailableBorrowedCsv() {
   }
 }
 
+function handleExportFrequentlyBorrowedCsv() {
+  if (frequentlyBorrowedItems.length === 0) {
+    showToast("No frequently borrowed item records to export", "error");
+    return;
+  }
+
+  try {
+    const headers = ["Rank", "Item Name", "Category", "Borrow Count"];
+
+    const rows = frequentlyBorrowedItems.map((item, index) => [
+      index + 1,
+      item.itemName,
+      item.categoryName,
+      item.count,
+    ]);
+
+    downloadCsvFile(
+      `qborrow-frequently-borrowed-items-${getCsvDateStamp()}.csv`,
+      headers,
+      rows
+    );
+
+    showActionSuccess("Frequently Borrowed Items Exported");
+  } catch (error) {
+    showActionError("Failed to export frequently borrowed items", error);
+  }
+}
+
 function getPercentage(value, total) {
   if (!total || total <= 0) return 0;
 
@@ -1420,8 +1568,16 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
 
   return (
     <div className="reports-page">
-      <div className="reports-print-only reports-print-header">
-  <h1>QBorrow Reports</h1>
+      <div className="reports-print-only reports-print-root" ref={printRootRef}>
+      <div className="reports-print-header">
+  <h1>
+    {activeReportModule === "dashboard"
+      ? "QBorrow Reports"
+      : `QBorrow Report — ${
+          REPORT_MODULES.find((moduleItem) => moduleItem.key === activeReportModule)
+            ?.label || "Report"
+        }`}
+  </h1>
   <p>QR-Based Digital Borrowing System</p>
   <span>Generated: {getReportGeneratedDate()}</span>
   <span>Report Range: {getDateRangeLabel()}</span>
@@ -1430,7 +1586,8 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     <strong>Assigned categories: {getAssignedCategoryNames()}</strong>
   )}
 </div>
-<div className="reports-print-only reports-formal-report">
+<div className="reports-formal-report">
+  {activeReportModule === "dashboard" && (
   <section className="reports-print-section">
     <h2>Inventory Summary</h2>
 
@@ -1458,7 +1615,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+  )}
 
+  {activeReportModule === "dashboard" && (
   <section className="reports-print-section">
     <h2>Borrow Request Summary</h2>
 
@@ -1484,7 +1643,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+  )}
 
+  {activeReportModule === "dashboard" && (
   <section className="reports-print-section">
   <h2>Statistics Overview</h2>
 
@@ -1508,7 +1669,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     </tbody>
   </table>
 </section>
+  )}
 
+  {activeReportModule === "dashboard" && (
   <section className="reports-print-section">
     <h2>Category Report</h2>
 
@@ -1546,7 +1709,9 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+  )}
 
+  {(activeReportModule === "dashboard" || activeReportModule === "frequentlyBorrowed") && (
   <section className="reports-print-section">
     <h2>Frequently Borrowed Items</h2>
 
@@ -1566,7 +1731,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
             <td colSpan="4">No borrowed item records available.</td>
           </tr>
         ) : (
-          frequentlyBorrowedItems.slice(0, 10).map((item, index) => (
+          frequentlyBorrowedItems.map((item, index) => (
             <tr key={item.itemKey}>
               <td>{index + 1}</td>
               <td>{item.itemName}</td>
@@ -1578,77 +1743,51 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+  )}
 
+  {(activeReportModule === "dashboard" || activeReportModule === "overdueItems") && (
   <section className="reports-print-section">
     <h2>Late / Overdue Returns</h2>
 
     <table>
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Item</th>
+          <th>Record Type</th>
+          <th>Item Code</th>
+          <th>Item Name</th>
           <th>Borrower</th>
           <th>Email</th>
           <th>ID Number</th>
           <th>Course / Department</th>
+          <th>Category</th>
+          <th>Borrow Date</th>
           <th>Expected Return</th>
           <th>Actual Return</th>
+          <th>Report Date</th>
+          <th>Status</th>
         </tr>
       </thead>
 
       <tbody>
         {lateOverdueReturnRecords.length === 0 ? (
           <tr>
-            <td colSpan="8">No late or overdue return records.</td>
+            <td colSpan="13">No late or overdue return records.</td>
           </tr>
         ) : (
           lateOverdueReturnRecords.map((request) => (
             <tr key={request.id}>
               <td>{getLateOverdueReturnType(request)}</td>
+              <td>{request.itemCode || request.itemId || "No code"}</td>
               <td>{request.itemName || "Untitled Item"}</td>
               <td>{request.borrowerName || "Unnamed Borrower"}</td>
               <td>{request.borrowerEmail || "No email"}</td>
               <td>{getBorrowerIdNumber(request)}</td>
               <td>{cleanDisplay(request.borrowerCourseDepartment)}</td>
-              <td>{request.expectedReturnDate || "Not set"}</td>
-              <td>{request.actualReturnDate || "Not returned"}</td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </section>
-
-  <section className="reports-print-section">
-    <h2>Borrowing History</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Borrower</th>
-          <th>Category</th>
-          <th>Borrow Date</th>
-          <th>Expected Return</th>
-          <th>Actual Return</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {filteredHistory.length === 0 ? (
-          <tr>
-            <td colSpan="7">No borrowing history found.</td>
-          </tr>
-        ) : (
-          filteredHistory.map((request) => (
-            <tr key={request.id}>
-              <td>{request.itemName || "Untitled Item"}</td>
-              <td>{request.borrowerName || request.borrowerEmail || "Borrower"}</td>
               <td>{getRequestCategoryName(request)}</td>
               <td>{request.borrowDate || "Not set"}</td>
               <td>{request.expectedReturnDate || "Not set"}</td>
               <td>{request.actualReturnDate || "Not returned"}</td>
+              <td>{getLateOverdueReturnReportDate(request) || "Not set"}</td>
               <td>{getRequestStatusLabel(request)}</td>
             </tr>
           ))
@@ -1656,7 +1795,65 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       </tbody>
     </table>
   </section>
+  )}
 
+  {(activeReportModule === "dashboard" || activeReportModule === "borrowingHistory") && (
+  <section className="reports-print-section">
+    <h2>Borrowing History</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item Code</th>
+          <th>Item Name</th>
+          <th>Borrower</th>
+          <th>Email</th>
+          <th>User Type</th>
+          <th>ID Number</th>
+          <th>Course / Department</th>
+          <th>Year / Section</th>
+          <th>Mobile Number</th>
+          <th>Category</th>
+          <th>Borrow Date</th>
+          <th>Expected Return</th>
+          <th>Actual Return</th>
+          <th>Status</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {filteredHistory.length === 0 ? (
+          <tr>
+            <td colSpan="15">No borrowing history found.</td>
+          </tr>
+        ) : (
+          filteredHistory.map((request) => (
+            <tr key={request.id}>
+              <td>{request.itemCode || request.itemId || "No code"}</td>
+              <td>{request.itemName || "Untitled Item"}</td>
+              <td>{request.borrowerName || "Unnamed Borrower"}</td>
+              <td>{request.borrowerEmail || "No email"}</td>
+              <td>{getBorrowerUserType(request)}</td>
+              <td>{getBorrowerIdNumber(request)}</td>
+              <td>{cleanDisplay(request.borrowerCourseDepartment)}</td>
+              <td>{getBorrowerYearSection(request)}</td>
+              <td>{cleanDisplay(request.borrowerMobileNumber)}</td>
+              <td>{getRequestCategoryName(request)}</td>
+              <td>{request.borrowDate || "Not set"}</td>
+              <td>{request.expectedReturnDate || "Not set"}</td>
+              <td>{request.actualReturnDate || "Not returned"}</td>
+              <td>{getRequestStatusLabel(request)}</td>
+              <td>{request.purpose || "No purpose provided"}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </section>
+  )}
+
+  {(activeReportModule === "dashboard" || activeReportModule === "damagedLostItems") && (
   <section className="reports-print-section">
     <h2>Damaged / Lost / Maintenance Items</h2>
 
@@ -1671,13 +1868,16 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Condition</th>
           <th>Reported Date</th>
           <th>Borrower</th>
+          <th>Borrower Email</th>
+          <th>Report / Reason</th>
+          <th>Item ID</th>
         </tr>
       </thead>
 
       <tbody>
         {damagedLostReportItems.length === 0 ? (
           <tr>
-            <td colSpan="8">No damaged, lost, or under maintenance items.</td>
+            <td colSpan="11">No damaged, lost, or under maintenance items.</td>
           </tr>
         ) : (
           damagedLostReportItems.map((item) => (
@@ -1690,13 +1890,18 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
               <td>{item.condition || item.availability || "N/A"}</td>
               <td>{getItemDamagedLostDate(item) || "No recorded date"}</td>
               <td>{getItemDamagedLostBorrowerName(item)}</td>
+              <td>{getItemDamagedLostBorrowerEmail(item) || "No email"}</td>
+              <td>{item.damagedLostReport || item.maintenanceReason || "No report recorded"}</td>
+              <td>{item.id}</td>
             </tr>
           ))
         )}
       </tbody>
     </table>
   </section>
+  )}
 
+  {(activeReportModule === "dashboard" || activeReportModule === "availableBorrowedItems") && (
   <section className="reports-print-section">
     <h2>Available / Borrowed Items</h2>
 
@@ -1710,16 +1915,24 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
           <th>Condition</th>
           <th>Current Borrower</th>
           <th>Expected Return</th>
+          <th>Overdue</th>
+          <th>Item ID</th>
         </tr>
       </thead>
 
       <tbody>
-        {availableBorrowedItemsAll.length === 0 ? (
+        {(activeReportModule === "availableBorrowedItems"
+          ? filteredAvailableBorrowedItems
+          : availableBorrowedItemsAll
+        ).length === 0 ? (
           <tr>
-            <td colSpan="7">No available or borrowed items.</td>
+            <td colSpan="9">No available or borrowed items.</td>
           </tr>
         ) : (
-          availableBorrowedItemsAll.map((item) => (
+          (activeReportModule === "availableBorrowedItems"
+            ? filteredAvailableBorrowedItems
+            : availableBorrowedItemsAll
+          ).map((item) => (
             <tr key={item.id}>
               <td>{item.itemCode || item.id}</td>
               <td>{item.itemName || "Untitled Item"}</td>
@@ -1736,12 +1949,20 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
                   ? getItemBorrowerExpectedReturn(item)
                   : "N/A"}
               </td>
+              <td>
+                {item.availability === "Borrowed" && isItemCurrentlyOverdue(item)
+                  ? "Yes"
+                  : "No"}
+              </td>
+              <td>{item.id}</td>
             </tr>
           ))
         )}
       </tbody>
     </table>
   </section>
+  )}
+</div>
 </div>
       {viewingHistoryRequest && (
   <div
@@ -2065,21 +2286,22 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
   </div>
 </section>
 
-{activeReportModule !== "availableBorrowedItems" && (
 <section className="reports-panel reports-export-panel reports-control-export-panel">
   <div className="reports-section-heading">
     <div>
       <h2>Report Controls & Export</h2>
       <p>
         {activeReportModule === "dashboard"
-          ? "Filter reports by date range or download report records as CSV files."
+          ? "Filter reports by date range, or download report records as CSV or PDF files."
           : activeReportModule === "borrowingHistory"
-          ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV."
+          ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV or PDF."
           : activeReportModule === "overdueItems"
-          ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV."
+          ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV or PDF."
           : activeReportModule === "damagedLostItems"
-          ? "Filter damaged, lost, and under-maintenance items by the date they were reported (resolved items still show for that date), refresh the data, or export the records as CSV."
-          : "Filter frequently borrowed items by date range and refresh the data."}
+          ? "Filter damaged, lost, and under-maintenance items by the date they were reported (resolved items still show for that date), refresh the data, or export the records as CSV or PDF."
+          : activeReportModule === "availableBorrowedItems"
+          ? "Filter reports by date range, refresh the data, or export available/borrowed items as CSV or PDF."
+          : "Filter frequently borrowed items by date range, refresh the data, or export them as CSV or PDF."}
       </p>
     </div>
   </div>
@@ -2136,36 +2358,108 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
     </div>
 
     {activeReportModule === "borrowingHistory" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-inline-export-btn"
-        onClick={handleExportBorrowingHistoryCsv}
-        disabled={filteredHistory.length === 0}
-      >
-        Export Borrowing History
-      </button>
+      <>
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn"
+          onClick={handleExportBorrowingHistoryCsv}
+          disabled={filteredHistory.length === 0}
+        >
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
+          onClick={handlePrintReport}
+        >
+          Download PDF
+        </button>
+      </>
     )}
 
     {activeReportModule === "overdueItems" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-inline-export-btn"
-        onClick={handleExportOverdueItemsCsv}
-        disabled={lateOverdueReturnRecords.length === 0}
-      >
-        Export Late / Overdue
-      </button>
+      <>
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn"
+          onClick={handleExportOverdueItemsCsv}
+          disabled={lateOverdueReturnRecords.length === 0}
+        >
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
+          onClick={handlePrintReport}
+        >
+          Download PDF
+        </button>
+      </>
     )}
 
     {activeReportModule === "damagedLostItems" && (
-      <button
-        type="button"
-        className="reports-secondary-btn reports-inline-export-btn"
-        onClick={handleExportDamagedLostCsv}
-        disabled={damagedLostReportItems.length === 0}
-      >
-        Export Damaged / Lost / Maintenance
-      </button>
+      <>
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn"
+          onClick={handleExportDamagedLostCsv}
+          disabled={damagedLostReportItems.length === 0}
+        >
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
+          onClick={handlePrintReport}
+        >
+          Download PDF
+        </button>
+      </>
+    )}
+
+    {activeReportModule === "availableBorrowedItems" && (
+      <>
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn"
+          onClick={handleExportAvailableBorrowedCsv}
+          disabled={filteredAvailableBorrowedItems.length === 0}
+        >
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
+          onClick={handlePrintReport}
+        >
+          Download PDF
+        </button>
+      </>
+    )}
+
+    {activeReportModule === "frequentlyBorrowed" && (
+      <>
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn"
+          onClick={handleExportFrequentlyBorrowedCsv}
+          disabled={frequentlyBorrowedItems.length === 0}
+        >
+          Export CSV
+        </button>
+
+        <button
+          type="button"
+          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
+          onClick={handlePrintReport}
+        >
+          Download PDF
+        </button>
+      </>
     )}
 
   </div>
@@ -2207,10 +2501,26 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       >
         Export Available / Borrowed
       </button>
+
+      <button
+        type="button"
+        className="reports-secondary-btn"
+        onClick={handleExportFrequentlyBorrowedCsv}
+        disabled={frequentlyBorrowedItems.length === 0}
+      >
+        Export Frequently Borrowed
+      </button>
+
+      <button
+        type="button"
+        className="reports-secondary-btn reports-pdf-export-btn"
+        onClick={handlePrintReport}
+      >
+        Download Full Report (PDF)
+      </button>
     </div>
   )}
 </section>
-)}
 
 {activeReportModule === "dashboard" && (
   <>
