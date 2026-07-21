@@ -799,10 +799,6 @@ html[data-theme="dark"] .code-generator-box.compact .code-generator-print-label-
   background: #facc15 !important;
   color: #0f172a !important;
 }
-/* =========================================================
-   QR GENERATOR - BORROWER VIEW: HIDE DOWNLOAD / PRINT ACTIONS
-   Paste this at the VERY BOTTOM of QRCodeGenerator.css
-========================================================= */
 
 .code-generator-box.hide-actions .qr-code-area button,
 .code-generator-box.hide-actions .barcode-area button,
@@ -839,10 +835,6 @@ html[data-theme="dark"] .code-generator-box.compact .code-generator-print-label-
     min-height: 110px !important;
   }
 }
-/* =========================================================
-   QR CODE GENERATOR - DARK MODE CLEANUP
-   Paste at the VERY BOTTOM of src/styles/QRCodeGenerator.css
-========================================================= */
 
 /* Remove the extra rectangle around the compact generator content */
 .code-generator-box.compact,

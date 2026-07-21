@@ -1950,10 +1950,6 @@ html[data-theme="dark"] .user-empty {
   background: var(--qb-bg);
   color: var(--qb-foreground);
 }
-/* =========================================================
-   FINAL USER TABLE COMPACT + MOBILE DESKTOP TABLE MODE
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 .user-list-card {
   overflow-x: auto !important;
@@ -5064,12 +5060,6 @@ html[data-theme="dark"] .user-create-card.user-tool-active .user-category-grid l
   color: #f8fafc !important;
 }
 
-
-/* =========================================================
-   USER MANAGEMENT - DARK MODE TITLE + EXISTING USERS CLEANUP
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
-
 /* Title card: readable in dark mode */
 html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header,
 html[data-theme="dark"] body .app-page-content .user-management-page .user-management-header-compact {
@@ -5251,19 +5241,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-small
   -webkit-text-fill-color: #94a3b8 !important;
 }
 
-
-
-/* =========================================================
-   VERY FINAL FIX - EXISTING USERS TITLE READABLE IN DARK MODE
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
-
-/* The "Existing Users" title lives inside:
-   <section className="user-list-card">
-     <div className="user-section-heading">
-       <h2>Existing Users</h2>
-       <p>Showing...</p>
-*/
 html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card > .user-section-heading,
 html[data-theme="dark"] body .app-page-content .user-management-page .user-list-card .user-section-heading {
   display: block !important;
@@ -5334,13 +5311,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-list-
   filter: none !important;
   mix-blend-mode: normal !important;
 }
-
-
-
-/* =========================================================
-   USER MANAGEMENT - ADD USER BORROWER DETAILS NO OUTLINE
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Remove the large rounded outline around the Borrower Details section
    in Add New User only. This keeps the actual input/select borders. */
@@ -5457,13 +5427,6 @@ html[data-theme="dark"] body .user-management-page .user-create-card .user-borro
     grid-template-columns: 1fr !important;
   }
 }
-
-
-
-/* =========================================================
-   USER MANAGEMENT - MANAGE ITEM CATEGORIES DARK MODE FIX
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Main Manage Item Categories card */
 html[data-theme="dark"] body .app-page-content .user-management-page .user-tool-modal-card.user-tool-active,
@@ -5682,13 +5645,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-categ
 html[data-theme="dark"] body .app-page-content .user-management-page .user-category-table tbody tr:hover td {
   background: #162033 !important;
 }
-
-
-
-/* =========================================================
-   USER MANAGEMENT - IMPORT CSV HEADING NO RECTANGLE OUTLINE
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Remove the unwanted rectangle around "Upload Borrower CSV" text only.
    The main upload card and input borders will stay unchanged. */
@@ -6093,19 +6049,6 @@ html[data-theme="dark"] .user-management-page .user-table-scroll-area .user-card
   box-shadow: none !important;
 }
 
-
-
-/* =========================================================
-   USER MANAGEMENT - MOBILE TITLE, STATS, TOOLS, TABLE COMPACT FIX
-   Paste at the VERY BOTTOM of UserManagement.css
-
-   Fixes:
-   - Back to Dashboard stays on the right side of the User Management title card.
-   - User summary cards become one horizontal scroll row on mobile.
-   - Existing Users tools become compact: search full row, All Roles + Refresh in one row.
-   - Existing Users table becomes more compact while staying horizontally scrollable.
-========================================================= */
-
 /* ---------- Title card: Back button on the right ---------- */
 .user-management-page .user-management-header-content,
 .user-management-page .user-management-header > div {
@@ -6506,18 +6449,6 @@ html[data-theme="dark"] .user-management-page .user-stats-grid::-webkit-scrollba
 html[data-theme="dark"] .user-management-page .user-summary-grid::-webkit-scrollbar-thumb {
   background: rgba(147, 197, 253, 0.38) !important;
 }
-
-
-
-/* =========================================================
-   USER MANAGEMENT - TITLE CARD SIZE MATCH ADD ITEM PAGE
-   Paste at the VERY BOTTOM of UserManagement.css
-
-   Fix:
-   - Makes the User Management title card match the Add Item title card size.
-   - Keeps the title on the left and Back to Dashboard on the right.
-   - Keeps mobile compact behavior.
-========================================================= */
 
 /* Desktop / laptop title card size */
 .user-management-page .user-management-header-content,
@@ -8407,11 +8338,6 @@ html[data-theme="dark"] .user-penalty-item {
   border-color: rgba(203, 213, 225, 0.24);
   background: rgba(15, 23, 42, 0.9);
 }
-/* =========================================================
-   USER MANAGEMENT - EXISTING USERS MOBILE TABLE MODE FINAL
-   Makes Existing Users data a side-scroll table on mobile.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 /* Keep the outer Existing Users card fixed */
 html body .app-page-content .user-management-page .user-list-card {
@@ -8773,12 +8699,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-table
   color: #cbd5e1 !important;
   -webkit-text-fill-color: #cbd5e1 !important;
 }
-/* =========================================================
-   USER MANAGEMENT - FIX DESKTOP TABLE WHITE SPACE
-   Desktop: table fills the Existing Users card.
-   Mobile: table stays horizontally scrollable.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 /* Desktop / wide tablet: make table fill the whole card */
 @media (min-width: 921px) {
@@ -8868,11 +8788,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-table
     max-width: none !important;
   }
 }
-/* =========================================================
-   USER MANAGEMENT - MOBILE TABLE ROW HEIGHT FIX
-   Makes Existing Users rows compact in mobile horizontal table.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 @media (max-width: 920px) {
   /* Keep only the table area scrollable */
@@ -9088,11 +9003,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-table
     align-items: start !important;
   }
 }
-/* =========================================================
-   USER MANAGEMENT - TRUE FINAL MOBILE TABLE DATA VISIBILITY
-   Fixes blank details in mobile horizontal table.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 @media (max-width: 920px) {
   /* Only the table scrolls sideways */
@@ -9354,12 +9264,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page .user-list-
   color: #cbd5e1 !important;
   -webkit-text-fill-color: #cbd5e1 !important;
 }
-/* =========================================================
-   USER MANAGEMENT - MANAGE ITEM CATEGORIES COMPACT FIX
-   Compact hero, right-middle dashboard button, compact table,
-   centered action icons.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 /* Scope only to Manage Item Categories tool */
 body .app-page-content .user-management-page
@@ -9852,12 +9756,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page
 .user-category-table td {
   color: #f8fafc !important;
 }
-/* =========================================================
-   USER MANAGEMENT - ADD USER + IMPORT BORROWERS HERO COMPACT
-   Makes the top card text smaller and keeps Back to Dashboard
-   at the right-middle side.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
 
 /* Target only Add More User and Import Borrowers */
 body .app-page-content .user-management-page
@@ -10558,12 +10456,6 @@ html[data-theme="dark"] body .app-page-content .user-management-page
   }
 }
 
-/* =========================================================
-   USER MANAGEMENT DARK MODE READABILITY FIX
-   Status pill text + dropdown text should be black/readable.
-   Paste at the VERY BOTTOM of UserManagement.css.
-========================================================= */
-
 /* Status pill text must stay black in dark mode */
 html[data-theme="dark"] .user-management-page .user-borrowing-status-text,
 html[data-theme="dark"] .user-management-page .user-borrowing-status-text *,
@@ -10943,10 +10835,6 @@ html[data-theme="dark"] .user-management-page select option:disabled {
     max-height: 40px !important;
   }
 }
-/* =========================================================
-   FIX: Mobile action buttons cut off - increase actions column width
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 @media (max-width: 900px) {
   /* Widen the whole table so the Actions column has room */
@@ -11031,10 +10919,6 @@ html[data-theme="dark"] .user-management-page select option:disabled {
     gap: 6px !important;
   }
 }
-/* =========================================================
-   FINAL: Center status pill text under Status column
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Status pill text alignment – desktop */
 .user-management-page .user-table-status .user-borrowing-status-text,
@@ -11086,10 +10970,6 @@ html[data-theme="dark"] .user-management-page select option:disabled {
     justify-content: center !important;
   }
 }
-/* =========================================================
-   FIX: Remove right white space on mobile table rows
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Mobile: shrink table width to fit content, not fixed wide */
 @media (max-width: 920px) {
@@ -11470,10 +11350,6 @@ html[data-theme="dark"] .user-management-page select option:disabled {
     padding-bottom: 12px !important;
   }
 }
-/* =========================================================
-   VIEW MODAL: X close button blends with design
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Clean X button - blends with modal */
 .user-view-modal .user-modal-close-x,
@@ -11553,10 +11429,6 @@ html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-
     right: 14px !important;
   }
 }
-/* =========================================================
-   VIEW MODAL: Clean X close button - no spin, visible outline
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* Clean X button - visible but blends with design */
 .user-view-modal .user-modal-close-x,
@@ -11641,10 +11513,6 @@ html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-
     right: 14px !important;
   }
 }
-/* =========================================================
-   DARK MODE: View modal pill outlines removed + text readable
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* ---------- Remove rectangle outlines from pills in dark mode ---------- */
 html[data-theme="dark"] .user-view-modal .user-view-role-row strong,
@@ -11781,10 +11649,6 @@ html[data-theme="dark"] .user-view-modal .user-modal-close-btn.user-modal-close-
   border-color: rgba(148, 163, 184, 0.5) !important;
   color: #f8fafc !important;
 }
-/* =========================================================
-   DARK MODE: Remove pill outlines + fixed pill size
-   Paste at the VERY BOTTOM of UserManagement.css
-========================================================= */
 
 /* ---------- Remove ALL outlines/borders from pills in dark mode ---------- */
 html[data-theme="dark"] .user-view-modal .user-view-role-row strong,

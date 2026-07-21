@@ -149,10 +149,6 @@
     height: 30px;
   }
 }
-/* =========================================================
-   QBORROW TOAST - DARK MODE READABILITY FIX
-   Paste at the VERY BOTTOM of src/styles/Toast.css
-========================================================= */
 
 /* Keep toast above modals/sidebar/topbar */
 .qb-toast-container {

@@ -824,10 +824,6 @@ html[data-theme="dark"] .borrow-request-field textarea {
   background-color: var(--qb-input, #111827);
   color: var(--qb-foreground, #f8fafc);
 }
-/* =========================================================
-   BORROW REQUEST - DARK MODE POLISH + READABLE PILLS
-   Paste at the VERY BOTTOM of BorrowRequest.css
-========================================================= */
 
 /* ---------- Header card: readable, no inner text rectangle ---------- */
 html[data-theme="dark"] .borrow-request-page .borrow-request-header-content {
@@ -1035,17 +1031,6 @@ html[data-theme="dark"] .borrow-request-page .borrow-request-primary-btn {
     width: 100% !important;
   }
 }
-
-
-
-/* =========================================================
-   BORROW REQUEST - COMPACT TITLE CARD + MOBILE COMPACT LAYOUT
-   Paste at the VERY BOTTOM of BorrowRequest.css
-   Goal:
-   - Keep Back to Item on the right side of the title card.
-   - Make the title card consistent with the system title cards.
-   - Make item preview, borrower details, form fields, and buttons compact.
-========================================================= */
 
 .borrow-request-page {
   gap: 10px !important;

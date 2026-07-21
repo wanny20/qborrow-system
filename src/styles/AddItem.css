@@ -1207,7 +1207,6 @@ html[data-theme="dark"] .add-item-preview-media {
   z-index: 3 !important;
 }
 
-/* Do not let the 1180px breakpoint stack the header */
 @media (max-width: 1180px) {
   .add-item-page .add-item-header-content,
   .add-item-page .add-item-header > div {
@@ -1219,7 +1218,6 @@ html[data-theme="dark"] .add-item-preview-media {
   }
 }
 
-/* Mobile compact title card */
 @media (max-width: 760px) {
   .add-item-page {
     gap: 10px !important;
@@ -1442,7 +1440,6 @@ html[data-theme="dark"] .add-item-maintenance-field textarea {
 }
 /* =========================================================
    ADD ITEM - CHARACTER COUNTER
-   Paste at the VERY BOTTOM of AddItem.css
 ========================================================= */
 
 .add-item-char-counter {

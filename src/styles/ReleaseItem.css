@@ -2082,14 +2082,6 @@ html[data-theme="dark"] .release-page .release-purpose-box {
   }
 }
 
-
-
-
-/* =========================================================
-   RELEASE ITEM - FINAL DARK MODE TITLE + APPROVED TABLE FIX
-   Paste at the VERY BOTTOM of ReleaseItem.css
-========================================================= */
-
 /* ---------- Title card readability in dark mode ---------- */
 html[data-theme="dark"] .release-page .release-header-content,
 html[data-theme="dark"] .release-page .release-header > div {
@@ -2393,19 +2385,6 @@ html[data-theme="dark"] .release-page .release-empty p {
     width: 100% !important;
   }
 }
-
-
-
-/* =========================================================
-   RELEASE ITEM - FINAL COMPACT MOBILE LAYOUT + RIGHT BACK BUTTON
-   Paste at the VERY BOTTOM of ReleaseItem.css
-
-   Fixes:
-   - Moves Back to Dashboard to the right side of the title card.
-   - Stops mobile/tablet CSS from making the back button full-width.
-   - Makes scanner, manual search, selected request, and approved queue compact.
-   - Keeps dark mode support.
-========================================================= */
 
 /* ---------- Title card: back button on the right ---------- */
 .release-page .release-header,
@@ -3733,11 +3712,6 @@ html[data-theme="dark"] .release-page .release-selected-close-btn {
   background: rgba(153, 27, 27, 0.34) !important;
   color: #fecaca !important;
 }
-/* =========================================================
-   RELEASE ITEM - MOBILE TABLE SCROLL MODE
-   Makes For Release + Released Items use side-scroll tables.
-   Paste at the VERY BOTTOM of ReleaseItem.css.
-========================================================= */
 
 @media (max-width: 860px) {
   /* The queue panel becomes the horizontal scroll container */

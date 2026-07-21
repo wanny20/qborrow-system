@@ -392,10 +392,6 @@
     width: 100% !important;
   }
 }
-/* =========================================================
-   CONFIRM ACTION MODAL - DARK MODE READABILITY FIX
-   Paste at the VERY BOTTOM of ConfirmActionModal.css
-========================================================= */
 
 /* Keep modal above everything, but make dark mode readable */
 html[data-theme="dark"] .confirm-action-backdrop {

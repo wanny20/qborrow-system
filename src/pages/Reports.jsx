@@ -51,6 +51,8 @@ const [dateTo, setDateTo] = useState("");
     LATE_OVERDUE_REPORT_PAGE_SIZE
   );
   const printRootRef = useRef(null);
+  const exportMenuRef = useRef(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [viewingHistoryRequest, setViewingHistoryRequest] = useState(null);
   const [viewingDamagedItem, setViewingDamagedItem] = useState(null);
   const [viewingAvailableBorrowedItem, setViewingAvailableBorrowedItem] = useState(null);
@@ -652,6 +654,34 @@ useEffect(() => {
   dateTo,
 ]);
 
+useEffect(() => {
+  setIsExportMenuOpen(false);
+}, [activeReportModule]);
+
+useEffect(() => {
+  if (!isExportMenuOpen) return undefined;
+
+  function handleClickOutside(event) {
+    if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      setIsExportMenuOpen(false);
+    }
+  }
+
+  function handleEscapeKey(event) {
+    if (event.key === "Escape") {
+      setIsExportMenuOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("keydown", handleEscapeKey);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("keydown", handleEscapeKey);
+  };
+}, [isExportMenuOpen]);
+
   const visibleItems = useMemo(() => {
     return items.filter((item) =>
       canCategoryAdminSeeCategory(
@@ -1060,270 +1090,338 @@ function downloadCsvFile(fileName, headers, rows) {
   URL.revokeObjectURL(url);
 }
 
-function handleExportBorrowingHistoryCsv() {
-  if (filteredHistory.length === 0) {
-    showToast("No borrowing history records to export", "error");
-    return;
-  }
+function escapeExcelHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
-  try {
-    const headers = [
-      "Item Code",
-      "Item Name",
-      "Borrower",
-      "Email",
-      "User Type",
-      "ID Number",
-      "Course / Department",
-      "Year / Section",
-      "Mobile Number",
-      "Category",
-      "Borrow Date",
-      "Expected Return",
-      "Actual Return",
-      "Status",
-      "Purpose",
-    ];
+function downloadExcelFile(fileName, headers, rows) {
+  const headerRowHtml = headers
+    .map((header) => `<th>${escapeExcelHtml(header)}</th>`)
+    .join("");
 
-    const rows = filteredHistory.map((request) => [
-      request.itemCode || request.itemId || "No code",
-      request.itemName || "Untitled Item",
-      request.borrowerName || "Unnamed Borrower",
-      request.borrowerEmail || "No email",
-      getBorrowerUserType(request),
-      getBorrowerIdNumber(request),
-      cleanDisplay(request.borrowerCourseDepartment),
-      getBorrowerYearSection(request),
-      cleanDisplay(request.borrowerMobileNumber),
-      getRequestCategoryName(request),
-      request.borrowDate || "Not set",
-      request.expectedReturnDate || "Not set",
-      request.actualReturnDate || "Not returned",
-      getRequestStatusLabel(request),
-      request.purpose || "No purpose provided",
-    ]);
+  const bodyRowsHtml = rows
+    .map(
+      (row) =>
+        `<tr>${row.map((cell) => `<td>${escapeExcelHtml(cell)}</td>`).join("")}</tr>`
+    )
+    .join("");
 
-    downloadCsvFile(
-      `qborrow-borrowing-history-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
-    );
+  const workbookHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8" />
+<!--[if gte mso 9]><xml>
+<x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>Report</x:Name>
+<x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook>
+</xml><![endif]-->
+</head>
+<body>
+<table border="1">
+<thead><tr>${headerRowHtml}</tr></thead>
+<tbody>${bodyRowsHtml}</tbody>
+</table>
+</body>
+</html>`;
 
-    showActionSuccess("Borrowing History Exported");
-  } catch (error) {
-    showActionError("Failed to export borrowing history", error);
+  const blob = new Blob([`\ufeff${workbookHtml}`], {
+    type: "application/vnd.ms-excel;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function getBorrowingHistoryExportDataset() {
+  const headers = [
+    "Item Code",
+    "Item Name",
+    "Borrower",
+    "Email",
+    "User Type",
+    "ID Number",
+    "Course / Department",
+    "Year / Section",
+    "Mobile Number",
+    "Category",
+    "Borrow Date",
+    "Expected Return",
+    "Actual Return",
+    "Status",
+    "Purpose",
+  ];
+
+  const rows = filteredHistory.map((request) => [
+    request.itemCode || request.itemId || "No code",
+    request.itemName || "Untitled Item",
+    request.borrowerName || "Unnamed Borrower",
+    request.borrowerEmail || "No email",
+    getBorrowerUserType(request),
+    getBorrowerIdNumber(request),
+    cleanDisplay(request.borrowerCourseDepartment),
+    getBorrowerYearSection(request),
+    cleanDisplay(request.borrowerMobileNumber),
+    getRequestCategoryName(request),
+    request.borrowDate || "Not set",
+    request.expectedReturnDate || "Not set",
+    request.actualReturnDate || "Not returned",
+    getRequestStatusLabel(request),
+    request.purpose || "No purpose provided",
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-borrowing-history",
+    emptyMessage: "No borrowing history records to export",
+    successMessage: "Borrowing History Exported",
+    errorMessage: "Failed to export borrowing history",
+  };
+}
+
+function getCategoryReportExportDataset() {
+  const headers = [
+    "Category",
+    "Total Items",
+    "Available",
+    "Reserved",
+    "Borrowed",
+    "Damaged / Lost / Maintenance",
+    "Total Requests",
+  ];
+
+  const rows = categoryReports.map((category) => [
+    category.categoryName,
+    category.totalItems,
+    category.available,
+    category.reserved,
+    category.borrowed,
+    category.damagedLost,
+    category.totalRequests,
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-category-report",
+    emptyMessage: "No category report records to export",
+    successMessage: "Category Report Exported",
+    errorMessage: "Failed to export category report",
+  };
+}
+
+function getOverdueItemsExportDataset() {
+  const headers = [
+    "Record Type",
+    "Item Code",
+    "Item Name",
+    "Borrower",
+    "Email",
+    "ID Number",
+    "Course / Department",
+    "Category",
+    "Borrow Date",
+    "Expected Return",
+    "Actual Return",
+    "Report Date",
+    "Status",
+  ];
+
+  const rows = lateOverdueReturnRecords.map((request) => [
+    getLateOverdueReturnType(request),
+    request.itemCode || request.itemId || "No code",
+    request.itemName || "Untitled Item",
+    request.borrowerName || "Unnamed Borrower",
+    request.borrowerEmail || "No email",
+    getBorrowerIdNumber(request),
+    cleanDisplay(request.borrowerCourseDepartment),
+    getRequestCategoryName(request),
+    request.borrowDate || "Not set",
+    request.expectedReturnDate || "Not set",
+    request.actualReturnDate || "Not returned",
+    getLateOverdueReturnReportDate(request) || "Not set",
+    getRequestStatusLabel(request),
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-late-overdue-returns",
+    emptyMessage: "No late or overdue return records to export",
+    successMessage: "Late / Overdue Returns Exported",
+    errorMessage: "Failed to export late or overdue returns",
+  };
+}
+
+function getDamagedLostExportDataset() {
+  const headers = [
+    "Item Code",
+    "Item Name",
+    "Category",
+    "Report Status",
+    "Availability",
+    "Condition",
+    "Damaged/Lost/Maintenance Date",
+    "Returned By (Borrower)",
+    "Borrower Email",
+    "Report/Reason",
+    "Item ID",
+  ];
+
+  const rows = damagedLostReportItems.map((item) => [
+    item.itemCode || item.id,
+    item.itemName || "Untitled Item",
+    getItemCategoryName(item),
+    getDamagedLostReportStatusLabel(item),
+    item.availability || "N/A",
+    item.condition || item.availability || "N/A",
+    getItemDamagedLostDate(item) || "No recorded date",
+    getItemDamagedLostBorrowerName(item),
+    getItemDamagedLostBorrowerEmail(item) || "No email",
+    item.damagedLostReport || item.maintenanceReason || "No report recorded",
+    item.id,
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-damaged-lost-items",
+    emptyMessage: "No damaged, lost, or under maintenance item records to export",
+    successMessage: "Damaged / Lost / Maintenance Items Exported",
+    errorMessage: "Failed to export damaged, lost, or under maintenance items",
+  };
+}
+
+function getAvailableBorrowedExportDataset() {
+  const headers = [
+    "Item Code",
+    "Item Name",
+    "Category",
+    "Availability",
+    "Condition",
+    "Current Borrower",
+    "Expected Return Date",
+    "Overdue",
+    "Item ID",
+  ];
+
+  const rows = filteredAvailableBorrowedItems.map((item) => [
+    item.itemCode || item.id,
+    item.itemName || "Untitled Item",
+    getItemCategoryName(item),
+    item.availability || "N/A",
+    item.condition || "Unknown",
+    item.availability === "Borrowed" ? getItemBorrowerName(item) : "N/A",
+    item.availability === "Borrowed"
+      ? getItemBorrowerExpectedReturn(item)
+      : "N/A",
+    item.availability === "Borrowed" && isItemCurrentlyOverdue(item)
+      ? "Yes"
+      : "No",
+    item.id,
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-available-borrowed-items",
+    emptyMessage: "No available/borrowed item records to export",
+    successMessage: "Available / Borrowed Items Exported",
+    errorMessage: "Failed to export available/borrowed items",
+  };
+}
+
+function getFrequentlyBorrowedExportDataset() {
+  const headers = ["Rank", "Item Name", "Category", "Borrow Count"];
+
+  const rows = frequentlyBorrowedItems.map((item, index) => [
+    index + 1,
+    item.itemName,
+    item.categoryName,
+    item.count,
+  ]);
+
+  return {
+    headers,
+    rows,
+    fileBase: "qborrow-frequently-borrowed-items",
+    emptyMessage: "No frequently borrowed item records to export",
+    successMessage: "Frequently Borrowed Items Exported",
+    errorMessage: "Failed to export frequently borrowed items",
+  };
+}
+
+function getExportDatasetForModule(moduleKey) {
+  switch (moduleKey) {
+    case "borrowingHistory":
+      return [getBorrowingHistoryExportDataset()];
+    case "overdueItems":
+      return [getOverdueItemsExportDataset()];
+    case "damagedLostItems":
+      return [getDamagedLostExportDataset()];
+    case "availableBorrowedItems":
+      return [getAvailableBorrowedExportDataset()];
+    case "frequentlyBorrowed":
+      return [getFrequentlyBorrowedExportDataset()];
+    case "dashboard":
+      return [
+        getBorrowingHistoryExportDataset(),
+        getCategoryReportExportDataset(),
+        getOverdueItemsExportDataset(),
+        getAvailableBorrowedExportDataset(),
+        getFrequentlyBorrowedExportDataset(),
+      ];
+    default:
+      return [];
   }
 }
 
-function handleExportCategoryReportCsv() {
-  if (categoryReports.length === 0) {
-    showToast("No category report records to export", "error");
+function handleExportReport(format) {
+  setIsExportMenuOpen(false);
+
+  if (format === "pdf") {
+    handlePrintReport();
+    return;
+  }
+
+  const datasets = getExportDatasetForModule(activeReportModule).filter(
+    (dataset) => dataset.rows.length > 0
+  );
+
+  if (datasets.length === 0) {
+    showToast("No records available to export", "error");
     return;
   }
 
   try {
-    const headers = [
-      "Category",
-      "Total Items",
-      "Available",
-      "Reserved",
-      "Borrowed",
-      "Damaged / Lost / Maintenance",
-      "Total Requests",
-    ];
+    datasets.forEach((dataset) => {
+      const fileName = `${dataset.fileBase}-${getCsvDateStamp()}.${
+        format === "excel" ? "xls" : "csv"
+      }`;
 
-    const rows = categoryReports.map((category) => [
-      category.categoryName,
-      category.totalItems,
-      category.available,
-      category.reserved,
-      category.borrowed,
-      category.damagedLost,
-      category.totalRequests,
-    ]);
+      if (format === "excel") {
+        downloadExcelFile(fileName, dataset.headers, dataset.rows);
+      } else {
+        downloadCsvFile(fileName, dataset.headers, dataset.rows);
+      }
+    });
 
-    downloadCsvFile(
-      `qborrow-category-report-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
+    showActionSuccess(
+      datasets.length > 1
+        ? "Reports Exported"
+        : datasets[0].successMessage
     );
-
-    showActionSuccess("Category Report Exported");
   } catch (error) {
-    showActionError("Failed to export category report", error);
-  }
-}
-
-function handleExportOverdueItemsCsv() {
-  if (lateOverdueReturnRecords.length === 0) {
-    showToast("No late or overdue return records to export", "error");
-    return;
-  }
-
-  try {
-    const headers = [
-      "Record Type",
-      "Item Code",
-      "Item Name",
-      "Borrower",
-      "Email",
-      "ID Number",
-      "Course / Department",
-      "Category",
-      "Borrow Date",
-      "Expected Return",
-      "Actual Return",
-      "Report Date",
-      "Status",
-    ];
-
-    const rows = lateOverdueReturnRecords.map((request) => [
-      getLateOverdueReturnType(request),
-      request.itemCode || request.itemId || "No code",
-      request.itemName || "Untitled Item",
-      request.borrowerName || "Unnamed Borrower",
-      request.borrowerEmail || "No email",
-      getBorrowerIdNumber(request),
-      cleanDisplay(request.borrowerCourseDepartment),
-      getRequestCategoryName(request),
-      request.borrowDate || "Not set",
-      request.expectedReturnDate || "Not set",
-      request.actualReturnDate || "Not returned",
-      getLateOverdueReturnReportDate(request) || "Not set",
-      getRequestStatusLabel(request),
-    ]);
-
-    downloadCsvFile(
-      `qborrow-late-overdue-returns-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
-    );
-
-    showActionSuccess("Late / Overdue Returns Exported");
-  } catch (error) {
-    showActionError("Failed to export late or overdue returns", error);
-  }
-}
-
-function handleExportDamagedLostCsv() {
-  if (damagedLostReportItems.length === 0) {
-    showToast("No damaged, lost, or under maintenance item records to export", "error");
-    return;
-  }
-
-  try {
-    const headers = [
-      "Item Code",
-      "Item Name",
-      "Category",
-      "Report Status",
-      "Availability",
-      "Condition",
-      "Damaged/Lost/Maintenance Date",
-      "Returned By (Borrower)",
-      "Borrower Email",
-      "Report/Reason",
-      "Item ID",
-    ];
-
-    const rows = damagedLostReportItems.map((item) => [
-      item.itemCode || item.id,
-      item.itemName || "Untitled Item",
-      getItemCategoryName(item),
-      getDamagedLostReportStatusLabel(item),
-      item.availability || "N/A",
-      item.condition || item.availability || "N/A",
-      getItemDamagedLostDate(item) || "No recorded date",
-      getItemDamagedLostBorrowerName(item),
-      getItemDamagedLostBorrowerEmail(item) || "No email",
-      item.damagedLostReport || item.maintenanceReason || "No report recorded",
-      item.id,
-    ]);
-
-    downloadCsvFile(
-      `qborrow-damaged-lost-items-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
-    );
-
-    showActionSuccess("Damaged / Lost / Maintenance Items Exported");
-  } catch (error) {
-    showActionError("Failed to export damaged, lost, or under maintenance items", error);
-  }
-}
-
-function handleExportAvailableBorrowedCsv() {
-  if (filteredAvailableBorrowedItems.length === 0) {
-    showToast("No available/borrowed item records to export", "error");
-    return;
-  }
-
-  try {
-    const headers = [
-      "Item Code",
-      "Item Name",
-      "Category",
-      "Availability",
-      "Condition",
-      "Current Borrower",
-      "Expected Return Date",
-      "Overdue",
-      "Item ID",
-    ];
-
-    const rows = filteredAvailableBorrowedItems.map((item) => [
-      item.itemCode || item.id,
-      item.itemName || "Untitled Item",
-      getItemCategoryName(item),
-      item.availability || "N/A",
-      item.condition || "Unknown",
-      item.availability === "Borrowed" ? getItemBorrowerName(item) : "N/A",
-      item.availability === "Borrowed"
-        ? getItemBorrowerExpectedReturn(item)
-        : "N/A",
-      item.availability === "Borrowed" && isItemCurrentlyOverdue(item)
-        ? "Yes"
-        : "No",
-      item.id,
-    ]);
-
-    downloadCsvFile(
-      `qborrow-available-borrowed-items-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
-    );
-
-    showActionSuccess("Available / Borrowed Items Exported");
-  } catch (error) {
-    showActionError("Failed to export available/borrowed items", error);
-  }
-}
-
-function handleExportFrequentlyBorrowedCsv() {
-  if (frequentlyBorrowedItems.length === 0) {
-    showToast("No frequently borrowed item records to export", "error");
-    return;
-  }
-
-  try {
-    const headers = ["Rank", "Item Name", "Category", "Borrow Count"];
-
-    const rows = frequentlyBorrowedItems.map((item, index) => [
-      index + 1,
-      item.itemName,
-      item.categoryName,
-      item.count,
-    ]);
-
-    downloadCsvFile(
-      `qborrow-frequently-borrowed-items-${getCsvDateStamp()}.csv`,
-      headers,
-      rows
-    );
-
-    showActionSuccess("Frequently Borrowed Items Exported");
-  } catch (error) {
-    showActionError("Failed to export frequently borrowed items", error);
+    showActionError("Failed to export report", error);
   }
 }
 
@@ -2292,16 +2390,16 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <h2>Report Controls & Export</h2>
       <p>
         {activeReportModule === "dashboard"
-          ? "Filter reports by date range, or download report records as CSV or PDF files."
+          ? "Filter reports by date range, reset the filters, or export report records as PDF, Excel, or CSV files."
           : activeReportModule === "borrowingHistory"
-          ? "Filter borrowing history by date range, refresh the data, or export borrowing records as CSV or PDF."
+          ? "Filter borrowing history by date range, reset the filters, or export borrowing records as PDF, Excel, or CSV."
           : activeReportModule === "overdueItems"
-          ? "Filter current overdue and returned-late records by date range, refresh the data, or export them as CSV or PDF."
+          ? "Filter current overdue and returned-late records by date range, reset the filters, or export them as PDF, Excel, or CSV."
           : activeReportModule === "damagedLostItems"
-          ? "Filter damaged, lost, and under-maintenance items by the date they were reported (resolved items still show for that date), refresh the data, or export the records as CSV or PDF."
+          ? "Filter damaged, lost, and under-maintenance items by the date they were reported (resolved items still show for that date), reset the filters, or export the records as PDF, Excel, or CSV."
           : activeReportModule === "availableBorrowedItems"
-          ? "Filter reports by date range, refresh the data, or export available/borrowed items as CSV or PDF."
-          : "Filter frequently borrowed items by date range, refresh the data, or export them as CSV or PDF."}
+          ? "Filter reports by date range, reset the filters, or export available/borrowed items as PDF, Excel, or CSV."
+          : "Filter frequently borrowed items by date range, reset the filters, or export them as PDF, Excel, or CSV."}
       </p>
     </div>
   </div>
@@ -2336,19 +2434,60 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
 <button
   type="button"
   className="reports-refresh-btn"
-  onClick={() => fetchReportsData({ showSuccessToast: true })}
+  onClick={resetDateRange}
+  disabled={!dateFrom && !dateTo}
 >
-  Refresh
+  Reset
 </button>
 
-    <button
-      type="button"
-      className="reports-secondary-btn reports-reset-date-btn"
-      onClick={resetDateRange}
-      disabled={!dateFrom && !dateTo}
-    >
-      Reset Date
-    </button>
+    <div className="reports-export-dropdown" ref={exportMenuRef}>
+      <button
+        type="button"
+        className="reports-secondary-btn reports-reset-date-btn reports-export-toggle-btn"
+        onClick={() => setIsExportMenuOpen((open) => !open)}
+        aria-haspopup="true"
+        aria-expanded={isExportMenuOpen}
+      >
+        Export
+        <span className="reports-export-toggle-caret" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+
+      {isExportMenuOpen && (
+        <div className="reports-export-dropdown-menu" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="reports-export-dropdown-item"
+            onClick={() => handleExportReport("pdf")}
+          >
+            <span className="reports-export-dropdown-icon" aria-hidden="true">PDF</span>
+            PDF
+          </button>
+
+          <button
+            type="button"
+            role="menuitem"
+            className="reports-export-dropdown-item"
+            onClick={() => handleExportReport("excel")}
+          >
+            <span className="reports-export-dropdown-icon" aria-hidden="true">XLS</span>
+            Excel
+          </button>
+
+          <button
+            type="button"
+            role="menuitem"
+            className="reports-export-dropdown-item"
+            onClick={() => handleExportReport("csv")}
+          >
+            <span className="reports-export-dropdown-icon" aria-hidden="true">CSV</span>
+            CSV
+          </button>
+        </div>
+      )}
+    </div>
   </div>
 
   <div className="reports-export-range-row">
@@ -2356,170 +2495,7 @@ const categoryPerformanceChart = categoryReports.slice(0, 8).map((category) => (
       <span>Showing report range:</span>
       <strong>{getDateRangeLabel()}</strong>
     </div>
-
-    {activeReportModule === "borrowingHistory" && (
-      <>
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn"
-          onClick={handleExportBorrowingHistoryCsv}
-          disabled={filteredHistory.length === 0}
-        >
-          Export CSV
-        </button>
-
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
-          onClick={handlePrintReport}
-        >
-          Download PDF
-        </button>
-      </>
-    )}
-
-    {activeReportModule === "overdueItems" && (
-      <>
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn"
-          onClick={handleExportOverdueItemsCsv}
-          disabled={lateOverdueReturnRecords.length === 0}
-        >
-          Export CSV
-        </button>
-
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
-          onClick={handlePrintReport}
-        >
-          Download PDF
-        </button>
-      </>
-    )}
-
-    {activeReportModule === "damagedLostItems" && (
-      <>
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn"
-          onClick={handleExportDamagedLostCsv}
-          disabled={damagedLostReportItems.length === 0}
-        >
-          Export CSV
-        </button>
-
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
-          onClick={handlePrintReport}
-        >
-          Download PDF
-        </button>
-      </>
-    )}
-
-    {activeReportModule === "availableBorrowedItems" && (
-      <>
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn"
-          onClick={handleExportAvailableBorrowedCsv}
-          disabled={filteredAvailableBorrowedItems.length === 0}
-        >
-          Export CSV
-        </button>
-
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
-          onClick={handlePrintReport}
-        >
-          Download PDF
-        </button>
-      </>
-    )}
-
-    {activeReportModule === "frequentlyBorrowed" && (
-      <>
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn"
-          onClick={handleExportFrequentlyBorrowedCsv}
-          disabled={frequentlyBorrowedItems.length === 0}
-        >
-          Export CSV
-        </button>
-
-        <button
-          type="button"
-          className="reports-secondary-btn reports-inline-export-btn reports-pdf-export-btn"
-          onClick={handlePrintReport}
-        >
-          Download PDF
-        </button>
-      </>
-    )}
-
   </div>
-
-  {activeReportModule === "dashboard" && (
-    <div className="reports-export-grid">
-      <button
-        type="button"
-        className="reports-secondary-btn"
-        onClick={handleExportBorrowingHistoryCsv}
-        disabled={filteredHistory.length === 0}
-      >
-        Export Borrowing History
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn"
-        onClick={handleExportCategoryReportCsv}
-        disabled={categoryReports.length === 0}
-      >
-        Export Category Report
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn"
-        onClick={handleExportOverdueItemsCsv}
-        disabled={lateOverdueReturnRecords.length === 0}
-      >
-        Export Late / Overdue
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn"
-        onClick={handleExportAvailableBorrowedCsv}
-        disabled={availableBorrowedItemsAll.length === 0}
-      >
-        Export Available / Borrowed
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn"
-        onClick={handleExportFrequentlyBorrowedCsv}
-        disabled={frequentlyBorrowedItems.length === 0}
-      >
-        Export Frequently Borrowed
-      </button>
-
-      <button
-        type="button"
-        className="reports-secondary-btn reports-pdf-export-btn"
-        onClick={handlePrintReport}
-      >
-        Download Full Report (PDF)
-      </button>
-    </div>
-  )}
 </section>
 
 {activeReportModule === "dashboard" && (

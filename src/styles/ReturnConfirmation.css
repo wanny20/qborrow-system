@@ -2456,13 +2456,6 @@ html[data-theme="dark"] .return-page .return-empty {
   }
 }
 
-
-
-/* =========================================================
-   RETURN CONFIRMATION - FINAL DARK MODE TITLE + MANUAL FIND FIX
-   Paste at the VERY BOTTOM of ReturnConfirmation.css
-========================================================= */
-
 /* ---------- Title card readable in night mode ---------- */
 html[data-theme="dark"] .return-page .return-header-content,
 html[data-theme="dark"] .return-page .return-header > div {
@@ -2662,13 +2655,6 @@ html[data-theme="dark"] .return-page .return-empty-selected p {
   }
 }
 
-
-
-/* =========================================================
-   RETURN CONFIRMATION - REMOVE MANUAL ROW RECTANGLE OUTLINE
-   Paste at the VERY BOTTOM of ReturnConfirmation.css
-========================================================= */
-
 /* This targets the exact wrapper around the input + Find button. */
 html body .app-page-content .return-page .return-scanner-card .return-manual-form .return-manual-row,
 html body .return-page .return-scanner-card .return-manual-form .return-manual-row,
@@ -2734,19 +2720,6 @@ html[data-theme="dark"] body .return-page .return-manual-row > .return-secondary
   color: #2563eb !important;
   -webkit-text-fill-color: #2563eb !important;
 }
-
-
-
-/* =========================================================
-   RETURN CONFIRMATION - FINAL COMPACT MOBILE LAYOUT + RIGHT BACK BUTTON
-   Paste at the VERY BOTTOM of ReturnConfirmation.css
-
-   Fixes:
-   - Moves Back to Dashboard to the right side of the title card.
-   - Stops mobile/tablet CSS from making the back button full-width.
-   - Makes scanner, manual input, selected borrowed request, and borrowed queue compact.
-   - Keeps dark mode support.
-========================================================= */
 
 /* ---------- Title card: back button on the right ---------- */
 .return-page .return-header,
@@ -4106,11 +4079,6 @@ html[data-theme="dark"] .return-page .return-selected-close-btn {
   background: rgba(153, 27, 27, 0.34) !important;
   color: #fecaca !important;
 }
-/* =========================================================
-   RETURN CONFIRMATION - MOBILE TABLE SCROLL MODE
-   Makes Borrowed + Returned tabs use side-scroll tables.
-   Paste at the VERY BOTTOM of ReturnConfirmation.css.
-========================================================= */
 
 @media (max-width: 860px) {
   /* The queue panel becomes the horizontal scroll container */
