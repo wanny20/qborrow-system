@@ -729,18 +729,6 @@ html[data-theme="dark"] .settings-secondary-btn {
   }
 }
 
-
-
-/* =========================================================
-   SETTINGS - ROLE PILL + BUTTON TEXT VISIBILITY FIX
-   Paste at the VERY BOTTOM of Settings.css
-
-   Fixes:
-   - Makes the role pill under the profile name readable/visible.
-   - Makes Save Settings text black.
-   - Makes Change Password text black.
-========================================================= */
-
 /* Role pill under profile name */
 .settings-page .settings-profile-preview p {
   width: fit-content !important;
@@ -2205,11 +2193,6 @@ html[data-theme="dark"] .settings-penalty-meta span {
   border-color: rgba(203, 213, 225, 0.24);
   background: rgba(15, 23, 42, 0.88);
 }
-/* =========================================================
-   SETTINGS - COMPACT HEADER WITH RIGHT-MIDDLE BACK BUTTON
-   Keeps Back to Dashboard on the right side in mobile/tablet.
-   Paste at the VERY BOTTOM of Settings.css.
-========================================================= */
 
 .settings-page > .settings-header.settings-header-compact > .settings-header-content {
   min-height: 104px !important;
@@ -2378,12 +2361,6 @@ html[data-theme="dark"] .settings-page .settings-header-back-btn {
   color: #f8fafc !important;
   -webkit-text-fill-color: #f8fafc !important;
 }
-/* =========================================================
-   SETTINGS - BORROWER DESKTOP LAYOUT FIX
-   Fixes big white space on borrower settings desktop view.
-   Borrowing Status + Change Password become same-row cards.
-   Paste at the VERY BOTTOM of Settings.css.
-========================================================= */
 
 /* Desktop borrower layout */
 @media (min-width: 981px) {
@@ -2716,11 +2693,6 @@ html[data-theme="dark"] .settings-borrowing-status-main span,
 html[data-theme="dark"] .settings-school-status-grid span {
   color: #cbd5e1;
 }
-/* =========================================================
-   SETTINGS - SCHOOL AVAILABILITY + SYSTEM SUSPENSION LAYOUT FIX
-   Fixes squeezed System Suspension card.
-   Paste at the VERY BOTTOM of Settings.css.
-========================================================= */
 
 /* Desktop: make both admin system cards equal-width */
 @media (min-width: 981px) {
@@ -3025,13 +2997,6 @@ html[data-theme="dark"] .settings-page .settings-system-suspension-card .setting
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
-/* =========================================================
-   DARK MODE FIX: SETTINGS HEADER + PROFILE PREVIEW CONTRAST
-   Header card and borrower profile-preview box were still
-   using their light-mode gradient backgrounds in dark mode,
-   which washed out against the (already-correct) light text.
-   Paste at the VERY BOTTOM of Settings.css.
-========================================================= */
 
 html[data-theme="dark"] .settings-page > .settings-header.settings-header-compact > .settings-header-content {
   background:

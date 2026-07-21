@@ -1166,13 +1166,6 @@ html[data-theme="dark"] .my-requests-modal-purpose {
   background: var(--qb-input, #ffffff);
   color: var(--qb-foreground, #0f172a);
 }
-/* =========================================================
-   MY REQUESTS - COMPACT TABLE + DARK MODE POLISH
-   Paste at the VERY BOTTOM of MyRequests.css
-========================================================= */
-
-/* Confirm: the page already has a real Load More button.
-   This block only moves/polishes it inside the history panel. */
 
 /* ---------- Header dark mode cleanup ---------- */
 html[data-theme="dark"] .my-requests-page .my-requests-header-content,
@@ -1596,10 +1589,6 @@ html[data-theme="dark"] .my-requests-page .my-requests-modal-grid > div {
     color: #94a3b8 !important;
   }
 }
-/* =========================================================
-   MY REQUESTS - SUMMARY ICONS + REFRESH BUTTON FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-========================================================= */
 
 /* Remove the unwanted rectangle wrapping the whole summary card group */
 .my-requests-summary-grid,
@@ -1767,18 +1756,6 @@ html[data-theme="dark"] .my-requests-page .my-requests-tools .qb-label {
   background: transparent !important;
   box-shadow: none !important;
 }
-
-
-
-/* =========================================================
-   MY REQUESTS - STRONG OUTLINE + CLEAN LOAD MORE FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-   Goal:
-   - Match the strong rounded outline style from other pages.
-   - Add outlines to title card, stat cards, search/filter card, request panel,
-     and request rows.
-   - Remove the unwanted rectangular outline around the Load More area.
-========================================================= */
 
 .my-requests-page {
   --mr-hard-outline: #1e293b;
@@ -1986,13 +1963,6 @@ html[data-theme="dark"] .my-requests-page .my-requests-load-more-row .my-request
     min-width: 0 !important;
   }
 }
-
-
-
-/* =========================================================
-   MY REQUESTS - ULTRA COMPACT HISTORY TABLE + ICON ACTION
-   Paste at the VERY BOTTOM of MyRequests.css
-========================================================= */
 
 /* Compact the history panel spacing */
 .my-requests-page .my-requests-panel {
@@ -2338,18 +2308,6 @@ html[data-theme="dark"] .my-requests-page .my-request-icon-btn::after {
     color: #94a3b8 !important;
   }
 }
-
-
-
-/* =========================================================
-   MY REQUESTS - MOBILE COMPACT RESPONSIVE FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-   Goal:
-   - Move Back to Dashboard to the right side of the title card.
-   - Make summary cards one compact horizontal row.
-   - Make search/filter card compact.
-   - Keep Request History as a compact table on mobile instead of stacked cards.
-========================================================= */
 
 .my-requests-page {
   gap: 10px !important;
@@ -2819,17 +2777,6 @@ html[data-theme="dark"] .my-requests-page .my-request-table-purpose strong {
   -webkit-text-fill-color: #f8fafc !important;
 }
 
-
-
-/* =========================================================
-   MY REQUESTS - MOBILE ONE-ROW SEARCH + FITTED COMPACT TABLE
-   Paste at the VERY BOTTOM of MyRequests.css
-   Goal:
-   - Search/filter/refresh stays in ONE compact row on mobile.
-   - Request History table fits the card width on mobile.
-   - No horizontal table cut-off / no stacked field rows.
-========================================================= */
-
 /* Search tools: compact base */
 .my-requests-page .my-requests-tools {
   align-items: center !important;
@@ -3120,17 +3067,6 @@ html[data-theme="dark"] .my-requests-page .my-request-table-item strong {
   -webkit-text-fill-color: #f8fafc !important;
 }
 
-
-
-/* =========================================================
-   MY REQUESTS - FINAL MOBILE TOOLS ROW + SCROLLABLE TABLE FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-   Goal:
-   - Search input, status dropdown, and Refresh stay in ONE row.
-   - Request History table becomes horizontally scrollable again.
-   - Restore all table columns on mobile instead of hiding columns.
-========================================================= */
-
 @media (max-width: 760px) {
   /* Search/filter/refresh: one row */
   .my-requests-page .my-requests-tools {
@@ -3420,19 +3356,6 @@ html[data-theme="dark"] .my-requests-page .my-request-table-purpose strong {
   color: #f8fafc !important;
   -webkit-text-fill-color: #f8fafc !important;
 }
-  
-
-
-/* =========================================================
-   MY REQUESTS - MOBILE REAL SCROLLABLE TABLE FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-
-   Mobile behavior:
-   - Real table layout, not stacked cards.
-   - Horizontally scrollable on small screens.
-   - All columns stay visible when scrolling sideways.
-   - Fixes clipped item code/name.
-========================================================= */
 
 @media (max-width: 920px) {
   /* Override the old mobile card-like layout */
@@ -3711,18 +3634,6 @@ html[data-theme="dark"] .my-requests-page .my-request-table-purpose strong {
     -webkit-text-fill-color: #f8fafc !important;
   }
 }
-
-
-
-/* =========================================================
-   MY REQUESTS - FINAL ACTION INSIDE ROW OUTLINE FIX
-   Paste at the VERY BOTTOM of MyRequests.css
-
-   Fix:
-   - Keeps mobile Request History as a sideways-scroll table.
-   - Makes the row/header outline wide enough for the Action column.
-   - Puts the Details icon fully inside the row border.
-========================================================= */
 
 @media (max-width: 920px) {
   .my-requests-page .my-requests-table-shell {

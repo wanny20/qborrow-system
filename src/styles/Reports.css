@@ -258,6 +258,108 @@
 }
 
 /* =========================
+   Export Dropdown
+========================= */
+
+.reports-export-dropdown {
+  position: relative;
+  display: block;
+}
+
+.reports-export-toggle-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.reports-export-toggle-caret {
+  font-size: 0.65rem;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.reports-export-toggle-btn[aria-expanded="true"] .reports-export-toggle-caret {
+  transform: rotate(180deg);
+}
+
+.reports-export-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--reports-border);
+  border-radius: 14px;
+  background: var(--reports-surface);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.16);
+  animation: reportsExportMenuIn 120ms ease;
+}
+
+@keyframes reportsExportMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reports-export-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--reports-text);
+  padding: 9px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-align: left;
+  text-transform: none;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.reports-export-dropdown-item:hover {
+  background: var(--reports-blue-soft, rgba(37, 99, 235, 0.1));
+  color: var(--reports-blue-dark, #1d4ed8);
+}
+
+.reports-export-dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--reports-muted);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+html[data-theme="dark"] .reports-export-dropdown-menu {
+  background: var(--reports-surface);
+  border-color: var(--reports-border);
+}
+
+html[data-theme="dark"] .reports-export-dropdown-icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================
    Panels
 ========================= */
 

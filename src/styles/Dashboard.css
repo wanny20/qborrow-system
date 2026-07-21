@@ -1303,13 +1303,6 @@ html[data-theme="dark"] .dashboard-urgent-card:hover {
   }
 }
 
-
-/* =========================================================
-   DASHBOARD - ONE ROW STAT CARDS DESKTOP FIX
-   Paste at the VERY BOTTOM of Dashboard.css
-   Goal: make the 6 dashboard stat cards fit in one row on desktop.
-========================================================= */
-
 /* Desktop / laptop: keep all 6 cards in one row */
 @media (min-width: 1024px) {
   .dashboard-page .dashboard-stats-grid {
@@ -1384,14 +1377,6 @@ html[data-theme="dark"] .dashboard-urgent-card:hover {
     grid-template-columns: 1fr !important;
   }
 }
-
-
-
-/* =========================================================
-   DASHBOARD - RESTORE TITLE / WELCOME CARD
-   Paste at the VERY BOTTOM of Dashboard.css
-   This overrides the previous rule that accidentally hid the title card.
-========================================================= */
 
 .dashboard-page .dashboard-hero {
   display: block !important;
@@ -1489,13 +1474,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-hero p {
     font-size: 0.82rem !important;
   }
 }
-
-
-/* =========================================================
-   DASHBOARD - COMPACT TITLE CARD LIKE OTHER PAGES
-   Paste at the VERY BOTTOM of Dashboard.css
-   Removes the Super Admin Dashboard pill and restores a clean compact header.
-========================================================= */
 
 .dashboard-page .dashboard-eyebrow,
 .dashboard-page .qb-kicker,
@@ -1654,14 +1632,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-assigned-note {
   }
 }
 
-
-
-/* =========================================================
-   DASHBOARD - ULTRA COMPACT TITLE CARD
-   Paste at the VERY BOTTOM of Dashboard.css
-   Goal: make the welcome/title card much smaller and free space.
-========================================================= */
-
 .dashboard-page {
   gap: 10px !important;
 }
@@ -1817,18 +1787,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-assigned-note {
     font-size: 0.58rem !important;
   }
 }
-
-
-
-/* =========================================================
-   DASHBOARD - MOBILE RESPONSIVE COMPACT FIX
-   Paste at the VERY BOTTOM of Dashboard.css
-   Goal:
-   - Remove Borrower Dashboard / role pill.
-   - Make title card smaller on small screens.
-   - Make stat cards stay in one horizontal row on mobile.
-   - Make Quick Actions and Available Items more compact.
-========================================================= */
 
 /* Remove role pill on all dashboard layouts */
 .dashboard-page .dashboard-eyebrow,
@@ -2164,17 +2122,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-item-preview-list::-webkit-sc
   }
 }
 
-
-
-/* =========================================================
-   DASHBOARD - BORROWER MOBILE LIST LAYOUT FIX
-   Paste at the VERY BOTTOM of Dashboard.css
-   Goal:
-   - Force remove Borrower Dashboard / role pill.
-   - Make Quick Actions a compact vertical list on mobile.
-   - Make Available Items a compact vertical list on mobile.
-========================================================= */
-
 /* Force remove dashboard role pill everywhere */
 .dashboard-page .dashboard-hero .dashboard-eyebrow,
 .dashboard-page .dashboard-hero-content .dashboard-eyebrow,
@@ -2353,17 +2300,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-item-preview-list::-webkit-sc
     min-height: 50px !important;
   }
 }
-
-
-
-/* =========================================================
-   DASHBOARD - BORROWER CARD FIT / NO EMPTY SPACE FIX
-   Paste at the VERY BOTTOM of Dashboard.css
-   Goal:
-   - Borrower dashboard has 5 stat cards, so use 5 equal columns.
-   - Admin dashboard still keeps 6 equal columns.
-   - Quick Actions + Available Items panels fill the row cleanly.
-========================================================= */
 
 /* Desktop/tablet: when there are exactly 5 dashboard cards, make them fill the row */
 @media (min-width: 761px) {
@@ -2696,10 +2632,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollba
 html[data-theme="dark"] .dashboard-page .dashboard-urgent-grid::-webkit-scrollbar-thumb {
   background: rgba(96, 165, 250, 0.34);
 }
-/* =========================================================
-   DASHBOARD - COMPACT QUICK ACTIONS + NEEDS ATTENTION
-   Paste at the VERY BOTTOM of Dashboard.css
-========================================================= */
 
 /* Keep both panels from stretching too tall */
 .dashboard-page .dashboard-main-grid {
@@ -2878,12 +2810,6 @@ html[data-theme="dark"] .dashboard-page .dashboard-action-list button:hover,
 html[data-theme="dark"] .dashboard-page .dashboard-attention-list button:hover {
   background: rgba(37, 99, 235, 0.2) !important;
 }
-/* =========================================================
-   DASHBOARD - 7 STAT CARDS IN ONE ROW
-   Paste at the VERY BOTTOM of Dashboard.css
-   For: Total Items, Available, Borrowed, Pending, Overdue,
-   Damaged/Lost, Maintenance
-========================================================= */
 
 @media (min-width: 1200px) {
   .dashboard-page .dashboard-stats-grid {

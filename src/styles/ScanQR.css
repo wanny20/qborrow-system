@@ -712,10 +712,6 @@ html[data-theme="dark"] .scan-camera-controls select {
   background: var(--qb-input, #0f172a);
   color: var(--qb-foreground, #f8fafc);
 }
-/* =========================================================
-   SCAN QR PAGE - DARK MODE POLISH
-   Paste at the VERY BOTTOM of ScanQR.css
-========================================================= */
 
 /* ---------- Header: dark readable card, no text rectangle ---------- */
 html[data-theme="dark"] .scan-page .scan-header-content,
@@ -980,17 +976,6 @@ html:not([data-theme="dark"]) .scan-page .scan-header-text p {
   color: #64748b !important;
   -webkit-text-fill-color: #64748b !important;
 }
-
-
-
-/* =========================================================
-   SCAN QR - COMPACT TITLE CARD + COMPACT RESPONSIVE LAYOUT
-   Paste at the VERY BOTTOM of ScanQR.css
-   Goal:
-   - Keep Back to Dashboard on the right side of the Scan QR title.
-   - Make the title card consistent with other compact title cards.
-   - Reduce scanner, manual search, upload, and tips spacing.
-========================================================= */
 
 .scan-page {
   gap: 10px !important;

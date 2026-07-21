@@ -1114,6 +1114,19 @@ html[data-theme="dark"] .notifications-modal-grid > div {
 
 .notifications-load-more-row .notifications-refresh-btn {
   width: min(280px, 100%) !important;
+  border: 2px solid var(--notif-blue, #2563eb) !important;
+  border-radius: 999px !important;
+  color: var(--notif-blue-dark, #1d4ed8) !important;
+  background: #ffffff !important;
+  box-shadow: 3px 3px 0 var(--notif-blue, #2563eb) !important;
+  font-weight: 900 !important;
+}
+
+.notifications-load-more-row .notifications-refresh-btn:hover:not(:disabled) {
+  background: var(--notif-blue, #2563eb) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 3px 4px 0 var(--notif-blue-dark, #1d4ed8) !important;
 }
 
 .notifications-modal-backdrop {
@@ -1123,10 +1136,6 @@ html[data-theme="dark"] .notifications-modal-grid > div {
 .notification-icon-btn::after {
   z-index: 100001 !important;
 }
-/* =========================================================
-   NOTIFICATIONS SUMMARY CARD COUNT CLARITY
-   Paste at the VERY BOTTOM of Notifications.css
-========================================================= */
 
 .notifications-summary-grid small {
   position: relative;
@@ -1148,19 +1157,6 @@ html[data-theme="dark"] .notifications-modal-grid > div {
     font-size: 0.56rem;
   }
 }
-
-
-
-/* =========================================================
-   NOTIFICATIONS - DASHBOARD-STYLE CARDS + SIDE-BY-SIDE ACTIONS
-   Paste at the VERY BOTTOM of Notifications.css
-
-   Fix:
-   - Notifications title card matches dashboard title-card style.
-   - Summary cards, search card, and list card get strong QBorrow outlines.
-   - Mark All Read and Delete Visible stay side-by-side, including mobile.
-   - Buttons stay visible/readable in light and dark mode.
-========================================================= */
 
 /* ---------- Dashboard-style title card ---------- */
 .notifications-page .notifications-header-content {
@@ -1582,18 +1578,20 @@ html[data-theme="dark"] .notifications-page .notifications-heading-actions .noti
   box-shadow: none !important;
 }
 
+html[data-theme="dark"] .notifications-page .notifications-load-more-row .notifications-refresh-btn {
+  border: 2px solid #60a5fa !important;
+  background-color: #172033 !important;
+  color: #93c5fd !important;
+  -webkit-text-fill-color: #93c5fd !important;
+  box-shadow: 3px 3px 0 #60a5fa !important;
+}
 
-
-/* =========================================================
-   NOTIFICATIONS - MOBILE COMPACT SIDE-SCROLL TABLE FIX
-   Paste at the VERY BOTTOM of Notifications.css
-
-   Fix:
-   - Stops mobile from turning the Notification List table into tall cards.
-   - Keeps Notification List heading and action buttons fixed.
-   - Only the table header + table rows scroll sideways.
-   - Makes the table compact like the other QBorrow admin tables.
-========================================================= */
+html[data-theme="dark"] .notifications-page .notifications-load-more-row .notifications-refresh-btn:hover:not(:disabled) {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 3px 4px 0 #1d4ed8 !important;
+}
 
 /* The list card itself should not be the horizontal scroller */
 .notifications-page .notifications-panel {
@@ -1953,4 +1951,26 @@ html[data-theme="dark"] .notifications-page .notifications-table-wrap::-webkit-s
 
 html[data-theme="dark"] .notifications-page .notifications-table-wrap::-webkit-scrollbar-thumb {
   background: rgba(147, 197, 253, 0.38) !important;
+}
+
+/* ---------- Final override: kill only the load-more row's own box outline ---------- */
+.notifications-page .notifications-load-more-row,
+.notifications-load-more-row {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .notifications-page .notifications-load-more-row,
+html[data-theme="dark"] .notifications-load-more-row {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.notifications-page .notifications-load-more-row .notifications-refresh-btn {
+  border: 2px solid var(--notif-blue, #2563eb) !important;
+  box-shadow: 3px 3px 0 var(--notif-blue, #2563eb) !important;
+  background: #ffffff !important;
 }
