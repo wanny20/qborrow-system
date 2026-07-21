@@ -1944,11 +1944,6 @@ html[data-theme="dark"] .app-suspended-topbar-tooltip::before {
     backdrop-filter: none !important;
   }
 }
-/* =========================================================
-   APP SIDEBAR - COLLAPSIBLE GROUPS + CLEAN BRAND
-   Paste at the very bottom of src/styles/AppLayout.css
-========================================================= */
-
 /* Remove "Digital Borrowing" subtitle under QBorrow */
 .app-sidebar-brand-text::after {
   display: none !important;
@@ -2163,13 +2158,6 @@ html[data-theme="dark"] .app-nav-group-icon {
   border-color: rgba(148, 163, 184, 0.22) !important;
 }
 
-/* The base rules above (~line 2066 and ~2078) force `filter: none` on every
-   sidebar sub-link icon, which is correct in light mode (black icon on a
-   white chip) but makes the icon invisible in dark mode, since the chip
-   background becomes dark (#172033) while the PNG icon stays black.
-   Re-invert the icon to white specifically for the non-active state in dark
-   mode. The active state keeps its white chip background (set below), so it
-   is intentionally left un-inverted. */
 html[data-theme="dark"] .app-sidebar-section-list .app-nav-link:not(.active) .app-nav-icon img {
   filter: brightness(0) invert(1) !important;
   opacity: 0.92;
@@ -2183,11 +2171,6 @@ html[data-theme="dark"] .app-sidebar-section-list .app-nav-link.active .app-nav-
 html[data-theme="dark"] .app-sidebar-section-list .app-nav-link.active .app-nav-icon img {
   filter: none !important;
 }
-/* =========================================================
-   APP TOPBAR CLEANUP + QUICK DARK MODE
-   Paste at the very bottom of src/styles/AppLayout.css
-========================================================= */
-
 /* Remove the yellow "QBorrow" pill/card above the title */
 .app-topbar-title::before {
   display: none !important;
@@ -2601,12 +2584,6 @@ html[data-theme="dark"] .dashboard-urgent-empty {
   right: -4px !important;
 }
 
-/* =========================================================
-   FINAL GLOBAL BACK BUTTON CONSISTENCY FIX
-   Makes all "Back to Dashboard" / page back buttons use one design.
-   Paste at the very bottom of src/styles/AppLayout.css
-========================================================= */
-
 .app-page-content :where(
   button[class*="header-back-btn"],
   a[class*="header-back-btn"],
@@ -2782,11 +2759,6 @@ html[data-theme="dark"] .app-page-content :where(
   border-color: #93c5fd !important;
 }
 
-/* =========================================================
-   FINAL BELL CENTER FIX - MUST STAY AT VERY BOTTOM
-   Keeps back button consistency and centers the bell icon.
-========================================================= */
-
 .app-topbar-notification {
   width: 44px !important;
   min-width: 44px !important;
@@ -2929,10 +2901,6 @@ html[data-theme="dark"] .app-page-content :where(
   z-index: 1000002 !important;
 }
 
-/* =========================================================
-   FINAL PROFILE MENU / PROFILE PILL DARK MODE FIX
-   Paste this at the VERY BOTTOM of AppLayout.css
-========================================================= */
 
 html[data-theme="dark"] .app-profile-menu-wrap {
   z-index: 99999 !important;
@@ -3087,18 +3055,6 @@ html[data-theme="dark"] .app-profile-menu-item.logout:hover strong {
   }
 }
 
-
-
-/* =========================================================
-   APPLAYOUT - BURGER / HAMBURGER BUTTON DARK MODE VISIBILITY
-   Paste at the VERY BOTTOM of AppLayout.css
-
-   Fix:
-   - Makes the sidebar burger button visible in night mode.
-   - Makes the topbar/mobile burger button visible in night mode.
-   - Keeps a clean white/blue outline style consistent with QBorrow.
-========================================================= */
-
 /* Base: make burger lines stronger even in light mode */
 .app-sidebar-toggle span,
 .app-topbar-menu-btn span,
@@ -3173,13 +3129,6 @@ html[data-theme="dark"] .floating-layout-toggle:focus-visible span {
     height: 2.5px !important;
   }
 }
-
-
-
-/* =========================================================
-   TOPBAR CLAIM ITEM ALERT
-   Shows borrower approved items waiting to be claimed/released.
-========================================================= */
 
 .app-claim-topbar-btn {
   position: relative;
@@ -3301,8 +3250,6 @@ html[data-theme="dark"] .app-claim-topbar-icon {
   color: #fde68a !important;
 }
 
-
-
 /* =========================================================
    CLAIM ITEM ICON ONLY
 ========================================================= */
@@ -3339,8 +3286,6 @@ html[data-theme="dark"] .app-claim-topbar-icon {
     height: 26px !important;
   }
 }
-
-
 
 /* =========================================================
    GLOBAL MODAL STACK FIX
@@ -3417,8 +3362,6 @@ body :where(
   z-index: 190;
 }
 
-
-
 /* =========================================================
    DASHBOARD APPROVED / DUE POPUP FIX
    Makes Dashboard popup overlays cover the sidebar too.
@@ -3468,8 +3411,6 @@ body :where(
   }
 }
 
-
-
 /* =========================================================
    REPORTS SIDEBAR MODULE
    Makes Reports a separate sidebar module with long submodule
@@ -3506,8 +3447,6 @@ body :where(
   }
 }
 
-
-
 /* =========================================================
    REPORTS SIDEBAR LABEL UPDATE
    Supports the longer Late / Overdue Returns submodule label.
@@ -3519,7 +3458,6 @@ body :where(
   white-space: normal;
   overflow-wrap: anywhere;
 }
-
 
 /* =========================================================
    SCHOOL CLOSURE MODE - APP LAYOUT BANNER
@@ -4028,11 +3966,6 @@ html[data-theme="dark"] .app-school-closed-banner.system-suspended small {
   z-index: 10000;
   width: min(680px, calc(100vw - 32px));
 }
-/* =========================================================
-   APP LAYOUT - RESPONSIVE BLANK SCREEN FINAL FIX
-   Keeps page visible when resizing to tablet/mobile.
-   Paste at the VERY BOTTOM of AppLayout.css.
-========================================================= */
 
 /* Desktop / laptop layout */
 @media (min-width: 821px) {
@@ -4277,10 +4210,6 @@ html[data-theme="dark"] .app-school-closed-banner.system-suspended .app-status-d
   -webkit-text-fill-color: #000000 !important;
   text-shadow: none !important;
 }
-/* =========================================================
-   SIDEBAR DARK MODE HOVER - BLACK TEXT FOR READABILITY
-   Paste at the VERY BOTTOM of AppLayout.css
-========================================================= */
 
 /* Group headers (Dashboard, Admin Menu, Reports, User Management) */
 html[data-theme="dark"] .app-sidebar-section-toggle:hover {

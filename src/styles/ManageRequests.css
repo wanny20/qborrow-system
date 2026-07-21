@@ -1552,12 +1552,6 @@ html[data-theme="dark"] .manage-request-row-actions .manage-action-details {
   color: #bfdbfe !important;
 }
 
-
-/* =========================================================
-   MANAGE REQUESTS ACTION ICON PLACEMENT FIX
-   Paste-safe final override
-========================================================= */
-
 /* Give the action column enough room so icons stay in one row */
 @media (min-width: 981px) {
   .manage-request-table-header,
@@ -1829,13 +1823,6 @@ html[data-theme="dark"] .manage-request-row-actions .manage-action-details {
   color: #bfdbfe !important;
 }
 
-
-/* =========================================================
-   MANAGE REQUESTS - REMOVE ACTIONS GROUP RECTANGLE
-   Paste-safe final override
-   The row keeps its rounded outline, but the actions cell has no box.
-========================================================= */
-
 @media (min-width: 981px) {
   .manage-request-table-header,
   .manage-request-row {
@@ -1938,11 +1925,6 @@ html[data-theme="dark"] .manage-request-row-actions {
   box-shadow: none !important;
   background: transparent !important;
 }
-
-/* =========================================================
-   MANAGE REQUESTS - DARK MODE + ICON/TABLE CLEANUP
-   Paste at the VERY BOTTOM of ManageRequests.css
-========================================================= */
 
 /* Page-safe dark variables */
 html[data-theme="dark"] .manage-requests-page {
@@ -2366,11 +2348,6 @@ html[data-theme="dark"] .manage-requests-page .manage-request-view-grid strong,
 html[data-theme="dark"] .manage-requests-page .manage-request-view-purpose p {
   color: #ffffff !important;
 }
-/* =========================================================
-   MANAGE REQUESTS - DETAILS MODAL ABOVE SIDEBAR FIX
-   Paste at the VERY BOTTOM of ManageRequests.css
-   Works with ManageRequests.portal-details.jsx
-========================================================= */
 
 .manage-request-view-overlay {
   position: fixed !important;
@@ -2481,13 +2458,6 @@ html[data-theme="dark"] .manage-request-modal-close {
     border-radius: 22px !important;
   }
 }
-/* =========================================================
-   MANAGE REQUESTS - DETAILS MODAL TRUE FRONT FIX
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   This fixes the case where the AppLayout sidebar/topbar still sits
-   above the Details modal when the sidebar is open.
-========================================================= */
 
 /* 1) Force the modal overlay and card above normal page layers */
 .manage-request-view-overlay {
@@ -2628,11 +2598,6 @@ html[data-theme="dark"] .manage-request-view-purpose p {
     border-radius: 22px !important;
   }
 }
-/* =========================================================
-   MANAGE REQUESTS - MODAL CLICK FIX
-   Paste at the VERY BOTTOM of ManageRequests.css,
-   below the previous true-front modal fix.
-========================================================= */
 
 /* The modal and everything inside it must be clickable */
 .manage-request-view-overlay,
@@ -2691,19 +2656,6 @@ body:has(.manage-request-view-overlay) .manage-request-view-overlay,
 body:has(.manage-request-view-overlay) .manage-request-view-overlay * {
   pointer-events: auto !important;
 }
-
-
-
-/* =========================================================
-   MANAGE REQUESTS - MOBILE COMPACT LAYOUT FINAL
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fixes:
-   - Back to Dashboard stays on the right side of the title card.
-   - Summary cards become one horizontal scroll row on mobile.
-   - Search input, status dropdown, and refresh button become one compact row.
-   - Borrow Requests become a compact sideways-scroll table on mobile.
-========================================================= */
 
 /* ---------- Title card / header ---------- */
 .manage-requests-page .manage-requests-header-content,
@@ -3182,17 +3134,6 @@ html[data-theme="dark"] .manage-requests-page .manage-request-cell strong {
   -webkit-text-fill-color: #f8fafc !important;
 }
 
-
-
-/* =========================================================
-   MANAGE REQUESTS - BORROW REQUESTS DATA SCROLL FIX
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - Makes the Borrow Requests header + rows scroll sideways on mobile.
-   - Prevents the right-side columns/actions from being clipped.
-========================================================= */
-
 @media (max-width: 760px) {
   /* The whole Borrow Requests panel becomes the horizontal scroll area */
   .manage-requests-page .manage-request-panel {
@@ -3294,17 +3235,6 @@ html[data-theme="dark"] .manage-requests-page .manage-request-cell strong {
   }
 }
 
-
-
-/* =========================================================
-   MANAGE REQUESTS - REMOVE LOAD MORE RECTANGLE OUTLINE
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - Removes the rectangular outline around the Load More Requests area.
-   - Keeps only the blue Load More button visible.
-========================================================= */
-
 .app-page-content .manage-requests-page .manage-load-more-row,
 .app-page-content .manage-requests-page .manage-request-panel .manage-load-more-row,
 .app-page-content .manage-requests-page .manage-request-table-grid .manage-load-more-row,
@@ -3377,18 +3307,6 @@ html[data-theme="dark"] .manage-requests-page .manage-request-table-grid .manage
   background: transparent !important;
   box-shadow: none !important;
 }
-
-
-
-/* =========================================================
-   MANAGE REQUESTS - COMPACT DETAILS MODAL
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - Makes the request details modal more compact/professional.
-   - Removes the bottom Close button because the top-right X already closes it.
-   - Keeps View Item button.
-========================================================= */
 
 .manage-request-view-overlay {
   padding: 14px !important;
@@ -3691,17 +3609,6 @@ html[data-theme="dark"] .manage-request-view-grid p {
   -webkit-text-fill-color: #94a3b8 !important;
 }
 
-
-
-/* =========================================================
-   MANAGE REQUESTS - DETAILS MODAL X BUTTON TOP RIGHT FIX
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - Moves the modal X close button to the top-right corner.
-   - Prevents the X from floating on the left side.
-========================================================= */
-
 .manage-request-view-modal {
   position: relative !important;
 }
@@ -3763,18 +3670,6 @@ html[data-theme="dark"] .manage-request-modal-close {
   color: #fecaca !important;
   -webkit-text-fill-color: #fecaca !important;
 }
-
-
-
-/* =========================================================
-   MANAGE REQUESTS - DETAILS MODAL SPLIT LAYOUT FINAL
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fixes:
-   - Removes View Item button from request row actions.
-   - Removes View Item / Close buttons from the details modal bottom.
-   - Details modal now uses LEFT Item Details and RIGHT User Details.
-========================================================= */
 
 /* Action column has fewer icons now */
 @media (min-width: 981px) {
@@ -4137,18 +4032,6 @@ html[data-theme="dark"] .manage-request-modal-close {
   -webkit-text-fill-color: #fecaca !important;
 }
 
-
-
-/* =========================================================
-   MANAGE REQUESTS - REMOVE RECTANGLE OUTLINE ON MODAL HEADINGS
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - Removes the unwanted rectangular outline around "Item Details"
-     and "User Details" heading areas.
-   - Keeps the main left/right detail cards outlined.
-========================================================= */
-
 .app-page-content .manage-request-view-modal .manage-request-view-panel-heading,
 .manage-request-view-modal .manage-request-view-panel-heading,
 .manage-request-view-panel-heading {
@@ -4216,18 +4099,6 @@ html[data-theme="dark"] .manage-request-view-panel-heading {
 html[data-theme="dark"] .manage-request-view-panel {
   border-color: rgba(148, 163, 184, 0.34) !important;
 }
-
-
-
-/* =========================================================
-   MANAGE REQUESTS - BORROW REQUESTS HEADING FIX + TABLE-ONLY SCROLL
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Fix:
-   - "Borrow Requests" title and "Showing..." text stay fixed.
-   - Only the table header + table rows scroll sideways.
-   - Prevents the whole panel heading from joining horizontal scroll.
-========================================================= */
 
 /* The whole Borrow Requests card should NOT scroll sideways */
 .manage-requests-page .manage-request-panel {
@@ -4468,23 +4339,6 @@ html[data-theme="dark"] .manage-requests-page .manage-request-table-wrap::-webki
 html[data-theme="dark"] .manage-requests-page .manage-request-table-shell::-webkit-scrollbar-thumb {
   background: rgba(147, 197, 253, 0.38) !important;
 }
-
-
-
-/* =========================================================
-   MANAGE REQUESTS - FINAL TABLE SCROLL + ACTIONS VISIBLE FIX
-   Paste at the VERY BOTTOM of ManageRequests.css
-
-   Requires ManageRequests.jsx wrapper:
-   <div className="manage-request-table-scroll"> around
-   .manage-request-table-header and .manage-request-table-grid.
-
-   Fixes:
-   - Borrow Requests title / showing text stays fixed.
-   - Only the table scrolls sideways.
-   - Action buttons no longer disappear on mobile.
-   - Action column stays visible at the right side while scrolling.
-========================================================= */
 
 /* Main panel stays fixed. It should not be the horizontal scroll container. */
 .manage-requests-page .manage-request-panel {
