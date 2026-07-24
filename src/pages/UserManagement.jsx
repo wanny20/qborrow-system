@@ -2788,8 +2788,7 @@ fetchData();
       adminCount,
       requestCount,
       activeRequestCount,
-      canDelete:
-        itemCount === 0 && adminCount === 0 && activeRequestCount === 0,
+      canDelete: itemCount === 0 && adminCount === 0,
       canEditName: activeRequestCount === 0,
     };
   }

@@ -415,6 +415,13 @@ exports.addCategory = onCall(async (request) => {
   };
 });
 
+// Deletion rule: a category can be permanently deleted once it has no
+// items and no category admin assigned to it. Historical borrow requests
+// (Returned/Rejected/Cancelled, or any past request) are just records and
+// do NOT block deletion - only items and assigned admins do. This
+// intentionally mirrors the frontend's getCategoryUsage()/canDelete logic
+// in UserManagement.jsx, which already only counts *active* borrow
+// requests and never blocks on items/admins that have been cleared out.
 exports.deleteCategory = onCall(async (request) => {
   await requireSuperAdmin(request);
 
@@ -451,28 +458,10 @@ exports.deleteCategory = onCall(async (request) => {
     categoryId
   );
 
-  const hasRequestsByCategoryId = await collectionHasMatch(
-    "borrowRequests",
-    "categoryId",
-    categoryId
-  );
-
-  const hasRequestsByCategory = await collectionHasMatch(
-    "borrowRequests",
-    "category",
-    categoryId
-  );
-
-  if (
-    hasItemsByCategoryId ||
-    hasItemsByCategory ||
-    hasAdmins ||
-    hasRequestsByCategoryId ||
-    hasRequestsByCategory
-  ) {
+  if (hasItemsByCategoryId || hasItemsByCategory || hasAdmins) {
     throw new HttpsError(
       "failed-precondition",
-      "This category cannot be deleted because it is still used by items, admins, or borrow requests."
+      "This category cannot be deleted because it is still used by items or has an assigned admin."
     );
   }
 
