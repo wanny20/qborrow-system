@@ -119,13 +119,33 @@ function getCategoryInfo(record) {
       return {
         id: matchedCategory.id,
         name: matchedCategory.name || matchedCategory.id,
+        isDeletedCategory: false,
       };
     }
+  }
+
+  // No active category matched any stored value. If a value was actually
+  // recorded (not just a placeholder/empty field), the category itself was
+  // likely deleted after the fact - surface the original name for audit
+  // purposes instead of hiding it behind a generic "Uncategorized" label.
+  const preferredHistoricalValue = [
+    record.categoryName,
+    record.category,
+    record.categoryId,
+  ].find((value) => !isPlaceholderCategory(value));
+
+  if (preferredHistoricalValue) {
+    return {
+      id: UNCATEGORIZED_CATEGORY_ID,
+      name: `${String(preferredHistoricalValue).trim()} (Deleted)`,
+      isDeletedCategory: true,
+    };
   }
 
   return {
     id: UNCATEGORIZED_CATEGORY_ID,
     name: UNCATEGORIZED_CATEGORY_NAME,
+    isDeletedCategory: false,
   };
 }
 
